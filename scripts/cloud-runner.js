@@ -11,7 +11,7 @@ const prompt = process.env.PROMPT || process.argv[2] || '';
 const apiKey = process.env.GEMINI_API_KEY || process.env.ANTIGRAVITY_API_KEY || '';
 const telegramToken = process.env.TELEGRAM_BOT_TOKEN || '';
 const chatId = process.env.CHAT_ID || process.env.ALLOWED_CHAT_ID || '';
-const preferredModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const preferredModel = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
 console.log('🤖 [Cloud Runner] Starting autonomous code execution...');
 console.log('📝 Prompt:', prompt);
@@ -52,6 +52,7 @@ async function notifyTelegram(message) {
 async function callGemini(key, systemInstruction, userContent) {
   const candidateModels = [
     preferredModel,
+    'gemini-3.8-flash',
     'gemini-2.5-flash',
     'gemini-2.0-flash',
     'gemini-1.5-flash'
