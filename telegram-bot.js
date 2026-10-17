@@ -2,6 +2,7 @@
 require('dotenv/config');
 const fs = require('fs');
 const path = require('path');
+const http = require('http');
 const { spawn } = require('child_process');
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -34,7 +35,7 @@ if (!token || !allowedChatId) {
   process.exit(1);
 }
 
-// 1. Long polling mode (polling: true). No webhooks or open ports needed.
+// 1. Long polling mode (polling: true).
 const bot = new TelegramBot(token, { polling: true });
 
 console.log('🤖 Telegram Antigravity Bridge started in long-polling mode.');
@@ -42,6 +43,22 @@ console.log(`🔒 Authorized Chat ID: ${allowedChatId}`);
 console.log('Waiting for instructions or media from authorized user...\n');
 
 let isProcessing = false;
+
+// 2. HTTP Health check server for 24/7 cloud hosts (Render, Railway, Fly.io)
+const PORT = process.env.PORT || 3000;
+const healthServer = http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({
+    status: 'ok',
+    service: 'Dhaka-RPG Telegram Bot',
+    uptime: Math.floor(process.uptime()),
+    isProcessing: Boolean(isProcessing)
+  }));
+});
+
+healthServer.listen(PORT, () => {
+  console.log(`🌐 HTTP health check server listening on port ${PORT}`);
+});
 
 function killProcessGroup(proc, signal = 'SIGTERM') {
   if (!proc || !proc.pid) return;
@@ -340,6 +357,24 @@ async function handleMediaDownload(msg) {
   return { relativePath, finalPath, targetSubdir, fileName: path.basename(finalPath) };
 }
 
+async function pushToGitHub() {
+  const ghPat = process.env.GH_PAT;
+  const owner = process.env.GITHUB_REPO_OWNER || 'tawsifx';
+  const repo = process.env.GITHUB_REPO_NAME || 'Dhaka-RPG';
+  try {
+    await runCommand('git', ['config', 'user.name', '"Dhaka-RPG Bot"'], 5000).catch(() => {});
+    await runCommand('git', ['config', 'user.email', '"bot@dhaka-rpg.local"'], 5000).catch(() => {});
+    if (ghPat) {
+      await runCommand('git', ['push', `https://${ghPat}@github.com/${owner}/${repo}.git`, 'main'], 60000);
+    } else {
+      await runCommand('git', ['push', 'origin', 'main'], 60000);
+    }
+    console.log('[GIT] Pushed updates to GitHub main branch.');
+  } catch (pushErr) {
+    console.warn('[GIT] Push notice:', pushErr.message);
+  }
+}
+
 bot.on('message', async (msg) => {
   const chatId = String(msg.chat.id);
 
@@ -410,6 +445,7 @@ bot.on('message', async (msg) => {
           await runCommand('git', ['add', mediaResult.relativePath], 60000);
           await runCommand('git', ['commit', '-m', `"Add asset via Telegram: ${mediaResult.fileName}"`], 60000);
           console.log(`[GIT] Committed new asset: ${mediaResult.fileName}`);
+          await pushToGitHub();
         } catch (gitErr) {
           console.warn('⚠️ Git commit warning (ignored):', gitErr.message);
         }
@@ -482,6 +518,7 @@ bot.on('message', async (msg) => {
       const gitStatus = await runCommand('git', ['status', '--porcelain'], 30000).catch(() => ({ stdout: '' }));
       if (gitStatus.stdout.trim()) {
         await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 60000);
+        await pushToGitHub();
       } else {
         console.log('ℹ️ No file changes detected to commit.');
       }
@@ -526,6 +563,7 @@ bot.on('message', async (msg) => {
         const promptSnippet = promptText.slice(0, 50).replace(/["`$\r\n]/g, ' ').trim();
         await runCommand('git', ['add', '-A'], 60000);
         await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 60000);
+        await pushToGitHub();
         const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 180000);
         const liveUrl = extractVercelUrl(`${vercelRes.stdout}\n${vercelRes.stderr}`) || 'https://dhaka-date-rpg.vercel.app';
         await bot.sendMessage(chatId, `✅ Deployed successfully!\n🔗 ${liveUrl}`);
@@ -552,12 +590,11 @@ bot.on('message', async (msg) => {
 });
 
 // Graceful termination
-process.on('SIGINT', () => {
+const shutdown = () => {
   console.log('\n🛑 Stopping Telegram bot...');
+  try { healthServer.close(); } catch (e) {}
   bot.stopPolling().then(() => process.exit(0));
-});
+};
 
-process.on('SIGTERM', () => {
-  console.log('\n🛑 Stopping Telegram bot...');
-  bot.stopPolling().then(() => process.exit(0));
-});
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
