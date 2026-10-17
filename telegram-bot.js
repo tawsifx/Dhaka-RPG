@@ -194,3 +194,4 @@ process.on('SIGTERM', () => {
   console.log('\n🛑 Stopping Telegram bot...');
   bot.stopPolling().then(() => process.exit(0));
 });
+
