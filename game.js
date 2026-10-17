@@ -676,7 +676,7 @@ const WORLDS_DB = {
     nextWorld: 'sunken',
     enemySpec: { name: 'Briar Bogling', tex: 'enemy-slime', hp: 55, atk: 10, xp: 35, drop: 'spirit_dew' },
     bossSpec:  { id: 'boss_forest', name: 'SYLVAN BRIAR STAG (FOREST GUARDIAN)', tex: 'boss-stag', hp: 260, atk: 18, xp: 150, reward: 'seal_forest', x: 1820, y: 900 },
-    npcSpec:   { name: 'Elder Banyan Sage', tex: 'npc-walker1', portrait: '🌿', x: 520, y: 840,
+    npcSpec:   { name: 'Elder Banyan Sage', tex: 'npc-sage', portrait: '🌿', x: 520, y: 840,
       lines: [
         'Welcome to the Whispering Emerald Forest, Moon Walker and Totoro! A reality fracture has agitated the Sylvan Briar Stag to the East.',
         'Gather glowing Emerald Spirit Dew from the forest floor and use your Bag & Craft menu (I) to forge stronger gear!',
@@ -739,7 +739,7 @@ const WORLDS_DB = {
     nextWorld: 'ember',
     enemySpec: { name: 'Tidepool Crabler', tex: 'enemy-crab', hp: 90, atk: 16, xp: 55, drop: 'coral_shard' },
     bossSpec:  { id: 'boss_sunken', name: 'ABYSSAL CORAL LEVIATHAN', tex: 'boss-leviathan', hp: 420, atk: 24, xp: 240, reward: 'seal_sunken', x: 1820, y: 900 },
-    npcSpec:   { name: 'Tidekeeper Marina', tex: 'npc-walker3', portrait: '🐚', x: 520, y: 840,
+    npcSpec:   { name: 'Tidekeeper Marina', tex: 'npc-marina', portrait: '🐚', x: 520, y: 840,
       lines: [
         'Our coastal kingdom sank when the memory fractures began, yet your Dhaka keepsakes resonate with our ancient coral shrines!',
         'Collect Luminous Coral Shards around the tidepools to craft the Coral Tideglaive before challenging the Abyssal Leviathan.'
@@ -800,7 +800,7 @@ const WORLDS_DB = {
     nextWorld: 'frost',
     enemySpec: { name: 'Cinder Hound', tex: 'enemy-wisp', hp: 135, atk: 22, xp: 80, drop: 'ember_ore' },
     bossSpec:  { id: 'boss_ember', name: 'IGNIS, THE MAGMA DRAKE', tex: 'boss-drake', hp: 620, atk: 32, xp: 360, reward: 'seal_ember', x: 1820, y: 900 },
-    npcSpec:   { name: 'Master Blacksmith Kael', tex: 'npc-walker2', portrait: '⚒️', x: 520, y: 840,
+    npcSpec:   { name: 'Master Blacksmith Kael', tex: 'npc-kael', portrait: '⚒️', x: 520, y: 840,
       lines: [
         'The fires of Emberfall recognize the warmth of Totoro’s spirit! Mine Volcanic Ember Ore to temper the Emberfall Sunblade.',
         'Defeat Ignis the Magma Drake in the eastern caldera to open the Frost Gate!'
@@ -860,7 +860,7 @@ const WORLDS_DB = {
     nextWorld: 'astral',
     enemySpec: { name: 'Glacier Wraith', tex: 'enemy-wraith', hp: 180, atk: 28, xp: 110, drop: 'frost_crystal' },
     bossSpec:  { id: 'boss_frost', name: 'CRYON, WARDEN OF ETERNAL FROST', tex: 'boss-warden', hp: 850, atk: 38, xp: 500, reward: 'seal_frost', x: 1820, y: 900 },
-    npcSpec:   { name: 'Astronomer Lyra', tex: 'npc-walker1', portrait: '❄️', x: 520, y: 840,
+    npcSpec:   { name: 'Astronomer Lyra', tex: 'npc-lyra', portrait: '❄️', x: 520, y: 840,
       lines: [
         'Through our frozen observatory lens, we saw the same four constellations you charted over Dhanmondi Lake!',
         'Totoro is no ordinary spirit—he is the ancient Guardian of Shared Memories, bound to Moon Walker’s heart.',
@@ -921,7 +921,7 @@ const WORLDS_DB = {
     nextWorld: 'dhaka',
     enemySpec: { name: 'Void Echo', tex: 'enemy-wraith', hp: 230, atk: 34, xp: 150, drop: 'frost_crystal' },
     bossSpec:  { id: 'boss_astral', name: 'CHRONO-FRACTURE ARCHON (FINAL BOSS)', tex: 'boss-archon', hp: 1200, atk: 45, xp: 1000, reward: 'seal_astral', x: 1820, y: 900 },
-    npcSpec:   { name: 'Celestial Chronicler', tex: 'npc-walker3', portrait: '🌟', x: 520, y: 840,
+    npcSpec:   { name: 'Celestial Chronicler', tex: 'npc-chronicler', portrait: '🌟', x: 520, y: 840,
       lines: [
         'Every keepsake you gathered in Dhaka Valley—from the Krishnachura blossom to the Peacekeeper Charm—anchors reality itself.',
         'Awaken the Starlight Crescent Blade in your Crafting tab and vanquish the Chrono-Fracture Archon to seal the realms forever!'
@@ -3233,284 +3233,801 @@ class DhakaValleyScene extends Phaser.Scene {
     });
 
    // --- Contextual Vendors, Rakin, Wandering Citizens & Mimi the Cat ---
+    // --- Contextual Vendors, Rakin, Wandering Citizens & Mimi the Cat ---
     const makeWalkerNPC = (baseKey, shirtCol, hairCol, accCol, role = '') => {
-      [0, 1].forEach(step => {
+      [0, 1, 2, 3].forEach(step => {
         makeTex(`${baseKey}-${step}`, 52, 58, ctx => {
-          const bob = step === 1 ? -1.8 : 0;
-          const lLeg = step === 1 ? -2 : 0;
-          const rLeg = step === 1 ? 2 : 0;
+          // 4-frame walk cycle kinematics
+          const bob = (step === 1 || step === 3) ? -1.8 : 0;
+          const lLeg = step === 0 ? 2.5 : (step === 2 ? -2.2 : 0);
+          const rLeg = step === 2 ? 2.5 : (step === 0 ? -2.2 : 0);
+          const lFoot = step === 0 ? 2.0 : (step === 2 ? -1.2 : 0);
+          const rFoot = step === 2 ? 2.0 : (step === 0 ? -1.2 : 0);
+          const armSwing = step === 0 ? 2.4 : (step === 2 ? -2.4 : 0);
+          const flutter = step === 1 ? 1.5 : (step === 3 ? -1.5 : (step === 0 ? -0.8 : 0.8));
           const cx = 26;
 
-          // 1. Soft Ground Shadow
-          ctx.fillStyle = 'rgba(12, 8, 20, 0.25)';
-          ctx.beginPath(); ctx.ellipse(cx, 53, 12, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+          // 1. Double-Layer Contact Ground Shadow (dynamically breathes with stride)
+          ctx.fillStyle = 'rgba(12, 8, 20, 0.12)';
+          ctx.beginPath();
+          ctx.ellipse(cx, 53, (step % 2 === 0) ? 13 : 11.5, (step % 2 === 0) ? 4.2 : 3.6, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = 'rgba(12, 8, 20, 0.28)';
+          ctx.beginPath();
+          ctx.ellipse(cx, 53, (step % 2 === 0) ? 8.5 : 7.2, (step % 2 === 0) ? 2.5 : 2.1, 0, 0, Math.PI * 2);
+          ctx.fill();
 
-          // 2. Contextual Back Hair (for female NPCs: Phulwali, Nadia, Tania)
-          const isFemale = ['phulwali', 'sketcher', 'jogger'].includes(role);
+          // 2. Contextual Back Hair Layer (for female NPCs & fantasy guides)
+          const isFemale = ['phulwali', 'sketcher', 'jogger', 'marina', 'lyra'].includes(role);
           if (isFemale) {
             ctx.fillStyle = hairCol;
             ctx.beginPath();
-            ctx.ellipse(cx, 17 + bob, 10.5, 11, 0, 0, Math.PI * 2);
+            ctx.ellipse(cx, 16.5 + bob, 10.5, 11, 0, 0, Math.PI * 2);
             if (role === 'jogger') {
-              // High sporty ponytail bouncing on the side
-              ctx.ellipse(cx + 10, 13 + bob * 1.4, 3.5, 6, 0.45, 0, Math.PI * 2);
-            } else {
-              ctx.ellipse(cx + 8.5, 22 + bob, 4, 7, -0.2, 0, Math.PI * 2);
+              // High athletic ponytail swinging dynamically
+              ctx.ellipse(cx + 9.5 + armSwing * 0.7, 12.5 + bob * 1.3, 3.8, 7.5, 0.35 + flutter * 0.15, 0, Math.PI * 2);
+            } else if (role === 'phulwali') {
+              // Long dark braid draped forward
+              ctx.ellipse(cx - 7.5, 23 + bob, 4.2, 8.5, 0.2, 0, Math.PI * 2);
+            } else if (role === 'sketcher') {
+              // Bohemian wavy artistic locks
+              ctx.ellipse(cx - 8, 22 + bob, 4.2, 7.5, 0.2, 0, Math.PI * 2);
+              ctx.ellipse(cx + 8, 22 + bob, 4.2, 7.5, -0.2, 0, Math.PI * 2);
+            } else if (role === 'marina') {
+              // Flowing seafoam-aquamarine tresses
+              ctx.ellipse(cx - 9, 23 + bob, 4.8, 9.5, 0.22, 0, Math.PI * 2);
+              ctx.ellipse(cx + 9, 23 + bob, 4.8, 9.5, -0.22, 0, Math.PI * 2);
+            } else if (role === 'lyra') {
+              // Cascading starlight silver-blue locks
+              ctx.ellipse(cx - 9, 23 + bob, 4.5, 9, 0.18, 0, Math.PI * 2);
+              ctx.ellipse(cx + 9, 23 + bob, 4.5, 9, -0.18, 0, Math.PI * 2);
             }
             ctx.fill();
+
+            // Hair accessories in back hair
+            if (role === 'jogger') {
+              ctx.fillStyle = '#f43f5e'; // Neon pink scrunchie
+              ctx.fillRect(cx + 7.5, 10.5 + bob, 2.5, 2.5);
+            } else if (role === 'phulwali') {
+              ctx.fillStyle = '#ffffff'; // White Beli flower blossom
+              ctx.beginPath(); ctx.arc(cx - 8, 17 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = '#fef08a'; ctx.fillRect(cx - 8.5, 16.5 + bob, 1, 1);
+            } else if (role === 'sketcher') {
+              ctx.strokeStyle = '#d97706'; ctx.lineWidth = 1.4; // Carved wooden hairpin
+              ctx.beginPath(); ctx.moveTo(cx + 4, 10 + bob); ctx.lineTo(cx + 12, 16 + bob); ctx.stroke();
+            }
           }
 
-          // 3. Legs / Lungi / Saree Lower Drape & Footwear
+          // 3. Lower Body, Legs, Attire & Footwear
           if (role === 'tea' || role === 'doi') {
-            // Checkered / Traditional Lungi for Tong-er Mama & Old Dhaka Sweetwalla
-            ctx.fillStyle = role === 'tea' ? '#2b5876' : '#6e3b23';
-            ctx.fillRect(cx - 7.5, 38 + bob, 15, 11);
-            ctx.fillStyle = 'rgba(255,255,255,0.16)';
-            ctx.fillRect(cx - 7.5, 42 + bob, 15, 2);
-            ctx.fillRect(cx - 2, 38 + bob, 2, 11);
+            // Checkered Traditional Dhaka Lungi
+            const lungiBase = role === 'tea' ? '#1e3a8a' : '#78350f';
+            ctx.fillStyle = lungiBase;
+            ctx.fillRect(cx - 8, 38 + bob, 16, 12);
+            // Detailed checkered grid stripes
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            for (let ly = 41; ly <= 48; ly += 3) ctx.fillRect(cx - 8, ly + bob, 16, 1);
+            for (let lx = -5; lx <= 5; lx += 4) ctx.fillRect(cx + lx, 38 + bob, 1.2, 12);
+            // Waist knot fold
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+            ctx.fillRect(cx - 3.5, 37.5 + bob, 7, 2.2);
+
+            // Feet peeking below lungi with leather toe-thong sandals
+            ctx.fillStyle = '#dfaa78';
+            ctx.fillRect(cx - 5.5, 50 + lFoot, 4, 3);
+            ctx.fillRect(cx + 1.5, 50 + rFoot, 4, 3);
+            ctx.fillStyle = '#451a03'; // Sandal soles & straps
+            ctx.fillRect(cx - 6, 52 + lFoot, 5, 1.6);
+            ctx.fillRect(cx + 1, 52 + rFoot, 5, 1.6);
+            ctx.fillRect(cx - 4, 50.5 + lFoot, 1.2, 1.8);
+            ctx.fillRect(cx + 3, 50.5 + rFoot, 1.2, 1.8);
           } else if (role === 'phulwali') {
-            // Floral Saree Pleats
-            ctx.fillStyle = '#b8335a';
-            ctx.fillRect(cx - 8, 38 + bob, 16, 11);
-            ctx.fillStyle = '#ffd166';
-            ctx.fillRect(cx - 8, 47 + bob, 16, 2);
+            // Festive Magenta & Yellow Bengali Saree
+            ctx.fillStyle = '#be185d'; // Deep magenta saree drape
+            ctx.fillRect(cx - 8, 38 + bob, 16, 12);
+            ctx.fillStyle = '#eab308'; // Sunflower-yellow pleats
+            ctx.fillRect(cx - 2.5, 38 + bob, 5, 12);
+            ctx.fillStyle = '#fde047'; // Gold zari hem border
+            ctx.fillRect(cx - 8, 48.5 + bob, 16, 1.8);
+
+            // Feet & gold heeled sandals
+            ctx.fillStyle = '#f3c5a5';
+            ctx.fillRect(cx - 4.8, 50 + lFoot, 3.8, 2.8);
+            ctx.fillRect(cx + 1.2, 50 + rFoot, 3.8, 2.8);
+            ctx.fillStyle = '#dc2626'; // Red glass ankle bangles
+            ctx.fillRect(cx - 5.2, 49.5 + lFoot, 4.4, 1);
+            ctx.fillRect(cx + 0.8, 49.5 + rFoot, 4.4, 1);
+            ctx.fillStyle = '#d97706'; // Gold sandal straps
+            ctx.fillRect(cx - 5.2, 52 + lFoot, 4.4, 1.4);
+            ctx.fillRect(cx + 0.8, 52 + rFoot, 4.4, 1.4);
+          } else if (role === 'jogger') {
+            // Charcoal Running Leggings with Lavender Side Stripes
+            ctx.fillStyle = '#18181b';
+            ctx.fillRect(cx - 6.5, 39 + lLeg, 5, 10);
+            ctx.fillRect(cx + 1.5, 39 + rLeg, 5, 10);
+            ctx.fillStyle = '#c084fc'; // Lavender speed stripes
+            ctx.fillRect(cx - 6.5, 39 + lLeg, 1.2, 10);
+            ctx.fillRect(cx + 5.3, 39 + rLeg, 1.2, 10);
+
+            // High-Performance Cushioned Running Shoes
+            ctx.fillStyle = '#ffffff'; // White foam midsole
+            ctx.fillRect(cx - 6.8, 49 + lFoot, 5.8, 3.5);
+            ctx.fillRect(cx + 1.2, 49 + rFoot, 5.8, 3.5);
+            ctx.fillStyle = '#fb7185'; // Neon pink outer sole
+            ctx.fillRect(cx - 6.8, 52 + lFoot, 5.8, 1.2);
+            ctx.fillRect(cx + 1.2, 52 + rFoot, 5.8, 1.2);
+            ctx.fillStyle = '#06b6d4'; // Electric cyan mesh accents
+            ctx.fillRect(cx - 6, 49.5 + lFoot, 4.2, 1.8);
+            ctx.fillRect(cx + 2, 49.5 + rFoot, 4.2, 1.8);
+          } else if (role === 'physics') {
+            // Tailored Khaki Chinos & Collegiate Canvas Sneakers
+            ctx.fillStyle = '#bfa07a';
+            ctx.fillRect(cx - 6.5, 39 + lLeg, 5.2, 10);
+            ctx.fillRect(cx + 1.5, 39 + rLeg, 5.2, 10);
+            ctx.fillStyle = '#9c7c58'; // Inseam shadow
+            ctx.fillRect(cx - 2, 39 + Math.min(lLeg, rLeg), 4, 3);
+            ctx.fillStyle = '#d4b896'; // Ankle cuff roll
+            ctx.fillRect(cx - 6.5, 48 + lLeg, 5.2, 1.5);
+            ctx.fillRect(cx + 1.5, 48 + rLeg, 5.2, 1.5);
+
+            // Navy Canvas Sneakers with White Rubber Foxing
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(cx - 6.5, 49.5 + lFoot, 5.4, 2.5);
+            ctx.fillRect(cx + 1.5, 49.5 + rFoot, 5.4, 2.5);
+            ctx.fillStyle = '#f8fafc'; // White rubber soles
+            ctx.fillRect(cx - 6.8, 51.5 + lFoot, 6, 1.6);
+            ctx.fillRect(cx + 1.2, 51.5 + rFoot, 6, 1.6);
+          } else if (role === 'sketcher') {
+            // Bohemian Wide-Leg Indigo Culottes & Kolhapuri Sandals
+            ctx.fillStyle = '#2e4057';
+            ctx.fillRect(cx - 7, 39 + lLeg, 5.8, 10.5);
+            ctx.fillRect(cx + 1.2, 39 + rLeg, 5.8, 10.5);
+            ctx.fillStyle = '#854d0e'; // Tan leather Kolhapuri sandals
+            ctx.fillRect(cx - 6.5, 51 + lFoot, 5, 2);
+            ctx.fillRect(cx + 1.5, 51 + rFoot, 5, 2);
+            ctx.fillStyle = '#b45309'; // Toe-ring straps
+            ctx.fillRect(cx - 5.5, 49.5 + lFoot, 3, 1.5);
+            ctx.fillRect(cx + 2.5, 49.5 + rFoot, 3, 1.5);
+          } else if (role === 'poet') {
+            // Crisp White Cotton Pajama & Nagra Slippers
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(cx - 6.5, 39 + lLeg, 5.2, 11);
+            ctx.fillRect(cx + 1.5, 39 + rLeg, 5.2, 11);
+            ctx.fillStyle = '#cbd5e1'; // Crease lines
+            ctx.fillRect(cx - 6.5, 46 + lLeg, 5.2, 1);
+            ctx.fillRect(cx + 1.5, 46 + rLeg, 5.2, 1);
+            // Chestnut leather pointed nagra shoes
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(cx - 6.5, 50.5 + lFoot, 5.5, 2.5);
+            ctx.fillRect(cx + 1.5, 50.5 + rFoot, 5.5, 2.5);
+            ctx.fillRect(cx - 8, 51 + lFoot, 2, 1.8); // Curled toe point
+            ctx.fillRect(cx + 6.5, 51 + rFoot, 2, 1.8);
+          } else if (role === 'photo') {
+            // Olive Tactical Cargo Joggers & Modern Sneakers
+            ctx.fillStyle = '#3f6212';
+            ctx.fillRect(cx - 6.5, 39 + lLeg, 5.2, 10.5);
+            ctx.fillRect(cx + 1.5, 39 + rLeg, 5.2, 10.5);
+            ctx.fillStyle = '#2d470c'; // Side flap pockets
+            ctx.fillRect(cx - 7.5, 42 + lLeg, 1.5, 4);
+            ctx.fillRect(cx + 6.2, 42 + rLeg, 1.5, 4);
+            // Two-tone sneakers with orange speed trim
+            ctx.fillStyle = '#1f2937';
+            ctx.fillRect(cx - 6.5, 49.5 + lFoot, 5.4, 2.5);
+            ctx.fillRect(cx + 1.5, 49.5 + rFoot, 5.4, 2.5);
+            ctx.fillStyle = '#f97316'; // Orange streak
+            ctx.fillRect(cx - 6.5, 50.5 + lFoot, 5.4, 1);
+            ctx.fillRect(cx + 1.5, 50.5 + rFoot, 5.4, 1);
+            ctx.fillStyle = '#ffffff'; // White soles
+            ctx.fillRect(cx - 6.8, 51.5 + lFoot, 6, 1.6);
+            ctx.fillRect(cx + 1.2, 51.5 + rFoot, 6, 1.6);
+          } else if (role === 'sage') {
+            // Forest Druid Robes
+            ctx.fillStyle = '#14532d';
+            ctx.fillRect(cx - 8, 38 + bob, 16, 13);
+            ctx.fillStyle = '#86efac';
+            ctx.fillRect(cx - 8, 49.5 + bob, 16, 1.5);
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(cx - 5, 51.5 + lFoot, 4, 2);
+            ctx.fillRect(cx + 1, 51.5 + rFoot, 4, 2);
+          } else if (role === 'marina') {
+            // Seafoam Ocean Skirt
+            ctx.fillStyle = '#0d9488';
+            ctx.fillRect(cx - 8, 38 + bob, 16, 13);
+            ctx.fillStyle = '#5eead4';
+            ctx.fillRect(cx - 8, 49 + bob, 16, 2);
+            ctx.fillStyle = '#f3c5a5';
+            ctx.fillRect(cx - 4.5, 51 + lFoot, 3.5, 2);
+            ctx.fillRect(cx + 1, 51 + rFoot, 3.5, 2);
+          } else if (role === 'kael') {
+            // Heavy Studded Blacksmith Kilt & Iron Boots
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(cx - 7.5, 38 + bob, 15, 11);
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(cx - 7.5, 47 + bob, 15, 1.8);
+            ctx.fillStyle = '#334155'; // Iron greaves & boots
+            ctx.fillRect(cx - 6.5, 49 + lFoot, 5.5, 4);
+            ctx.fillRect(cx + 1.2, 49 + rFoot, 5.5, 4);
+          } else if (role === 'lyra') {
+            // Starlight Velvet Gown
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(cx - 8, 38 + bob, 16, 13);
+            ctx.fillStyle = '#93c5fd';
+            ctx.fillRect(cx - 8, 49.5 + bob, 16, 1.5);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(cx - 4.5, 51 + lFoot, 3.5, 2);
+            ctx.fillRect(cx + 1, 51 + rFoot, 3.5, 2);
+          } else if (role === 'chronicler') {
+            // Astral Nebula Robes
+            ctx.fillStyle = '#3b0764';
+            ctx.fillRect(cx - 8, 38 + bob, 16, 13);
+            ctx.fillStyle = '#c084fc';
+            ctx.fillRect(cx - 8, 49.5 + bob, 16, 1.5);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(cx - 4.5, 51 + lFoot, 3.5, 2);
+            ctx.fillRect(cx + 1, 51 + rFoot, 3.5, 2);
           } else {
-            // Trousers / Jeans / Track Pants
-            ctx.fillStyle = role === 'jogger' ? '#1f2937' : '#2d3142';
-            ctx.fillRect(cx - 6.5, 40 + lLeg, 5, 9);
-            ctx.fillRect(cx + 1.5, 40 + rLeg, 5, 9);
+            // Default Tailored Trousers / Jeans & Leather Shoes
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(cx - 6.5, 40 + lLeg, 5, 9.5);
+            ctx.fillRect(cx + 1.5, 40 + rLeg, 5, 9.5);
+            ctx.fillStyle = '#3b2219';
+            ctx.fillRect(cx - 6.8, 49.5 + lFoot, 5.6, 2.8);
+            ctx.fillRect(cx + 1.2, 49.5 + rFoot, 5.6, 2.8);
           }
 
-          // Shoes / Sandals
-          ctx.fillStyle = role === 'jogger' ? '#ffffff' : '#3a2618';
-          ctx.beginPath();
-          ctx.ellipse(cx - 4, 50 + lLeg * 0.6, 3.6, 1.8, 0, 0, Math.PI * 2);
-          ctx.ellipse(cx + 4, 50 + rLeg * 0.6, 3.6, 1.8, 0, 0, Math.PI * 2);
-          ctx.fill();
-
-          // 4. Torso, Panjabi, Aprons & Saree Drape
+          // 4. Torso, Kurti, Panjabi, Jacket & Attire
           ctx.fillStyle = shirtCol;
           ctx.beginPath();
-          ctx.roundRect(cx - 8.5, 24 + bob, 17, 17, 3);
+          ctx.roundRect(cx - 8.5, 23 + bob, 17, 18, 2.5);
           ctx.fill();
 
-          // Side shading on torso
-          ctx.fillStyle = 'rgba(0,0,0,0.16)';
-          ctx.fillRect(cx - 8.5, 25 + bob, 3.5, 15);
+          // Fabric Shading (Shadow on left, highlight on right)
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+          ctx.fillRect(cx - 8.5, 23 + bob, 4, 18);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+          ctx.fillRect(cx + 2, 23.5 + bob, 5, 14);
 
-          // Collar / Scarf / Gamcha / Dupatta Accents
-          if (role === 'tea' || role === 'fuchka') {
-            // Red checkered Gamcha towel over shoulder + Vendor Apron
-            ctx.fillStyle = '#fff8eb';
-            ctx.fillRect(cx - 6.5, 29 + bob, 13, 12); // Apron
-            ctx.fillStyle = '#d62828';
-            ctx.fillRect(cx - 8, 24 + bob, 4, 10);    // Gamcha on shoulder
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(cx - 8, 31 + bob, 4, 1.5);
-          } else if (role === 'poet') {
-            // Artistic Khadi Panjabi + Draped Shawl
-            ctx.fillStyle = accCol;
-            ctx.beginPath();
-            ctx.moveTo(cx - 8.5, 24 + bob); ctx.lineTo(cx - 3, 24 + bob);
-            ctx.lineTo(cx + 8.5, 38 + bob); ctx.lineTo(cx + 3, 40 + bob);
-            ctx.closePath(); ctx.fill();
-          } else if (role === 'sketcher' || role === 'artist') {
-            // Charukola Paint-Splattered Smock / Kurta
-            ctx.fillStyle = accCol;
+          // Role-Specific Attire Details
+          if (role === 'tea') {
+            // Vendor Apron + Checkered Gamcha on Left Shoulder
+            ctx.fillStyle = '#fffbeb';
             ctx.fillRect(cx - 6.5, 28 + bob, 13, 12);
-            ctx.fillStyle = '#e63946'; ctx.fillRect(cx - 4, 32 + bob, 2, 2);
-            ctx.fillStyle = '#457b9d'; ctx.fillRect(cx + 2, 35 + bob, 2, 2);
-          } else {
-            // Standard Collar / Neckline Trim
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(cx - 4.5, 34 + bob, 9, 5); // Apron pocket
+            // Red Checkered Gamcha
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(cx - 9, 23 + bob, 5, 13);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(cx - 9, 26 + bob, 5, 1.2);
+            ctx.fillRect(cx - 9, 30 + bob, 5, 1.2);
+            ctx.fillRect(cx - 9, 34 + bob, 5, 1.2);
+            // Gamcha tassel fringe
+            ctx.fillStyle = '#fca5a5';
+            ctx.fillRect(cx - 9, 36 + bob, 5, 2.2);
+          } else if (role === 'fuchka') {
+            // Emerald Vendor Shirt + Crisp White Apron
+            ctx.fillStyle = '#ffffff'; // White collar
+            ctx.fillRect(cx - 5, 23 + bob, 10, 2.5);
+            ctx.fillStyle = '#f8fafc'; // White apron
+            ctx.fillRect(cx - 6.5, 28 + bob, 13, 12);
+            ctx.fillStyle = '#e2e8f0';
+            ctx.fillRect(cx - 4.5, 34 + bob, 9, 4.5);
+          } else if (role === 'books') {
+            // Tweed Waistcoat with Welt Pockets & Buttons
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(cx - 7.5, 24 + bob, 15, 15);
+            ctx.fillStyle = '#451a03'; // V-neck opening
+            ctx.beginPath();
+            ctx.moveTo(cx - 4, 24 + bob); ctx.lineTo(cx, 31 + bob); ctx.lineTo(cx + 4, 24 + bob);
+            ctx.fill();
+            ctx.fillStyle = '#fefce8'; // Kurta inside V
+            ctx.fillRect(cx - 2, 24 + bob, 4, 6);
+            ctx.fillStyle = '#facc15'; // Gold buttons
+            ctx.fillRect(cx - 0.7, 32 + bob, 1.4, 1.4);
+            ctx.fillRect(cx - 0.7, 35 + bob, 1.4, 1.4);
+            ctx.fillStyle = '#5c2a05'; // Welt pockets
+            ctx.fillRect(cx - 6, 33 + bob, 3.5, 1.2);
+            ctx.fillRect(cx + 2.5, 33 + bob, 3.5, 1.2);
+          } else if (role === 'guitar') {
+            // Royal Purple Kurti with Golden Mirrorwork Neckline
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(cx - 1.5, 23 + bob, 3, 11);
+            ctx.fillRect(cx - 4.5, 23 + bob, 9, 1.8);
+            ctx.fillStyle = '#fef08a';
+            ctx.fillRect(cx - 0.7, 26 + bob, 1.4, 1.4);
+            ctx.fillRect(cx - 0.7, 29 + bob, 1.4, 1.4);
+            ctx.fillRect(cx - 0.7, 32 + bob, 1.4, 1.4);
+          } else if (role === 'artist') {
+            // Orange Kurta with Multi-Color Paint Splatters
             ctx.fillStyle = accCol;
-            ctx.fillRect(cx - 5, 24 + bob, 10, 3.2);
-          }
-
-          // 5. Arms & Sleeves
-          ctx.fillStyle = shirtCol;
-          ctx.fillRect(cx - 11.5, 25 + bob, 3.5, 8);
-          ctx.fillRect(cx + 8, 25 + bob, 3.5, 8);
-          ctx.fillStyle = '#ebbfa0';
-          ctx.fillRect(cx - 11, 32 + bob, 3, 5);
-          ctx.fillRect(cx + 8, 32 + bob, 3, 5);
-
-          // 6. Neck, Head, Face & Expressions
-          ctx.fillStyle = '#d4a383';
-          ctx.fillRect(cx - 2.5, 20.5 + bob, 5, 4);
-          ctx.fillStyle = '#f0c4a5';
-          ctx.beginPath(); ctx.arc(cx, 15.5 + bob, 8, 0, Math.PI * 2); ctx.fill();
-
-          // Eyes & Brows
-          ctx.fillStyle = '#1f1614';
-          ctx.fillRect(cx - 4.5, 14 + bob, 2, 2.4);
-          ctx.fillRect(cx + 2.5, 14 + bob, 2, 2.4);
-          ctx.fillStyle = '#ffffff';
-          ctx.fillRect(cx - 4.2, 14.2 + bob, 0.9, 0.9);
-          ctx.fillRect(cx + 2.8, 14.2 + bob, 0.9, 0.9);
-
-          // Glasses for Nilkhet Bookwalla & Arif (DU Physics Senior)
-          if (role === 'books' || role === 'physics') {
-            ctx.strokeStyle = '#1d2d44';
-            ctx.lineWidth = 1.1;
-            ctx.strokeRect(cx - 6, 13 + bob, 4.5, 3.5);
-            ctx.strokeRect(cx + 1.5, 13 + bob, 4.5, 3.5);
-            ctx.beginPath(); ctx.moveTo(cx - 1.5, 14.5 + bob); ctx.lineTo(cx + 1.5, 14.5 + bob); ctx.stroke();
-          }
-
-          // Friendly Mustache / Beard for Vendors & Poet, or Smile
-          if (role === 'tea' || role === 'doi' || role === 'fuchka') {
-            ctx.fillStyle = '#2b1d14';
-            ctx.fillRect(cx - 3.5, 17.5 + bob, 7, 1.6); // Friendly Mama mustache
+            ctx.fillRect(cx - 5, 23 + bob, 10, 2.5);
+            // Splatters
+            ctx.fillStyle = '#2563eb'; ctx.fillRect(cx - 5, 29 + bob, 2.2, 2.2);
+            ctx.fillStyle = '#ef4444'; ctx.fillRect(cx + 3, 31 + bob, 2, 2);
+            ctx.fillStyle = '#eab308'; ctx.fillRect(cx - 2, 35 + bob, 2.5, 2);
+            ctx.fillStyle = '#10b981'; ctx.fillRect(cx + 4, 36 + bob, 1.8, 1.8);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 4, 38 + bob, 1.5, 1.5);
+          } else if (role === 'doi') {
+            // Sweetmaker's Apron & Gold Neck Embroidery
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(cx - 5, 23 + bob, 10, 2.2);
+            ctx.fillStyle = '#78350f';
+            ctx.fillRect(cx - 6.5, 29 + bob, 13, 11);
+            ctx.fillStyle = '#c28b38';
+            ctx.fillRect(cx - 6.5, 38 + bob, 13, 1.5);
+          } else if (role === 'phulwali') {
+            // Saree Pallu Draped Across Chest to Left Shoulder
+            ctx.fillStyle = '#fde047'; // Blouse border
+            ctx.fillRect(cx - 5, 23 + bob, 10, 2);
+            ctx.fillStyle = '#be185d';
+            ctx.beginPath();
+            ctx.moveTo(cx + 8, 38 + bob); ctx.lineTo(cx - 8, 23 + bob);
+            ctx.lineTo(cx - 4, 23 + bob); ctx.lineTo(cx + 8, 34 + bob);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#fde047'; // Zari border on pallu
+            ctx.beginPath();
+            ctx.moveTo(cx + 8, 38 + bob); ctx.lineTo(cx - 8, 23 + bob);
+            ctx.lineTo(cx - 6.5, 23 + bob); ctx.lineTo(cx + 8, 36.5 + bob);
+            ctx.closePath(); ctx.fill();
+          } else if (role === 'physics') {
+            // Forest Green Kurta with Placket & Pen Pocket
+            ctx.fillStyle = '#1d3d28';
+            ctx.fillRect(cx - 1.5, 23 + bob, 3, 10);
+            ctx.fillRect(cx - 4.5, 23 + bob, 9, 2);
+            ctx.fillStyle = '#b45309'; // Buttons
+            ctx.fillRect(cx - 0.7, 26 + bob, 1.4, 1.4);
+            ctx.fillRect(cx - 0.7, 29 + bob, 1.4, 1.4);
+            // Pen in pocket
+            ctx.fillStyle = '#cbd5e1';
+            ctx.fillRect(cx + 3, 27 + bob, 1.2, 3.5);
+            // Crossbody leather bag strap
+            ctx.strokeStyle = '#78350f'; ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.moveTo(cx - 7, 23 + bob); ctx.lineTo(cx + 8, 37 + bob); ctx.stroke();
+          } else if (role === 'sketcher') {
+            // Layered Rust Kurta with Mustard Undershirt & Batik Dots
+            ctx.fillStyle = '#f59e0b';
+            ctx.fillRect(cx - 4.5, 23 + bob, 9, 3);
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(cx - 4, 29 + bob, 1.5, 1.5);
+            ctx.fillRect(cx + 3, 31 + bob, 1.5, 1.5);
+            ctx.fillRect(cx - 2, 34 + bob, 1.5, 1.5);
           } else if (role === 'poet') {
-            ctx.fillStyle = '#362c28';
-            ctx.beginPath(); ctx.arc(cx, 17.5 + bob, 4.5, 0, Math.PI); ctx.fill(); // Poet's beard
+            // Crimson Kashmiri Woolen Shawl Draped Over Left Shoulder
+            ctx.fillStyle = '#881337';
+            ctx.beginPath();
+            ctx.moveTo(cx - 8.5, 23 + bob); ctx.lineTo(cx - 2, 23 + bob);
+            ctx.lineTo(cx + 8.5, 37 + bob); ctx.lineTo(cx + 4, 39 + bob);
+            ctx.lineTo(cx - 8.5, 28 + bob);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#facc15'; // Gold zari border fringe
+            ctx.beginPath();
+            ctx.moveTo(cx - 8.5, 27 + bob); ctx.lineTo(cx + 4, 39 + bob);
+            ctx.lineTo(cx + 4, 40.5 + bob); ctx.lineTo(cx - 8.5, 28.5 + bob);
+            ctx.closePath(); ctx.fill();
+          } else if (role === 'photo') {
+            // Denim Trucker Jacket Worn Open Over Camera Graphic Tee
+            ctx.fillStyle = '#ffffff'; // White graphic tee inside
+            ctx.fillRect(cx - 3, 24 + bob, 6, 15);
+            ctx.fillStyle = '#18181b'; // Miniature camera graphic
+            ctx.fillRect(cx - 1.5, 28 + bob, 3, 2);
+            // Denim collar lapels
+            ctx.fillStyle = '#1d4ed8';
+            ctx.fillRect(cx - 7.5, 23 + bob, 4, 3);
+            ctx.fillRect(cx + 3.5, 23 + bob, 4, 3);
+          } else if (role === 'jogger') {
+            // Athletic Racerback Tank with Reflective Trim
+            ctx.fillStyle = '#e2e8f0'; // Silver reflective side piping
+            ctx.fillRect(cx - 8.5, 23 + bob, 1.5, 16);
+            ctx.fillRect(cx + 7, 23 + bob, 1.5, 16);
+            ctx.fillStyle = '#be123c';
+            ctx.fillRect(cx - 4, 23 + bob, 8, 2);
+          } else if (role === 'sage') {
+            // Forest Druid Mantle & Leaf Brooch
+            ctx.fillStyle = '#14532d';
+            ctx.fillRect(cx - 8, 23 + bob, 16, 5);
+            ctx.fillStyle = '#4ade80'; // Emerald leaf brooch
+            ctx.beginPath(); ctx.arc(cx, 26 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+          } else if (role === 'marina') {
+            // Seashell Pearl Scallop Collar
+            ctx.fillStyle = '#5eead4';
+            ctx.fillRect(cx - 6, 23 + bob, 12, 3);
+            ctx.fillStyle = '#ffffff'; // Pearl
+            ctx.beginPath(); ctx.arc(cx, 25.5 + bob, 1.8, 0, Math.PI * 2); ctx.fill();
+          } else if (role === 'kael') {
+            // Charred Leather Smithing Vest & Copper Rivets
+            ctx.fillStyle = '#451a03';
+            ctx.fillRect(cx - 8, 23 + bob, 16, 17);
+            ctx.fillStyle = '#b45309'; // Copper rivets
+            ctx.fillRect(cx - 6, 26 + bob, 1.5, 1.5);
+            ctx.fillRect(cx + 4.5, 26 + bob, 1.5, 1.5);
+            ctx.fillRect(cx - 6, 33 + bob, 1.5, 1.5);
+            ctx.fillRect(cx + 4.5, 33 + bob, 1.5, 1.5);
+          } else if (role === 'lyra') {
+            // Midnight Velvet Cloak with Fur Trim
+            ctx.fillStyle = '#ffffff'; // White fur trim
+            ctx.fillRect(cx - 8.5, 23 + bob, 17, 3);
+            ctx.fillStyle = '#facc15'; // Star clasp
+            ctx.fillRect(cx - 1.5, 25 + bob, 3, 3);
+          } else if (role === 'chronicler') {
+            // Celestial Starlight Mantle
+            ctx.fillStyle = '#7e22ce';
+            ctx.fillRect(cx - 8.5, 23 + bob, 17, 4);
+            ctx.fillStyle = '#fde047'; // Constellation gold dots
+            ctx.fillRect(cx - 5, 28 + bob, 1.2, 1.2);
+            ctx.fillRect(cx + 4, 30 + bob, 1.2, 1.2);
+            ctx.fillRect(cx, 33 + bob, 1.2, 1.2);
           } else {
-            ctx.fillStyle = '#b55d52';
-            ctx.fillRect(cx - 1.8, 18.5 + bob, 3.6, 1.3);
+            ctx.fillStyle = accCol;
+            ctx.fillRect(cx - 5, 23 + bob, 10, 2.5);
           }
 
-          // 7. Hair & Role-Specific Headgear
+          // 5. Arms & Sleeves (With Walking Arm Swing!)
+          const lArmX = cx - 11.5 + (armSwing * -0.5);
+          const rArmX = cx + 8 + (armSwing * 0.5);
+          ctx.fillStyle = shirtCol;
+          ctx.fillRect(lArmX, 24 + bob, 3.5, 8.5);
+          ctx.fillRect(rArmX, 24 + bob, 3.5, 8.5);
+          // Forearms & Hands
+          ctx.fillStyle = '#f0c4a5';
+          ctx.fillRect(lArmX + 0.2, 32.5 + bob, 3.2, 4.5);
+          ctx.fillRect(rArmX + 0.2, 32.5 + bob, 3.2, 4.5);
+
+          // Wrist Accessories
+          if (role === 'physics') {
+            ctx.fillStyle = '#334155'; // Casio digital watch
+            ctx.fillRect(lArmX, 33 + bob, 3.5, 2);
+            ctx.fillStyle = '#38bdf8'; // Cyan screen glint
+            ctx.fillRect(lArmX + 1, 33.5 + bob, 1.5, 1);
+          } else if (role === 'jogger') {
+            ctx.fillStyle = '#0f172a'; // Smart fitness watch
+            ctx.fillRect(lArmX, 33 + bob, 3.5, 2.2);
+            ctx.fillStyle = '#22c55e'; // Green pulse display
+            ctx.fillRect(lArmX + 1, 33.5 + bob, 1.5, 1);
+          } else if (role === 'phulwali') {
+            ctx.fillStyle = '#dc2626'; // Red glass bangles
+            ctx.fillRect(lArmX, 32.5 + bob, 3.5, 1.2);
+            ctx.fillRect(rArmX, 32.5 + bob, 3.5, 1.2);
+            ctx.fillStyle = '#fde047'; // Gold bangles
+            ctx.fillRect(lArmX, 34 + bob, 3.5, 1);
+            ctx.fillRect(rArmX, 34 + bob, 3.5, 1);
+          }
+
+          // 6. Signature High-Detail Held Props
+          if (role === 'tea') {
+            // Left hand: Hammered Aluminum Kettle with Spout & Handle
+            ctx.fillStyle = '#94a3b8';
+            ctx.beginPath(); ctx.ellipse(cx - 13, 36 + bob, 5, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#e2e8f0'; // Specular highlight
+            ctx.fillRect(cx - 15, 34 + bob, 2.5, 2);
+            ctx.fillStyle = '#64748b'; // Spout
+            ctx.beginPath();
+            ctx.moveTo(cx - 17, 34 + bob); ctx.lineTo(cx - 19, 30 + bob); ctx.lineTo(cx - 16.5, 32 + bob);
+            ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 1.4; // Black handle
+            ctx.beginPath(); ctx.arc(cx - 13, 31 + bob, 3.2, Math.PI, 0); ctx.stroke();
+
+            // Right hand: Steaming Terracotta Matir Bhaar (Clay Cup) of Spiced Malai Cha
+            ctx.fillStyle = '#b45309'; // Terracotta clay cup
+            ctx.fillRect(cx + 9, 32 + bob, 5.5, 6);
+            ctx.fillStyle = '#fef08a'; // Frothy Malai Cha top
+            ctx.fillRect(cx + 9.5, 31.5 + bob, 4.5, 1.5);
+            // Rising animated steam curls
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+            ctx.fillRect(cx + 10.5 + flutter * 0.6, 27 + bob, 1.5, 3.5);
+            ctx.fillRect(cx + 12 + flutter * 0.3, 24 + bob, 1.2, 2.5);
+          } else if (role === 'fuchka') {
+            // Left hand: Plate of Crispy Fuchkas & Egg Shaving Garnish
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath(); ctx.ellipse(cx + 10.5, 35.5 + bob, 6.2, 2.8, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#d97706'; // Golden puffed fuchkas
+            ctx.beginPath();
+            ctx.arc(cx + 8, 34 + bob, 2, 0, Math.PI * 2);
+            ctx.arc(cx + 12.5, 34 + bob, 2, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#fef08a'; // Egg shreds
+            ctx.fillRect(cx + 9.5, 33 + bob, 2, 1);
+            ctx.fillStyle = '#16a34a'; // Cilantro green
+            ctx.fillRect(cx + 11.5, 32.5 + bob, 1.2, 1.2);
+
+            // Right hand: Bowl of Spicy Tamarind Tok
+            ctx.fillStyle = '#9a3412';
+            ctx.fillRect(cx - 14, 34 + bob, 5, 4);
+            ctx.fillStyle = '#78350f'; // Dark tamarind tok
+            ctx.fillRect(cx - 13.5, 33.5 + bob, 4, 1.5);
+          } else if (role === 'books') {
+            // Towering Stack of 3 Antique Hardcover Volumes
+            // Bottom volume: Crimson Moroccan leather
+            ctx.fillStyle = '#991b1b'; ctx.fillRect(cx + 5, 36 + bob, 10, 3.5);
+            ctx.fillStyle = '#fef08a'; ctx.fillRect(cx + 5.5, 37 + bob, 9, 1); // Gold page edges
+            // Middle volume: Peacock teal clothbound
+            ctx.fillStyle = '#0f766e'; ctx.fillRect(cx + 4.5, 32.5 + bob, 10.5, 3.5);
+            ctx.fillStyle = '#facc15'; ctx.fillRect(cx + 4.5, 33.5 + bob, 1.5, 1.5);
+            // Top volume: Midnight blue with dangling ribbon
+            ctx.fillStyle = '#1e3a8a'; ctx.fillRect(cx + 5.5, 29 + bob, 9.5, 3.5);
+            ctx.fillStyle = '#ef4444'; // Red ribbon bookmark
+            ctx.fillRect(cx + 13.5, 31 + bob, 1.5, 4);
+          } else if (role === 'guitar') {
+            // Acoustic Sunburst Guitar Slung Across Body
+            ctx.fillStyle = '#d97706'; // Sunburst amber top
+            ctx.beginPath(); ctx.ellipse(cx - 2, 36 + bob, 8.5, 6, -0.32, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#451a03'; // Body dark rim
+            ctx.stroke();
+            ctx.fillStyle = '#1c1917'; // Soundhole
+            ctx.beginPath(); ctx.arc(cx - 2, 36 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fde68a'; // Rosette ring
+            ctx.beginPath(); ctx.arc(cx - 2, 36 + bob, 2.8, 0, Math.PI * 2); ctx.stroke();
+            // Guitar Neck, Frets & Headstock
+            ctx.strokeStyle = '#5c3822'; ctx.lineWidth = 2.4;
+            ctx.beginPath(); ctx.moveTo(cx + 2, 33 + bob); ctx.lineTo(cx + 14, 22 + bob); ctx.stroke();
+            ctx.fillStyle = '#cbd5e1'; // Tuning pegs
+            ctx.fillRect(cx + 13, 20 + bob, 3, 2);
+          } else if (role === 'artist') {
+            // Kidney-Shaped Wooden Artist Palette & Paintbrush
+            ctx.fillStyle = '#d4a373';
+            ctx.beginPath(); ctx.ellipse(cx - 12, 35 + bob, 5.5, 4, 0, 0, Math.PI * 2); ctx.fill();
+            // Palette paint blobs
+            ctx.fillStyle = '#ef4444'; ctx.fillRect(cx - 14.5, 33.5 + bob, 1.8, 1.8);
+            ctx.fillStyle = '#eab308'; ctx.fillRect(cx - 13, 36 + bob, 1.8, 1.8);
+            ctx.fillStyle = '#2563eb'; ctx.fillRect(cx - 10, 36.5 + bob, 1.8, 1.8);
+            ctx.fillStyle = '#10b981'; ctx.fillRect(cx - 9.5, 34 + bob, 1.8, 1.8);
+            // Paintbrush dripping red in right hand
+            ctx.strokeStyle = '#78350f'; ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.moveTo(cx + 9, 37 + bob); ctx.lineTo(cx + 13.5, 27 + bob); ctx.stroke();
+            ctx.fillStyle = '#ef4444'; ctx.fillRect(cx + 12.5, 26 + bob, 2.5, 2.5);
+          } else if (role === 'doi') {
+            // Authentic Terracotta Earthen Pot (Matir Haari) of Bogurar Mishti Doi
+            ctx.fillStyle = '#9a3412';
+            ctx.beginPath(); ctx.arc(cx + 10.5, 36.5 + bob, 5.2, 0, Math.PI); ctx.fill();
+            ctx.fillStyle = '#fef3c7'; // Luscious caramelized yogurt crust
+            ctx.beginPath(); ctx.ellipse(cx + 10.5, 35.5 + bob, 5, 2, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(cx + 9, 35 + bob, 3, 1);
+            // Wooden sweet scoop
+            ctx.fillStyle = '#d4a373'; ctx.fillRect(cx + 13.5, 32 + bob, 2, 5);
+          } else if (role === 'phulwali') {
+            // Woven Bamboo Basket Overflowing with Fragrant Beli Gajras & Marigolds
+            ctx.fillStyle = '#b45309';
+            ctx.beginPath(); ctx.arc(cx, 37 + bob, 7.5, 0, Math.PI); ctx.fill();
+            ctx.strokeStyle = '#78350f'; ctx.lineWidth = 1;
+            ctx.stroke();
+            // Blooming Beli Gajras (Jasmine)
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(cx - 3.5, 35.5 + bob, 2.5, 0, Math.PI * 2);
+            ctx.arc(cx + 3.5, 35.5 + bob, 2.5, 0, Math.PI * 2);
+            ctx.arc(cx, 34 + bob, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            // Marigolds
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(cx - 5.5, 37 + bob, 1.8, 0, Math.PI * 2);
+            ctx.arc(cx + 5.5, 37 + bob, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+          } else if (role === 'physics') {
+            // Leather Messenger Bag & Hardbound Quantum Mechanics Textbook
+            ctx.fillStyle = '#78350f'; // Messenger bag
+            ctx.fillRect(cx + 7, 34 + bob, 6.5, 8);
+            ctx.fillStyle = '#fbbf24'; // Brass buckle
+            ctx.fillRect(cx + 9.5, 37 + bob, 1.8, 1.8);
+            // Quantum Mechanics Textbook tucked under left arm
+            ctx.fillStyle = '#1e3a8a';
+            ctx.fillRect(cx - 14, 30 + bob, 6.5, 8.5);
+            ctx.fillStyle = '#facc15'; // Gold foil spine
+            ctx.fillRect(cx - 14, 30 + bob, 1.5, 8.5);
+            ctx.fillStyle = '#f8fafc'; // Pages
+            ctx.fillRect(cx - 12, 37 + bob, 4.5, 1.2);
+          } else if (role === 'sketcher') {
+            // Spiral-Bound Artist Sketchpad with Curzon Hall Sketch & 2B Pencil
+            ctx.fillStyle = '#fdf6e2';
+            ctx.fillRect(cx + 6.5, 30 + bob, 7.5, 9);
+            ctx.fillStyle = '#1c1917'; // Spiral binding
+            for (let sp = 31; sp <= 38; sp += 2) ctx.fillRect(cx + 6.5, sp + bob, 1.2, 1);
+            // Miniature Curzon red dome sketch on cover
+            ctx.fillStyle = '#b91c1c';
+            ctx.fillRect(cx + 9.5, 33 + bob, 3, 2.5);
+            // Wooden drawing pencil in left hand
+            ctx.fillStyle = '#b45309'; ctx.fillRect(cx - 13.5, 32 + bob, 2, 6);
+            ctx.fillStyle = '#18181b'; ctx.fillRect(cx - 13.5, 31 + bob, 2, 1.5); // Graphite tip
+          } else if (role === 'poet') {
+            // Woven Jhola Bag & Rolled Handmade Poetry Scroll
+            ctx.fillStyle = '#d4a373'; // Jhola shoulder bag
+            ctx.fillRect(cx - 13.5, 33 + bob, 6, 7.5);
+            ctx.fillStyle = '#fdf6e2'; // Manuscript papers inside bag
+            ctx.fillRect(cx - 12.5, 31.5 + bob, 4, 2);
+            // Handmade poetry scroll tied with red silk ribbon
+            ctx.fillStyle = '#fef3c7';
+            ctx.fillRect(cx + 8.5, 29 + bob, 4, 9);
+            ctx.fillStyle = '#dc2626'; // Red ribbon & wax seal
+            ctx.fillRect(cx + 8.5, 33 + bob, 4, 1.8);
+            ctx.fillRect(cx + 10, 34.5 + bob, 1.5, 1.5);
+          } else if (role === 'photo') {
+            // Modern Professional DSLR Camera Hanging on Neck Strap
+            ctx.strokeStyle = '#18181b'; ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(cx - 4.5, 23 + bob); ctx.lineTo(cx - 3, 31 + bob);
+            ctx.moveTo(cx + 4.5, 23 + bob); ctx.lineTo(cx + 3, 31 + bob);
+            ctx.stroke();
+            // Camera body
+            ctx.fillStyle = '#18181b';
+            ctx.fillRect(cx - 5, 30 + bob, 10, 6.5);
+            ctx.fillStyle = '#ef4444'; // Red recording tally LED
+            ctx.fillRect(cx - 4, 31 + bob, 1.2, 1.2);
+            // Telephoto zoom lens
+            ctx.fillStyle = '#27272a';
+            ctx.beginPath(); ctx.arc(cx, 33.5 + bob, 3.2, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = '#dc2626'; ctx.lineWidth = 0.8; ctx.stroke(); // Red ring of luxury lens
+            ctx.fillStyle = '#38bdf8'; // Cyan glass reflection
+            ctx.fillRect(cx - 1, 32.5 + bob, 1.8, 1.8);
+          } else if (role === 'jogger') {
+            // Translucent Cyan Sports Water Bottle
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(cx + 9, 31 + bob, 4, 7);
+            ctx.fillStyle = '#bae6fd'; // Water level
+            ctx.fillRect(cx + 9.5, 33.5 + bob, 3, 4);
+            ctx.fillStyle = '#ffffff'; // White lid
+            ctx.fillRect(cx + 9.5, 29.5 + bob, 3, 1.8);
+          } else if (role === 'sage') {
+            // Gnarled Wooden Staff with Glowing Emerald Leaf Crystal
+            ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.moveTo(cx + 10, 48 + bob); ctx.lineTo(cx + 11, 20 + bob); ctx.stroke();
+            ctx.fillStyle = '#22c55e'; // Emerald crystal
+            ctx.beginPath(); ctx.arc(cx + 11, 18 + bob, 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#86efac'; ctx.fillRect(cx + 10, 17 + bob, 1.5, 1.5);
+          } else if (role === 'marina') {
+            // Glowing Nautilus Conch Shell
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath(); ctx.ellipse(cx + 9, 34 + bob, 4.5, 3.5, 0.4, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#5eead4'; ctx.fillRect(cx + 8, 33 + bob, 2, 2);
+          } else if (role === 'kael') {
+            // Heavy Obsidian Forge Hammer with Molten Runes
+            ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2.2;
+            ctx.beginPath(); ctx.moveTo(cx + 9, 44 + bob); ctx.lineTo(cx + 11, 24 + bob); ctx.stroke();
+            ctx.fillStyle = '#334155'; ctx.fillRect(cx + 8, 22 + bob, 7, 4.5);
+            ctx.fillStyle = '#f97316'; ctx.fillRect(cx + 9.5, 23.5 + bob, 4, 1.5);
+          } else if (role === 'lyra') {
+            // Polished Brass Armillary Sphere
+            ctx.strokeStyle = '#facc15'; ctx.lineWidth = 1.4;
+            ctx.beginPath(); ctx.arc(cx + 10, 33 + bob, 3.8, 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = '#93c5fd'; ctx.beginPath(); ctx.arc(cx + 10, 33 + bob, 1.8, 0, Math.PI * 2); ctx.fill();
+          } else if (role === 'chronicler') {
+            // Floating Astral Tome & Radiant Golden Feather Quill
+            ctx.fillStyle = '#581c87'; ctx.fillRect(cx - 14, 30 + bob, 6.5, 8);
+            ctx.fillStyle = '#fde047'; ctx.fillRect(cx - 13, 31 + bob, 4.5, 6);
+            ctx.fillStyle = '#facc15'; // Golden quill
+            ctx.beginPath(); ctx.moveTo(cx + 10, 36 + bob); ctx.lineTo(cx + 13, 27 + bob); ctx.stroke();
+          }
+
+          // 7. Neck, Head, Face & Character Expression
+          ctx.fillStyle = '#dfaa78'; // Neck
+          ctx.fillRect(cx - 2.5, 20 + bob, 5, 4);
+          ctx.fillStyle = '#f0c4a5'; // Face
+          ctx.beginPath(); ctx.arc(cx, 15.2 + bob, 7.8, 0, Math.PI * 2); ctx.fill();
+
+          // Expressive Eyes with Pupils & Catchlights
+          ctx.fillStyle = '#18181b';
+          ctx.fillRect(cx - 4.5, 13.5 + bob, 2.2, 2.4);
+          ctx.fillRect(cx + 2.3, 13.5 + bob, 2.2, 2.4);
+          ctx.fillStyle = '#ffffff'; // Catchlight sparkles
+          ctx.fillRect(cx - 4.2, 13.8 + bob, 1, 1);
+          ctx.fillRect(cx + 2.6, 13.8 + bob, 1, 1);
+
+          // Rosy Cheek Blush
+          ctx.fillStyle = 'rgba(244, 63, 94, 0.28)';
+          ctx.beginPath();
+          ctx.arc(cx - 4.5, 16.5 + bob, 1.4, 0, Math.PI * 2);
+          ctx.arc(cx + 4.5, 16.5 + bob, 1.4, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Glasses (DU Senior Arif & Nilkhet Boiwala)
+          if (role === 'physics') {
+            ctx.strokeStyle = '#334155'; ctx.lineWidth = 1.1;
+            ctx.strokeRect(cx - 6, 12.8 + bob, 4.2, 3.2);
+            ctx.strokeRect(cx + 1.8, 12.8 + bob, 4.2, 3.2);
+            ctx.beginPath(); ctx.moveTo(cx - 1.8, 14.2 + bob); ctx.lineTo(cx + 1.8, 14.2 + bob); ctx.stroke();
+            // Anti-reflective blue glint
+            ctx.fillStyle = 'rgba(186, 230, 253, 0.55)';
+            ctx.fillRect(cx - 5.2, 13.4 + bob, 1.8, 1.8);
+            ctx.fillRect(cx + 2.6, 13.4 + bob, 1.8, 1.8);
+          } else if (role === 'books') {
+            ctx.strokeStyle = '#eab308'; ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(cx - 3.8, 14.5 + bob, 2.2, 0, Math.PI * 2);
+            ctx.arc(cx + 3.8, 14.5 + bob, 2.2, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(cx - 1.6, 14.5 + bob); ctx.lineTo(cx + 1.6, 14.5 + bob); ctx.stroke();
+          }
+
+          // Mustaches, Beards & Smiles
+          if (role === 'tea' || role === 'doi') {
+            // Friendly generous Bengali mustache
+            ctx.fillStyle = '#1c1917';
+            ctx.fillRect(cx - 4, 17.2 + bob, 8, 1.8);
+          } else if (role === 'fuchka') {
+            ctx.fillStyle = '#1c1917';
+            ctx.fillRect(cx - 3.5, 17.5 + bob, 7, 1.6);
+          } else if (role === 'poet') {
+            // Distinguished salt-and-pepper poet's beard
+            ctx.fillStyle = '#262626';
+            ctx.beginPath(); ctx.arc(cx, 17.5 + bob, 4.5, 0, Math.PI); ctx.fill();
+            ctx.fillStyle = '#a1a1aa'; // Grey wisdom streaks
+            ctx.fillRect(cx - 2, 18.5 + bob, 4, 1);
+          } else if (role === 'kael') {
+            // Braided fiery dwarven beard with copper rings
+            ctx.fillStyle = '#c2410c';
+            ctx.fillRect(cx - 4, 17 + bob, 8, 6);
+            ctx.fillStyle = '#b45309'; // Copper ring
+            ctx.fillRect(cx - 2.5, 21 + bob, 5, 1.5);
+          } else if (role === 'sage') {
+            // Long flowing silver druidic beard
+            ctx.fillStyle = '#e2e8f0';
+            ctx.beginPath(); ctx.arc(cx, 17.5 + bob, 5, 0, Math.PI); ctx.fill();
+            ctx.fillRect(cx - 3, 20 + bob, 6, 6);
+          } else {
+            // Gentle warm smile
+            ctx.fillStyle = '#b91c1c';
+            ctx.fillRect(cx - 1.8, 18.2 + bob, 3.6, 1.2);
+          }
+
+          // 8. Hair & Role-Specific Headgear
           ctx.fillStyle = hairCol;
           ctx.beginPath();
-          ctx.arc(cx, 11.5 + bob, 8.2, Math.PI, 0);
+          ctx.arc(cx, 11.2 + bob, 8, Math.PI, 0);
           ctx.fill();
 
+          // Glossy Hair Sheen Highlight
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+          ctx.fillRect(cx - 4, 8 + bob, 8, 1.5);
+
+          // Headgear / Forehead Adornments
           if (role === 'fuchka') {
-            // Jaali Cap / Chef Cap
-            ctx.fillStyle = '#fff8eb';
-            ctx.beginPath(); ctx.arc(cx, 10 + bob, 7.8, Math.PI, 0); ctx.fill();
-            ctx.fillStyle = '#f7cb45';
-            ctx.fillRect(cx - 7.8, 9.5 + bob, 15.6, 2);
+            // Crisp White Jaali Topi with Golden Rim
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(cx, 9.5 + bob, 7.8, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#eab308';
+            ctx.fillRect(cx - 7.8, 9 + bob, 15.6, 2);
           } else if (role === 'doi') {
             // Traditional Old Dhaka Embroidered Topi
-            ctx.fillStyle = '#fff5de';
-            ctx.fillRect(cx - 7.5, 7 + bob, 15, 4.5);
-            ctx.fillStyle = '#c28b38';
-            ctx.fillRect(cx - 7.5, 9.5 + bob, 15, 1.5);
+            ctx.fillStyle = '#fefce8';
+            ctx.fillRect(cx - 7.5, 6.5 + bob, 15, 4.8);
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(cx - 7.5, 9.2 + bob, 15, 1.8);
           } else if (role === 'jogger') {
-            // Sporty Sweatband
-            ctx.fillStyle = '#ff4d6d';
-            ctx.fillRect(cx - 8, 9.5 + bob, 16, 2.4);
+            // Sporty Neon Coral Sweatband
+            ctx.fillStyle = '#fb7185';
+            ctx.fillRect(cx - 8, 9.5 + bob, 16, 2.6);
           } else if (role === 'phulwali') {
-            // Red Tip (Bindi) on forehead & flower tucked in hair
-            ctx.fillStyle = '#e63946';
-            ctx.fillRect(cx - 0.8, 12 + bob, 1.6, 1.6);
-            ctx.fillStyle = '#fff3a1';
-            ctx.beginPath(); ctx.arc(cx + 8, 13 + bob, 2.5, 0, Math.PI * 2); ctx.fill();
-          }
-
-          // 8. Signature Contextual Props Held by Each Character!
-          if (role === 'tea') {
-            // Aluminum Kettle in Left Hand + Steaming Clay Cup in Right Hand
-            ctx.fillStyle = '#adb5bd';
-            ctx.beginPath(); ctx.arc(cx - 12, 36 + bob, 4, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#c96551'; // Clay matir bhaar
-            ctx.fillRect(cx + 9, 32 + bob, 4.5, 5);
-            ctx.fillStyle = 'rgba(255,255,255,0.75)'; // Rising steam
-            ctx.fillRect(cx + 10.5, 28 + bob, 1.5, 3);
-          } else if (role === 'guitar') {
-            // Acoustic Guitar Strapped Across Body
-            ctx.fillStyle = '#b5651d';
-            ctx.beginPath(); ctx.ellipse(cx - 2, 35 + bob, 7.5, 5.5, -0.35, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#3d2314';
-            ctx.beginPath(); ctx.arc(cx - 2, 35 + bob, 2.2, 0, Math.PI * 2); ctx.fill(); // Soundhole
-            ctx.strokeStyle = '#5c3822'; ctx.lineWidth = 2.6;
-            ctx.beginPath(); ctx.moveTo(cx + 2, 32 + bob); ctx.lineTo(cx + 13, 23 + bob); ctx.stroke(); // Guitar neck
-          } else if (role === 'artist') {
-            // Wooden Paint Palette & Brush with Red Tip
-            ctx.fillStyle = '#deb887';
-            ctx.beginPath(); ctx.ellipse(cx - 11, 35 + bob, 5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#e63946'; ctx.fillRect(cx - 13, 34 + bob, 2, 2);
-            ctx.fillStyle = '#2a9d8f'; ctx.fillRect(cx - 10, 35 + bob, 2, 2);
-            ctx.strokeStyle = '#5c3c24'; ctx.lineWidth = 1.6;
-            ctx.beginPath(); ctx.moveTo(cx + 9, 37 + bob); ctx.lineTo(cx + 13, 27 + bob); ctx.stroke();
-            ctx.fillStyle = '#e63946'; ctx.fillRect(cx + 12, 26 + bob, 2.5, 2.5);
-          } else if (role === 'books') {
-            // Stack of Hardcover Poetry Books
-            ctx.fillStyle = '#9b2226'; ctx.fillRect(cx + 6, 33 + bob, 8, 3);
-            ctx.fillStyle = '#e9d8a6'; ctx.fillRect(cx + 6.5, 34 + bob, 7, 1);
-            ctx.fillStyle = '#005f73'; ctx.fillRect(cx + 6, 30 + bob, 8, 3);
-          } else if (role === 'phulwali') {
-            // Wicker Basket Overflowing with White Beli & Marigold Gajras
-            ctx.fillStyle = '#9c6644';
-            ctx.beginPath(); ctx.arc(cx + 10, 36 + bob, 5.5, 0, Math.PI); ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.beginPath(); ctx.arc(cx + 8, 35 + bob, 2.5, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(cx + 12, 35 + bob, 2.5, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#ffb703';
-            ctx.beginPath(); ctx.arc(cx + 10, 33.5 + bob, 2.2, 0, Math.PI * 2); ctx.fill();
-          } else if (role === 'fuchka') {
-            // Plate of Crispy Fuchkas & Spoon
-            ctx.fillStyle = '#e5e5e5';
-            ctx.beginPath(); ctx.ellipse(cx + 10, 35 + bob, 5.5, 2.5, 0, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#d4a359';
-            ctx.beginPath();
-            ctx.arc(cx + 8.5, 34 + bob, 1.8, 0, Math.PI * 2);
-            ctx.arc(cx + 11.5, 34 + bob, 1.8, 0, Math.PI * 2);
-            ctx.fill();
-          } else if (role === 'doi') {
-            // Terracotta Earthen Pot (Matir Haari) of Bogurar Mishti Doi
-            ctx.fillStyle = '#b5542c';
-            ctx.beginPath(); ctx.arc(cx + 10, 36 + bob, 4.8, 0, Math.PI); ctx.fill();
-            ctx.fillStyle = '#fff3d1'; // Creamy caramelized yogurt top
-            ctx.beginPath(); ctx.ellipse(cx + 10, 35 + bob, 4.5, 1.8, 0, 0, Math.PI * 2); ctx.fill();
-          } else if (role === 'rakin') {
-            // Red Rose & Apology Love Letter with Heart Seal
-            ctx.fillStyle = '#fff8eb';
-            ctx.fillRect(cx - 13, 32 + bob, 6.5, 4.5);
-            ctx.fillStyle = '#e63946';
-            ctx.fillRect(cx - 10.5, 33.5 + bob, 2, 2); // Wax heart seal
-            ctx.strokeStyle = '#2d6a4f'; ctx.lineWidth = 1.5;
-            ctx.beginPath(); ctx.moveTo(cx + 9, 37 + bob); ctx.lineTo(cx + 11, 29 + bob); ctx.stroke();
-            ctx.fillStyle = '#d90429';
-            ctx.beginPath(); ctx.arc(cx + 11, 28.5 + bob, 2.6, 0, Math.PI * 2); ctx.fill(); // Rose blossom
-          } else if (role === 'physics') {
-            // Crossbody Messenger Bag & Thick Quantum Mechanics Textbook
-            ctx.strokeStyle = '#3d2b1f'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(cx - 6, 24 + bob); ctx.lineTo(cx + 7, 38 + bob); ctx.stroke();
-            ctx.fillStyle = '#1d3557';
-            ctx.fillRect(cx - 12.5, 30 + bob, 6, 7.5);
-            ctx.fillStyle = '#f1faee';
-            ctx.fillRect(cx - 11, 32 + bob, 3, 1.5);
-          } else if (role === 'sketcher') {
-            // Spiral Sketchpad & Charcoal Pencil
-            ctx.fillStyle = '#fdf0d5';
-            ctx.fillRect(cx + 6.5, 30 + bob, 6.5, 8);
-            ctx.fillStyle = '#4a2e1b';
-            ctx.fillRect(cx + 6.5, 30 + bob, 6.5, 1.5);
-          } else if (role === 'poet') {
-            // Rolled Jhola Shoulder Bag & Tied Poetry Scroll
-            ctx.fillStyle = '#d4a373';
-            ctx.fillRect(cx - 12, 34 + bob, 5, 6);
-            ctx.fillStyle = '#fdf5e6';
-            ctx.fillRect(cx + 8, 30 + bob, 3.5, 8);
-            ctx.fillStyle = '#e63946'; // Red ribbon around scroll
-            ctx.fillRect(cx + 8, 33.5 + bob, 3.5, 1.5);
-          } else if (role === 'photo') {
-            // DSLR Camera on Neck Strap with Telephoto Lens
-            ctx.strokeStyle = '#222222'; ctx.lineWidth = 1.2;
-            ctx.beginPath();
-            ctx.moveTo(cx - 4, 24 + bob); ctx.lineTo(cx - 3, 32 + bob);
-            ctx.moveTo(cx + 4, 24 + bob); ctx.lineTo(cx + 3, 32 + bob);
-            ctx.stroke();
-            ctx.fillStyle = '#1f2421';
-            ctx.fillRect(cx - 4.5, 31 + bob, 9, 6);
-            ctx.fillStyle = '#6c757d';
-            ctx.beginPath(); ctx.arc(cx, 34 + bob, 2.6, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#7fd4e6'; // Lens reflection
-            ctx.fillRect(cx - 1, 33 + bob, 1.5, 1.5);
-          } else if (role === 'jogger') {
-            // Water Bottle in Hand & Headphone Band
-            ctx.fillStyle = '#48cae4';
-            ctx.fillRect(cx + 8.5, 32 + bob, 3.5, 6);
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(cx + 9, 30.5 + bob, 2.5, 1.5);
+            // Red Bindi (Tip) on Forehead
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(cx - 0.8, 11.8 + bob, 1.6, 1.6);
+          } else if (role === 'sage') {
+            // Living Emerald Banyan Leaf Crown
+            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(cx - 7.5, 9 + bob, 15, 2);
+            ctx.fillRect(cx - 2, 7 + bob, 4, 3);
+          } else if (role === 'marina') {
+            // Sea Pearl & Coral Circlet
+            ctx.fillStyle = '#f43f5e'; ctx.fillRect(cx - 7, 9.5 + bob, 14, 1.8);
+            ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx, 9 + bob, 1.8, 0, Math.PI * 2); ctx.fill();
+          } else if (role === 'lyra') {
+            // Starlight Silver Tiara
+            ctx.fillStyle = '#93c5fd'; ctx.fillRect(cx - 6, 9.5 + bob, 12, 1.6);
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 1, 7.5 + bob, 2, 3);
+          } else if (role === 'chronicler') {
+            // Floating Golden Halo of Astral Starlight
+            ctx.strokeStyle = '#fde047'; ctx.lineWidth = 1.6;
+            ctx.beginPath(); ctx.ellipse(cx, 5.5 + bob, 9, 2.5, 0, 0, Math.PI * 2); ctx.stroke();
           }
         });
       });
+
+      // Alias static texture to frame 0
+      makeTex(baseKey, 52, 58, (ctx) => {
+        const tex = this.textures.get(`${baseKey}-0`);
+        if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
+      });
     };
 
-    // Vendors & Story Characters
+    // Vendors & Story Characters (Dhaka Valley)
     makeWalkerNPC('npc-tea',      '#c96551', '#3b2416', '#f5e1c0', 'tea');
     makeWalkerNPC('npc-fuchka',   '#2d8a56', '#241d1d', '#f7cb45', 'fuchka');
     makeWalkerNPC('npc-books',    '#3b6e8c', '#4a2e1b', '#e6d3b8', 'books');
@@ -3698,286 +4215,422 @@ class DhakaValleyScene extends Phaser.Scene {
       });
     });
 
-    // --- Dedicated Rakin Sprite (Earnest DU Student with Roses & Apology Letter) ---
-    [0, 1].forEach(step => {
+    // --- Dedicated Rakin Sprite (Earnest DU Student with Roses & Apology Letter: 4-Frame Walk) ---
+    [0, 1, 2, 3].forEach(step => {
       makeTex(`npc-rakin-${step}`, 52, 58, ctx => {
-        const bob = step === 1 ? -1.8 : 0;
-        const lLeg = step === 1 ? -2 : 0;
-        const rLeg = step === 1 ? 2 : 0;
+        const bob = (step === 1 || step === 3) ? -1.8 : 0;
+        const lLeg = step === 0 ? 2.5 : (step === 2 ? -2.2 : 0);
+        const rLeg = step === 2 ? 2.5 : (step === 0 ? -2.2 : 0);
+        const lFoot = step === 0 ? 2.0 : (step === 2 ? -1.2 : 0);
+        const rFoot = step === 2 ? 2.0 : (step === 0 ? -1.2 : 0);
+        const armSwing = step === 0 ? 2.2 : (step === 2 ? -2.2 : 0);
         const cx = 26;
 
-        // 1. Soft Ground Shadow
-        ctx.fillStyle = 'rgba(12, 8, 20, 0.25)';
-        ctx.beginPath(); ctx.ellipse(cx, 53, 12, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+        // 1. Double-Layer Contact Ground Shadow
+        ctx.fillStyle = 'rgba(12, 8, 20, 0.12)';
+        ctx.beginPath();
+        ctx.ellipse(cx, 53, (step % 2 === 0) ? 13 : 11.5, (step % 2 === 0) ? 4.2 : 3.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(12, 8, 20, 0.28)';
+        ctx.beginPath();
+        ctx.ellipse(cx, 53, (step % 2 === 0) ? 8.5 : 7.2, (step % 2 === 0) ? 2.5 : 2.1, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        // 2. Dark Slim-Fit Chinos / Trousers & Leather Shoes
+        // 2. Dark Slim-Fit Chinos & Polished Leather Oxford Shoes
         ctx.fillStyle = '#1c2430';
-        ctx.fillRect(cx - 6.5, 40 + lLeg, 5, 9);
-        ctx.fillRect(cx + 1.5, 40 + rLeg, 5, 9);
-        ctx.fillStyle = '#3b2219'; // Leather shoes
+        ctx.fillRect(cx - 6.5, 39 + lLeg, 5, 10);
+        ctx.fillRect(cx + 1.5, 39 + rLeg, 5, 10);
+        ctx.fillStyle = '#0f172a'; // Inseam shadow
+        ctx.fillRect(cx - 2, 39 + Math.min(lLeg, rLeg), 4, 3);
+        // Polished chestnut leather Oxford shoes
+        ctx.fillStyle = '#3b2219';
         ctx.beginPath();
-        ctx.ellipse(cx - 4, 50 + lLeg * 0.6, 3.6, 1.8, 0, 0, Math.PI * 2);
-        ctx.ellipse(cx + 4, 50 + rLeg * 0.6, 3.6, 1.8, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx - 4, 50.5 + lFoot, 3.8, 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 4, 50.5 + rFoot, 3.8, 2, 0, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillStyle = '#67402c'; // Leather gloss highlight
+        ctx.fillRect(cx - 5.2, 49.5 + lFoot, 2.5, 1);
+        ctx.fillRect(cx + 2.8, 49.5 + rFoot, 2.5, 1);
 
-        // 3. Tailored Navy-Blue Panjabi with Silver Button Placket
-        ctx.fillStyle = '#1b365d'; // Deep navy shadow
+        // 3. Tailored Navy-Blue Silk Panjabi with Silver Embroidery
+        ctx.fillStyle = '#172554'; // Outer shadow fold
         ctx.beginPath();
-        ctx.roundRect(cx - 8.5, 24 + bob, 17, 17, 3);
+        ctx.roundRect(cx - 8.5, 23 + bob, 17, 18, 2.5);
         ctx.fill();
-        ctx.fillStyle = '#24487d'; // Main navy Panjabi fabric
-        ctx.fillRect(cx - 7.5, 24.5 + bob, 15, 16);
-        // Silver embroidery along collar and front placket
-        ctx.fillStyle = '#e0e6ed';
-        ctx.fillRect(cx - 1, 24.5 + bob, 2, 10);
-        ctx.fillRect(cx - 3, 24.5 + bob, 6, 1.5);
+        ctx.fillStyle = '#1e3a8a'; // Main rich royal navy fabric
+        ctx.fillRect(cx - 7.5, 23.5 + bob, 15, 17);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.12)'; // Fabric luster
+        ctx.fillRect(cx + 2, 23.5 + bob, 5, 14);
 
+        // Silver Embroidery along Mandarin Collar & Front Placket
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(cx - 1, 23.5 + bob, 2, 11);
+        ctx.fillRect(cx - 3.5, 23.5 + bob, 7, 1.8);
+        ctx.fillStyle = '#94a3b8'; // Silver buttons
+        ctx.fillRect(cx - 0.6, 26 + bob, 1.2, 1.2);
+        ctx.fillRect(cx - 0.6, 29 + bob, 1.2, 1.2);
+        ctx.fillRect(cx - 0.6, 32 + bob, 1.2, 1.2);
+
+        // 4. Sleeves, Forearms, Wristwatch & Hands
+        const lArmX = cx - 11.5 + (armSwing * -0.5);
+        const rArmX = cx + 8 + (armSwing * 0.5);
+        ctx.fillStyle = '#1e3a8a';
+        ctx.fillRect(lArmX, 24 + bob, 3.5, 9);
+        ctx.fillRect(rArmX, 24 + bob, 3.5, 9);
+        ctx.fillStyle = '#f0c4a5';
+        ctx.fillRect(lArmX + 0.2, 33 + bob, 3.2, 4);
+        ctx.fillRect(rArmX + 0.2, 33 + bob, 3.2, 4);
         // Silver Watch on Left Wrist
-        ctx.fillStyle = '#8d99ae';
-        ctx.fillRect(cx - 11.5, 33 + bob, 2.5, 2.5);
-
-        // 4. Sleeves & Hands
-        ctx.fillStyle = '#24487d';
-        ctx.fillRect(cx - 11.5, 25 + bob, 3.5, 9);
-        ctx.fillRect(cx + 8, 25 + bob, 3.5, 9);
-        ctx.fillStyle = '#f0c4a5'; // Warm skin tone
-        ctx.fillRect(cx - 11, 34 + bob, 3, 3.5);
-        ctx.fillRect(cx + 8, 34 + bob, 3, 3.5);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(lArmX, 33 + bob, 3.5, 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(lArmX + 1, 33.5 + bob, 1.5, 1);
 
         // 5. Neck, Head, Nervous/Earnest Expression
-        ctx.fillStyle = '#d4a383';
-        ctx.fillRect(cx - 2.5, 20.5 + bob, 5, 4);
+        ctx.fillStyle = '#dfaa78';
+        ctx.fillRect(cx - 2.5, 20 + bob, 5, 4);
         ctx.fillStyle = '#f5cfb0';
-        ctx.beginPath(); ctx.arc(cx, 15.5 + bob, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx, 15.2 + bob, 7.8, 0, Math.PI * 2); ctx.fill();
 
-        // Earnest, slightly worried eyes & slight sweat drop of nervousness
+        // Earnest, slightly worried dark eyes with catchlight & slight nervous sweat bead
         ctx.fillStyle = '#1f1614';
-        ctx.fillRect(cx - 4.5, 14 + bob, 2, 2);
-        ctx.fillRect(cx + 2.5, 14 + bob, 2, 2);
-        ctx.fillStyle = '#7fd4e6'; // Nervous sweat bead near temple
-        ctx.fillRect(cx + 6, 13 + bob, 1.2, 2);
-
-        // Gentle apologetic smile / closed lips
-        ctx.fillStyle = '#b55d52';
-        ctx.fillRect(cx - 1.8, 18.5 + bob, 3.6, 1);
-
-        // 6. Styled DU Student Hair (Side-swept dark fringe)
-        ctx.fillStyle = '#1c1817';
-        ctx.beginPath();
-        ctx.arc(cx, 12 + bob, 8.2, Math.PI, 0);
-        ctx.fill();
-        // Swept-over fringe across forehead
-        ctx.beginPath();
-        ctx.moveTo(cx - 8, 12 + bob);
-        ctx.quadraticCurveTo(cx, 7 + bob, cx + 8.5, 13 + bob);
-        ctx.lineTo(cx + 7, 10 + bob);
-        ctx.quadraticCurveTo(cx, 5 + bob, cx - 7, 10 + bob);
-        ctx.closePath();
-        ctx.fill();
-
-        // 7. Rakin's Signature Items: Bouquet of Fresh Red Roses & Apology Love Letter!
-        // Bouquet of Red Roses held in right hand
-        ctx.strokeStyle = '#2d6a4f'; ctx.lineWidth = 1.5;
-        ctx.beginPath(); ctx.moveTo(cx + 8, 35 + bob); ctx.lineTo(cx + 12, 27 + bob); ctx.stroke();
-        [
-          [12, 26], [10, 24], [14, 25], [12, 23]
-        ].forEach(([rx, ry]) => {
-          ctx.fillStyle = '#d90429';
-          ctx.beginPath(); ctx.arc(cx + rx, ry + bob, 2.5, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#ff4d6d';
-          ctx.fillRect(cx + rx - 0.8, ry - 0.8 + bob, 1.2, 1.2);
-        });
-
-        // Apology Letter with Red Wax Heart Seal held in left hand
-        ctx.fillStyle = '#fff8eb';
-        ctx.fillRect(cx - 13, 33 + bob, 7, 5);
-        ctx.fillStyle = '#e63946';
-        ctx.fillRect(cx - 10, 35 + bob, 2, 2); // Wax seal
-      });
-    });
-
-    // Generic Realm Guides (Worlds 2-6) & Distinct Dhaka Wandering Citizens
-    // Generic Realm Guides (Worlds 2-6) & Distinct Dhaka Wandering Citizens
-    makeWalkerNPC('npc-walker1',  '#488a6c', '#241d1d', '#f5e1c0', 'physics');
-    makeWalkerNPC('npc-walker2',  '#b85d43', '#36201d', '#f7cb45', 'sketcher');
-    makeWalkerNPC('npc-walker3',  '#5c548a', '#1c1817', '#f4a9c0', 'poet');
-    makeWalkerNPC('npc-photo',    '#2b5876', '#1c1817', '#f7cb45', 'photo');
-    makeWalkerNPC('npc-jogger',   '#e63956', '#2b1912', '#ffffff', 'jogger');
-
-    // Dedicated Sprite for Anamika (Moon Walker's Bestie & Star Kebab Partner)
-    [0, 1].forEach(step => {
-      makeTex(`npc-anamika-${step}`, 52, 58, ctx => {
-        const bob = step === 1 ? -1.8 : 0;
-        const lLeg = step === 1 ? -2 : 0;
-        const rLeg = step === 1 ? 2 : 0;
-        const cx = 26;
-
-        // 1. Soft Ground Shadow
-        ctx.fillStyle = 'rgba(12, 8, 20, 0.25)';
-        ctx.beginPath(); ctx.ellipse(cx, 53, 12, 4.2, 0, 0, Math.PI * 2); ctx.fill();
-
-        // 2. Flowing Wavy Dark-Auburn Hair
-        ctx.fillStyle = '#291714';
-        ctx.beginPath();
-        ctx.ellipse(cx, 17 + bob, 11, 12, 0, 0, Math.PI * 2);
-        ctx.ellipse(cx - 8.5, 24 + bob, 4.5, 8, 0.18, 0, Math.PI * 2);
-        ctx.ellipse(cx + 8.5, 24 + bob, 4.5, 8, -0.18, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 3. Cream Palazzo Pants & Sandals
-        ctx.fillStyle = '#f5ebe0';
-        ctx.fillRect(cx - 6.5, 41 + lLeg, 5, 8.5);
-        ctx.fillRect(cx + 1.5, 41 + rLeg, 5, 8.5);
-        ctx.fillStyle = '#5c3822';
-        ctx.beginPath();
-        ctx.ellipse(cx - 4, 50.5 + lLeg * 0.6, 3.6, 1.7, 0, 0, Math.PI * 2);
-        ctx.ellipse(cx + 4, 50.5 + rLeg * 0.6, 3.6, 1.7, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 4. Emerald-Teal Kurti & Mustard-Gold Dupatta
-        ctx.fillStyle = '#134e4a';
-        ctx.beginPath();
-        ctx.moveTo(cx - 8.5, 24 + bob); ctx.lineTo(cx + 8.5, 24 + bob);
-        ctx.lineTo(cx + 10.5, 43 + bob); ctx.lineTo(cx - 10.5, 43 + bob);
-        ctx.closePath(); ctx.fill();
-
-        ctx.fillStyle = '#1f7a73';
-        ctx.fillRect(cx - 7, 24.5 + bob, 14, 17.5);
-        ctx.fillStyle = '#f7cb45'; // Mustard-gold border
-        ctx.fillRect(cx - 10, 41.5 + bob, 20, 1.5);
-
-        // Mustard-Gold Dupatta draped across chest
-        ctx.fillStyle = '#f4a261';
-        ctx.beginPath();
-        ctx.moveTo(cx - 8, 24 + bob); ctx.lineTo(cx - 3, 24 + bob);
-        ctx.lineTo(cx + 9, 36 + bob); ctx.lineTo(cx + 7.5, 40 + bob);
-        ctx.lineTo(cx - 8, 28 + bob);
-        ctx.closePath(); ctx.fill();
-
-        // 5. Sleeves, Hands & Props (Smartphone on video call with Shuvra + Star Kebab Falooda/Bag)
-        ctx.fillStyle = '#1f7a73';
-        ctx.fillRect(cx - 11.5, 25 + bob, 3.5, 8);
-        ctx.fillRect(cx + 8, 25 + bob, 3.5, 8);
-        ctx.fillStyle = '#f2c6a5';
-        ctx.fillRect(cx - 11, 32.5 + bob, 3, 4);
-        ctx.fillRect(cx + 8.2, 32.5 + bob, 3, 4);
-
-        // Left hand: Smartphone glowing (texting Shuvra in Barishal)
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(cx - 13.5, 30 + bob, 4, 6);
-        ctx.fillStyle = '#7fd4e6';
-        ctx.fillRect(cx - 13, 30.8 + bob, 3, 4.2);
-
-        // Right hand: Star Kebab Takeout Parcel / Falooda Cup
-        ctx.fillStyle = '#fdf0d5';
-        ctx.fillRect(cx + 8.5, 34 + bob, 5.5, 6.5);
-        ctx.fillStyle = '#d90429';
-        ctx.fillRect(cx + 9.5, 36 + bob, 3.5, 2); // Star emblem
-
-        // 6. Neck, Warm Smiling Face & Hair Fringe
-        ctx.fillStyle = '#d4a383';
-        ctx.fillRect(cx - 2.5, 20.5 + bob, 5, 4);
-        ctx.fillStyle = '#f5cfb0';
-        ctx.beginPath(); ctx.arc(cx, 15.2 + bob, 8, 0, Math.PI * 2); ctx.fill();
-
-        // Expressive eyes, warm blush & cheerful smile
-        ctx.fillStyle = '#1f1418';
-        ctx.fillRect(cx - 4.5, 13.8 + bob, 2.2, 2.4);
-        ctx.fillRect(cx + 2.3, 13.8 + bob, 2.2, 2.4);
+        ctx.fillRect(cx - 4.5, 13.8 + bob, 2.2, 2.2);
+        ctx.fillRect(cx + 2.3, 13.8 + bob, 2.2, 2.2);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(cx - 4.2, 14 + bob, 1, 1);
         ctx.fillRect(cx + 2.6, 14 + bob, 1, 1);
-        ctx.fillStyle = 'rgba(235, 115, 125, 0.4)';
+        // Nervous sweat bead near right temple
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(cx + 6.2, 12.8 + bob, 1.4, 2);
+
+        // Gentle, apologetic smile / closed lips
+        ctx.fillStyle = '#b55d52';
+        ctx.fillRect(cx - 1.8, 18.2 + bob, 3.6, 1.2);
+
+        // 6. Styled DU Student Hair (Side-swept dark fringe with sheen)
+        ctx.fillStyle = '#1c1817';
         ctx.beginPath();
-        ctx.arc(cx - 5, 16.5 + bob, 1.6, 0, Math.PI * 2);
-        ctx.arc(cx + 5, 16.5 + bob, 1.6, 0, Math.PI * 2);
+        ctx.arc(cx, 11.5 + bob, 8.2, Math.PI, 0);
         ctx.fill();
-        ctx.fillStyle = '#b8335a';
-        ctx.beginPath(); ctx.arc(cx, 17.5 + bob, 2.2, 0, Math.PI); ctx.fill();
-
-        // Parted Hair Bangs & Hair Clip
-        ctx.fillStyle = '#291714';
+        // Swept-over fringe across forehead
         ctx.beginPath();
-        ctx.moveTo(cx - 8.2, 13.5 + bob);
-        ctx.quadraticCurveTo(cx - 8, 6 + bob, cx, 5.5 + bob);
-        ctx.quadraticCurveTo(cx + 8, 6 + bob, cx + 8.2, 13.5 + bob);
-        ctx.quadraticCurveTo(cx + 3, 9.5 + bob, cx, 10 + bob);
-        ctx.quadraticCurveTo(cx - 3, 9.5 + bob, cx - 8.2, 13.5 + bob);
-        ctx.closePath(); ctx.fill();
+        ctx.moveTo(cx - 8, 11.5 + bob);
+        ctx.quadraticCurveTo(cx, 6.5 + bob, cx + 8.5, 12.5 + bob);
+        ctx.lineTo(cx + 7, 9.5 + bob);
+        ctx.quadraticCurveTo(cx, 4.5 + bob, cx - 7, 9.5 + bob);
+        ctx.closePath();
+        ctx.fill();
+        // Hair sheen
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.fillRect(cx - 3, 7.5 + bob, 6, 1.5);
 
-        ctx.fillStyle = '#f7cb45'; // Gold hair clip
-        ctx.fillRect(cx - 7, 10 + bob, 2.8, 1.3);
+        // 7. Signature Items: Fresh Red Rose Bouquet & Heart-Sealed Apology Letter!
+        // Bouquet of Blooming Red Roses in Right Hand
+        ctx.fillStyle = '#d4a373'; // Kraft paper wrapping
+        ctx.beginPath();
+        ctx.moveTo(cx + 8, 36 + bob); ctx.lineTo(cx + 15, 25 + bob); ctx.lineTo(cx + 17, 30 + bob);
+        ctx.closePath(); ctx.fill();
+        // Pink silk ribbon bow
+        ctx.fillStyle = '#f472b6';
+        ctx.fillRect(cx + 10.5, 33 + bob, 3, 2);
+        // Rose blossoms and emerald leaves
+        ctx.fillStyle = '#15803d'; // Leaves
+        ctx.fillRect(cx + 11, 23 + bob, 2.5, 2.5);
+        ctx.fillRect(cx + 15, 25 + bob, 2.5, 2.5);
+        [
+          [12, 24], [10, 22], [14, 23], [12, 20], [15, 21]
+        ].forEach(([rx, ry]) => {
+          ctx.fillStyle = '#b91c1c';
+          ctx.beginPath(); ctx.arc(cx + rx, ry + bob, 2.6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#ef4444'; // Petal highlight
+          ctx.fillRect(cx + rx - 0.8, ry - 0.8 + bob, 1.3, 1.3);
+        });
+
+        // Apology Letter with Red Wax Heart Seal in Left Hand
+        ctx.fillStyle = '#fefce8'; // Linen parchment
+        ctx.fillRect(cx - 14, 32 + bob, 7.5, 5.5);
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.8;
+        ctx.strokeRect(cx - 14, 32 + bob, 7.5, 5.5);
+        // Crimson Wax Heart Seal
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(cx - 11, 34 + bob, 2.5, 2.5);
       });
     });
 
-    // Mimi the Campus Ginger Tabby Cat (Upgraded with Stripes, Swishing Tail, Pink Ears & Whiskers)
-    [0, 1].forEach(step => {
+    makeTex('npc-rakin', 52, 58, ctx => {
+      const tex = this.textures.get('npc-rakin-0');
+      if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
+    });
+
+    // Wandering Dhaka Citizens (Fuller Road, TSC, Curzon, Dhanmondi Lake)
+    makeWalkerNPC('npc-walker1',  '#2d5a3c', '#1c1917', '#bfa07a', 'physics');  // Arif (DU Physics Senior)
+    makeWalkerNPC('npc-walker2',  '#c2593f', '#26150f', '#f59e0b', 'sketcher'); // Nadia (Charukola Sketcher)
+    makeWalkerNPC('npc-walker3',  '#1e293b', '#262626', '#881337', 'poet');     // Baki Bhai (Nilkhet Poet)
+    makeWalkerNPC('npc-photo',    '#1d4ed8', '#1c1917', '#f97316', 'photo');    // Sami (Street Photographer)
+    makeWalkerNPC('npc-jogger',   '#e11d48', '#271610', '#fb7185', 'jogger');   // Tania (Dhanmondi Jogger)
+
+    // Dedicated Realm Guardians & Guides (Worlds 2 to 6)
+    makeWalkerNPC('npc-sage',       '#166534', '#e2e8f0', '#4ade80', 'sage');       // Elder Banyan Sage
+    makeWalkerNPC('npc-marina',     '#0d9488', '#5eead4', '#f43f5e', 'marina');     // Tidekeeper Marina
+    makeWalkerNPC('npc-kael',       '#451a03', '#c2410c', '#f97316', 'kael');       // Master Blacksmith Kael
+    makeWalkerNPC('npc-lyra',       '#1e1b4b', '#93c5fd', '#facc15', 'lyra');       // Astronomer Lyra
+    makeWalkerNPC('npc-chronicler', '#581c87', '#e9d5ff', '#fde047', 'chronicler'); // Celestial Chronicler
+
+    // Dedicated Sprite for Anamika (Moon Walker's Bestie & Star Kebab Partner: 4-Frame Walk)
+    [0, 1, 2, 3].forEach(step => {
+      makeTex(`npc-anamika-${step}`, 52, 58, ctx => {
+        const bob = (step === 1 || step === 3) ? -1.8 : 0;
+        const lLeg = step === 0 ? 2.5 : (step === 2 ? -2.2 : 0);
+        const rLeg = step === 2 ? 2.5 : (step === 0 ? -2.2 : 0);
+        const lFoot = step === 0 ? 2.0 : (step === 2 ? -1.2 : 0);
+        const rFoot = step === 2 ? 2.0 : (step === 0 ? -1.2 : 0);
+        const armSwing = step === 0 ? 2.2 : (step === 2 ? -2.2 : 0);
+        const flutter = step === 1 ? 1.8 : (step === 3 ? -1.8 : (step === 0 ? -0.9 : 0.9));
+        const cx = 26;
+
+        // 1. Two-Tone Contact Ground Shadow
+        ctx.fillStyle = 'rgba(12, 8, 20, 0.12)';
+        ctx.beginPath();
+        ctx.ellipse(cx, 53, (step % 2 === 0) ? 13 : 11.5, (step % 2 === 0) ? 4.2 : 3.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = 'rgba(12, 8, 20, 0.28)';
+        ctx.beginPath();
+        ctx.ellipse(cx, 53, (step % 2 === 0) ? 8.5 : 7.2, (step % 2 === 0) ? 2.5 : 2.1, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Flowing Wavy Dark-Auburn Hair Layer
+        ctx.fillStyle = '#26150f';
+        ctx.beginPath();
+        ctx.ellipse(cx, 16.5 + bob, 11, 12, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx - 8.5, 23.5 + bob, 4.8, 8.5, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(cx + 8.5, 23.5 + bob, 4.8, 8.5, -0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Cream Silk Palazzo Pants & Heeled Sandals
+        ctx.fillStyle = '#fefce8';
+        ctx.fillRect(cx - 6.5, 39 + lLeg, 5.2, 10);
+        ctx.fillRect(cx + 1.5, 39 + rLeg, 5.2, 10);
+        ctx.fillStyle = '#facc15'; // Gold embroidered hem border
+        ctx.fillRect(cx - 6.5, 48 + lLeg, 5.2, 1.5);
+        ctx.fillRect(cx + 1.5, 48 + rLeg, 5.2, 1.5);
+
+        // Elegant Feet & Heeled Sandals
+        ctx.fillStyle = '#f5cfb0';
+        ctx.fillRect(cx - 4.8, 49.5 + lFoot, 3.8, 2.5);
+        ctx.fillRect(cx + 1.2, 49.5 + rFoot, 3.8, 2.5);
+        ctx.fillStyle = '#7c2d12'; // Strappy leather heels
+        ctx.fillRect(cx - 5.2, 51.5 + lFoot, 4.4, 1.5);
+        ctx.fillRect(cx + 0.8, 51.5 + rFoot, 4.4, 1.5);
+
+        // 4. Emerald-Teal Jamdani Kurti & Mustard-Gold Chiffon Dupatta
+        ctx.fillStyle = '#0f766e'; // Main emerald-teal fabric
+        ctx.beginPath();
+        ctx.roundRect(cx - 8.5, 23 + bob, 17, 19, 2.5);
+        ctx.fill();
+        ctx.fillStyle = '#115e59'; // Side slit shadow
+        ctx.fillRect(cx - 8.5, 35 + bob, 2.5, 7);
+        ctx.fillRect(cx + 6, 35 + bob, 2.5, 7);
+        ctx.fillStyle = '#fde047'; // Embroidered hem border & floral bootis
+        ctx.fillRect(cx - 8.5, 41 + bob, 17, 1.6);
+        ctx.fillRect(cx - 5, 28 + bob, 1.5, 1.5);
+        ctx.fillRect(cx + 3.5, 28 + bob, 1.5, 1.5);
+        ctx.fillRect(cx - 5, 34 + bob, 1.5, 1.5);
+        ctx.fillRect(cx + 3.5, 34 + bob, 1.5, 1.5);
+
+        // Mustard-Gold Chiffon Dupatta Floating Across Chest & Side
+        ctx.fillStyle = '#f59e0b';
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, 23 + bob); ctx.lineTo(cx - 3, 23 + bob);
+        ctx.lineTo(cx + 8.5, 35 + bob); ctx.lineTo(cx + 7, 39 + bob);
+        ctx.lineTo(cx - 8.5, 27 + bob);
+        ctx.closePath(); ctx.fill();
+        // Trailing fluttering dupatta tail
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(cx - 10, 24 + bob, 3.5, 16 + flutter);
+        ctx.fillStyle = '#fef08a'; // Gold lace border on dupatta
+        ctx.fillRect(cx - 10, 39 + bob + flutter, 3.5, 1.5);
+
+        // 5. Sleeves, Hands & Signature Props (Glowing Smartphone + Star Kebab Box)
+        const lArmX = cx - 11.5 + (armSwing * -0.5);
+        const rArmX = cx + 8 + (armSwing * 0.5);
+        ctx.fillStyle = '#0f766e';
+        ctx.fillRect(lArmX, 24 + bob, 3.5, 8.5);
+        ctx.fillRect(rArmX, 24 + bob, 3.5, 8.5);
+        ctx.fillStyle = '#f5cfb0';
+        ctx.fillRect(lArmX + 0.2, 32.5 + bob, 3.2, 4);
+        ctx.fillRect(rArmX + 0.2, 32.5 + bob, 3.2, 4);
+        // Gold Bangles on Wrists
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(lArmX, 32 + bob, 3.5, 1.2);
+        ctx.fillRect(rArmX, 32 + bob, 3.5, 1.2);
+
+        // Left Hand: Smartphone glowing with Shuvra's Video Call & Heart
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(lArmX - 2.5, 29 + bob, 4.8, 7.5);
+        ctx.fillStyle = '#38bdf8'; // Glowing call screen
+        ctx.fillRect(lArmX - 1.8, 30 + bob, 3.6, 5);
+        ctx.fillStyle = '#f43f5e'; // Pink heart notification emoji!
+        ctx.fillRect(lArmX - 0.8, 31.5 + bob, 1.8, 1.8);
+
+        // Right Hand: Authentic Star Kebab Takeout Box with Steam
+        ctx.fillStyle = '#fdf6e2'; // Star Kebab parcel box
+        ctx.fillRect(rArmX + 1.5, 33 + bob, 7, 7.5);
+        ctx.fillStyle = '#dc2626'; // Star Kebab red emblem
+        ctx.beginPath(); ctx.arc(rArmX + 5, 36.5 + bob, 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#d97706'; // Gold ribbon tie
+        ctx.fillRect(rArmX + 1.5, 36 + bob, 7, 1);
+        // Rising fragrant steam
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.fillRect(rArmX + 3.5 + flutter * 0.4, 28 + bob, 1.5, 3.5);
+
+        // 6. Neck, Radiant Smiling Face & Flowing Bangs
+        ctx.fillStyle = '#dfaa78';
+        ctx.fillRect(cx - 2.5, 20 + bob, 5, 4);
+        ctx.fillStyle = '#f5cfb0';
+        ctx.beginPath(); ctx.arc(cx, 15.2 + bob, 7.8, 0, Math.PI * 2); ctx.fill();
+
+        // Cat-Eye Kohl Liner, Dark Eyes, Catchlights & Cheerful Blush
+        ctx.fillStyle = '#18181b';
+        ctx.fillRect(cx - 4.5, 13.5 + bob, 2.5, 2.2);
+        ctx.fillRect(cx + 2, 13.5 + bob, 2.5, 2.2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(cx - 4.2, 13.8 + bob, 1, 1);
+        ctx.fillRect(cx + 2.4, 13.8 + bob, 1, 1);
+        ctx.fillStyle = 'rgba(244, 63, 94, 0.35)'; // Rosy peach blush
+        ctx.beginPath();
+        ctx.arc(cx - 4.5, 16.5 + bob, 1.6, 0, Math.PI * 2);
+        ctx.arc(cx + 4.5, 16.5 + bob, 1.6, 0, Math.PI * 2);
+        ctx.fill();
+        // Warm radiant smile
+        ctx.fillStyle = '#e11d48';
+        ctx.beginPath(); ctx.arc(cx, 17.5 + bob, 2.4, 0, Math.PI); ctx.fill();
+
+        // Parted Hair Bangs & Gold Barrette Clip
+        ctx.fillStyle = '#26150f';
+        ctx.beginPath();
+        ctx.arc(cx, 11 + bob, 8, Math.PI, 0);
+        ctx.fill();
+        // Side bangs sweeping down
+        ctx.fillRect(cx - 8, 11 + bob, 2.5, 4);
+        ctx.fillRect(cx + 5.5, 11 + bob, 2.5, 4);
+        // Gold barrette hair clip
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(cx - 7, 9.5 + bob, 3.2, 1.4);
+        // Dangling gold jhumka earrings with emerald drops
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath(); ctx.arc(cx - 7, 16.5 + bob, 1.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + 7, 16.5 + bob, 1.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(cx - 7.5, 17.5 + bob, 1.2, 1.5);
+        ctx.fillRect(cx + 6.3, 17.5 + bob, 1.2, 1.5);
+      });
+    });
+
+    makeTex('npc-anamika', 52, 58, ctx => {
+      const tex = this.textures.get('npc-anamika-0');
+      if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
+    });
+
+    // Mimi the Campus Ginger Tabby Cat (4-Frame Walk: Mackerel Stripes, Swishing Tail, White Paws, Bell)
+    [0, 1, 2, 3].forEach(step => {
       makeTex(`npc-cat-${step}`, 42, 36, ctx => {
-        const bob = step ? -1.2 : 0;
-        const tailWag = step ? 2.5 : -1.5;
+        const bob = (step === 1 || step === 3) ? -1.2 : 0;
+        const tailWag = step === 0 ? -2.2 : (step === 1 ? 0 : (step === 2 ? 2.5 : 0.8));
+        // Stepping paw offsets for realistic 4-beat cat trot
+        const flPaw = step === 0 ? -1.8 : (step === 2 ? 1.5 : 0);
+        const frPaw = step === 2 ? -1.8 : (step === 0 ? 1.5 : 0);
+        const blPaw = step === 3 ? -1.5 : (step === 1 ? 1.2 : 0);
+        const brPaw = step === 1 ? -1.5 : (step === 3 ? 1.2 : 0);
 
-        // Ground shadow
+        // Ground shadow (stretches and contracts with trot)
         ctx.fillStyle = 'rgba(12, 8, 20, 0.22)';
-        ctx.beginPath(); ctx.ellipse(21, 31, 11, 3.2, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(21, 31, (step % 2 === 0) ? 12 : 10.5, 3.2, 0, 0, Math.PI * 2);
+        ctx.fill();
 
-        // Upright Curving Ginger Tail with White Tip
-        ctx.strokeStyle = '#e07a2e';
+        // Upright Curving Ginger Tail with White Tip & Swish
+        ctx.strokeStyle = '#ea580c';
         ctx.lineWidth = 3.2;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(11, 21 + bob);
-        ctx.quadraticCurveTo(5, 14 + bob, 7 + tailWag, 8 + bob);
+        ctx.quadraticCurveTo(5, 13 + bob, 7 + tailWag, 7 + bob);
         ctx.stroke();
-        ctx.fillStyle = '#fff8eb';
-        ctx.beginPath(); ctx.arc(7 + tailWag, 8 + bob, 1.8, 0, Math.PI * 2); ctx.fill();
+        // Dark ginger stripe on tail
+        ctx.strokeStyle = '#9a3412'; ctx.lineWidth = 2.4;
+        ctx.beginPath(); ctx.moveTo(9, 17 + bob); ctx.lineTo(8, 14 + bob); ctx.stroke();
+        // White fluffy tail tip
+        ctx.fillStyle = '#fffbeb';
+        ctx.beginPath(); ctx.arc(7 + tailWag, 7 + bob, 2, 0, Math.PI * 2); ctx.fill();
 
-        // White Paws (Stepping)
-        ctx.fillStyle = '#fff8eb';
-        ctx.fillRect(11, 25 + (step ? -1.5 : 0), 3.5, 5);
-        ctx.fillRect(16, 25 + (step ? 1.5 : 0), 3.5, 5);
-        ctx.fillRect(23, 25 + (step ? -1.5 : 0), 3.5, 5);
-        ctx.fillRect(27.5, 25 + (step ? 1.5 : 0), 3.5, 5);
+        // 4 Stepping White Paws / Mittens
+        ctx.fillStyle = '#fffbeb';
+        ctx.fillRect(10.5, 25 + blPaw, 3.5, 5); // Back Left
+        ctx.fillRect(15.5, 25 + brPaw, 3.5, 5); // Back Right
+        ctx.fillRect(22.5, 25 + flPaw, 3.5, 5); // Front Left
+        ctx.fillRect(27.5, 25 + frPaw, 3.5, 5); // Front Right
 
         // Plump Ginger Body & Cream Belly
-        ctx.fillStyle = '#e07a2e';
-        ctx.beginPath(); ctx.ellipse(20, 21 + bob, 10, 6.2, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fff8eb';
-        ctx.beginPath(); ctx.ellipse(20, 24 + bob, 7.5, 3, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath(); ctx.ellipse(20, 21 + bob, 10.5, 6.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fffbeb'; // Cream underbelly bib
+        ctx.beginPath(); ctx.ellipse(20, 24 + bob, 7.8, 3.2, 0, 0, Math.PI * 2); ctx.fill();
 
-        // Dark Ginger Tabby Stripes on Back
-        ctx.fillStyle = '#a84a12';
-        ctx.fillRect(15, 15.5 + bob, 2, 4.5);
-        ctx.fillRect(19, 15 + bob, 2, 5);
-        ctx.fillRect(23, 15.5 + bob, 2, 4.5);
+        // Dark Russet Tabby Mackerel Stripes along Spine & Flank
+        ctx.fillStyle = '#9a3412';
+        ctx.fillRect(14, 15.5 + bob, 2, 5);
+        ctx.fillRect(18, 15 + bob, 2.2, 5.5);
+        ctx.fillRect(22, 15.5 + bob, 2, 5);
+        ctx.fillRect(25.5, 17 + bob, 1.8, 4);
 
-        // Cat Head & Pointed Ears with Pink Inner Triangles
-        ctx.fillStyle = '#e07a2e';
-        ctx.beginPath(); ctx.arc(29, 15.5 + bob, 6.5, 0, Math.PI * 2); ctx.fill();
-        // Left & Right Ears
+        // Cat Head & Pointed Ears with Pink Inner Cartilage
+        ctx.fillStyle = '#ea580c';
+        ctx.beginPath(); ctx.arc(29, 15.2 + bob, 6.8, 0, Math.PI * 2); ctx.fill();
+        // Ears
         ctx.beginPath();
-        ctx.moveTo(24, 12 + bob); ctx.lineTo(25, 5.5 + bob); ctx.lineTo(29, 10 + bob);
-        ctx.moveTo(29, 10 + bob); ctx.lineTo(33.5, 5.5 + bob); ctx.lineTo(34.5, 12 + bob);
+        ctx.moveTo(24, 12 + bob); ctx.lineTo(25, 5 + bob); ctx.lineTo(29, 9.5 + bob);
+        ctx.moveTo(29, 9.5 + bob); ctx.lineTo(33.5, 5 + bob); ctx.lineTo(34.5, 12 + bob);
         ctx.fill();
-        ctx.fillStyle = '#f4a9c0'; // Pink inner ears
-        ctx.fillRect(25.5, 8 + bob, 1.8, 2.5);
-        ctx.fillRect(31.8, 8 + bob, 1.8, 2.5);
-
-        // Emerald Cat Eyes, Pink Nose & Whiskers
-        ctx.fillStyle = '#1b4332';
-        ctx.fillRect(27, 14 + bob, 2, 2.2);
-        ctx.fillRect(31.5, 14 + bob, 2, 2.2);
+        // Inner ears
+        ctx.fillStyle = '#f4a9c0';
+        ctx.fillRect(25.5, 7.5 + bob, 1.8, 2.8);
+        ctx.fillRect(31.8, 7.5 + bob, 1.8, 2.8);
+        // White ear tufts
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(27.2, 14 + bob, 0.9, 0.9);
-        ctx.fillRect(31.7, 14 + bob, 0.9, 0.9);
-        ctx.fillStyle = '#ff758f'; // Tiny pink nose
-        ctx.fillRect(29.8, 16.5 + bob, 1.6, 1.2);
+        ctx.fillRect(25, 10 + bob, 1, 1.5);
+        ctx.fillRect(33, 10 + bob, 1, 1.5);
 
-        // Red Collar with Gold Bell
-        ctx.fillStyle = '#d90429';
-        ctx.fillRect(24.5, 19.8 + bob, 7.5, 1.8);
-        ctx.fillStyle = '#f7cb45';
-        ctx.beginPath(); ctx.arc(29.5, 21.5 + bob, 1.6, 0, Math.PI * 2); ctx.fill();
+        // Emerald Cat Eyes, Pink Nose, Whisker Dots & White Muzzle
+        ctx.fillStyle = '#fffbeb'; // White muzzle pad
+        ctx.beginPath(); ctx.ellipse(30.5, 17.5 + bob, 3, 2, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#15803d'; // Luminous emerald green eyes
+        ctx.fillRect(27, 13.8 + bob, 2.2, 2.4);
+        ctx.fillRect(31.5, 13.8 + bob, 2.2, 2.4);
+        ctx.fillStyle = '#ffffff'; // Eye glint
+        ctx.fillRect(27.2, 14 + bob, 1, 1);
+        ctx.fillRect(31.7, 14 + bob, 1, 1);
+        ctx.fillStyle = '#fb7185'; // Tiny pink triangular nose
+        ctx.fillRect(29.8, 16.5 + bob, 1.6, 1.2);
+        // Whiskers
+        ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 0.8;
+        ctx.beginPath();
+        ctx.moveTo(33, 17.5 + bob); ctx.lineTo(38, 16.5 + bob);
+        ctx.moveTo(33, 18.5 + bob); ctx.lineTo(38, 19 + bob);
+        ctx.stroke();
+
+        // Red Leather Collar with Shiny Golden Bell
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(24.5, 19.5 + bob, 7.5, 1.8);
+        ctx.fillStyle = '#facc15'; // Golden jingle bell
+        ctx.beginPath(); ctx.arc(29.5, 21.5 + bob, 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#78350f'; // Bell slit
+        ctx.fillRect(29.2, 22.2 + bob, 0.8, 0.8);
       });
+    });
+
+    makeTex('npc-cat', 42, 36, ctx => {
+      const tex = this.textures.get('npc-cat-0');
+      if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
     });
 
     // --- World Trees & Pillars ---
@@ -8246,11 +8899,20 @@ class DhakaValleyScene extends Phaser.Scene {
   getOrCreateWalkAnim(baseTex, frameRate = 4) {
     const key = `anim-${baseTex}`;
     if (!this.anims.exists(key)) {
-      if (this.textures.exists(`${baseTex}-0`) && this.textures.exists(`${baseTex}-1`)) {
+      const frames = [];
+      for (let i = 0; i < 8; i++) {
+        const frameKey = `${baseTex}-${i}`;
+        if (this.textures.exists(frameKey)) {
+          frames.push({ key: frameKey });
+        } else {
+          break;
+        }
+      }
+      if (frames.length >= 2) {
         this.anims.create({
           key,
-          frames: [{ key: `${baseTex}-0` }, { key: `${baseTex}-1` }],
-          frameRate,
+          frames,
+          frameRate: frames.length > 2 ? Math.max(frameRate, 4.5) : frameRate,
           repeat: -1
         });
       }
