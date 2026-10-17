@@ -54,8 +54,11 @@ jobs:
       - name: Execute Cloud Instruction
         env:
           PROMPT: ${{ github.event.client_payload.prompt || inputs.prompt }}
+          CHAT_ID: ${{ github.event.client_payload.chat_id || inputs.chat_id || secrets.ALLOWED_CHAT_ID }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           ANTIGRAVITY_API_KEY: ${{ secrets.ANTIGRAVITY_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-2.5-flash' }}
         run: |
           echo "Running cloud task for: $PROMPT"
           node scripts/cloud-runner.js "$PROMPT"
