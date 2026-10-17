@@ -1,5 +1,6 @@
 // telegram-bot.js - Local Telegram Automation Bridge for Antigravity & Vercel
 require('dotenv/config');
+const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const TelegramBot = require('node-telegram-bot-api');
@@ -38,7 +39,7 @@ const bot = new TelegramBot(token, { polling: true });
 
 console.log('🤖 Telegram Antigravity Bridge started in long-polling mode.');
 console.log(`🔒 Authorized Chat ID: ${allowedChatId}`);
-console.log('Waiting for instructions from authorized user...\n');
+console.log('Waiting for instructions or media from authorized user...\n');
 
 let isProcessing = false;
 
@@ -97,11 +98,9 @@ function runCommand(cmd, args, timeoutMs = 300000) {
 
 function extractVercelUrl(output) {
   if (!output) return null;
-  // Match standard production URL: https://*.vercel.app
   const match = output.match(/https:\/\/[a-zA-Z0-9-._]+\.vercel\.app/i);
   if (match) return match[0];
 
-  // Match general https url fallback
   const lines = output.split('\n').map(l => l.trim()).filter(Boolean);
   for (const line of lines) {
     const urlMatch = line.match(/https:\/\/[^\s]+/i);
@@ -110,6 +109,72 @@ function extractVercelUrl(output) {
     }
   }
   return null;
+}
+
+// Helper to download image and audio files into the assets directory
+async function handleMediaDownload(msg) {
+  let fileId = null;
+  let targetSubdir = 'images';
+  let desiredFileName = null;
+
+  // 1. Photos
+  if (msg.photo && msg.photo.length > 0) {
+    const highestQualityPhoto = msg.photo[msg.photo.length - 1];
+    fileId = highestQualityPhoto.file_id;
+    targetSubdir = 'images';
+    desiredFileName = `photo_${Date.now()}.jpg`;
+  }
+  // 2. Audio tracks
+  else if (msg.audio) {
+    fileId = msg.audio.file_id;
+    targetSubdir = 'audio';
+    desiredFileName = msg.audio.file_name || `audio_${Date.now()}.mp3`;
+  }
+  // 3. Voice notes
+  else if (msg.voice) {
+    fileId = msg.voice.file_id;
+    targetSubdir = 'audio';
+    desiredFileName = `voice_${Date.now()}.ogg`;
+  }
+  // 4. Documents (Uncompressed audio/images)
+  else if (msg.document) {
+    fileId = msg.document.file_id;
+    const docName = msg.document.file_name || `doc_${Date.now()}`;
+    const mime = (msg.document.mime_type || '').toLowerCase();
+
+    if (mime.startsWith('audio/') || /\.(mp3|wav|ogg|m4a|aac|flac|opus)$/i.test(docName)) {
+      targetSubdir = 'audio';
+    } else if (mime.startsWith('image/') || /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(docName)) {
+      targetSubdir = 'images';
+    } else {
+      targetSubdir = 'images';
+    }
+    desiredFileName = docName;
+  }
+
+  if (!fileId) return null;
+
+  // Ensure assets destination directory exists
+  const targetDir = path.join(__dirname, 'assets', targetSubdir);
+  fs.mkdirSync(targetDir, { recursive: true });
+
+  // Download via Telegram Bot API
+  const tempPath = await bot.downloadFile(fileId, targetDir);
+  let finalPath = tempPath;
+
+  if (desiredFileName) {
+    const safeName = desiredFileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+    finalPath = path.join(targetDir, safeName);
+    if (tempPath !== finalPath) {
+      if (fs.existsSync(finalPath)) {
+        fs.unlinkSync(finalPath);
+      }
+      fs.renameSync(tempPath, finalPath);
+    }
+  }
+
+  const relativePath = path.relative(__dirname, finalPath);
+  return { relativePath, finalPath, targetSubdir, fileName: path.basename(finalPath) };
 }
 
 bot.on('message', async (msg) => {
@@ -129,8 +194,7 @@ bot.on('message', async (msg) => {
     return;
   }
 
-  const text = msg.text ? msg.text.trim() : null;
-  if (!text) return;
+  const text = (msg.text || '').trim();
 
   // Reply to /start with: "🕹️ Connected to your Mac! Send any game design instruction."
   if (text === '/start') {
@@ -144,23 +208,65 @@ bot.on('message', async (msg) => {
   }
 
   isProcessing = true;
-  console.log(`\n📨 Received instruction from Chat ID ${chatId}: "${text}"`);
 
-  let statusMsg = null;
+  // Check if message contains media (photo, audio, voice, or document)
+  const isMedia = Boolean(msg.photo || msg.audio || msg.voice || msg.document);
+  let mediaResult = null;
 
   try {
+    if (isMedia) {
+      const downloadingMsg = await bot.sendMessage(chatId, '📥 Downloading file into assets directory...');
+      mediaResult = await handleMediaDownload(msg);
+      console.log(`[ASSET] Saved media to: ${mediaResult.relativePath}`);
+
+      // If no caption is attached, simply save and commit the new asset
+      const caption = (msg.caption || '').trim();
+      if (!caption) {
+        await bot.sendMessage(
+          chatId,
+          `✅ Saved file to \`${mediaResult.relativePath}\`!`,
+          { parse_mode: 'Markdown' }
+        );
+
+        // Auto-commit new asset locally
+        try {
+          await runCommand('git', ['add', mediaResult.relativePath], 60000);
+          await runCommand('git', ['commit', '-m', `"Add asset via Telegram: ${mediaResult.fileName}"`], 60000);
+          console.log(`[GIT] Committed new asset: ${mediaResult.fileName}`);
+        } catch (gitErr) {
+          console.warn('⚠️ Git commit warning (ignored):', gitErr.message);
+        }
+
+        isProcessing = false;
+        return;
+      }
+    }
+
+    const promptText = (msg.caption || msg.text || '').trim();
+    if (!promptText) {
+      isProcessing = false;
+      return;
+    }
+
+    // If an asset was sent WITH a caption, supply the file location to Antigravity
+    let effectiveInstruction = promptText;
+    if (mediaResult) {
+      effectiveInstruction = `The user uploaded an asset saved at "${mediaResult.relativePath}". ${promptText}`;
+    }
+
+    console.log(`\n📨 Processing instruction from Chat ID ${chatId}: "${effectiveInstruction}"`);
+
     // a. Send a Telegram status message: "⚙️ Running instruction: <prompt>..."
-    statusMsg = await bot.sendMessage(chatId, `⚙️ Running instruction: "${text}"...`);
+    const statusMsg = await bot.sendMessage(chatId, `⚙️ Running instruction: "${promptText}"...`);
 
     // b. Run headless Antigravity CLI with 5-minute timeout (300000ms) and CI: 'true', npm_config_yes: 'true'
-    // agy -p "<escaped_prompt>" --dangerously-skip-permissions
     console.log('[STEP 1/3] Running Antigravity CLI...');
-    const escapedPrompt = text.replace(/"/g, '\\"');
+    const escapedPrompt = effectiveInstruction.replace(/"/g, '\\"');
     await runCommand('agy', ['-p', `"${escapedPrompt}"`, '--dangerously-skip-permissions'], 300000);
 
     // c. Auto-commit changes locally: git add -A && git commit -m "Auto-update: <prompt_snippet>"
     console.log('[STEP 2/3] Auto-committing changes locally...');
-    const promptSnippet = text.slice(0, 50).replace(/["`$\r\n]/g, ' ').trim();
+    const promptSnippet = promptText.slice(0, 50).replace(/["`$\r\n]/g, ' ').trim();
     try {
       await runCommand('git', ['add', '-A'], 60000);
       const gitStatus = await runCommand('git', ['status', '--porcelain'], 30000).catch(() => ({ stdout: '' }));
@@ -182,7 +288,7 @@ bot.on('message', async (msg) => {
           message_id: statusMsg.message_id
         });
       } else {
-        statusMsg = await bot.sendMessage(chatId, '🚀 Edits applied! Deploying to Vercel...');
+        await bot.sendMessage(chatId, '🚀 Edits applied! Deploying to Vercel...');
       }
     } catch (editErr) {
       await bot.sendMessage(chatId, '🚀 Edits applied! Deploying to Vercel...');
@@ -192,7 +298,7 @@ bot.on('message', async (msg) => {
     const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 180000);
     const vercelOutput = `${vercelRes.stdout}\n${vercelRes.stderr}`;
 
-    // f. Extract the live https://*.vercel.app URL from the output and send a final confirmation message with the link to Telegram
+    // f. Extract the live https://*.vercel.app URL and send final confirmation link
     const liveUrl = extractVercelUrl(vercelOutput) || 'https://dhaka-date-rpg.vercel.app';
     const finalReply = `✅ Deployed successfully!\n🔗 ${liveUrl}`;
     console.log(`🎉 Complete: ${liveUrl}`);
