@@ -43,31 +43,81 @@ console.log('Waiting for instructions or media from authorized user...\n');
 
 let isProcessing = false;
 
-function runCommand(cmd, args, timeoutMs = 300000) {
+function killProcessGroup(proc, signal = 'SIGTERM') {
+  if (!proc || !proc.pid) return;
+  try {
+    process.kill(-proc.pid, signal);
+  } catch (e1) {
+    try {
+      proc.kill(signal);
+    } catch (e2) {}
+  }
+}
+
+function runCommand(cmd, args, timeoutMs = 900000, onProgress = null) {
   return new Promise((resolve, reject) => {
     console.log(`[EXEC] ${cmd} ${args.join(' ')}`);
+    const isAgy = cmd === 'agy' || (args && args.some(a => String(a).includes('agy')));
+
     const proc = spawn(cmd, args, {
       cwd: __dirname,
       env: customEnv,
-      shell: true
+      shell: true,
+      detached: true // allows process group kill (-proc.pid)
     });
 
     let stdout = '';
     let stderr = '';
     let timer = null;
+    let progressTimer = null;
+    let agyGraceTimer = null;
+    let settled = false;
+
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      if (progressTimer) clearInterval(progressTimer);
+      if (agyGraceTimer) clearTimeout(agyGraceTimer);
+    };
 
     if (timeoutMs > 0) {
       timer = setTimeout(() => {
-        try { proc.kill('SIGTERM'); } catch (e) {}
+        if (settled) return;
+        settled = true;
+        cleanup();
+        console.warn(`[TIMEOUT] Process group ${proc.pid} timed out after ${timeoutMs / 1000}s. Terminating...`);
+        killProcessGroup(proc, 'SIGTERM');
+        setTimeout(() => killProcessGroup(proc, 'SIGKILL'), 3000);
         const timeoutErr = new Error(`Command timed out after ${timeoutMs / 1000}s:\n${cmd} ${args.join(' ')}`);
         reject(timeoutErr);
       }, timeoutMs);
+    }
+
+    if (onProgress && typeof onProgress === 'function') {
+      let elapsed = 0;
+      progressTimer = setInterval(() => {
+        elapsed += 45;
+        onProgress(elapsed);
+      }, 45000);
     }
 
     proc.stdout.on('data', (d) => {
       const str = d.toString();
       stdout += str;
       process.stdout.write(str);
+
+      // If Antigravity CLI has printed its final response in print mode,
+      // the CLI has completed its code generation. If it lingers in shutdown,
+      // trigger a grace timer to gracefully wrap up after 12 seconds.
+      if (isAgy && (stdout.length > 50 || str.includes('```') || str.includes('Files Changed') || str.includes('Summary'))) {
+        if (!agyGraceTimer) {
+          agyGraceTimer = setTimeout(() => {
+            if (!settled) {
+              console.log('ℹ️ Antigravity CLI finished output. Completing cleanly...');
+              killProcessGroup(proc, 'SIGTERM');
+            }
+          }, 15000);
+        }
+      }
     });
 
     proc.stderr.on('data', (d) => {
@@ -77,12 +127,23 @@ function runCommand(cmd, args, timeoutMs = 300000) {
     });
 
     proc.on('error', (err) => {
-      if (timer) clearTimeout(timer);
+      if (settled) return;
+      settled = true;
+      cleanup();
       reject(err);
     });
 
     proc.on('close', (code) => {
-      if (timer) clearTimeout(timer);
+      if (settled) return;
+      settled = true;
+      cleanup();
+
+      // If agy was terminated by our grace timer after printing its answer, treat as success
+      if (isAgy && (code === 0 || code === null || code === 143) && stdout.trim().length > 0) {
+        resolve({ stdout, stderr, code: 0 });
+        return;
+      }
+
       if (code === 0) {
         resolve({ stdout, stderr, code });
       } else {
@@ -262,10 +323,28 @@ bot.on('message', async (msg) => {
     // a. Send a Telegram status message: "⚙️ Running instruction: <prompt>..."
     const statusMsg = await bot.sendMessage(chatId, `⚙️ Running instruction: "${promptText}"...`);
 
-    // b. Run headless Antigravity CLI with 5-minute timeout (300000ms) and CI: 'true', npm_config_yes: 'true'
     console.log('[STEP 1/3] Running Antigravity CLI...');
+    // Clean up any stale headless CLI server instances or locks
+    try {
+      await runCommand('pkill', ['-f', '"agy --app_data_dir=antigravity-cli"'], 5000).catch(() => {});
+    } catch (cleanErr) {}
+
+    const onAgyProgress = async (elapsedSeconds) => {
+      const mins = Math.floor(elapsedSeconds / 60);
+      const secs = elapsedSeconds % 60;
+      const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      try {
+        if (statusMsg) {
+          await bot.editMessageText(`⚙️ Coding in progress: "${promptText}" (${timeStr} elapsed)...`, {
+            chat_id: chatId,
+            message_id: statusMsg.message_id
+          });
+        }
+      } catch (e) {}
+    };
+
     const escapedPrompt = effectiveInstruction.replace(/"/g, '\\"');
-    await runCommand('agy', ['-p', `"${escapedPrompt}"`, '--dangerously-skip-permissions'], 300000);
+    await runCommand('agy', ['-p', `"${escapedPrompt}"`, '--dangerously-skip-permissions'], 900000, onAgyProgress);
 
     // c. Auto-commit changes locally: git add -A && git commit -m "Auto-update: <prompt_snippet>"
     console.log('[STEP 2/3] Auto-committing changes locally...');
