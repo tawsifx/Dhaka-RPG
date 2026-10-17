@@ -95,9 +95,9 @@ function runCommand(cmd, args, timeoutMs = 900000, onProgress = null) {
     if (onProgress && typeof onProgress === 'function') {
       let elapsed = 0;
       progressTimer = setInterval(() => {
-        elapsed += 45;
+        elapsed += 20;
         onProgress(elapsed);
-      }, 45000);
+      }, 20000);
     }
 
     proc.stdout.on('data', (d) => {
@@ -155,6 +155,75 @@ function runCommand(cmd, args, timeoutMs = 900000, onProgress = null) {
       }
     });
   });
+}
+
+// Inspect Antigravity CLI transcript and workspace to determine current activity
+function getAgyLiveStatus() {
+  const homeDir = process.env.HOME || process.env.USERPROFILE || '';
+  const brainDir = path.join(homeDir, '.gemini', 'antigravity-cli', 'brain');
+  let actionInfo = 'Analyzing codebase and planning changes...';
+  let stepNumber = null;
+
+  if (fs.existsSync(brainDir)) {
+    try {
+      const convs = fs.readdirSync(brainDir).map(f => {
+        try {
+          return { name: f, mtime: fs.statSync(path.join(brainDir, f)).mtimeMs };
+        } catch (e) { return null; }
+      }).filter(Boolean).sort((a, b) => b.mtime - a.mtime);
+
+      if (convs.length > 0) {
+        const transcriptPath = path.join(brainDir, convs[0].name, '.system_generated', 'logs', 'transcript.jsonl');
+        if (fs.existsSync(transcriptPath)) {
+          const lines = fs.readFileSync(transcriptPath, 'utf8').trim().split('\n');
+          for (let i = lines.length - 1; i >= 0 && i >= lines.length - 15; i--) {
+            try {
+              const step = JSON.parse(lines[i]);
+              if (stepNumber === null && step.step_index !== undefined) {
+                stepNumber = step.step_index;
+              }
+              if (step.tool_calls && step.tool_calls.length > 0) {
+                const tc = step.tool_calls[0];
+                const args = tc.args || {};
+                let desc = args.toolAction || args.toolSummary || args.Description || args.Instruction;
+                if (desc) {
+                  desc = String(desc).replace(/^"|"$/g, '');
+                  actionInfo = `${tc.name}: ${desc}`;
+                  break;
+                } else if (args.CommandLine) {
+                  actionInfo = `run_command: ${String(args.CommandLine).replace(/^"|"$/g, '').slice(0, 50)}`;
+                  break;
+                } else if (args.TargetFile) {
+                  actionInfo = `${tc.name}: ${path.basename(String(args.TargetFile).replace(/^"|"$/g, ''))}`;
+                  break;
+                } else {
+                  actionInfo = `Executing ${tc.name}`;
+                  break;
+                }
+              } else if (step.thinking) {
+                const t = step.thinking.trim().split('\n')[0];
+                actionInfo = `Thinking: ${t.slice(0, 70)}...`;
+                break;
+              }
+            } catch (e) {}
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Check git modified files
+  let modifiedFiles = '';
+  try {
+    const { execSync } = require('child_process');
+    const gitOut = execSync('git status --porcelain', { cwd: __dirname, encoding: 'utf8' });
+    const mods = gitOut.trim().split('\n').filter(Boolean).map(l => l.trim().split(/\s+/)[1]).filter(Boolean);
+    if (mods.length > 0) {
+      modifiedFiles = mods.slice(0, 3).join(', ') + (mods.length > 3 ? ` (+${mods.length - 3} more)` : '');
+    }
+  } catch (e) {}
+
+  return { stepNumber, actionInfo, modifiedFiles };
 }
 
 function extractVercelUrl(output) {
@@ -259,12 +328,26 @@ bot.on('message', async (msg) => {
 
   // Reply to /start with: "🕹️ Connected to your Mac! Send any game design instruction."
   if (text === '/start') {
-    await bot.sendMessage(chatId, '🕹️ Connected to your Mac! Send any game design instruction.');
+    await bot.sendMessage(chatId, '🕹️ Connected to your Mac! Send any game design instruction, or send /status to check current activity.');
+    return;
+  }
+
+  // Reply to /status with real-time Antigravity activity
+  if (text === '/status') {
+    if (isProcessing) {
+      const live = getAgyLiveStatus();
+      const stepStr = live.stepNumber !== null ? ` (Step ${live.stepNumber})` : '';
+      const actionStr = live.actionInfo ? `\n🛠️ Action: ${live.actionInfo}` : '';
+      const modsStr = live.modifiedFiles ? `\n📁 Files changed: ${live.modifiedFiles}` : '';
+      await bot.sendMessage(chatId, `⚙️ Antigravity is currently busy:${stepStr}${actionStr}${modsStr}`);
+    } else {
+      await bot.sendMessage(chatId, '✅ Antigravity is idle. Send any game design instruction.');
+    }
     return;
   }
 
   if (isProcessing) {
-    await bot.sendMessage(chatId, '⏳ An instruction is currently being processed. Please wait for it to complete.');
+    await bot.sendMessage(chatId, '⏳ An instruction is currently being processed. Send /status to see live progress.');
     return;
   }
 
@@ -333,14 +416,26 @@ bot.on('message', async (msg) => {
       const mins = Math.floor(elapsedSeconds / 60);
       const secs = elapsedSeconds % 60;
       const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+      const live = getAgyLiveStatus();
+      const stepStr = live.stepNumber !== null ? ` (Step ${live.stepNumber})` : '';
+      const actionStr = live.actionInfo ? `\n🛠️ Action: ${live.actionInfo}` : '';
+      const modsStr = live.modifiedFiles ? `\n📁 Files changed: ${live.modifiedFiles}` : '';
+
+      const progressText = `⚙️ Working on instruction: "${promptText}"\n⏱️ Elapsed: ${timeStr}${stepStr}${actionStr}${modsStr}`;
+
       try {
         if (statusMsg) {
-          await bot.editMessageText(`⚙️ Coding in progress: "${promptText}" (${timeStr} elapsed)...`, {
+          await bot.editMessageText(progressText, {
             chat_id: chatId,
             message_id: statusMsg.message_id
           });
         }
-      } catch (e) {}
+      } catch (e) {
+        if (!e.message || !e.message.includes('not modified')) {
+          console.warn('⚠️ Progress edit warning:', e.message);
+        }
+      }
     };
 
     const escapedPrompt = effectiveInstruction.replace(/"/g, '\\"');
