@@ -84,6 +84,58 @@ body, html {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
 }
 
+/* ================= TELEGRAM LIVE HUD INDICATOR ================= */
+.hud-live-pill {
+  pointer-events: auto;
+  cursor: pointer;
+  background: rgba(14, 24, 38, 0.92);
+  border: 1.5px solid #38bdf8;
+  border-radius: 20px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.05em;
+  color: #7dd3fc;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px rgba(56, 189, 248, 0.25);
+  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.hud-live-pill:hover {
+  transform: translateY(-1px);
+  border-color: #34d399;
+  color: #a7f3d0;
+  box-shadow: 0 6px 18px rgba(52, 211, 153, 0.35);
+}
+
+.hud-live-pill .live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #34d399;
+  animation: livePulse 1.4s infinite ease-in-out;
+}
+
+.hud-live-pill.active .live-dot {
+  background: #34d399;
+  box-shadow: 0 0 12px #34d399;
+  animation: livePulse 0.9s infinite ease-in-out;
+}
+
+.hud-live-pill.paused .live-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 6px #f59e0b;
+  animation: none;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.35); }
+}
+
 .hud-zone-card {
   min-width: 185px;
 }
