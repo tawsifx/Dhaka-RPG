@@ -2,7 +2,6 @@
 require('dotenv/config');
 const fs = require('fs');
 const path = require('path');
-const http = require('http');
 const { spawn } = require('child_process');
 const TelegramBot = require('node-telegram-bot-api');
 
@@ -35,7 +34,7 @@ if (!token || !allowedChatId) {
   process.exit(1);
 }
 
-// 1. Long polling mode (polling: true).
+// 1. Long polling mode (polling: true). No webhooks or open ports needed.
 const bot = new TelegramBot(token, { polling: true });
 
 console.log('🤖 Telegram Antigravity Bridge started in long-polling mode.');
@@ -43,22 +42,6 @@ console.log(`🔒 Authorized Chat ID: ${allowedChatId}`);
 console.log('Waiting for instructions or media from authorized user...\n');
 
 let isProcessing = false;
-
-// 2. HTTP Health check server for 24/7 cloud hosts (Render, Railway, Fly.io)
-const PORT = process.env.PORT || 3000;
-const healthServer = http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify({
-    status: 'ok',
-    service: 'Dhaka-RPG Telegram Bot',
-    uptime: Math.floor(process.uptime()),
-    isProcessing: Boolean(isProcessing)
-  }));
-});
-
-healthServer.listen(PORT, () => {
-  console.log(`🌐 HTTP health check server listening on port ${PORT}`);
-});
 
 function killProcessGroup(proc, signal = 'SIGTERM') {
   if (!proc || !proc.pid) return;
@@ -592,7 +575,6 @@ bot.on('message', async (msg) => {
 // Graceful termination
 const shutdown = () => {
   console.log('\n🛑 Stopping Telegram bot...');
-  try { healthServer.close(); } catch (e) {}
   bot.stopPolling().then(() => process.exit(0));
 };
 
