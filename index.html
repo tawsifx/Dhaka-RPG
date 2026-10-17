@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Totoro & Moon Walker: Chronicles of the Six Realms</title>
+  <!-- Google Fonts for Retro Pixel & Clean Readable UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <!-- Phaser 3.60 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+</head>
+<body>
+  <!-- Phaser Canvas Mount -->
+  <div id="phaser-mount"></div>
+
+  <header id="top-hud">
+
+    <div class="hud-card hud-zone-card">
+      <div class="hud-row">
+        <span id="hud-weather">🌤️</span>
+        <strong id="hud-zone">Curzon Hall Lawn</strong>
+      </div>
+      <div class="hud-subrow">
+        <span id="hud-time">3:15 PM</span> • <span id="hud-phase">Curzon Afternoon</span>
+      </div>
+    </div>
+
+    <div class="hud-card hud-stats-card">
+      <div class="stat-top">
+        <span id="hud-level">LV. 1 Moon Walker</span>
+        <span class="heart-container" title="Relationship Bond with Totoro">
+          <span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span>
+        </span>
+      </div>
+      <div class="bar-group">
+        <div class="stat-bar hp-bar"><div id="hud-hp-fill" class="bar-fill"></div><span id="hud-hp-text">HP 100/100</span></div>
+        <div class="stat-bar sp-bar"><div id="hud-sp-fill" class="bar-fill"></div><span id="hud-sp-text">SP 50/50</span></div>
+        <div class="stat-bar xp-bar"><div id="hud-xp-fill" class="bar-fill"></div><span id="hud-xp-text">XP 0/100</span></div>
+      </div>
+    </div>
+
+    <div class="hud-card hud-quest-card">
+      <div class="quest-header">📜 ACTIVE OBJECTIVE</div>
+      <div id="hud-quest">1. Find Totoro waiting under the Krishnachura tree at Curzon Hall (South-West).</div>
+    </div>
+
+    <!-- 3-Bar Dropdown Menu -->
+    <div class="hud-menu-container">
+      <button id="btn-menu-toggle" class="hud-btn hamburger-btn" type="button" aria-label="Toggle Navigation Menu">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+      <div id="hud-dropdown-menu" class="hud-dropdown-drawer" hidden>
+        <button id="btn-talk-partner" class="drawer-item-btn" type="button">🐾 Partner</button>
+        <button id="btn-open-quests" class="drawer-item-btn" type="button">📜 Quests (L)</button>
+        <button id="btn-open-bag" class="drawer-item-btn" type="button">🎒 Bag &amp; Craft (I)</button>
+        <button id="btn-open-map" class="drawer-item-btn" type="button">🗺️ Realm Map (M)</button>
+        <button id="btn-save-game" class="drawer-item-btn" type="button">💾 Quick Save</button>
+        <button id="btn-bgm" class="drawer-item-btn" type="button">🎵 BGM: ON</button>
+      </div>
+    </div>
+
+  </header>
+
+  <!-- Live Minimap Widget -->
+  <div id="minimap-panel">
+    <canvas id="minimap-canvas" width="144" height="108"></canvas>
+    <div id="minimap-world-label">World 1: Dhaka Valley</div>
+  </div>
+
+  <!-- Boss Health Bar Overlay -->
+  <div id="boss-hud" hidden>
+    <div id="boss-name">GUARDIAN BOSS</div>
+    <div class="boss-bar-outer">
+      <div id="boss-hp-fill"></div>
+    </div>
+  </div>
+
+  <!-- 10-Slot Keepsake & Item Hotbar -->
+  <footer id="bottom-hud">
+    <div id="combat-hints">
+      <span><b>WASD</b> Move</span>
+      <span><b>SPACE/E</b> Interact</span>
+      <span><b>J / Click</b> 3-Hit Combo</span>
+      <span><b>K / Shift</b> Dash</span>
+      <span><b>Q</b> Spirit Roar</span>
+      <span><b>R / F</b> Belly Slam</span>
+    </div>
+    <div id="inventory-bar"></div>
+  </footer>
+
+  <!-- Advanced Landscape Mobile Controls (Virtual Joystick & Arc Actions) -->
+  <div id="mobile-controls">
+    <!-- Left Hand: Virtual Analog Joystick Zone -->
+    <div id="joystick-zone">
+      <div id="joystick-base">
+        <div id="joystick-knob"></div>
+      </div>
+    </div>
+
+    <!-- Right Hand: Ergonomic Thumb Action Cluster -->
+    <div class="mobile-action-arc">
+      <button id="btn-mobile-slam" class="mob-btn slam" type="button" aria-label="Totoro Belly Slam">
+        <span class="btn-icon">💥</span>
+        <span class="btn-label">SLAM</span>
+      </button>
+      <button id="btn-mobile-skill" class="mob-btn skill" type="button" aria-label="Totoro Spirit Roar">
+        <span class="btn-icon">🐾</span>
+        <span class="btn-label">ROAR</span>
+      </button>
+      <button id="btn-mobile-dash" class="mob-btn dash" type="button" aria-label="Dash">
+        <span class="btn-icon">💨</span>
+        <span class="btn-label">DASH</span>
+      </button>
+      <button id="btn-mobile-act" class="mob-btn act" type="button" aria-label="Interact">
+        <span class="btn-icon">💬</span>
+        <span class="btn-label">ACT</span>
+      </button>
+      <button id="btn-mobile-atk" class="mob-btn atk" type="button" aria-label="Attack Combo">
+        <span class="btn-icon">⚔️</span>
+        <span class="btn-label">ATK</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Item / Quest Toast Notification -->
+  <div id="item-toast" hidden>
+    <span id="toast-icon">🌺</span>
+    <div>
+      <strong id="toast-title">Obtained Item!</strong>
+      <div id="toast-sub">Added to your inventory</div>
+    </div>
+  </div>
+
+  <!-- Dialogue Overlay with Custom SVG Pixel Portrait Canvas -->
+  <div id="dialogue-overlay" hidden>
+    <div class="dialogue-box">
+      <div class="dlg-portrait-frame">
+        <div id="dlg-portrait">🐾</div>
+      </div>
+      <div class="dlg-content">
+        <div id="dlg-speaker">Totoro</div>
+        <p id="dlg-text"></p>
+        <div id="dlg-choices" hidden></div>
+        <div id="dlg-next-hint">▼ Press SPACE or Click to continue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scrapbook / Memories Modal -->
+  <div id="scrapbook-modal" class="rpg-modal-backdrop" hidden>
+    <div class="rpg-modal-card">
+      <h2>📖 Dhaka & Astral Chronicle Scrapbook</h2>
+      <p class="modal-subtitle">Every keepsake and memory forged across the realms by Moon Walker & Totoro.</p>
+      <div id="scrapbook-moments" class="scrapbook-grid"></div>
+      <div class="modal-actions">
+        <button id="btn-keep-exploring" class="primary-rpg-btn" type="button">Continue Adventure ✨</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RPG Tabbed Menu Modal (Quests, Inventory/Equipment, Crafting, World Map, Settings/Save) -->
+  <div id="rpg-menu-modal" class="rpg-modal-backdrop" hidden>
+    <div class="rpg-modal-card wide-card">
+      <div class="rpg-tabs">
+        <button class="rpg-tab-btn active" data-tab="quests" type="button">📜 Quest Journal</button>
+        <button class="rpg-tab-btn" data-tab="inventory" type="button">🎒 Bag & Gear</button>
+        <button class="rpg-tab-btn" data-tab="crafting" type="button">⚒️ Crafting</button>
+        <button class="rpg-tab-btn" data-tab="map" type="button">🗺️ Realm Travel</button>
+        <button class="rpg-tab-btn" data-tab="system" type="button">⚙️ Save & Audio</button>
+        <button id="btn-close-rpg-menu" class="rpg-close-btn" type="button">✕ Close</button>
+      </div>
+      <div id="rpg-tab-body" class="rpg-tab-body"></div>
+    </div>
+  </div>
+
+<!-- Classic 16-Bit RPG Title Screen Window -->
+  <audio id="menu-bgm" src="assets/audio/spirited_away_piano.mp3" loop preload="auto"></audio>
+  <audio id="game-bgm" src="assets/audio/game_bgm.mp3" loop preload="auto"></audio>
+
+  <div id="title-screen-overlay">
+    <div class="rpg-title-backdrop"></div>
+    <div class="rpg-scanlines"></div>
+
+    <div class="rpg-main-frame">
+      <!-- Ornate Retro Header -->
+      <div class="rpg-header-crest">
+        <span class="crest-ornament">◈ ─── ❖ ─── ◈</span>
+        <div class="rpg-version-tag">VER 2.5 • RETRO 16-BIT CHRONICLES</div>
+      </div>
+
+      <h1 class="rpg-game-title">
+        <span class="title-top">TOTORO &amp; MOON WALKER</span>
+        <span class="title-sub">CHRONICLES OF THE SIX REALMS</span>
+      </h1>
+
+      <div class="rpg-story-scroll">
+        <p class="rpg-story-text">
+          A reality fracture ripples across Curzon Hall and the sacred valleys of Dhaka...
+          Gather keepsakes, awaken relics, and traverse ancient realms together.
+        </p>
+      </div>
+
+      <!-- Classic RPG Command Window -->
+      <div class="rpg-command-window">
+        <div class="rpg-command-list">
+          <button id="btn-title-new" class="rpg-cmd-btn" type="button">
+            <span class="cmd-cursor">▶</span>
+            <span class="cmd-label">START ADVENTURE</span>
+          </button>
+          <button id="btn-title-continue" class="rpg-cmd-btn" type="button" hidden>
+            <span class="cmd-cursor">▶</span>
+            <span class="cmd-label">CONTINUE JOURNEY</span>
+          </button>
+          <button id="btn-title-scrapbook" class="rpg-cmd-btn" type="button">
+            <span class="cmd-cursor">▶</span>
+            <span class="cmd-label">HOW TO PLAY</span>
+          </button>
+        </div>
+
+        <div class="rpg-audio-indicator" id="menu-audio-status">
+          <span class="music-note">♪</span>
+          <span id="menu-audio-text">TAP SCREEN FOR SPIRITED AWAY PIANO ♫</span>
+        </div>
+      </div>
+
+      <!-- Guide Sub-Window -->
+      <div id="title-controls-box" class="rpg-guide-box" hidden>
+        <div class="guide-title">◈ ADVENTURER'S MANUAL ◈</div>
+        <div class="guide-grid">
+          <div><span class="guide-key">MOVE</span> WASD / Virtual Joystick</div>
+          <div><span class="guide-key">ACTION</span> SPACE / E / ACT Button</div>
+          <div><span class="guide-key">ATTACK</span> J / Left-Click / ATK</div>
+          <div><span class="guide-key">DODGE</span> K / SHIFT / DASH</div>
+          <div><span class="guide-key">SKILL</span> Q / R / TOTORO ROAR</div>
+          <div><span class="guide-key">MENUS</span> 3-Bar Drawer / Bag (I) / Map (M)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

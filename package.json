@@ -1,0 +1,13 @@
+{
+  "name": "dhaka-date-rpg",
+  "version": "1.0.0",
+  "description": "Totoro & Moon Walker: Chronicles of the Six Realms RPG & Telegram Automation Bridge",
+  "main": "telegram-bot.js",
+  "scripts": {
+    "start": "node telegram-bot.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
