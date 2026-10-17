@@ -500,6 +500,29 @@ const SoundEngine = (() => {
       [440, 554.37, 659.25, 880].forEach((f, i) => {
         tone(f, f * 1.01, 'sine', 0.22, 0.1 * sfxVol, i * 0.07);
       });
+    },
+    spookyChime: () => {
+      getCtx();
+      [311.13, 369.99, 440.00, 587.33].forEach((f, i) => {
+        tone(f, f * 0.98, 'sine', 0.65, 0.07 * sfxVol, i * 0.09);
+      });
+    },
+    bellToll: () => {
+      getCtx();
+      tone(440, 436, 'triangle', 0.85, 0.12 * sfxVol, 0);
+      tone(880, 874, 'sine', 0.65, 0.08 * sfxVol, 0.02);
+      tone(220, 218, 'sine', 1.1, 0.14 * sfxVol, 0.04);
+    },
+    radioStatic: () => {
+      getCtx();
+      noiseBurst(0.35, 3200, 0.1 * sfxVol, 0);
+      tone(520, 580, 'sawtooth', 0.22, 0.05 * sfxVol, 0.08);
+      tone(680, 480, 'square', 0.18, 0.04 * sfxVol, 0.2);
+    },
+    ghostWhisper: () => {
+      getCtx();
+      tone(180, 240, 'sine', 0.9, 0.08 * sfxVol, 0);
+      tone(240, 160, 'triangle', 0.9, 0.06 * sfxVol, 0.25);
     }
   };
 })();
@@ -547,7 +570,11 @@ const ITEMS_DB = {
   apshora_silk_stole:   { id: 'apshora_silk_stole',   cat: 'accessory', atk: 8, def: 8, emoji: '🧣', name: 'Apshora’s Royal Heritage Silk Stole', desc: 'Handcrafted by Apshora & Anamika. Pure Rajshahi silk with Jamdani gold thread & Barishal river motifs. (+8 ATK, +8 DEF)' },
   fresh_milk:           { id: 'fresh_milk',           cat: 'consumable', healHp: 50, healSp: 35, emoji: '🥛', name: 'Lal Teer Organic Cow Milk', desc: 'Fresh, rich whole milk from Shuravi the dairy cow. Restores 50 HP & 35 SP.' },
   golden_egg:           { id: 'golden_egg',           cat: 'consumable', healHp: 40, healSp: 20, emoji: '🥚', name: 'Deshi Free-Range Egg', desc: 'A warm golden egg gathered from Tuntuni the free-range hen. Restores 40 HP & 20 SP.' },
-  farm_bell:            { id: 'farm_bell',            cat: 'accessory', atk: 5, def: 7, emoji: '🔔', name: 'Pastoral Brass Animal Bell', desc: 'A musical brass bell gifted by Chacha Rafiq at the Green Meadows Farmhouse. (+5 ATK, +7 DEF)' }
+  farm_bell:            { id: 'farm_bell',            cat: 'accessory', atk: 5, def: 7, emoji: '🔔', name: 'Pastoral Brass Animal Bell', desc: 'A musical brass bell gifted by Chacha Rafiq at the Green Meadows Farmhouse. (+5 ATK, +7 DEF)' },
+  spectral_lantern:     { id: 'spectral_lantern',     cat: 'accessory', atk: 7, def: 5, emoji: '🏮', name: 'Phantom Silver Lantern', desc: 'Gifted by Ananya the Shakchunni. Emits cold emerald light that dispels dark forest illusions. (+7 ATK, +5 DEF)' },
+  ghost_bell:           { id: 'ghost_bell',           cat: 'accessory', atk: 6, def: 8, emoji: '🛺', name: 'Phantom Rickshaw Brass Bell', desc: 'Given by Kofil Chacha. Its resonant toll pierces misty silence and repels the Nishi. (+6 ATK, +8 DEF)' },
+  occult_talisman:      { id: 'occult_talisman',      cat: 'keepsake',  emoji: '📜', name: 'Prof. Shamsher’s Occult Field Tome', desc: 'A handwritten field journal detailing the paranormal apparitions and Nishi frequencies of the Whispering Woods.' },
+  forest_cleansing_charm:{ id: 'forest_cleansing_charm', cat: 'accessory', atk: 14, def: 14, emoji: '🧿', name: 'Aparthib Forest Cleansing Charm', desc: 'Forged from the harmony of the three pacified forest spirits. Radiates protective warmth across all realms. (+14 ATK, +14 DEF)' }
 };
 
 const CRAFT_RECIPES = [
@@ -714,6 +741,25 @@ const WORLDS_DB = {
               },
               nextNodes: [
                 { speaker: 'Elder Banyan Sage', portrait: '🌿', text: 'May the soothing dew of the emerald canopy restore your strength. Walk in peace, children of Earth and Spirit! (HP & SP Fully Restored!)' }
+              ]
+            },
+            {
+              label: '👻 "Elder Sage, what are these restless spirits wandering the grove?"',
+              nextNodes: [
+                {
+                  speaker: 'Elder Banyan Sage',
+                  portrait: '🌿',
+                  text: DateState.forestSeanceComplete
+                    ? 'Through your compassion, Moon Walker and Totoro, the three souls have been granted peace! Ananya no longer weeps alone, Kofil Chacha guides wanderers with warmth, and Prof. Shamsher has recorded the greatest paranormal breakthrough of our age.'
+                    : 'The Chrono-Fracture tore through Dhaka’s historical memories, leaving three tragic spirits stranded here: Ananya the Weeping Petni in the north banyan, Kofil Chacha pulling his phantom rickshaw in the southwest marsh, and Prof. Shamsher in the northeast ruins, falling under the hypnotic trance of the Nishi (Night Caller). If you aid all three, gather them at the Ancient Spirit Altar!'
+                },
+                {
+                  speaker: 'Totoro',
+                  portrait: '🐾',
+                  text: DateState.forestSeanceComplete
+                    ? 'The air feels warm and comforting now. Not even the dark briars can scare us!'
+                    : 'We will bring solace to these wandering ghosts. Lead the way, Moon Walker!'
+                }
               ]
             }
           ]
@@ -1067,8 +1113,15 @@ const DateState = {
     sq_forest_dew: false,
     sq_sunken_shells: false,
     sq_ember_forge: false,
-    sq_frost_lens: false
-  }
+    sq_frost_lens: false,
+    sq_ananya_spirit: false,
+    sq_kofil_rickshaw: false,
+    sq_shamsher_nishi: false
+  },
+  forestSeanceComplete: false,
+  ananyaQuestStage: 0,
+  kofilQuestStage: 0,
+  shamsherQuestStage: 0
 };
 
 const RPGStats = {
@@ -4631,6 +4684,232 @@ class DhakaValleyScene extends Phaser.Scene {
     makeTex('npc-cat', 42, 36, ctx => {
       const tex = this.textures.get('npc-cat-0');
       if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
+    });
+
+    // --- World 2: Whispering Emerald Forest Spooky NPCs & Spirit Altar ---
+    // 1. Ananya the Weeping Petni (4-Frame Floating Ethereal Ghost)
+    [0, 1, 2, 3].forEach(step => {
+      makeTex(`npc-ananya-ghost-${step}`, 54, 66, ctx => {
+        const floatY = Math.sin((step / 4) * Math.PI * 2) * 3.5;
+        const driftX = Math.cos((step / 4) * Math.PI * 2) * 1.5;
+        const cx = 27 + driftX;
+
+        // Ethereal Aura Glow
+        ctx.fillStyle = 'rgba(52, 211, 153, 0.15)';
+        ctx.beginPath(); ctx.ellipse(cx, 32 + floatY, 22, 28, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(167, 243, 208, 0.25)';
+        ctx.beginPath(); ctx.ellipse(cx, 32 + floatY, 15, 20, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Spectral Ground Motes (No physical shadow, glowing wisps)
+        ctx.fillStyle = 'rgba(110, 231, 183, 0.35)';
+        ctx.beginPath(); ctx.ellipse(cx, 60, 14 + step, 3, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Flowing Pale Mint / Mist Jamdani Saree
+        ctx.fillStyle = 'rgba(209, 250, 229, 0.85)';
+        ctx.beginPath();
+        ctx.moveTo(cx - 9, 24 + floatY);
+        ctx.quadraticCurveTo(cx - 14, 46 + floatY, cx - 10 + step, 56 + floatY);
+        ctx.quadraticCurveTo(cx, 59 + floatY, cx + 11 - step, 56 + floatY);
+        ctx.quadraticCurveTo(cx + 14, 46 + floatY, cx + 9, 24 + floatY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Translucent Pale Torso & Draped Saree Pallu
+        ctx.fillStyle = '#ecfdf5';
+        ctx.fillRect(cx - 6, 20 + floatY, 12, 12);
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.45)';
+        ctx.beginPath();
+        ctx.moveTo(cx - 6, 20 + floatY);
+        ctx.lineTo(cx + 7, 30 + floatY);
+        ctx.lineTo(cx + 5, 42 + floatY);
+        ctx.lineTo(cx - 7, 28 + floatY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Drifting Dark Spectral Hair (Floating in spirit currents)
+        ctx.fillStyle = '#064e3b';
+        ctx.beginPath();
+        ctx.ellipse(cx, 14 + floatY, 8.5, 9, 0, 0, Math.PI * 2);
+        ctx.moveTo(cx - 7, 14 + floatY);
+        ctx.quadraticCurveTo(cx - 15, 26 + floatY, cx - 12 - step, 40 + floatY);
+        ctx.quadraticCurveTo(cx + 15, 26 + floatY, cx + 7, 14 + floatY);
+        ctx.fill();
+
+        // Pale Spectral Face & Weeping Eyes
+        ctx.fillStyle = '#f0fdf4';
+        ctx.beginPath(); ctx.arc(cx, 14 + floatY, 6.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#047857'; // Eerie glowing eyes
+        ctx.fillRect(cx - 3.5, 13 + floatY, 2, 2.2);
+        ctx.fillRect(cx + 1.5, 13 + floatY, 2, 2.2);
+        ctx.fillStyle = '#6ee7b7'; // Glowing tears
+        ctx.fillRect(cx - 3, 16 + floatY, 1.2, 3);
+        ctx.fillRect(cx + 2, 16 + floatY, 1.2, 3);
+
+        // Phantom Silver Lantern in Hands
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(cx + 9, 28 + floatY, 5, 7);
+        ctx.fillStyle = '#34d399'; // Emerald flame
+        ctx.beginPath(); ctx.arc(cx + 11.5, 31.5 + floatY, 2.5, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+    makeTex('npc-ananya-ghost', 54, 66, ctx => {
+      const tex = this.textures.get('npc-ananya-ghost-0');
+      if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
+    });
+
+    // 2. Kofil Chacha & The Phantom Rickshaw (4-Frame Spectral Stepping)
+    [0, 1, 2, 3].forEach(step => {
+      makeTex(`npc-kofil-ghost-${step}`, 74, 66, ctx => {
+        const bob = (step === 1 || step === 3) ? -1.5 : 0;
+        const lLeg = step === 0 ? 2.5 : (step === 2 ? -2.5 : 0);
+        const rLeg = step === 2 ? 2.5 : (step === 0 ? -2.5 : 0);
+
+        // Phantom Rickshaw Wheel & Chassis (Left Side)
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(22, 46, 16, 0, Math.PI * 2); ctx.stroke();
+        // Rickshaw Spokes
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+          ctx.beginPath(); ctx.moveTo(22, 46);
+          ctx.lineTo(22 + Math.cos(a + step * 0.2) * 16, 46 + Math.sin(a + step * 0.2) * 16);
+          ctx.stroke();
+        }
+        // Rickshaw Hood & Passenger Seat
+        ctx.fillStyle = 'rgba(14, 116, 144, 0.55)';
+        ctx.beginPath();
+        ctx.roundRect(8, 22, 28, 22, 4);
+        ctx.fill();
+        // Brass rickshaw bell on handlebar
+        ctx.fillStyle = '#fbbf24';
+        ctx.beginPath(); ctx.arc(42, 34 + bob, 2.8, 0, Math.PI * 2); ctx.fill();
+
+        // Kofil Chacha Pulling Rickshaw (Right Side)
+        const cx = 54;
+        // Legs & Checked Lungi
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.7)';
+        ctx.fillRect(cx - 5, 42 + lLeg, 4, 12);
+        ctx.fillRect(cx + 1, 42 + rLeg, 4, 12);
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.55)'; // Checked pattern
+        ctx.fillRect(cx - 6, 34 + bob, 12, 11);
+
+        // Weathered Vest & Gamchha / Muffler
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(cx - 5, 23 + bob, 10, 12);
+        ctx.fillStyle = '#f43f5e'; // Red gamchha around neck
+        ctx.fillRect(cx - 6, 21 + bob, 12, 3.5);
+
+        // Head, White Beard & Flat Cap
+        ctx.fillStyle = '#bae6fd';
+        ctx.beginPath(); ctx.arc(cx, 14 + bob, 5.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#e2e8f0'; // Wispy white beard
+        ctx.beginPath(); ctx.ellipse(cx, 17.5 + bob, 3.5, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#334155'; // Wool flat cap
+        ctx.fillRect(cx - 6, 9 + bob, 12, 3);
+        ctx.fillRect(cx - 2, 7 + bob, 8, 3);
+
+        // Friendly Spectral Blue Eyes
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(cx - 2.5, 13 + bob, 1.8, 1.8);
+        ctx.fillRect(cx + 1.5, 13 + bob, 1.8, 1.8);
+      });
+    });
+    makeTex('npc-kofil-ghost', 74, 66, ctx => {
+      const tex = this.textures.get('npc-kofil-ghost-0');
+      if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
+    });
+
+    // 3. Prof. Shamsher (DU Occult Investigator with Radio EMF Scanner)
+    [0, 1, 2, 3].forEach(step => {
+      makeTex(`npc-shamsher-investigator-${step}`, 54, 62, ctx => {
+        const bob = (step === 1 || step === 3) ? -1.5 : 0;
+        const lLeg = step === 0 ? 2 : (step === 2 ? -2 : 0);
+        const rLeg = step === 2 ? 2 : (step === 0 ? -2 : 0);
+        const cx = 27;
+
+        // Ground shadow
+        ctx.fillStyle = 'rgba(12, 8, 20, 0.25)';
+        ctx.beginPath(); ctx.ellipse(cx, 56, 12, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+
+        // Trousers & Oxford Shoes
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(cx - 5.5, 42 + lLeg, 4.5, 11);
+        ctx.fillRect(cx + 1, 42 + rLeg, 4.5, 11);
+
+        // Tweed Investigator Coat & Knit Sweater
+        ctx.fillStyle = '#78350f'; // Tweed trench coat
+        ctx.fillRect(cx - 8, 25 + bob, 16, 19);
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(cx - 6.5, 26 + bob, 13, 17);
+        // White shirt collar & mustard tie
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(cx - 2.5, 25 + bob, 5, 4);
+        ctx.fillStyle = '#ca8a04'; ctx.fillRect(cx - 1, 28 + bob, 2, 7);
+
+        // Head, Salt & Pepper Hair, Glasses & Mustachio
+        ctx.fillStyle = '#d4a383';
+        ctx.beginPath(); ctx.arc(cx, 16 + bob, 6.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#475569'; // Grey parted hair
+        ctx.fillRect(cx - 7, 10 + bob, 14, 4);
+        ctx.fillRect(cx - 7.5, 12 + bob, 3, 5);
+        // Wireframe Round Glasses
+        ctx.strokeStyle = '#facc15'; ctx.lineWidth = 1;
+        ctx.strokeRect(cx - 5.5, 14 + bob, 4, 3);
+        ctx.strokeRect(cx + 1.5, 14 + bob, 4, 3);
+        ctx.beginPath(); ctx.moveTo(cx - 1.5, 15.5 + bob); ctx.lineTo(cx + 1.5, 15.5 + bob); ctx.stroke();
+        // Scholarly Mustache
+        ctx.fillStyle = '#334155'; ctx.fillRect(cx - 3.5, 19 + bob, 7, 1.8);
+
+        // Handheld Cathode Vacuum EMF Radio Scanner
+        ctx.fillStyle = '#1e293b'; // Bakelite casing
+        ctx.fillRect(cx + 8, 30 + bob, 8, 12);
+        // Antenna
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(cx + 12, 30 + bob); ctx.lineTo(cx + 12, 18 + bob); ctx.stroke();
+        // Glowing Green Oscilloscope / Meter
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(cx + 9.5, 32 + bob, 5, 4);
+        ctx.fillStyle = '#ef4444'; // Signal blip
+        ctx.fillRect(cx + 11.5, 33 + bob, 1.5, 1.5);
+      });
+    });
+    makeTex('npc-shamsher-investigator', 54, 62, ctx => {
+      const tex = this.textures.get('npc-shamsher-investigator-0');
+      if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
+    });
+
+    // 4. Ancient Spirit Altar Prop (World 2 Centerpiece)
+    makeTex('prop-spirit-altar', 68, 62, ctx => {
+      // Ground Shadow
+      ctx.fillStyle = 'rgba(12, 8, 20, 0.35)';
+      ctx.beginPath(); ctx.ellipse(34, 56, 28, 5.5, 0, 0, Math.PI * 2); ctx.fill();
+
+      // Ancient Weathered Stone Pedestal
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(10, 44, 48, 12);
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(14, 32, 40, 14);
+      ctx.fillStyle = '#475569';
+      ctx.fillRect(8, 24, 52, 9);
+
+      // Carved Emerald Runes
+      ctx.fillStyle = '#34d399';
+      [18, 26, 34, 42, 50].forEach(rx => {
+        ctx.fillRect(rx, 27, 2, 4);
+        ctx.fillRect(rx - 1, 29, 4, 1);
+      });
+
+      // Sacred Incense Vessel & Glowing Spirit Hearth
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath(); ctx.ellipse(34, 22, 12, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#a855f7'; // Purple flame core
+      ctx.beginPath(); ctx.arc(34, 18, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#c084fc';
+      ctx.beginPath(); ctx.arc(34, 16, 2.5, 0, Math.PI * 2); ctx.fill();
+
+      // Flanking Incense Candles
+      [16, 52].forEach(cx => {
+        ctx.fillStyle = '#fde047'; ctx.fillRect(cx - 1.5, 19, 3, 6);
+        ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.arc(cx, 17, 1.8, 0, Math.PI * 2); ctx.fill();
+      });
     });
 
     // --- World Trees & Pillars ---
@@ -10205,6 +10484,27 @@ class DhakaValleyScene extends Phaser.Scene {
         });
       });
 
+      // World 2: Whispering Emerald Forest Spooky NPCs & Spirit Altar
+      if (worldId === 'forest') {
+        // 1. Ananya the Weeping Petni (North Banyan Grove: x: 880, y: 460)
+        const ananyaEntry = registerInteract(880, 460, 'npc-ananya-ghost-0', 'Ananya (Weeping Petni) 👻', 90, () => this.interactAnanyaGhost());
+        const ananyaAnim = this.getOrCreateWalkAnim('npc-ananya-ghost', 2.5);
+        if (ananyaAnim && ananyaEntry.sprite) ananyaEntry.sprite.play(ananyaAnim);
+
+        // 2. Kofil Chacha & Phantom Rickshaw (Southwest Marsh: x: 420, y: 1320)
+        const kofilEntry = registerInteract(420, 1320, 'npc-kofil-ghost-0', 'Kofil Chacha (Phantom Rickshaw) 🛺', 95, () => this.interactKofilGhost());
+        const kofilAnim = this.getOrCreateWalkAnim('npc-kofil-ghost', 2.5);
+        if (kofilAnim && kofilEntry.sprite) kofilEntry.sprite.play(kofilAnim);
+
+        // 3. Prof. Shamsher (DU Occult Investigator: x: 1540, y: 460)
+        const shamsherEntry = registerInteract(1540, 460, 'npc-shamsher-investigator-0', 'Prof. Shamsher (Occult Investigator) 📻', 90, () => this.interactShamsherNishi());
+        const shamsherAnim = this.getOrCreateWalkAnim('npc-shamsher-investigator', 2.5);
+        if (shamsherAnim && shamsherEntry.sprite) shamsherEntry.sprite.play(shamsherAnim);
+
+        // 4. Ancient Spirit Altar (Central Grove: x: 1150, y: 640)
+        registerInteract(1150, 640, 'prop-spirit-altar', 'Ancient Spirit Altar 🕯️', 95, () => this.interactSpiritAltar());
+      }
+
       // Spawn Patrol Enemies & Guardian Boss
       this.spawnRealmEnemies(wCfg);
     }
@@ -13549,6 +13849,303 @@ class DhakaValleyScene extends Phaser.Scene {
         }
       ]);
     }
+  }
+
+  /* ===== World 2: Whispering Emerald Forest — Spooky NPCs & Cutscenes ===== */
+  interactAnanyaGhost() {
+    SoundEngine.ghostWhisper();
+    if (DateState.ananyaQuestStage === 0) {
+      SoundEngine.spookyChime();
+      this.cameras.main.pan(880, 460, 800, 'Sine.easeInOut');
+      UI.startDialogue([
+        {
+          speaker: 'Ananya (Weeping Petni)',
+          portrait: '👻',
+          text: 'Sob... sob... the winter fog never lifts from Curzon’s gardens... Seventy years ago in 1952, I left my final letter tucked beneath the banyan root... but the gunfire echoed, and he never came...'
+        },
+        {
+          speaker: 'Moon Walker',
+          portrait: '🌙',
+          text: 'Ananya? You don’t have to weep alone in the dark anymore. We hear your grief, and Dhaka has never forgotten your sacrifice.'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: '(Totoro steps forward softly on giant padded paws and lays a freshly woven garland of white Beli flowers and glowing Spirit Dew at her floating feet.)'
+        },
+        {
+          speaker: 'Ananya (Weeping Petni)',
+          portrait: '🏮',
+          text: 'The scent of Beli flowers... warmth... after all these frozen decades! My heart feels light as air! Please, kind travelers, take my Phantom Silver Lantern. Its emerald flame pierces all forest illusions!',
+          choices: [
+            {
+              label: '🏮 Accept Ananya’s Phantom Silver Lantern (+7 ATK, +5 DEF)',
+              onPick: () => {
+                DateState.ananyaQuestStage = 1;
+                DateState.sideQuests.sq_ananya_spirit = true;
+                SoundEngine.itemFanfare();
+                UI.giveItem('spectral_lantern', 'Received Phantom Silver Lantern from Ananya!');
+                UI.showToast('🏮', 'Spirit Pacified!', 'Ananya’s sorrow has been soothed! (+7 ATK, +5 DEF)');
+                this.cameras.main.flash(500, 52, 211, 153);
+              },
+              nextNodes: [
+                {
+                  speaker: 'Ananya (Pacified Spirit)',
+                  portrait: '✨',
+                  text: 'Thank you, Moon Walker and Totoro! If you seek to bring peace to this grove, please visit old Kofil Chacha by the marsh, and find Prof. Shamsher near the ruins before the Nishi claims his soul!'
+                }
+              ]
+            }
+          ]
+        }
+      ]);
+    } else {
+      SoundEngine.spookyChime();
+      UI.startDialogue([
+        {
+          speaker: 'Ananya (Pacified Spirit)',
+          portrait: '✨',
+          text: 'The banyan whispers softly now, free from sorrow. Go with peace, Moon Walker and Totoro! May my lantern light your path!'
+        }
+      ]);
+    }
+  }
+
+  interactKofilGhost() {
+    SoundEngine.bellToll();
+    if (DateState.kofilQuestStage === 0) {
+      SoundEngine.rickshawBell();
+      this.cameras.main.pan(420, 1320, 800, 'Sine.easeInOut');
+      UI.startDialogue([
+        {
+          speaker: 'Kofil Chacha',
+          portrait: '🛺',
+          text: 'Tring-tring... Hajaribagh, Lalbagh, Sadarghat... Who needs passage across the high waters? The floodwaters of ’88 are rising, but old Kofil never leaves a passenger stranded!'
+        },
+        {
+          speaker: 'Moon Walker',
+          portrait: '🌙',
+          text: 'Kofil Chacha... the flood ended decades ago. You got every mother and child home safely that night.'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: '(Totoro clambers gently onto the vintage rickshaw seat, bouncing the carriage softly with a delighted smile, and hands Kofil Chacha a steaming clay cup of Tong-er Mama’s spiced tea.)'
+        },
+        {
+          speaker: 'Kofil Chacha',
+          portrait: '🍵',
+          text: 'Orey baba! A giant fluffy forest spirit riding my rickshaw?! And hot ginger malai cha in the middle of this swamp?! Ha ha ha! By Allah, that warms my old bones like sunshine on Buriganga!',
+          choices: [
+            {
+              label: '🛺 Ring Kofil Chacha’s Phantom Brass Bell (+6 ATK, +8 DEF)',
+              onPick: () => {
+                DateState.kofilQuestStage = 1;
+                DateState.sideQuests.sq_kofil_rickshaw = true;
+                SoundEngine.bellToll();
+                SoundEngine.rickshawBell();
+                SoundEngine.itemFanfare();
+                UI.giveItem('ghost_bell', 'Received Phantom Rickshaw Brass Bell from Kofil Chacha!');
+                UI.showToast('🔔', 'Chacha’s Joy!', 'Kofil Chacha’s phantom rickshaw shines bright! (+6 ATK, +8 DEF)');
+                this.cameras.main.flash(500, 56, 189, 248);
+              },
+              nextNodes: [
+                {
+                  speaker: 'Kofil Chacha',
+                  portrait: '🔔',
+                  text: 'Take my lucky brass bell, beta! When the mist rolls thick and eerie sounds call your name, ring this bell—no phantom tricks can overcome a Dhaka rickshawalla’s chime! Now hurry and check on that professor in the ruins!'
+                }
+              ]
+            }
+          ]
+        }
+      ]);
+    } else {
+      SoundEngine.rickshawBell();
+      UI.startDialogue([
+        {
+          speaker: 'Kofil Chacha',
+          portrait: '🛺',
+          text: 'Tring-tring! Whenever you and Totoro need a breather from slaying briar stags, my rickshaw hood is always open for you two!'
+        }
+      ]);
+    }
+  }
+
+  interactShamsherNishi() {
+    SoundEngine.radioStatic();
+    if (DateState.shamsherQuestStage === 0) {
+      SoundEngine.spookyChime();
+      this.cameras.main.pan(1540, 460, 800, 'Sine.easeInOut');
+      UI.startDialogue([
+        {
+          speaker: 'Prof. Shamsher',
+          portrait: '📻',
+          text: 'Shamsher... Shamsher... come into the dark thicket... yes mother, I am coming... (Prof. Shamsher stands rigid like a mannequin, his eyes glazed in a hypnotic stupor as his radio scanner crackles violently.)'
+        },
+        {
+          speaker: 'Moon Walker',
+          portrait: '🌙',
+          text: 'Professor Shamsher! Snap out of it! That’s the Nishi—the Night Caller! Don’t answer its call!'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: 'Not on my watch! (Totoro inflates his chest to massive proportions, planting his claws into the soil...)'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🦁',
+          text: 'ROOOOOOOAAAAAAR! (A titanic Spirit Roar detonates through the ruins, shattering the disembodied Nishi frequencies into glowing emerald sparks!)',
+          choices: [
+            {
+              label: '💥 Unleash Totoro’s Spirit Shockwave!',
+              onPick: () => {
+                SoundEngine.totoroRoar();
+                this.cameras.main.shake(500, 0.02);
+                this.cameras.main.flash(500, 244, 63, 94);
+              },
+              nextNodes: [
+                {
+                  speaker: 'Prof. Shamsher',
+                  portrait: '👓',
+                  text: 'Gasp! Cough! My spectacles! Great Scott! The Nishi frequency... shattered by pure acoustic resonant power!'
+                },
+                {
+                  speaker: 'Prof. Shamsher',
+                  portrait: '📜',
+                  text: 'You two saved my mind! I am Prof. Shamsher from Dhaka University’s Department of Folklore. Take my handwritten Occult Field Tome—it records the ancient secrets of the spirit realm!',
+                  choices: [
+                    {
+                      label: '📜 Receive Prof. Shamsher’s Occult Field Tome (+ Keepsake)',
+                      onPick: () => {
+                        DateState.shamsherQuestStage = 1;
+                        DateState.sideQuests.sq_shamsher_nishi = true;
+                        SoundEngine.itemFanfare();
+                        UI.giveItem('occult_talisman', 'Received Prof. Shamsher’s Occult Field Tome!');
+                        UI.showToast('📜', 'Nishi Banished!', 'Hypnotic trance broken! Tome acquired.');
+                      },
+                      nextNodes: [
+                        {
+                          speaker: 'Prof. Shamsher',
+                          portrait: '✨',
+                          text: 'Now that Ananya, Kofil Chacha, and I have found clarity, the ancient Spirit Altar in the central grove can be awakened! Head to the altar, children of light!'
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]);
+    } else {
+      SoundEngine.spookyChime();
+      UI.startDialogue([
+        {
+          speaker: 'Prof. Shamsher',
+          portrait: '👓',
+          text: 'Fascinating! My EMF scanner is picking up pure harmonious aura waves now. Totoro’s roar was pure genius!'
+        }
+      ]);
+    }
+  }
+
+  interactSpiritAltar() {
+    SoundEngine.spookyChime();
+    const aidedCount = (DateState.ananyaQuestStage >= 1 ? 1 : 0) +
+                       (DateState.kofilQuestStage >= 1 ? 1 : 0) +
+                       (DateState.shamsherQuestStage >= 1 ? 1 : 0);
+
+    if (DateState.forestSeanceComplete) {
+      SoundEngine.bellToll();
+      UI.startDialogue([
+        {
+          speaker: 'Ancient Spirit Altar',
+          portrait: '🕯️',
+          text: 'The sacred runes glow with eternal tranquil emerald fire. The three pacified souls of Dhaka’s past watch over you across all Six Realms.'
+        }
+      ]);
+      return;
+    }
+
+    if (aidedCount < 3) {
+      UI.startDialogue([
+        {
+          speaker: 'Ancient Spirit Altar',
+          portrait: '🕯️',
+          text: `Ancient weathered runes flicker dimly on the mossy stone pedestal (${aidedCount}/3 Spirits Pacified).`
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: aidedCount === 0
+            ? 'Three restless apparitions still wander the grove: the weeping ghost under the North banyan, the rickshawalla in the Southwest marsh, and the professor near the Northeast ruins.'
+            : `We have aided ${aidedCount} spirit${aidedCount > 1 ? 's' : ''}! Let us comfort the remaining wanderer${3 - aidedCount > 1 ? 's' : ''} to awaken the sacred seance!`
+        }
+      ]);
+      return;
+    }
+
+    // Grand Seance Cutscene: All 3 Spirits Gather
+    SoundEngine.bellToll();
+    this.cameras.main.pan(1150, 640, 1000, 'Sine.easeInOut');
+    this.cameras.main.flash(700, 168, 85, 247);
+    UI.startDialogue([
+      {
+        speaker: 'Ancient Spirit Altar',
+        portrait: '🕯️',
+        text: '(The incense hearth ignites into radiant violet and emerald flames! The silver lantern, brass rickshaw bell, and occult tome resonate in harmonic unison!)'
+      },
+      {
+        speaker: 'Ananya (Pacified Spirit)',
+        portrait: '🏮',
+        text: 'From the tearful fog of Curzon Hall, we bring our blessing of eternal remembrance...'
+      },
+      {
+        speaker: 'Kofil Chacha',
+        portrait: '🔔',
+        text: 'From the flooded alleys of Old Dhaka, we bring the unyielding spirit of resilience and protection!'
+      },
+      {
+        speaker: 'Prof. Shamsher',
+        portrait: '📜',
+        text: 'And from the scholarly halls of knowledge, we dispel all darkness and dread!'
+      },
+      {
+        speaker: 'Totoro',
+        portrait: '🐾',
+        text: 'Look, Moon Walker! Their harmonious memories are fusing into a radiant talisman above the altar!'
+      },
+      {
+        speaker: 'Moon Walker',
+        portrait: '🌙',
+        text: 'The Aparthib Forest Cleansing Charm... Forged from Dhaka’s history and love.',
+        choices: [
+          {
+            label: '🧿 Claim the Aparthib Forest Cleansing Charm (+14 ATK, +14 DEF)',
+            onPick: () => {
+              DateState.forestSeanceComplete = true;
+              DateState.hp = DateState.maxHp;
+              DateState.sp = DateState.maxSp;
+              SoundEngine.itemFanfare();
+              UI.giveItem('forest_cleansing_charm', 'Forged the Aparthib Forest Cleansing Charm!');
+              UI.updateRPGStats();
+              UI.showToast('🧿', 'Grand Seance Complete!', 'The Forest Spirits blessed you! (+14 ATK, +14 DEF, Fully Healed)');
+              this.cameras.main.flash(800, 52, 211, 153);
+            },
+            nextNodes: [
+              {
+                speaker: 'Elder Banyan Sage',
+                portrait: '🌿',
+                text: 'Glorious! The Whispering Emerald Forest hasn’t breathed this peacefully in three hundred years. Go forth, heroes of Dhaka, and claim victory over the Sylvan Briar Stag!'
+              }
+            ]
+          }
+        ]
+      }
+    ]);
   }
 
   /* ===== Grand Dhaka Rickshaw Tour — "Tring-Tring Rush" =====

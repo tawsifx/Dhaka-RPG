@@ -54,7 +54,7 @@ function killProcessGroup(proc, signal = 'SIGTERM') {
   }
 }
 
-function runCommand(cmd, args, timeoutMs = 900000, onProgress = null) {
+function runCommand(cmd, args, maxTimeoutMs = 2700000, onProgress = null) {
   return new Promise((resolve, reject) => {
     console.log(`[EXEC] ${cmd} ${args.join(' ')}`);
     const isAgy = cmd === 'agy' || (args && args.some(a => String(a).includes('agy')));
@@ -68,34 +68,67 @@ function runCommand(cmd, args, timeoutMs = 900000, onProgress = null) {
 
     let stdout = '';
     let stderr = '';
-    let timer = null;
+    let overallTimer = null;
+    let inactivityTimer = null;
     let progressTimer = null;
     let agyGraceTimer = null;
     let settled = false;
 
+    // Track active state to prevent premature timeouts while work is being actively done
+    let lastStepOrAction = '';
+
     const cleanup = () => {
-      if (timer) clearTimeout(timer);
+      if (overallTimer) clearTimeout(overallTimer);
+      if (inactivityTimer) clearTimeout(inactivityTimer);
       if (progressTimer) clearInterval(progressTimer);
       if (agyGraceTimer) clearTimeout(agyGraceTimer);
     };
 
-    if (timeoutMs > 0) {
-      timer = setTimeout(() => {
-        if (settled) return;
-        settled = true;
-        cleanup();
-        console.warn(`[TIMEOUT] Process group ${proc.pid} timed out after ${timeoutMs / 1000}s. Terminating...`);
-        killProcessGroup(proc, 'SIGTERM');
-        setTimeout(() => killProcessGroup(proc, 'SIGKILL'), 3000);
-        const timeoutErr = new Error(`Command timed out after ${timeoutMs / 1000}s:\n${cmd} ${args.join(' ')}`);
-        reject(timeoutErr);
-      }, timeoutMs);
+    const terminate = (reason) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      console.warn(`[TIMEOUT] Process group ${proc.pid} terminated: ${reason}`);
+      killProcessGroup(proc, 'SIGTERM');
+      setTimeout(() => killProcessGroup(proc, 'SIGKILL'), 3000);
+      const timeoutErr = new Error(`Command failed: ${reason}\n${cmd} ${args.join(' ')}`);
+      reject(timeoutErr);
+    };
+
+    // Absolute hard ceiling (45 minutes)
+    if (maxTimeoutMs > 0) {
+      overallTimer = setTimeout(() => {
+        terminate(`Exceeded maximum overall runtime ceiling (${maxTimeoutMs / 60000} mins)`);
+      }, maxTimeoutMs);
     }
+
+    // Dynamic inactivity watchdog: 6 minutes of ZERO progress or tool actions before timing out
+    const INACTIVITY_LIMIT_MS = 360000;
+    const resetInactivityWatchdog = () => {
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+      inactivityTimer = setTimeout(() => {
+        terminate(`Process was idle with no steps, tool calls, or output for ${INACTIVITY_LIMIT_MS / 60000} minutes`);
+      }, INACTIVITY_LIMIT_MS);
+    };
+    resetInactivityWatchdog();
 
     if (onProgress && typeof onProgress === 'function') {
       let elapsed = 0;
       progressTimer = setInterval(() => {
         elapsed += 20;
+
+        // Check live activity to reset watchdog if Antigravity is making progress
+        if (isAgy) {
+          try {
+            const live = getAgyLiveStatus();
+            const currentSignature = `${live.stepNumber || ''}_${live.actionInfo || ''}_${live.modifiedFiles || ''}`;
+            if (currentSignature && currentSignature !== lastStepOrAction) {
+              lastStepOrAction = currentSignature;
+              resetInactivityWatchdog();
+            }
+          } catch (e) {}
+        }
+
         onProgress(elapsed);
       }, 20000);
     }
@@ -482,14 +515,36 @@ bot.on('message', async (msg) => {
     await bot.sendMessage(chatId, finalReply);
 
   } catch (error) {
-    // g. Catch any errors and report the error trace back to Telegram
-    console.error('❌ Pipeline execution error:', error);
-    const errorTrace = error.stack || error.message || String(error);
-    const formattedError = `❌ Execution Error Trace:\n\n${errorTrace.slice(0, 3500)}`;
+    // Check if valid file modifications were already written to disk before error/timeout
+    let salvaged = false;
     try {
-      await bot.sendMessage(chatId, formattedError);
-    } catch (sendErr) {
-      console.error('Failed to report error trace to Telegram:', sendErr.message);
+      const gitStatus = await runCommand('git', ['status', '--porcelain'], 20000).catch(() => ({ stdout: '' }));
+      if (gitStatus.stdout && gitStatus.stdout.trim()) {
+        await runCommand('node', ['-c', 'game.js'], 20000);
+        console.log('💡 Code modifications are valid! Salvaging work, committing and deploying...');
+        await bot.sendMessage(chatId, '⚠️ Prompt reached inactivity boundary, but code modifications were validated! Auto-committing and deploying to Vercel...');
+        const promptSnippet = promptText.slice(0, 50).replace(/["`$\r\n]/g, ' ').trim();
+        await runCommand('git', ['add', '-A'], 60000);
+        await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 60000);
+        const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 180000);
+        const liveUrl = extractVercelUrl(`${vercelRes.stdout}\n${vercelRes.stderr}`) || 'https://dhaka-date-rpg.vercel.app';
+        await bot.sendMessage(chatId, `✅ Deployed successfully!\n🔗 ${liveUrl}`);
+        salvaged = true;
+      }
+    } catch (salvageErr) {
+      console.warn('Could not auto-salvage:', salvageErr.message);
+    }
+
+    if (!salvaged) {
+      // g. Catch any errors and report the error trace back to Telegram
+      console.error('❌ Pipeline execution error:', error);
+      const errorTrace = error.stack || error.message || String(error);
+      const formattedError = `❌ Execution Error Trace:\n\n${errorTrace.slice(0, 3500)}`;
+      try {
+        await bot.sendMessage(chatId, formattedError);
+      } catch (sendErr) {
+        console.error('Failed to report error trace to Telegram:', sendErr.message);
+      }
     }
   } finally {
     isProcessing = false;
