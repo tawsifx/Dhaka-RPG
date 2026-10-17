@@ -992,7 +992,7 @@ const WORLDS_DB = {
     minimapColor: '#366d30',
     petalColor: 0xffe066,
     isActivity: true,
-    returnPos: { x: 740, y: 1540 }
+    returnPos: { x: 740, y: 1455 }
   }
 };
 
@@ -8566,6 +8566,472 @@ class DhakaValleyScene extends Phaser.Scene {
       ctx.fillStyle = '#9c663b'; ctx.fillRect(0, 11, 96, 1.5); ctx.fillRect(0, 22, 96, 1.5);
     });
 
+    // 3A. Grand Rustic Farmhouse Timber Archway & Gateway (prop-farm-arch: 192 x 128 px)
+    makeTex('prop-farm-arch', 192, 128, (ctx, W, H) => {
+      // 1. Soft Ground Shadows under Stone Bases and Swing Gates
+      ctx.fillStyle = 'rgba(12, 18, 10, 0.32)';
+      ctx.beginPath(); ctx.ellipse(34, 122, 28, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(158, 122, 28, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(54, 116, 16, 4, -0.2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(138, 116, 16, 4, 0.2, 0, Math.PI * 2); ctx.fill();
+
+      // 2. Fieldstone / Cobblestone Pillar Plinths
+      const drawPlinth = (x, y, w, h) => {
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(x, y, w, h);
+        const stones = [
+          [x + 2, y + 2, w / 2 - 3, h / 3 - 2, '#64748b'],
+          [x + w / 2 + 1, y + 2, w / 2 - 3, h / 3 - 2, '#475569'],
+          [x + 3, y + h / 3 + 2, w / 3, h / 3 - 2, '#475569'],
+          [x + w / 3 + 4, y + h / 3 + 2, w * 2 / 3 - 6, h / 3 - 2, '#64748b'],
+          [x + 2, y + h * 2 / 3 + 2, w / 2 - 2, h / 3 - 4, '#475569'],
+          [x + w / 2 + 2, y + h * 2 / 3 + 2, w / 2 - 4, h / 3 - 4, '#64748b'],
+        ];
+        stones.forEach(([sx, sy, sw, sh, col]) => {
+          ctx.fillStyle = col;
+          ctx.fillRect(sx, sy, sw, sh);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillRect(sx, sy, sw, 1);
+        });
+        ctx.fillStyle = '#65a30d';
+        ctx.fillRect(x + 4, y + h - 5, 5, 2);
+        ctx.fillRect(x + w - 8, y + h - 8, 4, 2);
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(x - 2, y - 4, w + 4, 4);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(x - 2, y - 4, w + 4, 1);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(x - 2, y, w + 4, 1);
+      };
+      drawPlinth(20, 94, 28, 28);
+      drawPlinth(144, 94, 28, 28);
+
+      // 3. Sturdy Vertical Timber Posts (Warm Cedar & Dark Teak)
+      const drawPost = (px) => {
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(px, 16, 16, 76);
+        ctx.fillStyle = '#78350f';
+        ctx.fillRect(px + 2, 16, 12, 76);
+        ctx.fillStyle = '#92400e';
+        ctx.fillRect(px + 4, 16, 2, 76);
+        ctx.fillRect(px + 9, 16, 2, 76);
+        ctx.fillStyle = '#b45309';
+        ctx.fillRect(px + 2, 16, 1, 76);
+
+        [28, 82].forEach(by => {
+          ctx.fillStyle = '#1e293b';
+          ctx.fillRect(px - 1, by, 18, 5);
+          ctx.fillStyle = '#94a3b8';
+          ctx.fillRect(px + 2, by + 1, 2, 2);
+          ctx.fillRect(px + 12, by + 1, 2, 2);
+        });
+
+        ctx.fillStyle = '#b45309';
+        ctx.beginPath();
+        ctx.moveTo(px, 16);
+        ctx.lineTo(px + 8, 8);
+        ctx.lineTo(px + 16, 16);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        ctx.moveTo(px + 4, 16);
+        ctx.lineTo(px + 8, 9);
+        ctx.lineTo(px + 12, 16);
+        ctx.closePath();
+        ctx.fill();
+      };
+      drawPost(26);
+      drawPost(150);
+
+      // 4. Arched Wooden Knee Brackets
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath();
+      ctx.moveTo(42, 48);
+      ctx.quadraticCurveTo(46, 28, 68, 26);
+      ctx.lineTo(68, 32);
+      ctx.quadraticCurveTo(50, 34, 42, 54);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(150, 48);
+      ctx.quadraticCurveTo(146, 28, 124, 26);
+      ctx.lineTo(124, 32);
+      ctx.quadraticCurveTo(142, 34, 150, 54);
+      ctx.closePath();
+      ctx.fill();
+
+      // 5. Massive Horizontal Timber Crossbeam / Lintel
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(14, 18, 164, 14);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(16, 20, 160, 10);
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(16, 20, 160, 2);
+      ctx.fillStyle = '#291003';
+      ctx.fillRect(14, 18, 3, 14);
+      ctx.fillRect(175, 18, 3, 14);
+
+      // 6. Charming Cedar Shingle Roof Canopy
+      ctx.fillStyle = '#451a03';
+      ctx.beginPath();
+      ctx.moveTo(96, 2);
+      ctx.lineTo(182, 18);
+      ctx.lineTo(10, 18);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.fillStyle = '#9a3412';
+      ctx.beginPath();
+      ctx.moveTo(96, 4);
+      ctx.lineTo(178, 17);
+      ctx.lineTo(14, 17);
+      ctx.closePath();
+      ctx.fill();
+
+      for (let rx = 20; rx < 172; rx += 10) {
+        ctx.fillStyle = (rx % 20 === 0) ? '#b45309' : '#d97706';
+        ctx.fillRect(rx, 13, 8, 4);
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(rx + 8, 13, 1, 4);
+      }
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(94, 0, 4, 3);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(92, 2, 8, 2);
+
+      // 7. Hanging Carved Wooden Welcome Plaque ("GREEN MEADOWS")
+      ctx.fillStyle = '#1e293b';
+      [60, 132].forEach(cx => {
+        ctx.fillRect(cx, 32, 2, 7);
+        ctx.fillRect(cx - 1, 34, 4, 1.5);
+      });
+      const bx = 46, by = 38, bw = 100, bh = 22;
+      ctx.fillStyle = '#451a03';
+      ctx.beginPath();
+      ctx.roundRect(bx, by, bw, bh, 3);
+      ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath();
+      ctx.roundRect(bx + 1.5, by + 1.5, bw - 3, bh - 3, 2);
+      ctx.fill();
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(bx + 3, by + 3, bw - 6, bh - 6);
+      ctx.fillStyle = '#eab308';
+      ctx.fillRect(bx + 3, by + 11, bw - 6, 1);
+
+      ctx.fillStyle = '#451a03';
+      ctx.font = 'bold 7.5px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('GREEN MEADOWS', 96, by + 7.5);
+
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(93, by + 13, 6, 5);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(95, by + 14, 2, 3);
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillText('🌾        🌾', 96, by + 15.5);
+
+      // 8. Open Welcoming Country Picket Gates (Ajar in perspective)
+      const drawGate = (gx, dir) => {
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(gx, 66, dir * 8, 3);
+        ctx.fillRect(gx, 88, dir * 8, 3);
+        for (let i = 0; i < 3; i++) {
+          const px = gx + dir * (6 + i * 8);
+          const py = 62 + i * 2;
+          const ph = 36 - i * 2;
+          ctx.fillStyle = '#451a03';
+          ctx.fillRect(px, py, 6, ph);
+          ctx.fillStyle = '#855836';
+          ctx.fillRect(px + 1, py + 1, 4, ph - 2);
+          ctx.fillStyle = '#a16207';
+          ctx.fillRect(px + 1, py + 1, 2, ph - 2);
+          ctx.fillStyle = '#a16207';
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(px + 3, py - 3);
+          ctx.lineTo(px + 6, py);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.strokeStyle = '#451a03';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(gx + dir * 6, 92);
+        ctx.lineTo(gx + dir * 24, 66);
+        ctx.stroke();
+        ctx.strokeStyle = '#a16207';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      };
+      drawGate(42, 1);
+      drawGate(150, -1);
+
+      // 9. Antique Brass & Forged Iron Hanging Barn Lanterns with Warm Corona
+      const drawLantern = (lx, ly) => {
+        ctx.strokeStyle = '#1e293b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(lx < 96 ? lx + 12 : lx - 12, ly - 4);
+        ctx.lineTo(lx, ly - 4);
+        ctx.lineTo(lx, ly);
+        ctx.stroke();
+
+        const glow = ctx.createRadialGradient(lx, ly + 6, 2, lx, ly + 6, 16);
+        glow.addColorStop(0, 'rgba(254, 240, 138, 0.65)');
+        glow.addColorStop(0.5, 'rgba(245, 158, 11, 0.3)');
+        glow.addColorStop(1, 'rgba(245, 158, 11, 0)');
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.arc(lx, ly + 6, 16, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#d4af37';
+        ctx.beginPath();
+        ctx.moveTo(lx - 5, ly);
+        ctx.lineTo(lx, ly - 4);
+        ctx.lineTo(lx + 5, ly);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(lx - 4, ly, 8, 10);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(lx - 2, ly + 2, 4, 6);
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(lx - 4, ly, 1.5, 10);
+        ctx.fillRect(lx + 2.5, ly, 1.5, 10);
+        ctx.fillRect(lx - 4, ly + 9, 8, 2);
+      };
+      drawLantern(16, 52);
+      drawLantern(176, 52);
+
+      // 10. Climbing Flowering Vines (Bougainvillea & Jasmine)
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(22, 112);
+      ctx.quadraticCurveTo(18, 80, 26, 60);
+      ctx.quadraticCurveTo(34, 40, 44, 28);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(170, 112);
+      ctx.quadraticCurveTo(174, 80, 166, 60);
+      ctx.quadraticCurveTo(158, 40, 148, 28);
+      ctx.stroke();
+
+      const leaves = [
+        [20, 95], [26, 85], [22, 70], [30, 50], [40, 32], [54, 22], [70, 20],
+        [172, 95], [166, 85], [170, 70], [162, 50], [152, 32], [138, 22], [122, 20]
+      ];
+      leaves.forEach(([lx, ly]) => {
+        ctx.fillStyle = '#16a34a';
+        ctx.beginPath(); ctx.ellipse(lx, ly, 3, 2, 0.4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#4ade80';
+        ctx.beginPath(); ctx.arc(lx, ly, 1.2, 0, Math.PI * 2); ctx.fill();
+      });
+
+      const blossoms = [
+        [18, 92, '#f43f5e'], [28, 82, '#ffffff'], [20, 68, '#fb7185'], [32, 48, '#ffffff'],
+        [44, 30, '#f43f5e'], [62, 20, '#ffffff'],
+        [174, 92, '#f43f5e'], [164, 82, '#ffffff'], [172, 68, '#fb7185'], [160, 48, '#ffffff'],
+        [146, 30, '#f43f5e'], [130, 20, '#ffffff']
+      ];
+      blossoms.forEach(([bx, by, col]) => {
+        ctx.fillStyle = col;
+        ctx.beginPath(); ctx.arc(bx, by, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fde047';
+        ctx.fillRect(bx - 0.6, by - 0.6, 1.2, 1.2);
+      });
+
+      // 11. Rustic Side Accents
+      const wx = 12, wy = 104, wr = 11;
+      ctx.fillStyle = 'rgba(12, 18, 10, 0.28)';
+      ctx.beginPath(); ctx.ellipse(wx, wy + 8, 10, 3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#334155';
+      ctx.beginPath(); ctx.arc(wx, wy, wr, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#78350f';
+      ctx.beginPath(); ctx.arc(wx, wy, wr - 1.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2b5329';
+      ctx.beginPath(); ctx.arc(wx, wy, wr - 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#92400e';
+      ctx.lineWidth = 1.5;
+      for (let a = 0; a < Math.PI; a += Math.PI / 4) {
+        ctx.beginPath();
+        ctx.moveTo(wx + Math.cos(a) * (wr - 3), wy + Math.sin(a) * (wr - 3));
+        ctx.lineTo(wx - Math.cos(a) * (wr - 3), wy - Math.sin(a) * (wr - 3));
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath(); ctx.arc(wx, wy, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath(); ctx.arc(wx, wy, 1.2, 0, Math.PI * 2); ctx.fill();
+
+      const drawMilkCan = (mx, my, scale) => {
+        ctx.fillStyle = 'rgba(12, 18, 10, 0.25)';
+        ctx.beginPath(); ctx.ellipse(mx + 4 * scale, my + 14 * scale, 5 * scale, 2 * scale, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillRect(mx, my + 4 * scale, 8 * scale, 10 * scale);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.fillRect(mx + 1 * scale, my + 4 * scale, 3 * scale, 10 * scale);
+        ctx.fillStyle = '#64748b';
+        ctx.fillRect(mx + 1.5 * scale, my + 1.5 * scale, 5 * scale, 3 * scale);
+        ctx.fillStyle = '#d4af37';
+        ctx.fillRect(mx + 1 * scale, my, 6 * scale, 2 * scale);
+        ctx.fillRect(mx + 3 * scale, my - 1.5 * scale, 2 * scale, 1.5 * scale);
+      };
+      drawMilkCan(174, 102, 1.1);
+      drawMilkCan(182, 106, 0.9);
+
+      [ [18, 122], [38, 123], [146, 122], [168, 123] ].forEach(([fx, fy]) => {
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(fx, fy, 1.8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#facc15';
+        ctx.fillRect(fx - 0.5, fy - 0.5, 1, 1);
+      });
+    });
+
+    // 3B. Rustic Directional Farm Milestone / Signpost (prop-farm-sign: 48 x 64 px)
+    makeTex('prop-farm-sign', 48, 64, (ctx, W, H) => {
+      ctx.fillStyle = 'rgba(12, 18, 10, 0.28)';
+      ctx.beginPath(); ctx.ellipse(24, 60, 16, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#451a03'; ctx.fillRect(21, 6, 6, 54);
+      ctx.fillStyle = '#78350f'; ctx.fillRect(22, 6, 4, 54);
+      ctx.fillStyle = '#92400e'; ctx.fillRect(23, 6, 1.5, 54);
+      ctx.fillStyle = '#b45309';
+      ctx.beginPath(); ctx.moveTo(21, 6); ctx.lineTo(24, 1); ctx.lineTo(27, 6); ctx.fill();
+
+      const drawArrow = (ay, text, pointsRight) => {
+        const ax = pointsRight ? 14 : 2;
+        const aw = 30;
+        ctx.fillStyle = '#451a03';
+        ctx.beginPath();
+        if (pointsRight) {
+          ctx.moveTo(ax, ay); ctx.lineTo(ax + aw - 5, ay); ctx.lineTo(ax + aw, ay + 6);
+          ctx.lineTo(ax + aw - 5, ay + 12); ctx.lineTo(ax, ay + 12);
+        } else {
+          ctx.moveTo(ax + 5, ay); ctx.lineTo(ax + aw, ay); ctx.lineTo(ax + aw, ay + 12);
+          ctx.lineTo(ax + 5, ay + 12); ctx.lineTo(ax, ay + 6);
+        }
+        ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = '#fef3c7';
+        ctx.beginPath();
+        if (pointsRight) {
+          ctx.moveTo(ax + 1, ay + 1); ctx.lineTo(ax + aw - 5, ay + 1); ctx.lineTo(ax + aw - 1, ay + 6);
+          ctx.lineTo(ax + aw - 5, ay + 11); ctx.lineTo(ax + 1, ay + 11);
+        } else {
+          ctx.moveTo(ax + 5, ay + 1); ctx.lineTo(ax + aw - 1, ay + 1); ctx.lineTo(ax + aw - 1, ay + 11);
+          ctx.lineTo(ax + 5, ay + 11); ctx.lineTo(ax + 1, ay + 6);
+        }
+        ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = '#78350f';
+        ctx.font = 'bold 5px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(text, ax + aw / 2, ay + 6.5);
+      };
+
+      drawArrow(8, 'FARM 🏡', true);
+      drawArrow(22, 'COWS 🐄', true);
+      drawArrow(36, 'POND 🦆', false);
+
+      ctx.fillStyle = '#1e293b'; ctx.fillRect(17, 18, 4, 1.5);
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath(); ctx.moveTo(17, 20); ctx.lineTo(14, 26); ctx.lineTo(20, 26); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fef08a'; ctx.fillRect(16.5, 26, 1, 1.5);
+
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(18, 56, 2, 4); ctx.fillRect(26, 55, 2, 5); ctx.fillRect(29, 57, 2, 3);
+      ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(17, 56, 1.5, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // 3C. Vibrant Golden Country Sunflowers (prop-sunflowers: 56 x 48 px)
+    makeTex('prop-sunflowers', 56, 48, (ctx, W, H) => {
+      ctx.fillStyle = 'rgba(12, 18, 10, 0.28)';
+      ctx.beginPath(); ctx.ellipse(28, 44, 24, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+      const stems = [
+        [16, 44, 14, 20], [26, 44, 28, 14], [38, 44, 40, 18], [46, 44, 44, 26]
+      ];
+      ctx.strokeStyle = '#15803d';
+      ctx.lineWidth = 2.5;
+      stems.forEach(([bx, by, tx, ty]) => {
+        ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo((bx + tx) / 2 - 3, (by + ty) / 2, tx, ty); ctx.stroke();
+      });
+
+      const leaves = [ [12, 32, -0.4], [22, 30, 0.3], [32, 28, -0.3], [44, 34, 0.4] ];
+      leaves.forEach(([lx, ly, rot]) => {
+        ctx.fillStyle = '#16a34a';
+        ctx.beginPath(); ctx.ellipse(lx, ly, 6, 3, rot, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#4ade80';
+        ctx.beginPath(); ctx.ellipse(lx, ly, 4, 1.5, rot, 0, Math.PI * 2); ctx.fill();
+      });
+
+      const heads = [
+        [14, 18, 9], [28, 12, 11], [40, 16, 10], [45, 25, 8]
+      ];
+      heads.forEach(([hx, hy, r]) => {
+        ctx.fillStyle = '#facc15';
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
+          const px = hx + Math.cos(a) * (r - 1);
+          const py = hy + Math.sin(a) * (r - 1);
+          ctx.beginPath(); ctx.arc(px, py, 2.8, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.fillStyle = '#fef08a';
+        for (let a = Math.PI / 12; a < Math.PI * 2; a += Math.PI / 6) {
+          const px = hx + Math.cos(a) * (r - 1.5);
+          const py = hy + Math.sin(a) * (r - 1.5);
+          ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.fillStyle = '#451a03';
+        ctx.beginPath(); ctx.arc(hx, hy, r * 0.48, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#78350f';
+        ctx.beginPath(); ctx.arc(hx, hy, r * 0.35, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ca8a04';
+        ctx.beginPath(); ctx.arc(hx, hy, r * 0.16, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+
+    // 3D. Golden Pastoral Hay Bale (prop-farm-haybale: 44 x 32 px)
+    makeTex('prop-farm-haybale', 44, 32, (ctx, W, H) => {
+      ctx.fillStyle = 'rgba(12, 18, 10, 0.3)';
+      ctx.beginPath(); ctx.ellipse(22, 28, 20, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = '#ca8a04';
+      ctx.fillRect(4, 10, 36, 18);
+      ctx.fillStyle = '#eab308';
+      ctx.beginPath();
+      ctx.moveTo(4, 10); ctx.lineTo(10, 4); ctx.lineTo(42, 4); ctx.lineTo(40, 10);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#a16207';
+      ctx.beginPath();
+      ctx.moveTo(40, 10); ctx.lineTo(42, 4); ctx.lineTo(42, 22); ctx.lineTo(40, 28);
+      ctx.closePath(); ctx.fill();
+
+      ctx.fillStyle = '#fef08a';
+      for (let i = 0; i < 20; i++) {
+        const sx = 6 + (i * 7) % 30;
+        const sy = 12 + (i * 3) % 14;
+        ctx.fillRect(sx, sy, 3, 1);
+      }
+      ctx.strokeStyle = '#facc15'; ctx.lineWidth = 1;
+      [ [3, 14], [2, 22], [41, 12], [42, 24], [12, 3], [34, 3] ].forEach(([wx, wy]) => {
+        ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx + (wx < 20 ? -3 : 3), wy - 2); ctx.stroke();
+      });
+
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(14, 10, 2, 18);
+      ctx.fillRect(30, 10, 2, 18);
+      ctx.beginPath();
+      ctx.moveTo(14, 10); ctx.lineTo(19, 4);
+      ctx.moveTo(30, 10); ctx.lineTo(34, 4);
+      ctx.stroke();
+    });
+
     // 4. Shuravi the Dairy Cow (npc-cow-0 & npc-cow-1: 58 x 46 px)
     [0, 1].forEach(frame => {
       makeTex(`npc-cow-${frame}`, 58, 46, (ctx, W, H) => {
@@ -9196,6 +9662,7 @@ class DhakaValleyScene extends Phaser.Scene {
       { x: 430, y: 278, w: 1100, h: 84 },               // North connecting avenue
       { x: 1472, y: 240, w: 380, h: 100 },              // North-East Food Bazaar Plaza
       { x: 692, y: 1420, w: 96, h: 380 },               // Farmhouse Country Lane
+      { x: 480, y: 1420, w: 220, h: 72 },               // West connecting lane to Farmhouse
     ];
 
     // ── Dhanmondi Lake Boundary (World coordinates) ──
@@ -9467,12 +9934,66 @@ class DhakaValleyScene extends Phaser.Scene {
       this.add.text(740, 1435, 'GREEN MEADOWS FARMHOUSE ROAD 🏡', labelStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(2180, 710, 'WHISPERING FOREST PORTAL 🌀', labelStyle).setOrigin(0.5).setDepth(2000);
 
-      // Rustic Farmhouse country pathway
+      // Rustic Farmhouse Country Pathway & Grand Pastoral Gateway Entrance
       this.add.tileSprite(740, 1530, 96, 320, 'tile-path').setDepth(1);
-      this.add.sprite(740, 1490, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1490);
+      this.add.tileSprite(600, 1420, 200, 72, 'tile-path').setDepth(1);
+
+      // Grand Farmstead Timber Archway Spanning Across Country Lane (Center: 740, 1485)
+      this.add.sprite(740, 1485, 'prop-farm-arch').setOrigin(0.5, 1).setDepth(1485);
+
+      // Flanking Pastoral Boundary Fences (Extending West & East)
+      this.add.sprite(596, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
+      this.add.sprite(500, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
+      this.add.sprite(884, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
+      this.add.sprite(980, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
+
+      // Boundary Collisions (Leaving open central 96px country road at x: 692–788 for free walking)
+      blockRect(550, 1475, 230, 16);
+      blockRect(930, 1475, 230, 16);
+      blockRect(668, 1478, 44, 18);
+      blockRect(812, 1478, 44, 18);
+
+      // Rustic Directional Signpost & Milestone
+      this.add.sprite(805, 1445, 'prop-farm-sign').setOrigin(0.5, 1).setDepth(1445);
+
+      // Lush Blooming Sunflowers & Stacked Golden Hay Bales
+      this.add.sprite(660, 1450, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1450);
+      this.add.sprite(825, 1492, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1492);
+      this.add.sprite(545, 1495, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1495);
+      this.add.sprite(935, 1495, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1495);
+
+      this.add.sprite(615, 1492, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1492);
+      this.add.sprite(635, 1496, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1496);
+      this.add.sprite(865, 1494, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1494);
+
+      // Warm Archway Lantern Glows (Pulsing with night/day cycle)
+      const archGlowL = this.add.circle(660, 1433, 44, 0xfde68a, 0.25).setDepth(1486);
+      const archGlowR = this.add.circle(820, 1433, 44, 0xfde68a, 0.25).setDepth(1486);
+      this.lampGlows.push(archGlowL, archGlowR);
+
+      // Floating Pastoral Dandelion Pollen Motes drifting in the country breeze
+      for (let i = 0; i < 6; i++) {
+        const dX = Phaser.Math.Between(695, 785);
+        const dY = Phaser.Math.Between(1440, 1530);
+        const mote = this.add.circle(dX, dY, 2, 0xfef08a, 0.65).setDepth(1600);
+        this.tweens.add({
+          targets: mote,
+          y: dY - 26,
+          x: dX + Phaser.Math.Between(-14, 14),
+          alpha: 0.15,
+          duration: 2400 + i * 400,
+          repeat: -1,
+          yoyo: true,
+          ease: 'Sine.easeInOut'
+        });
+      }
+
+      // Decorative Farmhouse Stepping Threshold
+      this.add.circle(740, 1530, 24, 0xca8a04, 0.25).setDepth(1529);
+      this.add.circle(740, 1530, 14, 0xfef08a, 0.35).setDepth(1529);
 
       registerInteract(CURZON_X, CURZON_Y + 12, null, 'Enter Curzon Hall 🏛️', 92, () => this.enterCurzonHall());
-      registerInteract(740, 1540, null, 'Visit Green Meadows Farmhouse 🏡', 92, () => this.enterFarmhouse());
+      registerInteract(740, 1530, null, 'Visit Green Meadows Farmhouse 🏡', 85, () => this.enterFarmhouse());
       registerInteract(275, 302, 'npc-tea-0', 'Tong-er Mama (Cha)', 105, () => this.interactTeaStall());
       registerInteract(415, 295, 'npc-guitar-0', 'TSC Acoustic Singer', 90, () => this.interactGuitarist());
       registerInteract(260, 755, 'npc-artist-0', 'Charukola Clay Art', 85, () => this.interactCharukola());
@@ -13713,7 +14234,7 @@ class DhakaValleyScene extends Phaser.Scene {
   exitFarmhouse() {
     if (this.isTransitioning || this.cutsceneLocked) return;
     SoundEngine.portalWarp();
-    this.transitionToWorld('dhaka', { x: 740, y: 1510 });
+    this.transitionToWorld('dhaka', { x: 740, y: 1455 });
   }
 
   buildCurzonInterior(spawnPos) {
@@ -14301,10 +14822,45 @@ class DhakaValleyScene extends Phaser.Scene {
       [320, 120], [880, 120]
     ].forEach(([tx, ty]) => addLandmark(tx, ty, 'prop-tree-krishna', 38, 24));
 
-    // Farm Entrance / Exit Gates (South Center: x: 600, y: 840)
-    this.add.sprite(520, 840, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(840);
-    this.add.sprite(680, 840, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(840);
-    registerInteract(600, 830, null, 'Return to Dhaka Valley 🚶', 85, () => this.exitFarmhouse());
+    // Farm Entrance / Exit Gates & Grand Pastoral Archway (South Center: x: 600, y: 850)
+    this.add.sprite(600, 850, 'prop-farm-arch').setOrigin(0.5, 1).setDepth(850);
+
+    // Flanking Southern Boundary Fences (Extending to West & East Margins)
+    this.add.sprite(456, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+    this.add.sprite(360, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+    this.add.sprite(264, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+    this.add.sprite(168, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+
+    this.add.sprite(744, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+    this.add.sprite(840, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+    this.add.sprite(936, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+    this.add.sprite(1032, 850, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(850);
+
+    // Southern Boundary Collisions (Leaving open central avenue at x: 552–648 for passage)
+    blockRect(312, 842, 400, 16);
+    blockRect(888, 842, 400, 16);
+    blockRect(528, 845, 34, 18);
+    blockRect(672, 845, 34, 18);
+
+    // Gate Milestone Signpost
+    this.add.sprite(665, 810, 'prop-farm-sign').setOrigin(0.5, 1).setDepth(810);
+
+    // Lush Sunflowers & Golden Hay Bales Framing the Exit Gate
+    this.add.sprite(520, 856, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(856);
+    this.add.sprite(680, 856, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(856);
+    this.add.sprite(475, 858, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(858);
+    this.add.sprite(725, 858, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(858);
+
+    // Warm Gate Lantern Glows
+    const farmGlowL = this.add.circle(520, 798, 44, 0xfde68a, 0.25).setDepth(851);
+    const farmGlowR = this.add.circle(680, 798, 44, 0xfde68a, 0.25).setDepth(851);
+    this.lampGlows.push(farmGlowL, farmGlowR);
+
+    // Stepping Threshold & Exit Return Trigger
+    this.add.circle(600, 840, 22, 0xca8a04, 0.25).setDepth(839);
+    this.add.circle(600, 840, 12, 0xfef08a, 0.35).setDepth(839);
+
+    registerInteract(600, 840, null, 'Return to Dhaka Valley 🚶', 75, () => this.exitFarmhouse());
 
     // 7. Interactive Animals & Farmer
     // A. Chacha Rafiq (Farm Master)
@@ -14606,8 +15162,9 @@ class DhakaValleyScene extends Phaser.Scene {
       ctx.fillRect(430 * sx, 278 * sy, 1100 * sx, 84 * sy);
       // North-East Food Bazaar Promenade
       ctx.fillRect(1472 * sx, 240 * sy, 380 * sx, 96 * sy);
-      // Farmhouse Country Lane
+      // Farmhouse Country Lane & West Branch
       ctx.fillRect(692 * sx, 1420 * sy, 96 * sx, 380 * sy);
+      ctx.fillRect(480 * sx, 1420 * sy, 220 * sx, 72 * sy);
 
       // Road shoulder strokes
       ctx.strokeStyle = 'rgba(120, 80, 50, 0.4)';
@@ -14660,9 +15217,14 @@ class DhakaValleyScene extends Phaser.Scene {
       ctx.fillStyle = '#38bdf8';
       ctx.fill();
 
-      // Green Meadows Farmhouse Gateway Arch
-      ctx.fillStyle = '#15803d';
-      ctx.fillRect(710 * sx, 1490 * sy, 60 * sx, 30 * sy);
+      // Green Meadows Farmhouse Gateway Arch & Boundary Fences
+      ctx.fillStyle = '#5c3a21';
+      ctx.fillRect(500 * sx, 1485 * sy, 480 * sx, 4 * sy);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(644 * sx, 1475 * sy, 192 * sx, 16 * sy);
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(660 * sx, 1480 * sy, 4 * sx, 4 * sy);
+      ctx.fillRect(816 * sx, 1480 * sy, 4 * sx, 4 * sy);
 
     } else if (world === 'farmhouse') {
       // Farmhouse Layout: Central Yard, Pastures, Duck Pond, Barn & Silo
@@ -14691,6 +15253,15 @@ class DhakaValleyScene extends Phaser.Scene {
       ctx.strokeRect(176 * sx, 220 * sy, 280 * sx, 140 * sy); // Cow pasture
       ctx.strokeRect(736 * sx, 220 * sy, 280 * sx, 140 * sy); // Goat pasture
       ctx.strokeRect(173 * sx, 514 * sy, 190 * sx, 110 * sy); // Chicken coop
+
+      // Southern Farmstead Boundary Fences & Grand Timber Gateway Arch
+      ctx.fillStyle = '#5c3a21';
+      ctx.fillRect(160 * sx, 846 * sy, 880 * sx, 4 * sy);
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(504 * sx, 840 * sy, 192 * sx, 14 * sy);
+      ctx.fillStyle = '#fde047';
+      ctx.fillRect(520 * sx, 843 * sy, 3 * sx, 3 * sy);
+      ctx.fillRect(676 * sx, 843 * sy, 3 * sx, 3 * sy);
 
     } else if (world === 'curzon_interior') {
       // Parquet Interior & Velvet Carpet Runners
