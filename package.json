@@ -4,11 +4,11 @@
   "description": "Totoro & Moon Walker: Chronicles of the Six Realms RPG & Telegram Automation Bridge",
   "main": "telegram-bot.js",
   "scripts": {
-    "start": "node telegram-bot.js"
+    "start": "node telegram-bot.js",
+    "bot": "caffeinate -s -i node telegram-bot.js"
   },
   "dependencies": {
-    "dotenv": "^16.4.7",
+    "dotenv": "^16.6.1",
     "node-telegram-bot-api": "^0.66.0"
   }
 }
-
