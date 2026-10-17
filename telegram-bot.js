@@ -254,6 +254,9 @@ bot.on('message', async (msg) => {
       effectiveInstruction = `The user uploaded an asset saved at "${mediaResult.relativePath}". ${promptText}`;
     }
 
+    // Direct Mode directive: ensures Antigravity auto-writes and applies file changes directly to disk
+    effectiveInstruction += '\n[System Directive: Directly apply all necessary file modifications to disk in this folder. Do not prompt for confirmation.]';
+
     console.log(`\n📨 Processing instruction from Chat ID ${chatId}: "${effectiveInstruction}"`);
 
     // a. Send a Telegram status message: "⚙️ Running instruction: <prompt>..."
