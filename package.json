@@ -5,7 +5,10 @@
   "main": "telegram-bot.js",
   "scripts": {
     "start": "node telegram-bot.js",
-    "bot": "caffeinate -s -i node telegram-bot.js"
+    "bot": "caffeinate -s -i node telegram-bot.js",
+    "webhook:set": "node scripts/webhook-manager.js set",
+    "webhook:info": "node scripts/webhook-manager.js info",
+    "webhook:delete": "node scripts/webhook-manager.js delete"
   },
   "dependencies": {
     "dotenv": "^16.6.1",
