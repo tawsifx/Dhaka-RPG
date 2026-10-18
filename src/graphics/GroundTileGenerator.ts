@@ -612,6 +612,53 @@ export class GroundTileGenerator {
       }
     });
 
+    // --- Layer 3 Interactive Ground Foliage Sprites (16x16 pixel art) ---
+    makeTex('tile-flower-red', 16, 16, ctx => {
+      // Crimson Krishnachura Blossom
+      ctx.fillStyle = '#1b4332'; ctx.fillRect(7, 8, 2, 7);
+      ctx.fillStyle = '#2d6a4f'; ctx.fillRect(5, 11, 2, 2); ctx.fillRect(9, 10, 2, 2);
+      ctx.fillStyle = '#e11d48'; ctx.fillRect(6, 3, 4, 5); ctx.fillRect(4, 5, 8, 3);
+      ctx.fillStyle = '#f43f5e'; ctx.fillRect(7, 4, 2, 2);
+      ctx.fillStyle = '#facc15'; ctx.fillRect(7, 5, 2, 2);
+    });
+
+    makeTex('tile-flower-blue', 16, 16, ctx => {
+      // Aparajita Indigo Flower
+      ctx.fillStyle = '#1b4332'; ctx.fillRect(7, 8, 2, 7);
+      ctx.fillStyle = '#2563eb'; ctx.fillRect(6, 3, 4, 5); ctx.fillRect(4, 5, 8, 3);
+      ctx.fillStyle = '#60a5fa'; ctx.fillRect(7, 4, 2, 2);
+      ctx.fillStyle = '#fef08a'; ctx.fillRect(7, 5, 2, 2);
+    });
+
+    makeTex('tile-flower-yellow', 16, 16, ctx => {
+      // Golden Beli Garland Flower
+      ctx.fillStyle = '#1b4332'; ctx.fillRect(7, 8, 2, 7);
+      ctx.fillStyle = '#eab308'; ctx.fillRect(6, 3, 4, 5); ctx.fillRect(4, 5, 8, 3);
+      ctx.fillStyle = '#fef08a'; ctx.fillRect(7, 4, 2, 2);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(7, 5, 2, 2);
+    });
+
+    makeTex('tile-clover', 16, 16, ctx => {
+      // 4-Leaf Lucky Bengal Clover
+      ctx.fillStyle = '#14532d'; ctx.fillRect(7, 9, 2, 6);
+      ctx.fillStyle = '#16a34a';
+      ctx.fillRect(5, 3, 3, 3); ctx.fillRect(8, 3, 3, 3);
+      ctx.fillRect(3, 6, 3, 3); ctx.fillRect(10, 6, 3, 3);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(6, 4, 1, 1); ctx.fillRect(9, 4, 1, 1);
+      ctx.fillRect(4, 7, 1, 1); ctx.fillRect(11, 7, 1, 1);
+    });
+
+    makeTex('tile-petals', 16, 16, ctx => {
+      // Fallen Krishnachura Petal Cluster
+      ctx.fillStyle = 'rgba(20, 30, 20, 0.35)';
+      ctx.fillRect(3, 8, 4, 2); ctx.fillRect(9, 12, 4, 2); ctx.fillRect(7, 5, 4, 2);
+      ctx.fillStyle = '#e11d48';
+      ctx.fillRect(3, 7, 3, 2); ctx.fillRect(10, 11, 3, 2); ctx.fillRect(7, 4, 3, 2);
+      ctx.fillStyle = '#fb7185';
+      ctx.fillRect(4, 7, 1, 1); ctx.fillRect(11, 11, 1, 1); ctx.fillRect(8, 4, 1, 1);
+    });
+
     // --- 16-Tile 4-Bit Wang Autotiles (32x32 Grid Standard) ---
     /**
      * @asset-spec

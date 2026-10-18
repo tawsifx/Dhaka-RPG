@@ -720,7 +720,10 @@ export const UIController: any = (() => {
           startMenuMusic();
         }, { once: true });
 
-        if (RPGStats.hasSave()) {
+        const hasSave = (typeof RPGStats !== 'undefined' && RPGStats?.hasSave)
+          ? RPGStats.hasSave()
+          : (typeof localStorage !== 'undefined' && Boolean(localStorage.getItem('totoro_moonwalker_rpg_save_v2')));
+        if (hasSave) {
           const contBtn = $('btn-title-continue');
           if (contBtn) contBtn.hidden = false;
         }
