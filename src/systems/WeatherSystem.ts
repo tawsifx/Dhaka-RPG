@@ -1,5 +1,5 @@
-declare const Phaser: any;
 // src/systems/WeatherSystem.ts - Kalbaishakhi monsoon rain, puddles, thunder, fireflies, & wind gusts
+import Phaser from 'phaser';
 import { SoundEngine } from '../audio/SoundEngine';
 import { UI } from '../ui/UIController';
 

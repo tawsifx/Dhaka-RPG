@@ -1,6 +1,6 @@
-declare const Phaser: any;
 // src/audio/SoundEngine.ts - Complete Web Audio synthesizer, BGM crossfader & SFX pool
 // Migrated 100% intact from game.js
+declare const Phaser: any;
 
 export const SoundEngine = (() => {
   let ctx = null;

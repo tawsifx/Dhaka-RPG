@@ -15,7 +15,7 @@ import { CRAFT_RECIPES } from '../config/recipes.db';
 import { WORLDS_DB } from '../config/worlds.db';
 
 export const UIController: any = (() => {
-  const $: any = (id: string): any => document.getElementById(id);
+  const $: any = (id: string): any => (typeof document !== 'undefined' ? document.getElementById(id) : null);
   let activeNodes = [];
   let nodeIdx = 0;
   let typingTimer = null;
@@ -26,8 +26,10 @@ export const UIController: any = (() => {
   let speakerWave = 'sine';
   let currentTab = 'quests';
 
-  const bgmBtn = $('btn-bgm');
-  if (bgmBtn) bgmBtn.textContent = '🎵 BGM: ON';
+  if (typeof document !== 'undefined') {
+    const bgmBtn = $('btn-bgm');
+    if (bgmBtn) bgmBtn.textContent = '🎵 BGM: ON';
+  }
 
   function refreshHotbarUI() {
     const bar = $('inventory-bar');
@@ -87,6 +89,7 @@ export const UIController: any = (() => {
 
   function updateHearts(count) {
     DateState.hearts = Math.min(5, count);
+    if (typeof document === 'undefined') return;
     const slots = [...document.querySelectorAll('.h-slot')];
     slots.forEach((s, idx) => {
       s.textContent = idx < DateState.hearts ? '♥' : '♡';
@@ -602,166 +605,185 @@ export const UIController: any = (() => {
   }
 
   // Wire DOM Buttons
-  $('dialogue-overlay')?.addEventListener('click', () => advanceDialogue());
-  $('btn-keep-exploring')?.addEventListener('click', () => {
-    SoundEngine.select();
-    $('scrapbook-modal').hidden = true;
-  });
-  $('btn-open-quests')?.addEventListener('click', () => openRPGMenu('quests'));
-  $('btn-open-bag')?.addEventListener('click', () => openRPGMenu('inventory'));
-  $('btn-open-map')?.addEventListener('click', () => openRPGMenu('map'));
-  $('btn-save-game')?.addEventListener('click', () => RPGStats.saveGame(window.__activeScene));
-  $('btn-close-rpg-menu')?.addEventListener('click', () => closeRPGMenu());
-
-  document.querySelectorAll('.rpg-tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => openRPGMenu((btn as any).dataset.tab));
-  });
-
-  // Hamburger Dropdown Drawer Toggle
-  const menuBtn = $('btn-menu-toggle');
-  const dropdown = $('hud-dropdown-menu');
-
-  if (menuBtn && dropdown) {
-    menuBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      SoundEngine.select();
-      const isHidden = dropdown.hidden;
-      dropdown.hidden = !isHidden;
-      menuBtn.classList.toggle('open', !isHidden);
-    });
-
-    // Auto-close dropdown when any drawer item is tapped
-    dropdown.querySelectorAll('button').forEach(b => {
-      b.addEventListener('click', () => {
-        dropdown.hidden = true;
-        menuBtn.classList.remove('open');
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    const initDom = () => {
+      $('dialogue-overlay')?.addEventListener('click', () => advanceDialogue());
+      $('btn-keep-exploring')?.addEventListener('click', () => {
+        SoundEngine.select();
+        const m = $('scrapbook-modal');
+        if (m) m.hidden = true;
       });
-    });
+      $('btn-open-quests')?.addEventListener('click', () => openRPGMenu('quests'));
+      $('btn-open-bag')?.addEventListener('click', () => openRPGMenu('inventory'));
+      $('btn-open-map')?.addEventListener('click', () => openRPGMenu('map'));
+      $('btn-save-game')?.addEventListener('click', () => RPGStats.saveGame(window.__activeScene));
+      $('btn-close-rpg-menu')?.addEventListener('click', () => closeRPGMenu());
 
-    // Close when tapping anywhere else on screen
-    window.addEventListener('click', (e) => {
-      if (!dropdown.hidden && !dropdown.contains(e.target as Node) && e.target !== menuBtn) {
-        dropdown.hidden = true;
-        menuBtn.classList.remove('open');
+      document.querySelectorAll('.rpg-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => openRPGMenu((btn as any).dataset.tab));
+      });
+
+      // Hamburger Dropdown Drawer Toggle
+      const menuBtn = $('btn-menu-toggle');
+      const dropdown = $('hud-dropdown-menu');
+
+      if (menuBtn && dropdown) {
+        menuBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          SoundEngine.select();
+          const isHidden = dropdown.hidden;
+          dropdown.hidden = !isHidden;
+          menuBtn.classList.toggle('open', !isHidden);
+        });
+
+        // Auto-close dropdown when any drawer item is tapped
+        dropdown.querySelectorAll('button').forEach(b => {
+          b.addEventListener('click', () => {
+            dropdown.hidden = true;
+            menuBtn.classList.remove('open');
+          });
+        });
+
+        // Close when tapping anywhere else on screen
+        window.addEventListener('click', (e) => {
+          if (!dropdown.hidden && !dropdown.contains(e.target as Node) && e.target !== menuBtn) {
+            dropdown.hidden = true;
+            menuBtn.classList.remove('open');
+          }
+        });
       }
-    });
-  }
 
-// Title Screen Wiring & Menu BGM Manager
-  const titleOverlay = $('title-screen-overlay');
-  const menuBgm = $('menu-bgm');
-  const audioStatusText = $('menu-audio-text');
+      // Title Screen Wiring & Menu BGM Manager
+      const titleOverlay = $('title-screen-overlay');
+      const menuBgm = $('menu-bgm');
+      const audioStatusText = $('menu-audio-text');
 
-  function startMenuMusic() {
-    if (!menuBgm) return;
-    if (!(menuBgm as any).src || !(menuBgm as any).src.endsWith('.mp3')) {
-      (menuBgm as any).src = 'assets/audio/spirited_away_piano.mp3';
-    }
-    try { (menuBgm as any).volume = 0.75; } catch(e){}
-    (menuBgm as any).loop = true;
+      function startMenuMusic() {
+        if (!menuBgm) return;
+        if (!(menuBgm as any).src || !(menuBgm as any).src.endsWith('.mp3')) {
+          (menuBgm as any).src = 'assets/audio/spirited_away_piano.mp3';
+        }
+        try { (menuBgm as any).volume = 0.75; } catch(e){}
+        (menuBgm as any).loop = true;
 
-    (menuBgm as any).play().then(() => {
-      if (audioStatusText) audioStatusText.textContent = "MUSIC: SPIRITED AWAY — ONE SUMMER'S DAY (PIANO) ♫";
-    }).catch((err) => {
-      console.warn("Autoplay blocked or pending click:", err);
-    });
-  }
+        (menuBgm as any).play().then(() => {
+          if (audioStatusText) audioStatusText.textContent = "MUSIC: SPIRITED AWAY — ONE SUMMER'S DAY (PIANO) ♫";
+        }).catch((err) => {
+          console.warn("Autoplay blocked or pending click:", err);
+        });
+      }
 
-  function fadeOutMenuMusic(callback) {
-    if (!menuBgm || (menuBgm as any).paused) {
-      if (callback) callback();
-      return;
-    }
-    if (window.__activeScene && window.__activeScene.tweens) {
-      window.__activeScene.tweens.add({
-        targets: menuBgm,
-        volume: 0,
-        duration: 350,
-        ease: 'Linear',
-        onComplete: () => {
-          (menuBgm as any).pause();
-          (menuBgm as any).currentTime = 0;
+      function fadeOutMenuMusic(callback) {
+        if (!menuBgm || (menuBgm as any).paused) {
           if (callback) callback();
+          return;
         }
-      });
-      return;
-    }
-    let vol = (menuBgm as any).volume;
-    const fade = setInterval(() => {
-      vol = Math.max(0, vol - 0.1);
-      (menuBgm as any).volume = vol;
-      if (vol <= 0.05) {
-        clearInterval(fade);
-        (menuBgm as any).pause();
-        (menuBgm as any).currentTime = 0;
-        if (callback) callback();
-      }
-    }, 35);
-  }
-
-  function enterMainGame() {
-    fadeOutMenuMusic(() => {
-      if (titleOverlay) titleOverlay.hidden = true;
-      // Start in-game procedural music only AFTER the player leaves the menu
-      SoundEngine.playBGM();
-    });
-  }
-
-  if (titleOverlay) {
-    // Start menu MP3 on first user tap/click
-    titleOverlay.addEventListener('pointerdown', () => {
-      SoundEngine.unlock();
-      startMenuMusic();
-    }, { once: true });
-
-    if (RPGStats.hasSave()) {
-      $('btn-title-continue').hidden = false;
-    }
-
-    // Classic RPG cursor sound effects on hover/focus
-    document.querySelectorAll('.rpg-cmd-btn').forEach(btn => {
-      btn.addEventListener('mouseenter', () => SoundEngine.blip(620, 'triangle'));
-      btn.addEventListener('focus', () => SoundEngine.blip(620, 'triangle'));
-    });
-
-    $('btn-title-new')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      SoundEngine.unlock();
-      SoundEngine.select();
-      enterMainGame();
-    });
-
-    $('btn-title-continue')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      SoundEngine.unlock();
-      SoundEngine.select();
-      if (RPGStats.loadGame()) {
-        refreshHotbarUI();
-        updateRPGStats();
-        updateHearts(DateState.hearts);
-        updateClock();
-        updateQuestText();
-        if (window.__activeScene) {
-          window.__activeScene.transitionToWorld(DateState.currentWorld, DateState.playerPos);
+        if (window.__activeScene && window.__activeScene.tweens) {
+          window.__activeScene.tweens.add({
+            targets: menuBgm,
+            volume: 0,
+            duration: 350,
+            ease: 'Linear',
+            onComplete: () => {
+              (menuBgm as any).pause();
+              (menuBgm as any).currentTime = 0;
+              if (callback) callback();
+            }
+          });
+          return;
         }
+        let vol = (menuBgm as any).volume;
+        const fade = setInterval(() => {
+          vol = Math.max(0, vol - 0.1);
+          (menuBgm as any).volume = vol;
+          if (vol <= 0.05) {
+            clearInterval(fade);
+            (menuBgm as any).pause();
+            (menuBgm as any).currentTime = 0;
+            if (callback) callback();
+          }
+        }, 35);
       }
-      enterMainGame();
-    });
 
-    $('btn-title-scrapbook')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      SoundEngine.select();
-      const box = $('title-controls-box');
-      if (box) box.hidden = !box.hidden;
-    });
+      function enterMainGame() {
+        fadeOutMenuMusic(() => {
+          if (titleOverlay) titleOverlay.hidden = true;
+          // Start in-game procedural music only AFTER the player leaves the menu
+          SoundEngine.playBGM();
+        });
+      }
+
+      if (titleOverlay) {
+        // Start menu MP3 on first user tap/click
+        titleOverlay.addEventListener('pointerdown', () => {
+          SoundEngine.unlock();
+          startMenuMusic();
+        }, { once: true });
+
+        if (RPGStats.hasSave()) {
+          const contBtn = $('btn-title-continue');
+          if (contBtn) contBtn.hidden = false;
+        }
+
+        // Classic RPG cursor sound effects on hover/focus
+        document.querySelectorAll('.rpg-cmd-btn').forEach(btn => {
+          btn.addEventListener('mouseenter', () => SoundEngine.blip(620, 'triangle'));
+          btn.addEventListener('focus', () => SoundEngine.blip(620, 'triangle'));
+        });
+
+        $('btn-title-new')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          SoundEngine.unlock();
+          SoundEngine.select();
+          enterMainGame();
+        });
+
+        $('btn-title-continue')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          SoundEngine.unlock();
+          SoundEngine.select();
+          if (RPGStats.loadGame()) {
+            refreshHotbarUI();
+            updateRPGStats();
+            updateHearts(DateState.hearts);
+            updateClock();
+            updateQuestText();
+            if (window.__activeScene) {
+              window.__activeScene.transitionToWorld(DateState.currentWorld, DateState.playerPos);
+            }
+          }
+          enterMainGame();
+        });
+
+        $('btn-title-scrapbook')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          SoundEngine.select();
+          const box = $('title-controls-box');
+          if (box) box.hidden = !box.hidden;
+        });
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initDom);
+    } else {
+      initDom();
+    }
   }
 
   return {
-    isOpen: () =>
-      !$('dialogue-overlay').hidden ||
-      !$('scrapbook-modal').hidden ||
-      !($('rpg-menu-modal') && $('rpg-menu-modal').hidden) ||
-      !($('title-screen-overlay') && $('title-screen-overlay').hidden),
+    isOpen: () => {
+      const overlay = $('dialogue-overlay');
+      const scrapbook = $('scrapbook-modal');
+      const rpgMenu = $('rpg-menu-modal');
+      const title = $('title-screen-overlay');
+      return Boolean(
+        (overlay && !overlay.hidden) ||
+        (scrapbook && !scrapbook.hidden) ||
+        (rpgMenu && !rpgMenu.hidden) ||
+        (title && !title.hidden)
+      );
+    },
     startDialogue,
     advanceDialogue,
     giveItem,

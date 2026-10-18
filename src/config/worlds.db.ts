@@ -1,8 +1,8 @@
-declare const UI: any;
 // src/config/worlds.db.ts - Six Explorable Worlds Configuration + Curzon & Farmhouse
 // Migrated 100% intact from game.js
 import { SoundEngine } from '../audio/SoundEngine';
 import { DateState } from '../state/DateState';
+import { UI } from '../ui/UIController';
 import { CURZON_X, CURZON_Y } from './constants';
 
 export const WORLDS_DB: Record<string, any> = {

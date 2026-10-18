@@ -1,6 +1,6 @@
 // src/systems/ScheduleSystem.ts - NPC waypoint pathfinding & time-of-day behavior routines
 // Migrated 100% intact from game.js
-declare const Phaser: any;
+import Phaser from 'phaser';
 import { SoundEngine } from '../audio/SoundEngine';
 import { DateState } from '../state/DateState';
 import { RPGStats } from '../state/RPGStats';

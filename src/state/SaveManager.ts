@@ -2,6 +2,7 @@
 import { DateState } from './DateState';
 import { SoundEngine } from '../audio/SoundEngine';
 import { SAVE_KEY } from '../config/constants';
+import { UI } from '../ui/UIController';
 
 export const SaveManager = {
   saveGame(sceneRef?: any) {
@@ -18,10 +19,9 @@ export const SaveManager = {
       localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
       if (SoundEngine.itemFanfare) SoundEngine.itemFanfare();
       
-      const ui = (window as any).UI;
-      if (ui && ui.showToast) {
+      if (UI && UI.showToast) {
         const worldName = DateState.currentWorld || 'Dhaka Valley';
-        ui.showToast('💾', 'Progress Saved!', `${worldName} (${payload.timestamp})`);
+        UI.showToast('💾', 'Progress Saved!', `${worldName} (${payload.timestamp})`);
       }
       return true;
     } catch (e) {

@@ -54,7 +54,7 @@ function killProcessGroup(proc, signal = 'SIGTERM') {
   }
 }
 
-function runCommand(cmd, args, maxTimeoutMs = 2700000, onProgress = null) {
+function runCommand(cmd, args, maxTimeoutMs = 0, onProgress = null) {
   return new Promise((resolve, reject) => {
     console.log(`[EXEC] ${cmd} ${args.join(' ')}`);
     const isAgy = cmd === 'agy' || (args && args.some(a => String(a).includes('agy')));
@@ -71,17 +71,12 @@ function runCommand(cmd, args, maxTimeoutMs = 2700000, onProgress = null) {
     let overallTimer = null;
     let inactivityTimer = null;
     let progressTimer = null;
-    let agyGraceTimer = null;
     let settled = false;
-
-    // Track active state to prevent premature timeouts while work is being actively done
-    let lastStepOrAction = '';
 
     const cleanup = () => {
       if (overallTimer) clearTimeout(overallTimer);
       if (inactivityTimer) clearTimeout(inactivityTimer);
       if (progressTimer) clearInterval(progressTimer);
-      if (agyGraceTimer) clearTimeout(agyGraceTimer);
     };
 
     const terminate = (reason) => {
@@ -95,40 +90,29 @@ function runCommand(cmd, args, maxTimeoutMs = 2700000, onProgress = null) {
       reject(timeoutErr);
     };
 
-    // Absolute hard ceiling (45 minutes)
-    if (maxTimeoutMs > 0) {
+    // Absolute hard ceiling (only if explicitly specified > 0 and NOT isAgy)
+    if (maxTimeoutMs > 0 && isFinite(maxTimeoutMs) && !isAgy) {
       overallTimer = setTimeout(() => {
         terminate(`Exceeded maximum overall runtime ceiling (${maxTimeoutMs / 60000} mins)`);
       }, maxTimeoutMs);
     }
 
-    // Dynamic inactivity watchdog: 6 minutes of ZERO progress or tool actions before timing out
-    const INACTIVITY_LIMIT_MS = 360000;
-    const resetInactivityWatchdog = () => {
-      if (inactivityTimer) clearTimeout(inactivityTimer);
-      inactivityTimer = setTimeout(() => {
-        terminate(`Process was idle with no steps, tool calls, or output for ${INACTIVITY_LIMIT_MS / 60000} minutes`);
-      }, INACTIVITY_LIMIT_MS);
-    };
-    resetInactivityWatchdog();
+    // Dynamic inactivity watchdog (only if explicitly specified > 0 and NOT isAgy)
+    if (maxTimeoutMs > 0 && isFinite(maxTimeoutMs) && !isAgy) {
+      const INACTIVITY_LIMIT_MS = 600000;
+      const resetInactivityWatchdog = () => {
+        if (inactivityTimer) clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+          terminate(`Process was idle for ${INACTIVITY_LIMIT_MS / 60000} minutes`);
+        }, INACTIVITY_LIMIT_MS);
+      };
+      resetInactivityWatchdog();
+    }
 
     if (onProgress && typeof onProgress === 'function') {
       let elapsed = 0;
       progressTimer = setInterval(() => {
         elapsed += 20;
-
-        // Check live activity to reset watchdog if Antigravity is making progress
-        if (isAgy) {
-          try {
-            const live = getAgyLiveStatus();
-            const currentSignature = `${live.stepNumber || ''}_${live.actionInfo || ''}_${live.modifiedFiles || ''}`;
-            if (currentSignature && currentSignature !== lastStepOrAction) {
-              lastStepOrAction = currentSignature;
-              resetInactivityWatchdog();
-            }
-          } catch (e) {}
-        }
-
         onProgress(elapsed);
       }, 20000);
     }
@@ -137,20 +121,6 @@ function runCommand(cmd, args, maxTimeoutMs = 2700000, onProgress = null) {
       const str = d.toString();
       stdout += str;
       process.stdout.write(str);
-
-      // If Antigravity CLI has printed its final response in print mode,
-      // the CLI has completed its code generation. If it lingers in shutdown,
-      // trigger a grace timer to gracefully wrap up after 12 seconds.
-      if (isAgy && (stdout.length > 50 || str.includes('```') || str.includes('Files Changed') || str.includes('Summary'))) {
-        if (!agyGraceTimer) {
-          agyGraceTimer = setTimeout(() => {
-            if (!settled) {
-              console.log('ℹ️ Antigravity CLI finished output. Completing cleanly...');
-              killProcessGroup(proc, 'SIGTERM');
-            }
-          }, 15000);
-        }
-      }
     });
 
     proc.stderr.on('data', (d) => {
@@ -170,12 +140,6 @@ function runCommand(cmd, args, maxTimeoutMs = 2700000, onProgress = null) {
       if (settled) return;
       settled = true;
       cleanup();
-
-      // If agy was terminated by our grace timer after printing its answer, treat as success
-      if (isAgy && (code === 0 || code === null || code === 143) && stdout.trim().length > 0) {
-        resolve({ stdout, stderr, code: 0 });
-        return;
-      }
 
       if (code === 0) {
         resolve({ stdout, stderr, code });
@@ -491,16 +455,16 @@ bot.on('message', async (msg) => {
     };
 
     const escapedPrompt = effectiveInstruction.replace(/"/g, '\\"');
-    await runCommand('agy', ['-p', `"${escapedPrompt}"`, '--dangerously-skip-permissions'], 900000, onAgyProgress);
+    await runCommand('agy', ['-p', `"${escapedPrompt}"`, '--dangerously-skip-permissions'], 0, onAgyProgress);
 
     // c. Auto-commit changes locally: git add -A && git commit -m "Auto-update: <prompt_snippet>"
     console.log('[STEP 2/3] Auto-committing changes locally...');
     const promptSnippet = promptText.slice(0, 50).replace(/["`$\r\n]/g, ' ').trim();
     try {
-      await runCommand('git', ['add', '-A'], 60000);
-      const gitStatus = await runCommand('git', ['status', '--porcelain'], 30000).catch(() => ({ stdout: '' }));
+      await runCommand('git', ['add', '-A'], 0);
+      const gitStatus = await runCommand('git', ['status', '--porcelain'], 0).catch(() => ({ stdout: '' }));
       if (gitStatus.stdout.trim()) {
-        await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 60000);
+        await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 0);
         await pushToGitHub();
       } else {
         console.log('ℹ️ No file changes detected to commit.');
@@ -525,7 +489,7 @@ bot.on('message', async (msg) => {
     }
 
     // e. Execute npx vercel --prod --yes to push the production build
-    const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 180000);
+    const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 0);
     const vercelOutput = `${vercelRes.stdout}\n${vercelRes.stderr}`;
 
     // f. Extract the live https://*.vercel.app URL and send final confirmation link
@@ -538,16 +502,20 @@ bot.on('message', async (msg) => {
     // Check if valid file modifications were already written to disk before error/timeout
     let salvaged = false;
     try {
-      const gitStatus = await runCommand('git', ['status', '--porcelain'], 20000).catch(() => ({ stdout: '' }));
+      const gitStatus = await runCommand('git', ['status', '--porcelain'], 0).catch(() => ({ stdout: '' }));
       if (gitStatus.stdout && gitStatus.stdout.trim()) {
-        await runCommand('node', ['-c', 'game.js'], 20000);
+        if (fs.existsSync(path.join(__dirname, 'game.js'))) {
+          await runCommand('node', ['-c', 'game.js'], 0);
+        } else {
+          await runCommand('npm', ['run', 'typecheck'], 0);
+        }
         console.log('💡 Code modifications are valid! Salvaging work, committing and deploying...');
-        await bot.sendMessage(chatId, '⚠️ Prompt reached inactivity boundary, but code modifications were validated! Auto-committing and deploying to Vercel...');
+        await bot.sendMessage(chatId, '⚠️ Execution interrupted, but code modifications were validated! Auto-committing and deploying to Vercel...');
         const promptSnippet = promptText.slice(0, 50).replace(/["`$\r\n]/g, ' ').trim();
-        await runCommand('git', ['add', '-A'], 60000);
-        await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 60000);
+        await runCommand('git', ['add', '-A'], 0);
+        await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 0);
         await pushToGitHub();
-        const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 180000);
+        const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 0);
         const liveUrl = extractVercelUrl(`${vercelRes.stdout}\n${vercelRes.stderr}`) || 'https://dhaka-date-rpg.vercel.app';
         await bot.sendMessage(chatId, `✅ Deployed successfully!\n🔗 ${liveUrl}`);
         salvaged = true;

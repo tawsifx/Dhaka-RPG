@@ -1,6 +1,6 @@
 // src/systems/CombatSystem.ts - 3-hit parasol combos, dash i-frames, Totoro Spirit Roar & Belly Slam
 // Migrated 100% intact from game.js
-declare const Phaser: any;
+import Phaser from 'phaser';
 import { SoundEngine } from '../audio/SoundEngine';
 import { DateState } from '../state/DateState';
 import { RPGStats } from '../state/RPGStats';
@@ -9,6 +9,77 @@ import { WORLDS_DB } from '../config/worlds.db';
 import { UI } from '../ui/UIController';
 
 export class CombatSystem {
+  static performPlayerDash(scene: any) {
+    if (UI.isOpen() || scene.cutsceneLocked || !scene.player) return;
+    const now = scene.time.now;
+    if (now - (scene.lastDashTime || 0) < 650) return;
+    scene.lastDashTime = now;
+
+    SoundEngine.dashWhoosh();
+
+    const dirX = scene.facingVec ? scene.facingVec.x : 0;
+    const dirY = scene.facingVec ? scene.facingVec.y : 1;
+    const mag = Math.hypot(dirX, dirY) || 1;
+    const normX = dirX / mag;
+    const normY = dirY / mag;
+
+    scene.dashUntil = now + 240;
+
+    const px = scene.player.x;
+    const py = scene.player.y;
+
+    for (let i = 0; i < 3; i++) {
+      scene.time.delayedCall(i * 60, () => {
+        if (!scene.player) return;
+        const ghost = scene.add.sprite(scene.player.x, scene.player.y, scene.player.texture.key)
+          .setOrigin(0.5, 1)
+          .setAlpha(0.55)
+          .setDepth(scene.player.depth - 1)
+          .setFlipX(scene.player.flipX)
+          .setTint(0x80ffdb);
+        scene.tweens.add({
+          targets: ghost,
+          alpha: 0,
+          scaleX: 0.85,
+          duration: 180,
+          onComplete: () => ghost.destroy()
+        });
+      });
+    }
+
+    const dashDistance = 95;
+    const targetX = px + normX * dashDistance;
+    const targetY = py + normY * dashDistance;
+
+    const mapW = (scene.physics && scene.physics.world && scene.physics.world.bounds && scene.physics.world.bounds.width) || 2400;
+    const mapH = (scene.physics && scene.physics.world && scene.physics.world.bounds && scene.physics.world.bounds.height) || 1600;
+    const clampedX = Phaser.Math.Clamp(targetX, 40, mapW - 40);
+    const clampedY = Phaser.Math.Clamp(targetY, 60, mapH - 40);
+
+    scene.tweens.add({
+      targets: scene.player,
+      x: clampedX,
+      y: clampedY,
+      duration: 180,
+      ease: 'Cubic.easeOut',
+      onUpdate: () => {
+        if (scene.player && scene.player.body) {
+          scene.player.body.reset(scene.player.x, scene.player.y);
+        }
+      }
+    });
+
+    const puff = scene.add.circle(px, py - 10, 8, 0xffffff, 0.6).setDepth(py);
+    scene.tweens.add({
+      targets: puff,
+      scaleX: 2.5,
+      scaleY: 0.6,
+      alpha: 0,
+      duration: 200,
+      onComplete: () => puff.destroy()
+    });
+  }
+
   static performPlayerAttack(scene: any) {
     if (UI.isOpen() || scene.cutsceneLocked || !scene.player) return;
     const now = scene.time.now;
