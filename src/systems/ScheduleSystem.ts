@@ -172,8 +172,6 @@ export class ScheduleSystem {
     specs.forEach(s => {
       const start = s.waypoints[0];
       const sp = scene.add.sprite(start.x, start.y, `${s.baseTex}-0`).setOrigin(0.5, 1).setDepth(start.y);
-      const animKey = scene.getOrCreateWalkAnim(s.baseTex, 4);
-      if (animKey) sp.play(animKey);
       const badge = scene.add.text(start.x, start.y - sp.height - 6, '💬 ' + s.name, {
         fontFamily: 'Outfit', fontSize: '11px', fontStyle: 'bold',
         backgroundColor: s.isAnamika ? 'rgba(19, 78, 74, 0.92)' : 'rgba(31,30,28,0.75)',

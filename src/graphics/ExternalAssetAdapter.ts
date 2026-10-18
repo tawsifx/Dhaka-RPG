@@ -104,14 +104,14 @@ export class ExternalAssetAdapter {
       }
     }
 
-    // Register primary key alias so scene.add.sprite(x, y, id) resolves directly
-    this.createTextureAlias(scene, id, workingKey);
-
     // If character sheet or multi-frame entity, slice frames and register animations
     if (spec.category === 'character' || spec.category === 'companion') {
       this.sliceAndRegisterCharacterAnimations(scene, id, workingKey, spec);
     } else if (spec.category === 'crop') {
       this.sliceCropStages(scene, id, workingKey);
+    } else {
+      // Register primary key alias so scene.add.sprite(x, y, id) resolves directly
+      this.createTextureAlias(scene, id, workingKey);
     }
   }
 
@@ -193,6 +193,9 @@ export class ExternalAssetAdapter {
       }
     }
 
+    // Alias primary key ${id} directly to ${id}-0 so scene.add.sprite(x, y, id) resolves to single frame
+    this.createTextureAlias(scene, id, `${id}-0`);
+
     // 3. Register standard walk animation anim-${id} used by getOrCreateWalkAnim
     const standardAnimKey = `anim-${id}`;
     if (scene.anims.exists(standardAnimKey)) scene.anims.remove(standardAnimKey);
@@ -201,7 +204,7 @@ export class ExternalAssetAdapter {
       frames: [
         { key: `${id}-0` },
         { key: `${id}-1` },
-        { key: `${id}-0` },
+        { key: `${id}-2` },
         { key: `${id}-3` }
       ],
       frameRate: 5,
@@ -216,7 +219,7 @@ export class ExternalAssetAdapter {
         frames: [
           { key: 'player-0' },
           { key: 'player-1' },
-          { key: 'player-0' },
+          { key: 'player-2' },
           { key: 'player-3' }
         ],
         frameRate: 6,
@@ -239,7 +242,7 @@ export class ExternalAssetAdapter {
         frames: [
           { key: 'totoro-0' },
           { key: 'totoro-1' },
-          { key: 'totoro-0' },
+          { key: 'totoro-2' },
           { key: 'totoro-3' }
         ],
         frameRate: 4,

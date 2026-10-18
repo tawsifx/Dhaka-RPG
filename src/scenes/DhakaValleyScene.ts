@@ -697,8 +697,7 @@ export class DhakaValleyScene extends Phaser.Scene {
         else if (tex.startsWith('prop-fuchkacart')) sp.play('anim-fuchkacart');
         else if (tex.startsWith('prop-doicart')) sp.play('anim-doicart');
         else if (tex.startsWith('npc-')) {
-          const anim = this.getOrCreateWalkAnim(tex.replace(/-\d+$/, ''), 2.5);
-          if (anim) sp.play(anim);
+          // Stationary interactable NPC: display clean static idle pose
         }
       }
       const badgeY = sp ? y - sp.height - 8 : y - 58;
@@ -922,12 +921,7 @@ export class DhakaValleyScene extends Phaser.Scene {
         apshoraPos = { x: 1345, y: 480 };
       }
       this.ahona = this.add.sprite(ahonaPos.x, ahonaPos.y, 'npc-ahona-0').setOrigin(0.5, 1).setDepth(ahonaPos.y);
-      const ahonaAnim = this.getOrCreateWalkAnim('npc-ahona', 2.5);
-      if (ahonaAnim) this.ahona.play(ahonaAnim);
-
       this.apshora = this.add.sprite(apshoraPos.x, apshoraPos.y, 'npc-apshora-0').setOrigin(0.5, 1).setDepth(apshoraPos.y);
-      const apshoraAnim = this.getOrCreateWalkAnim('npc-apshora', 2.5);
-      if (apshoraAnim) this.apshora.play(apshoraAnim);
 
       let rivalText = '😒 Ahona & Apshora';
       if (DateState.ahonaQuestStage === 4) {
@@ -1013,9 +1007,6 @@ export class DhakaValleyScene extends Phaser.Scene {
       }
 
       this.salat = this.add.sprite(salatPos.x, salatPos.y, 'npc-salat-0').setOrigin(0.5, 1).setDepth(salatPos.y);
-      const salatAnim = this.getOrCreateWalkAnim('npc-salat', 2.5);
-      if (salatAnim) this.salat.play(salatAnim);
-
       this.salatBadge = this.add.text(salatPos.x, salatPos.y - 65, salatText, {
         fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
         backgroundColor: '#831843', color: '#fce7f3', padding: { x: 7, y: 3 }
@@ -1029,8 +1020,6 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.interactables.push(this.salatInteract);
 
       this.enan = this.add.sprite(enanPos.x, enanPos.y, 'npc-enan-0').setOrigin(0.5, 1).setDepth(enanPos.y);
-      const enanAnim = this.getOrCreateWalkAnim('npc-enan', 2.5);
-      if (enanAnim) this.enan.play(enanAnim);
 
       this.enanBadge = this.add.text(enanPos.x, enanPos.y - 70, enanText, {
         fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
@@ -6690,12 +6679,34 @@ export class DhakaValleyScene extends Phaser.Scene {
       const dist = Phaser.Math.Distance.Between(w.x, w.y, target.x, target.y);
       if (dist < 6) {
         w.wpIdx = (w.wpIdx + 1) % w.waypoints.length;
+        if (w.sprite.anims && w.sprite.anims.isPlaying) {
+          w.sprite.anims.stop();
+          w.sprite.setTexture(`${w.baseTex}-0`);
+        }
       } else {
         const step = (w.speed * delta) / 1000;
         w.x += (dx / dist) * step;
         w.y += (dy / dist) * step;
         w.sprite.setPosition(w.x, w.y).setDepth(w.y);
-        w.sprite.setFlipX(dx < -0.5);
+
+        let dir = 'down';
+        if (Math.abs(dx) > Math.abs(dy)) {
+          dir = dx < 0 ? 'left' : 'right';
+        } else {
+          dir = dy < 0 ? 'up' : 'down';
+        }
+        w.sprite.setFlipX(false);
+        const walkKey = `${w.baseTex}-walk-${dir}`;
+        if (this.anims.exists(walkKey)) {
+          if (!w.sprite.anims.isPlaying || w.sprite.anims.currentAnim.key !== walkKey) {
+            w.sprite.play(walkKey);
+          }
+        } else {
+          const fallbackAnim = this.getOrCreateWalkAnim(w.baseTex, 4);
+          if (fallbackAnim && (!w.sprite.anims.isPlaying || w.sprite.anims.currentAnim.key !== fallbackAnim)) {
+            w.sprite.play(fallbackAnim);
+          }
+        }
         w.badge.setPosition(w.x, w.y - w.sprite.height - 6).setDepth(w.y + 5);
       }
     });
@@ -6818,13 +6829,20 @@ export class DhakaValleyScene extends Phaser.Scene {
         this.tweens.add({ targets: spk, alpha: 0, y: py - 26, duration: 240, onComplete: () => spk.destroy() });
       }
     }
-    if (vx < 0) this.player.setFlipX(true);
-    else if (vx > 0) this.player.setFlipX(false);
+    let pDir = 'down';
+    if (Math.abs(vx) > Math.abs(vy)) {
+      pDir = vx < 0 ? 'left' : 'right';
+    } else if (Math.abs(vy) > 0) {
+      pDir = vy < 0 ? 'up' : 'down';
+    }
+    this.player.setFlipX(false);
 
     if (moving) {
       this.stepCounter += delta;
-      if (!this.player.anims.isPlaying || this.player.anims.currentAnim.key !== 'player-walk') {
-        this.player.play('player-walk');
+      const pWalkKey = `player-walk-${pDir}`;
+      const targetAnim = this.anims.exists(pWalkKey) ? pWalkKey : 'player-walk';
+      if (!this.player.anims.isPlaying || this.player.anims.currentAnim.key !== targetAnim) {
+        this.player.play(targetAnim);
       }
 
       if (this.stepCounter > 250) {
@@ -6865,22 +6883,37 @@ export class DhakaValleyScene extends Phaser.Scene {
           this.trail.unshift({ x: px, y: py });
           if (this.trail.length > 15) {
             const target = this.trail.pop();
-            if (target.x < this.totoro.x - 0.5) this.totoro.setFlipX(true);
-            else if (target.x > this.totoro.x + 0.5) this.totoro.setFlipX(false);
+            const tdx = target.x - this.totoro.x;
+            const tdy = target.y - this.totoro.y;
             this.totoro.setPosition(target.x, target.y);
+
+            let tDir = 'down';
+            if (Math.abs(tdx) > Math.abs(tdy)) {
+              tDir = tdx < 0 ? 'left' : 'right';
+            } else if (Math.abs(tdy) > 0) {
+              tDir = tdy < 0 ? 'up' : 'down';
+            }
+            this.totoro.setFlipX(false);
+            const tWalkKey = `totoro-walk-${tDir}`;
+            const targetAnim = moving ? (this.anims.exists(tWalkKey) ? tWalkKey : 'totoro-walk') : 'totoro-idle';
+            if (!this.totoro.anims.isPlaying || this.totoro.anims.currentAnim.key !== targetAnim) {
+              this.totoro.play(targetAnim);
+            }
           }
         }
-        const targetAnim = moving ? 'totoro-walk' : 'totoro-idle';
-        if (!this.totoro.anims.isPlaying || this.totoro.anims.currentAnim.key !== targetAnim) {
-          this.totoro.play(targetAnim);
+        if (!moving) {
+          if (!this.totoro.anims.isPlaying || this.totoro.anims.currentAnim.key !== 'totoro-idle') {
+            this.totoro.play('totoro-idle');
+          }
         }
         this.totoro.setDepth(this.totoro.y);
-        this.totoroBadge.setPosition(this.totoro.x, this.totoro.y - 66);
+        this.totoroBadge.setPosition(this.totoro.x, this.totoro.y - this.totoro.height - 4);
       }
     } else if (this.totoro) {
       if (!this.totoro.anims.isPlaying || this.totoro.anims.currentAnim.key !== 'totoro-idle') {
         this.totoro.play('totoro-idle');
       }
+      this.totoroBadge.setPosition(this.totoro.x, this.totoro.y - this.totoro.height - 4);
     }
 
     // 7. Update Zone Name in Top-Left HUD
