@@ -2,6 +2,7 @@
 // Migrated 100% intact from game.js
 import Phaser from 'phaser';
 import { TextureGenerator } from '../graphics/TextureGenerator';
+import { ExternalAssetAdapter } from '../graphics/ExternalAssetAdapter';
 import { DateState } from '../state/DateState';
 import { RPGStats } from '../state/RPGStats';
 import { SoundEngine } from '../audio/SoundEngine';
@@ -9,12 +10,24 @@ import { UI } from '../ui/UIController';
 import { ITEMS_DB, WEAPON_FX } from '../config/items.db';
 import { WORLDS_DB } from '../config/worlds.db';
 import { CRAFT_RECIPES } from '../config/recipes.db';
-import { CURZON_K, CURZON_X, CURZON_Y } from '../config/constants';
+import {
+  CURZON_K,
+  CURZON_X,
+  CURZON_Y,
+  DHAKA_MAP_WIDTH,
+  DHAKA_MAP_HEIGHT,
+  CURZON_INTERIOR_WIDTH,
+  CURZON_INTERIOR_HEIGHT,
+  FARMHOUSE_WIDTH,
+  FARMHOUSE_HEIGHT,
+  TILE_SIZE
+} from '../config/constants';
 import { CombatSystem } from '../systems/CombatSystem';
 import { WeatherSystem } from '../systems/WeatherSystem';
 import { ScheduleSystem } from '../systems/ScheduleSystem';
 import { TimeCalendarSystem } from '../systems/TimeCalendarSystem';
 import { FarmingSystem } from '../systems/FarmingSystem';
+import { AtmosphereSystem } from '../systems/AtmosphereSystem';
 
 export class DhakaValleyScene extends Phaser.Scene {
   [key: string]: any;
@@ -39,6 +52,14 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.puddles = [];
     this.monsoonTriggered = false;
     this.nextThunder = 0;
+    // Multi-Layer HGSS & Stardew systems
+    this.atmosphere = null;
+    this.timeCalendar = null;
+    this.farmingSystem = null;
+    this.tileCursor = null;
+    this.overheadCanopies = [];
+    this.interactiveFoliage = [];
+    this.playerReflection = null;
     // Evening life, fireflies & wind gust tracking
     this.fireflies = [];
     this.nextWindGust = 0;
@@ -48,6 +69,9 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   preload() {
     this.generateStardewTextures();
+    // External asset manifest preload with graceful error fallback guarantee
+    ExternalAssetAdapter.preloadExternalAssets(this);
+
     // Tuxemon outdoor tileset (CC-BY-SA) — PastTheFuture_Grass_Sand_Snow, 16×16 tiles
     this.load.image('tuxemon-terrain', 'assets/tilesets/PastTheFuture_Grass_Sand_Snow.png');
     // External interior & scenery tileset asset packs (Pipo, Buch, Kelvin Shadewing, Superpowers, George)
@@ -163,6 +187,27 @@ export class DhakaValleyScene extends Phaser.Scene {
   create() {
     window.__activeScene = this;
     this.isTransitioning = false;
+
+    // Normalize external assets & register animations/fallbacks
+    ExternalAssetAdapter.normalizeLoadedAssets(this);
+
+    // Initialize Atmosphere and Weather Lighting System
+    this.atmosphere = new AtmosphereSystem(this);
+    this.atmosphere.init();
+
+    // Initialize Time & Calendar System with sync to Atmosphere
+    this.timeCalendar = new TimeCalendarSystem('spring', 1, 15, 30);
+    this.timeCalendar.onMinuteCallback = (date) => {
+      if (this.atmosphere) {
+        this.atmosphere.updateLighting(date.timePhase, this.isRaining ? 'monsoon' : (date.weather || 'sunny'));
+      }
+    };
+
+    // Initialize 2D Grid Farming System
+    this.farmingSystem = new FarmingSystem(40, 30);
+
+    // Initialize Layer 6 Stardew Tile Cursor
+    this.tileCursor = this.add.graphics().setDepth(3100);
 
     // Initialize native Phaser Animation System
     this.initAnimations();
@@ -415,32 +460,32 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // ── Landmark Proximity Hubs (Trampled earth around social centers) ──
     const landmarks = [
-      { x: 240, y: 1320, r: 160 },                      // Curzon Hall courtyard
-      { x: 280, y: 265, r: 130 },                       // TSC Tea Stall adda
-      { x: 660, y: 260, r: 100 },                       // Aparajeyo Bangla Monument
-      { x: 220, y: 740, r: 130 },                       // Charukola Fine Arts
-      { x: 1060, y: 245, r: 130 },                      // Nilkhet Book Lane
-      { x: 1060, y: 820, r: 100 },                      // Mintu Road Fountain
-      { x: 1260, y: 480, r: 100, isFlowerCart: true },  // Flower Cart (beside Ramna Bench)
-      { x: 1570, y: 245, r: 100 },                      // Mama's Fuchka Cart (Food Bazaar)
-      { x: 1750, y: 245, r: 100 },                      // Pabna Mishti Doi (Food Bazaar)
-      { x: 1640, y: 825, r: 100 },                      // Rickshaw Stand
+      { x: 208, y: 1328, r: 160 },                      // Curzon Hall courtyard
+      { x: 272, y: 272, r: 130 },                       // TSC Tea Stall adda
+      { x: 656, y: 272, r: 100 },                       // Aparajeyo Bangla Monument
+      { x: 208, y: 752, r: 130 },                       // Charukola Fine Arts
+      { x: 1072, y: 240, r: 130 },                      // Nilkhet Book Lane
+      { x: 1072, y: 816, r: 100 },                      // Mintu Road Fountain
+      { x: 1264, y: 496, r: 100, isFlowerCart: true },  // Flower Cart (beside Ramna Bench)
+      { x: 1584, y: 240, r: 100 },                      // Mama's Fuchka Cart (Food Bazaar)
+      { x: 1744, y: 240, r: 100 },                      // Pabna Mishti Doi (Food Bazaar)
+      { x: 1648, y: 816, r: 100 },                      // Rickshaw Stand
     ];
 
-    // ── Main Paved Road Corridors (World coordinates) ──
+    // ── Main Paved Road Corridors (World coordinates - Snapped to 32x32) ──
     const paths = [
-      { x: 25, y: 772, w: 2175, h: 96 },                // Main East-West thoroughfare
-      { x: 432, y: 175, w: 96, h: 1450 },               // West North-South road (TSC to Curzon)
-      { x: 1012, y: 250, w: 96, h: 620 },               // Central Nilkhet spine
-      { x: 1472, y: 175, w: 96, h: 1450 },              // East North-South promenade
-      { x: 430, y: 278, w: 1100, h: 84 },               // North connecting avenue
-      { x: 1472, y: 240, w: 380, h: 100 },              // North-East Food Bazaar Plaza
-      { x: 692, y: 1420, w: 96, h: 380 },               // Farmhouse Country Lane
-      { x: 480, y: 1420, w: 220, h: 72 },               // West connecting lane to Farmhouse
+      { x: 0, y: 768, w: 2240, h: 96 },                 // Main East-West thoroughfare
+      { x: 416, y: 160, w: 96, h: 1472 },               // West North-South road (TSC to Curzon)
+      { x: 1024, y: 224, w: 96, h: 640 },               // Central Nilkhet spine
+      { x: 1472, y: 160, w: 96, h: 1472 },              // East North-South promenade
+      { x: 416, y: 256, w: 1120, h: 96 },               // North connecting avenue
+      { x: 1472, y: 224, w: 384, h: 96 },               // North-East Food Bazaar Plaza
+      { x: 672, y: 1408, w: 96, h: 416 },               // Farmhouse Country Lane
+      { x: 480, y: 1408, w: 224, h: 96 },               // West connecting lane to Farmhouse
     ];
 
-    // ── Dhanmondi Lake Boundary (World coordinates) ──
-    const lake = { x: 1568, y: 1040, w: 832, h: 760 };
+    // ── Dhanmondi Lake Boundary (World coordinates - Snapped to 32x32) ──
+    const lake = { x: 1568, y: 1056, w: 864, h: 768 };
 
     // ── Build Tile Grid ──
     const data = [];
@@ -583,11 +628,13 @@ export class DhakaValleyScene extends Phaser.Scene {
     const minLabel = document.getElementById('minimap-world-label');
     if (minLabel) minLabel.textContent = wCfg.name;
 
-    const MAP_W = 2400, MAP_H = 1800;
+    const MAP_W = DHAKA_MAP_WIDTH, MAP_H = DHAKA_MAP_HEIGHT;
     this.currentMapW = MAP_W;
     this.currentMapH = MAP_H;
     this.physics.world.setBounds(0, 0, MAP_W, MAP_H);
     this.obstacles = this.physics.add.staticGroup();
+    this.overheadCanopies = [];
+    this.interactiveFoliage = [];
 
     const blockRect = (x, y, w, h) => {
       const zone = this.add.zone(x, y, w, h);
@@ -603,6 +650,34 @@ export class DhakaValleyScene extends Phaser.Scene {
       else if (tex.startsWith('prop-bookstall')) sp.play('anim-bookstall');
       else if (tex.startsWith('prop-fuchkacart')) sp.play('anim-fuchkacart');
       else if (tex.startsWith('prop-doicart')) sp.play('anim-doicart');
+
+      // Layer 5: Register overhead canopies for smooth alpha fading (0.42) when walking behind
+      if (tex.includes('tree')) {
+        this.overheadCanopies.push({
+          sprite: sp,
+          minX: x - 48,
+          maxX: x + 48,
+          minY: y - 110,
+          maxY: y - 10
+        });
+      } else if (tex === 'prop-curzon') {
+        this.overheadCanopies.push({
+          sprite: sp,
+          minX: x - (176 * CURZON_K) / 2,
+          maxX: x + (176 * CURZON_K) / 2,
+          minY: y - 116 * CURZON_K,
+          maxY: y - 20
+        });
+      } else if (tex.includes('stall') || tex.includes('cart') || tex.includes('arch')) {
+        this.overheadCanopies.push({
+          sprite: sp,
+          minX: x - w / 2,
+          maxX: x + w / 2,
+          minY: y - h - 20,
+          maxY: y - 10
+        });
+      }
+
       return sp;
     };
 
@@ -630,122 +705,164 @@ export class DhakaValleyScene extends Phaser.Scene {
       return entry;
     };
 
-    // 1. Base Ground & Paths
+    // 1. Base Ground & Terrain (Layer 1)
     if (worldId === 'dhaka') {
-      // Use the custom 32x32 tileset tilemap for rich, varied ground with natural flower scattering
       this.buildDhakaTilemap(MAP_W, MAP_H);
     } else {
-      // Other worlds: use procedurally generated ground tile
       this.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, wCfg.groundTex).setDepth(0);
     }
 
     if (worldId === 'dhaka') {
-      // --- WORLD 1: DHAKA VALLEY (Full Original Map + Realm Fracture Portal) ---
-      this.add.tileSprite(1100, 820, 2150, 96, 'tile-path').setDepth(1);
-      this.add.tileSprite(480, 900, 96, 1450, 'tile-path').setDepth(1);
-      this.add.tileSprite(1060, 560, 96, 620, 'tile-path').setDepth(1);
-      this.add.tileSprite(1520, 900, 96, 1450, 'tile-path').setDepth(1);
-      this.add.tileSprite(980, 320, 1100, 84, 'tile-path').setDepth(1);
-      // North-East Promenade: Fuller Road Food Bazaar Paved Plaza
-      this.add.tileSprite(1660, 280, 380, 96, 'tile-path').setDepth(1);
+      // --- WORLD 1: DHAKA VALLEY (Full 80x60 Grid Map + Stardew / HGSS Layers) ---
 
-      this.lakeWater = this.add.tileSprite(1984, 1420, 832, 760, 'tile-water').setDepth(1);
-      this.add.tileSprite(1568, 1420, 24, 760, 'tile-bank').setDepth(2);
-      this.add.tileSprite(1984, 1040, 832, 24, 'tile-bank').setDepth(2);
-      this.add.tileSprite(1748, 1320, 384, 72, 'tile-pier').setDepth(3);
+      // Layer 2: Paved Road Corridors & Autotile Stone Walkways
+      this.add.tileSprite(1120, 816, 2240, 96, 'tile-path').setDepth(1);
+      this.add.tileSprite(464, 896, 96, 1472, 'tile-path').setDepth(1);
+      this.add.tileSprite(1072, 544, 96, 640, 'tile-path').setDepth(1);
+      this.add.tileSprite(1520, 896, 96, 1472, 'tile-path').setDepth(1);
+      this.add.tileSprite(976, 304, 1120, 96, 'tile-path').setDepth(1);
+      this.add.tileSprite(1664, 272, 384, 96, 'tile-path').setDepth(1);
+      this.add.tileSprite(720, 1616, 96, 416, 'tile-path').setDepth(1);
+      this.add.tileSprite(592, 1456, 224, 96, 'tile-path').setDepth(1);
 
-      blockRect(1980, 1166, 840, 260);
-      blockRect(1980, 1574, 840, 452);
-      blockRect(2165, 1320, 470, 60);
+      // Layer 0: Water & Shore with Animated Ripples & HGSS Vertical Reflections
+      this.lakeWater = this.add.tileSprite(2064, 1440, 992, 768, 'tile-water').setDepth(1);
+      this.add.tileSprite(1568, 1440, 24, 768, 'tile-bank').setDepth(2);
+      this.add.tileSprite(2064, 1056, 992, 24, 'tile-bank').setDepth(2);
+      this.add.tileSprite(1744, 1328, 384, 72, 'tile-pier').setDepth(3);
 
+      blockRect(2064, 1184, 992, 256);
+      blockRect(2064, 1600, 992, 448);
+      blockRect(2192, 1328, 480, 64);
+
+      // Pokémon HGSS Vertical Water Reflections (alpha: 0.22)
+      this.boatReflection = this.add.sprite(2032, 1376, 'prop-boat')
+        .setOrigin(0.5, 0).setScale(1, -0.7).setAlpha(0.22).setDepth(2).setTint(0x4a7c8c);
+
+      this.pierReflection = this.add.tileSprite(1744, 1364, 384, 36, 'tile-pier')
+        .setScale(1, -0.6).setAlpha(0.22).setDepth(2).setTint(0x4a7c8c);
+
+      this.playerReflection = this.add.sprite(0, 0, 'player-0')
+        .setOrigin(0.5, 0).setScale(1, -0.75).setAlpha(0).setDepth(2).setTint(0x4a7c8c);
+
+      // Layer 3: Interactive Ground Foliage (Wildflowers, clovers, fallen petals that rustle on step)
+      const foliagePositions = [
+        [176, 1264], [240, 1200], [336, 1248], [432, 1200], [208, 1424], [304, 1456],
+        [528, 656], [624, 624], [720, 688], [816, 640], [912, 672],
+        [1200, 368], [1296, 336], [1392, 368], [1712, 368], [1808, 336],
+        [624, 1168], [720, 1232], [816, 1168], [912, 1232], [1008, 1168],
+        [1200, 1168], [1296, 1232], [1392, 1168], [1488, 1232],
+        [560, 1552], [624, 1616], [816, 1616], [880, 1552], [944, 1616]
+      ];
+      const folTexs = ['tile-flower-red', 'tile-flower-blue', 'tile-flower-yellow', 'tile-clover', 'tile-petals'];
+      foliagePositions.forEach(([fx, fy], i) => {
+        const tex = folTexs[i % folTexs.length];
+        const sp = this.add.sprite(fx, fy, tex).setOrigin(0.5, 1).setDepth(3);
+        this.interactiveFoliage.push({ sprite: sp, x: fx, y: fy, isRustling: false });
+      });
+
+      // Layer 4: Snapped Landmarks & Stalls (32x32 Grid Aligned)
       addLandmark(CURZON_X, CURZON_Y, 'prop-curzon', 176 * CURZON_K, 50 * CURZON_K);
-      addLandmark(280, 265, 'prop-teastall', 184, 54);
-      addLandmark(660, 260, 'prop-monument', 96, 42);
-      // Store reference to Charukola sprite so update() can cycle through all 4 animation frames
-      this.charukolaSprite = addLandmark(220, 740, 'prop-charukola-0', 188, 54);
-      addLandmark(1060, 245, 'prop-bookstall', 188, 56);
-      addLandmark(1060, 820, 'prop-fountain', 88, 42);
+      addLandmark(272, 272, 'prop-teastall', 184, 54);
+      addLandmark(656, 272, 'prop-monument', 96, 42);
+      this.charukolaSprite = addLandmark(208, 752, 'prop-charukola-0', 188, 54);
+      addLandmark(1072, 240, 'prop-bookstall', 188, 56);
+      addLandmark(1072, 816, 'prop-fountain', 88, 42);
 
-      // Ramna Promenade: Flower Cart conveniently placed right next to Ramna Park Bench
-      this.flowerCartSprite = addLandmark(1260, 480, 'prop-flowercart-0', 180, 52);
-      this.ramnaBench = this.add.sprite(1330, 470, 'prop-bench').setOrigin(0.5, 1).setDepth(470);
+      // Ramna Promenade
+      this.flowerCartSprite = addLandmark(1264, 496, 'prop-flowercart-0', 180, 52);
+      this.ramnaBench = this.add.sprite(1328, 464, 'prop-bench').setOrigin(0.5, 1).setDepth(464);
 
-      // Fuller Road Food Bazaar: Mama's Fuchka + Pabna Mishti Doi with dining tables & benches
-      addLandmark(1570, 245, 'prop-fuchkacart', 180, 52);
-      addLandmark(1750, 245, 'prop-doicart', 180, 52);
-      this.add.sprite(1660, 305, 'prop-bench').setOrigin(0.5, 1).setDepth(305);
+      // Fuller Road Food Bazaar
+      addLandmark(1584, 240, 'prop-fuchkacart', 180, 52);
+      addLandmark(1744, 240, 'prop-doicart', 180, 52);
+      this.add.sprite(1648, 304, 'prop-bench').setOrigin(0.5, 1).setDepth(304);
 
-      this.telescopeProp = this.add.sprite(1780, 1312, 'prop-telescope').setOrigin(0.5, 1).setDepth(1312);
-      this.createLakeBoat(2020, 1352);
+      this.telescopeProp = this.add.sprite(1776, 1328, 'prop-telescope').setOrigin(0.5, 1).setDepth(1328);
+      this.createLakeBoat(2032, 1360);
 
+      // Biome Trees (32x32 Snapped)
       [
-        [140, 1480], [410, 1480], [110, 1010], [130, 520], [580, 520],
-        [840, 520], [1380, 420], [1920, 320], [2120, 560],
-        [780, 1180], [1180, 1180], [1360, 1480], [880, 1540]
+        [144, 1488], [400, 1488], [112, 1008], [144, 528], [592, 528],
+        [848, 528], [1392, 432], [1936, 336], [2128, 560],
+        [784, 1168], [1168, 1168], [1360, 1488], [880, 1552]
       ].forEach(([tx, ty]) => addLandmark(tx, ty, 'prop-tree-krishna', 40, 28));
 
+      // Streetlamps & Halos (32x32 Snapped)
       [
-        [390, 760], [620, 760], [940, 760], [1180, 760], [1440, 760],
-        [390, 1370], [1250, 460], [1545, 1275], [1885, 1285]
+        [400, 752], [624, 752], [944, 752], [1168, 752], [1456, 752],
+        [400, 1360], [1264, 464], [1552, 1264], [1872, 1296]
       ].forEach(([lx, ly]) => {
         this.add.sprite(lx, ly, 'prop-lamp').setOrigin(0.5, 1).setDepth(ly);
         const glow = this.add.circle(lx, ly - 68, 68, 0xfde68a, 0).setDepth(ly + 1);
         this.lampGlows.push(glow);
       });
 
+      // Atmosphere Lighting Registration (Edison Bulbs, Lamps, Rowboat)
+      if (this.atmosphere) {
+        this.atmosphere.destroy();
+        this.atmosphere = new AtmosphereSystem(this);
+        this.atmosphere.init();
+
+        this.atmosphere.registerLight(272, 260, 68, 0xfde68a, 0.7); // Tea stall
+        this.atmosphere.registerLight(1072, 240, 68, 0xfde68a, 0.65); // Book stall
+        this.atmosphere.registerLight(1264, 480, 64, 0xfbcfe8, 0.65); // Flower cart
+        this.atmosphere.registerLight(1584, 240, 68, 0xfde68a, 0.7); // Fuchka cart
+        this.atmosphere.registerLight(1744, 240, 68, 0xfde68a, 0.7); // Mishti doi
+        this.atmosphere.registerLight(2032, 1352, 60, 0xfef08a, 0.85); // Lake rowboat lantern
+        this.atmosphere.registerLight(672, 1433, 50, 0xfde68a, 0.6); // Farm arch left
+        this.atmosphere.registerLight(808, 1433, 50, 0xfde68a, 0.6); // Farm arch right
+
+        [
+          [400, 752], [624, 752], [944, 752], [1168, 752], [1456, 752],
+          [400, 1360], [1264, 464], [1552, 1264], [1872, 1296]
+        ].forEach(([lx, ly]) => {
+          this.atmosphere.registerLight(lx, ly - 50, 64, 0xfde68a, 0.6);
+        });
+      }
+
       const labelStyle = { fontFamily: 'Press Start 2P', fontSize: '9.5px', color: '#fff8eb', stroke: '#2b1d14', strokeThickness: 4 };
       this.add.text(CURZON_X, CURZON_Y - 116 * CURZON_K - 18, 'CURZON HALL & KRISHNACHURA LAWN', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(280, 95, 'TSC TEA STALL & ADDA', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(660, 135, 'APARAJEYO BANGLA', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(220, 525, 'CHARUKOLA FINE ARTS 🎨', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1060, 82, 'NILKHET BOOK LANE 📚', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1060, 725, 'MiNTU ROAD FOUNTAIN PLAZA', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1330, 395, 'RAMNA PARK BENCH 🌸', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1260, 395, 'PHULWALI FLOWER CART 🌼', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1660, 82, "FULLER ROAD FOOD BAZAAR 🥙🍮", labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1640, 755, 'DHAKA RICKSHAW STAND 🛺', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1775, 1205, 'DHANMONDI LAKE PIER & TELESCOPE 🔭', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(740, 1435, 'GREEN MEADOWS FARMHOUSE ROAD 🏡', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(2180, 710, 'WHISPERING FOREST PORTAL 🌀', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(272, 96, 'TSC TEA STALL & ADDA', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(656, 136, 'APARAJEYO BANGLA', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(208, 528, 'CHARUKOLA FINE ARTS 🎨', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1072, 80, 'NILKHET BOOK LANE 📚', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1072, 720, 'MiNTU ROAD FOUNTAIN PLAZA', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1328, 396, 'RAMNA PARK BENCH 🌸', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1264, 396, 'PHULWALI FLOWER CART 🌼', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1664, 80, "FULLER ROAD FOOD BAZAAR 🥙🍮", labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1648, 752, 'DHAKA RICKSHAW STAND 🛺', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1776, 1200, 'DHANMONDI LAKE PIER & TELESCOPE 🔭', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(736, 1432, 'GREEN MEADOWS FARMHOUSE ROAD 🏡', labelStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(2192, 712, 'WHISPERING FOREST PORTAL 🌀', labelStyle).setOrigin(0.5).setDepth(2000);
 
-      // Rustic Farmhouse Country Pathway & Grand Pastoral Gateway Entrance
-      this.add.tileSprite(740, 1530, 96, 320, 'tile-path').setDepth(1);
-      this.add.tileSprite(600, 1420, 200, 72, 'tile-path').setDepth(1);
+      // Farmstead Timber Archway & Pastoral Entrance (32x32 Snapped)
+      this.add.sprite(736, 1488, 'prop-farm-arch').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(608, 1488, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(512, 1488, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(864, 1488, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(960, 1488, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1488);
 
-      // Grand Farmstead Timber Archway Spanning Across Country Lane (Center: 740, 1485)
-      this.add.sprite(740, 1485, 'prop-farm-arch').setOrigin(0.5, 1).setDepth(1485);
-
-      // Flanking Pastoral Boundary Fences (Extending West & East)
-      this.add.sprite(596, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
-      this.add.sprite(500, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
-      this.add.sprite(884, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
-      this.add.sprite(980, 1485, 'prop-farm-fence').setOrigin(0.5, 1).setDepth(1485);
-
-      // Boundary Collisions (Leaving open central 96px country road at x: 692–788 for free walking)
       blockRect(550, 1475, 230, 16);
       blockRect(930, 1475, 230, 16);
       blockRect(668, 1478, 44, 18);
       blockRect(812, 1478, 44, 18);
 
-      // Rustic Directional Signpost & Milestone
-      this.add.sprite(805, 1445, 'prop-farm-sign').setOrigin(0.5, 1).setDepth(1445);
+      this.add.sprite(816, 1456, 'prop-farm-sign').setOrigin(0.5, 1).setDepth(1456);
 
-      // Lush Blooming Sunflowers & Stacked Golden Hay Bales
-      this.add.sprite(660, 1450, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1450);
-      this.add.sprite(825, 1492, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1492);
-      this.add.sprite(545, 1495, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1495);
-      this.add.sprite(935, 1495, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1495);
+      this.add.sprite(656, 1456, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1456);
+      this.add.sprite(816, 1488, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(544, 1488, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(928, 1488, 'prop-sunflowers').setOrigin(0.5, 1).setDepth(1488);
 
-      this.add.sprite(615, 1492, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1492);
-      this.add.sprite(635, 1496, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1496);
-      this.add.sprite(865, 1494, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1494);
+      this.add.sprite(624, 1488, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(640, 1488, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1488);
+      this.add.sprite(880, 1488, 'prop-farm-haybale').setOrigin(0.5, 1).setDepth(1488);
 
-      // Warm Archway Lantern Glows (Pulsing with night/day cycle)
-      const archGlowL = this.add.circle(660, 1433, 44, 0xfde68a, 0.25).setDepth(1486);
-      const archGlowR = this.add.circle(820, 1433, 44, 0xfde68a, 0.25).setDepth(1486);
+      const archGlowL = this.add.circle(672, 1440, 44, 0xfde68a, 0.25).setDepth(1489);
+      const archGlowR = this.add.circle(808, 1440, 44, 0xfde68a, 0.25).setDepth(1489);
       this.lampGlows.push(archGlowL, archGlowR);
 
-      // Floating Pastoral Dandelion Pollen Motes drifting in the country breeze
       for (let i = 0; i < 6; i++) {
         const dX = Phaser.Math.Between(695, 785);
         const dY = Phaser.Math.Between(1440, 1530);
@@ -762,28 +879,27 @@ export class DhakaValleyScene extends Phaser.Scene {
         });
       }
 
-      // Decorative Farmhouse Stepping Threshold
-      this.add.circle(740, 1530, 24, 0xca8a04, 0.25).setDepth(1529);
-      this.add.circle(740, 1530, 14, 0xfef08a, 0.35).setDepth(1529);
+      this.add.circle(736, 1536, 24, 0xca8a04, 0.25).setDepth(1529);
+      this.add.circle(736, 1536, 14, 0xfef08a, 0.35).setDepth(1529);
 
       registerInteract(CURZON_X, CURZON_Y + 12, null, 'Enter Curzon Hall 🏛️', 92, () => this.enterCurzonHall());
-      registerInteract(740, 1530, null, 'Visit Green Meadows Farmhouse 🏡', 85, () => this.enterFarmhouse());
-      registerInteract(275, 302, 'npc-tea-0', 'Tong-er Mama (Cha)', 105, () => this.interactTeaStall());
-      registerInteract(415, 295, 'npc-guitar-0', 'TSC Acoustic Singer', 90, () => this.interactGuitarist());
-      registerInteract(260, 755, 'npc-artist-0', 'Charukola Clay Art', 85, () => this.interactCharukola());
-      registerInteract(1060, 282, 'npc-books-0', 'Nilkhet Boiwala', 105, () => this.interactBookStall());
-      registerInteract(1260, 505, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
-      registerInteract(1570, 285, 'npc-fuchka-0', "Mama's Naga Fuchka", 105, () => this.interactFuchkaCart());
-      registerInteract(1750, 285, 'npc-doi-0', 'Pabnar Mishti Doi', 105, () => this.interactDoiCart());
+      registerInteract(736, 1536, null, 'Visit Green Meadows Farmhouse 🏡', 85, () => this.enterFarmhouse());
+      registerInteract(272, 304, 'npc-tea-0', 'Tong-er Mama (Cha)', 105, () => this.interactTeaStall());
+      registerInteract(400, 304, 'npc-guitar-0', 'TSC Acoustic Singer', 90, () => this.interactGuitarist());
+      registerInteract(240, 752, 'npc-artist-0', 'Charukola Clay Art', 85, () => this.interactCharukola());
+      registerInteract(1072, 272, 'npc-books-0', 'Nilkhet Boiwala', 105, () => this.interactBookStall());
+      registerInteract(1264, 528, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
+      registerInteract(1584, 272, 'npc-fuchka-0', "Mama's Naga Fuchka", 105, () => this.interactFuchkaCart());
+      registerInteract(1744, 272, 'npc-doi-0', 'Pabnar Mishti Doi', 105, () => this.interactDoiCart());
 
-      const rickEntry = registerInteract(1640, 825, 'prop-rickshaw', 'Grand Dhaka Rickshaw Tour 🛺', 92, () => this.interactRickshawTour());
+      const rickEntry = registerInteract(1648, 816, 'prop-rickshaw', 'Grand Dhaka Rickshaw Tour 🛺', 92, () => this.interactRickshawTour());
       this.rickshawSprite = rickEntry.sprite;
 
-      registerInteract(1780, 1318, 'prop-telescope', 'Stargazing Telescope 🔭', 105, () => this.interactStargazingTelescope());
-      registerInteract(1910, 1322, 'prop-lamp', 'Lantern Rowboat Finale ⛵', 88, () => this.interactLakePier());
+      registerInteract(1776, 1328, 'prop-telescope', 'Stargazing Telescope 🔭', 105, () => this.interactStargazingTelescope());
+      registerInteract(1904, 1328, 'prop-lamp', 'Lantern Rowboat Finale ⛵', 88, () => this.interactLakePier());
 
       // Portal to World 2: Whispering Emerald Forest
-      registerInteract(2180, 825, 'prop-portal-0', 'Enter Whispering Emerald Forest 🌀', 95, () => {
+      registerInteract(2192, 816, 'prop-portal-0', 'Enter Whispering Emerald Forest 🌀', 95, () => {
         if (!DateState.totoroJoined) {
           UI.startDialogue([{ speaker: 'Moon Walker', portrait: '🌙', text: 'A shimmering fracture in reality! I have to bring Totoro from Curzon Hall before stepping through.' }]);
           return;
@@ -5349,7 +5465,7 @@ export class DhakaValleyScene extends Phaser.Scene {
     const minLabel = document.getElementById('minimap-world-label');
     if (minLabel) minLabel.textContent = 'Curzon Hall: Faculty of Science';
 
-    const MAP_W = 1200, MAP_H = 900;
+    const MAP_W = CURZON_INTERIOR_WIDTH, MAP_H = CURZON_INTERIOR_HEIGHT;
     this.currentMapW = MAP_W;
     this.currentMapH = MAP_H;
     this.physics.world.setBounds(0, 0, MAP_W, MAP_H);
@@ -5827,7 +5943,7 @@ export class DhakaValleyScene extends Phaser.Scene {
     const minLabel = document.getElementById('minimap-world-label');
     if (minLabel) minLabel.textContent = 'Green Meadows Farmhouse 🏡';
 
-    const MAP_W = 1200, MAP_H = 900;
+    const MAP_W = FARMHOUSE_WIDTH, MAP_H = FARMHOUSE_HEIGHT;
     this.currentMapW = MAP_W;
     this.currentMapH = MAP_H;
     this.physics.world.setBounds(0, 0, MAP_W, MAP_H);
@@ -6437,6 +6553,10 @@ export class DhakaValleyScene extends Phaser.Scene {
   update(time, delta) {
     if (!this.player) return;
 
+    // Advance TimeCalendarSystem and AtmosphereSystem (Day/Night & Halos)
+    if (this.timeCalendar) this.timeCalendar.update(delta);
+    if (this.atmosphere) this.atmosphere.update(time, delta);
+
     // Render Monsoon Rain Drops & Slanted Streaks (Batched single draw call)
     if (this.isRaining && this.rainGraphics) {
       this.rainGraphics.clear();
@@ -6797,6 +6917,92 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.promptBubble.setVisible(true);
     } else {
       this.promptBubble.setVisible(false);
+    }
+
+    // Layer 0: Pokémon HGSS Vertical Water Reflections near Dhanmondi Lake
+    if (this.playerReflection) {
+      const nearLake = (DateState.currentWorld === 'dhaka' && px >= 1550 && px <= 2560 && py >= 1020 && py <= 1920);
+      if (nearLake) {
+        this.playerReflection.setVisible(true);
+        this.playerReflection.setPosition(px + Math.sin(time * 0.004) * 2, py + 12);
+        if (this.player.frame) this.playerReflection.setFrame(this.player.frame.name);
+        this.playerReflection.setFlipX(this.player.flipX);
+        this.playerReflection.setAlpha(0.22);
+      } else {
+        this.playerReflection.setVisible(false);
+      }
+    }
+
+    // Layer 3: Interactive Ground Foliage Rustling & Petal Particles
+    if (this.interactiveFoliage && this.interactiveFoliage.length > 0) {
+      for (const f of this.interactiveFoliage) {
+        if (f.isRustling) continue;
+        const dist = Phaser.Math.Distance.Between(px, py, f.x, f.y);
+        if (dist < 22) {
+          f.isRustling = true;
+          this.tweens.add({
+            targets: f.sprite,
+            angle: { from: -10, to: 10 },
+            duration: 65,
+            yoyo: true,
+            repeat: 2,
+            onComplete: () => {
+              f.sprite.angle = 0;
+              this.time.delayedCall(350, () => { f.isRustling = false; });
+            }
+          });
+          const petal = this.add.circle(f.x + Phaser.Math.Between(-6, 6), f.y - 12, 2, 0xf43f5e, 0.85).setDepth(f.y + 10);
+          this.tweens.add({
+            targets: petal,
+            y: petal.y - 18,
+            x: petal.x + Phaser.Math.Between(-12, 12),
+            alpha: 0,
+            duration: 380,
+            onComplete: () => petal.destroy()
+          });
+        }
+      }
+    }
+
+    // Layer 5: Overhead Canopies & Roofs Alpha Fading (smoothly lerps to 0.42 when Moon Walker walks behind)
+    if (this.overheadCanopies && this.overheadCanopies.length > 0) {
+      for (const c of this.overheadCanopies) {
+        if (!c.sprite || !c.sprite.active) continue;
+        const inside = (px >= c.minX && px <= c.maxX && py >= c.minY && py <= c.maxY);
+        const targetAlpha = inside ? 0.42 : 1.0;
+        c.sprite.alpha = Phaser.Math.Linear(c.sprite.alpha, targetAlpha, 0.12);
+      }
+    }
+
+    // Layer 6: Stardew Valley 32x32 Grid Tile Cursor
+    if (this.tileCursor) {
+      if (UI.isOpen() || this.cutsceneLocked) {
+        this.tileCursor.clear();
+      } else {
+        const targetCol = Math.floor((px + this.facingVec.x * 24) / 32);
+        const targetRow = Math.floor((py + this.facingVec.y * 24) / 32);
+        const cx = targetCol * 32;
+        const cy = targetRow * 32;
+
+        this.tileCursor.clear();
+        const pulse = 0.75 + Math.sin(time * 0.006) * 0.2;
+        this.tileCursor.lineStyle(2, 0xfde68a, pulse);
+        this.tileCursor.strokeRect(cx, cy, 32, 32);
+
+        this.tileCursor.lineStyle(2, 0xffffff, Math.min(1.0, pulse + 0.15));
+        const b = 6;
+        // Corner brackets
+        this.tileCursor.beginPath();
+        // Top-left
+        this.tileCursor.moveTo(cx, cy + b); this.tileCursor.lineTo(cx, cy); this.tileCursor.lineTo(cx + b, cy);
+        // Top-right
+        this.tileCursor.moveTo(cx + 32 - b, cy); this.tileCursor.lineTo(cx + 32, cy); this.tileCursor.lineTo(cx + 32, cy + b);
+        // Bottom-left
+        this.tileCursor.moveTo(cx, cy + 32 - b); this.tileCursor.lineTo(cx, cy + 32); this.tileCursor.lineTo(cx + b, cy + 32);
+        // Bottom-right
+        this.tileCursor.moveTo(cx + 32 - b, cy + 32); this.tileCursor.lineTo(cx + 32, cy + 32); this.tileCursor.lineTo(cx + 32, cy + 32 - b);
+        this.tileCursor.strokePath();
+      }
     }
 
     // 9. Update Live Minimap (throttled to ~16 FPS to avoid per-frame CPU canvas redraws)

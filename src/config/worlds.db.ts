@@ -18,7 +18,7 @@ export const WORLDS_DB: Record<string, any> = {
     bgColor: '#68a357',
     minimapColor: '#4c853e',
     petalColor: 0xff6b8b,
-    portalPos: { x: 2180, y: 820 },
+    portalPos: { x: 2192, y: 816 },
     nextWorld: 'forest'
   },
   forest: {
@@ -33,12 +33,12 @@ export const WORLDS_DB: Record<string, any> = {
     bgColor: '#2d5a3c',
     minimapColor: '#244730',
     petalColor: 0x80ffdb,
-    portalPos: { x: 2150, y: 900 },
-    returnPos: { x: 240, y: 900 },
+    portalPos: { x: 2160, y: 912 },
+    returnPos: { x: 240, y: 912 },
     nextWorld: 'sunken',
     enemySpec: { name: 'Briar Bogling', tex: 'enemy-slime', hp: 55, atk: 10, xp: 35, drop: 'spirit_dew' },
-    bossSpec:  { id: 'boss_forest', name: 'SYLVAN BRIAR STAG (FOREST GUARDIAN)', tex: 'boss-stag', hp: 260, atk: 18, xp: 150, reward: 'seal_forest', x: 1820, y: 900 },
-    npcSpec:   { name: 'Elder Banyan Sage', tex: 'npc-sage', portrait: '🌿', x: 520, y: 840,
+    bossSpec:  { id: 'boss_forest', name: 'SYLVAN BRIAR STAG (FOREST GUARDIAN)', tex: 'boss-stag', hp: 260, atk: 18, xp: 150, reward: 'seal_forest', x: 1808, y: 912 },
+    npcSpec:   { name: 'Elder Banyan Sage', tex: 'npc-sage', portrait: '🌿', x: 528, y: 848,
       lines: [
         'Welcome to the Whispering Emerald Forest, Moon Walker and Totoro! A reality fracture has agitated the Sylvan Briar Stag to the East.',
         'Gather glowing Emerald Spirit Dew from the forest floor and use your Bag & Craft menu (I) to forge stronger gear!',
@@ -115,12 +115,12 @@ export const WORLDS_DB: Record<string, any> = {
     bgColor: '#1f5f78',
     minimapColor: '#184b5e',
     petalColor: 0x7fd4e6,
-    portalPos: { x: 2150, y: 900 },
-    returnPos: { x: 240, y: 900 },
+    portalPos: { x: 2160, y: 912 },
+    returnPos: { x: 240, y: 912 },
     nextWorld: 'ember',
     enemySpec: { name: 'Tidepool Crabler', tex: 'enemy-crab', hp: 90, atk: 16, xp: 55, drop: 'coral_shard' },
-    bossSpec:  { id: 'boss_sunken', name: 'ABYSSAL CORAL LEVIATHAN', tex: 'boss-leviathan', hp: 420, atk: 24, xp: 240, reward: 'seal_sunken', x: 1820, y: 900 },
-    npcSpec:   { name: 'Tidekeeper Marina', tex: 'npc-marina', portrait: '🐚', x: 520, y: 840,
+    bossSpec:  { id: 'boss_sunken', name: 'ABYSSAL CORAL LEVIATHAN', tex: 'boss-leviathan', hp: 420, atk: 24, xp: 240, reward: 'seal_sunken', x: 1808, y: 912 },
+    npcSpec:   { name: 'Tidekeeper Marina', tex: 'npc-marina', portrait: '🐚', x: 528, y: 848,
       lines: [
         'Our coastal kingdom sank when the memory fractures began, yet your Dhaka keepsakes resonate with our ancient coral shrines!',
         'Collect Luminous Coral Shards around the tidepools to craft the Coral Tideglaive before challenging the Abyssal Leviathan.'
@@ -176,12 +176,12 @@ export const WORLDS_DB: Record<string, any> = {
     bgColor: '#4a251d',
     minimapColor: '#3d1e17',
     petalColor: 0xff9248,
-    portalPos: { x: 2150, y: 900 },
-    returnPos: { x: 240, y: 900 },
+    portalPos: { x: 2160, y: 912 },
+    returnPos: { x: 240, y: 912 },
     nextWorld: 'frost',
     enemySpec: { name: 'Cinder Hound', tex: 'enemy-wisp', hp: 135, atk: 22, xp: 80, drop: 'ember_ore' },
-    bossSpec:  { id: 'boss_ember', name: 'IGNIS, THE MAGMA DRAKE', tex: 'boss-drake', hp: 620, atk: 32, xp: 360, reward: 'seal_ember', x: 1820, y: 900 },
-    npcSpec:   { name: 'Master Blacksmith Kael', tex: 'npc-kael', portrait: '⚒️', x: 520, y: 840,
+    bossSpec:  { id: 'boss_ember', name: 'IGNIS, THE MAGMA DRAKE', tex: 'boss-drake', hp: 620, atk: 32, xp: 360, reward: 'seal_ember', x: 1808, y: 912 },
+    npcSpec:   { name: 'Master Blacksmith Kael', tex: 'npc-kael', portrait: '⚒️', x: 528, y: 848,
       lines: [
         'The fires of Emberfall recognize the warmth of Totoro’s spirit! Mine Volcanic Ember Ore to temper the Emberfall Sunblade.',
         'Defeat Ignis the Magma Drake in the eastern caldera to open the Frost Gate!'
@@ -236,12 +236,12 @@ export const WORLDS_DB: Record<string, any> = {
     bgColor: '#8ab6d6',
     minimapColor: '#5b88a8',
     petalColor: 0xffffff,
-    portalPos: { x: 2150, y: 900 },
-    returnPos: { x: 240, y: 900 },
+    portalPos: { x: 2160, y: 912 },
+    returnPos: { x: 240, y: 912 },
     nextWorld: 'astral',
     enemySpec: { name: 'Glacier Wraith', tex: 'enemy-wraith', hp: 180, atk: 28, xp: 110, drop: 'frost_crystal' },
-    bossSpec:  { id: 'boss_frost', name: 'CRYON, WARDEN OF ETERNAL FROST', tex: 'boss-warden', hp: 850, atk: 38, xp: 500, reward: 'seal_frost', x: 1820, y: 900 },
-    npcSpec:   { name: 'Astronomer Lyra', tex: 'npc-lyra', portrait: '❄️', x: 520, y: 840,
+    bossSpec:  { id: 'boss_frost', name: 'CRYON, WARDEN OF ETERNAL FROST', tex: 'boss-warden', hp: 850, atk: 38, xp: 500, reward: 'seal_frost', x: 1808, y: 912 },
+    npcSpec:   { name: 'Astronomer Lyra', tex: 'npc-lyra', portrait: '❄️', x: 528, y: 848,
       lines: [
         'Through our frozen observatory lens, we saw the same four constellations you charted over Dhanmondi Lake!',
         'Totoro is no ordinary spirit—he is the ancient Guardian of Shared Memories, bound to Moon Walker’s heart.',
@@ -297,12 +297,12 @@ export const WORLDS_DB: Record<string, any> = {
     bgColor: '#1d1438',
     minimapColor: '#160f2b',
     petalColor: 0xf7cb45,
-    portalPos: { x: 2150, y: 900 },
-    returnPos: { x: 240, y: 900 },
+    portalPos: { x: 2160, y: 912 },
+    returnPos: { x: 240, y: 912 },
     nextWorld: 'dhaka',
     enemySpec: { name: 'Void Echo', tex: 'enemy-wraith', hp: 230, atk: 34, xp: 150, drop: 'frost_crystal' },
-    bossSpec:  { id: 'boss_astral', name: 'CHRONO-FRACTURE ARCHON (FINAL BOSS)', tex: 'boss-archon', hp: 1200, atk: 45, xp: 1000, reward: 'seal_astral', x: 1820, y: 900 },
-    npcSpec:   { name: 'Celestial Chronicler', tex: 'npc-chronicler', portrait: '🌟', x: 520, y: 840,
+    bossSpec:  { id: 'boss_astral', name: 'CHRONO-FRACTURE ARCHON (FINAL BOSS)', tex: 'boss-archon', hp: 1200, atk: 45, xp: 1000, reward: 'seal_astral', x: 1808, y: 912 },
+    npcSpec:   { name: 'Celestial Chronicler', tex: 'npc-chronicler', portrait: '🌟', x: 528, y: 848,
       lines: [
         'Every keepsake you gathered in Dhaka Valley—from the Krishnachura blossom to the Peacekeeper Charm—anchors reality itself.',
         'Awaken the Starlight Crescent Blade in your Crafting tab and vanquish the Chrono-Fracture Archon to seal the realms forever!'
@@ -373,7 +373,7 @@ export const WORLDS_DB: Record<string, any> = {
     minimapColor: '#366d30',
     petalColor: 0xffe066,
     isActivity: true,
-    returnPos: { x: 740, y: 1455 }
+    returnPos: { x: 752, y: 1456 }
   }
 };
 

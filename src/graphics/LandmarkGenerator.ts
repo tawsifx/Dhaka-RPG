@@ -77,6 +77,16 @@ export class LandmarkGenerator {
     };
 
     // 1. World 1 (Dhaka Valley): Spreading Royal Krishnachura (Delonix regia)
+    /**
+     * @asset-spec
+     * @id prop-tree-krishna
+     * @external-png assets/sprites/trees/tree_krishnachura.png
+     * @fallback-procedural prop-tree-krishna (120x128)
+     * @grid-footprint 4x4 tiles (64x32px trunk collision base)
+     * @visual-size 128x128px (or 64x64px native upscaled 2x)
+     * @origin 0.5, 0.92
+     * @frames 1 static frame
+     */
     makeTex('prop-tree-krishna', 120, 128, ctx => {
       drawAmbientShadow(ctx, 60, 116, 42, 12);
       drawOrganicTrunk(ctx, 60, 114, 62, 14, ['#3a1f10', '#5e361e', '#855132'], true);
@@ -125,6 +135,16 @@ export class LandmarkGenerator {
     });
 
     // 2. World 2 (Whispering Emerald Forest): Ancient Bioluminescent Spirit Banyan
+    /**
+     * @asset-spec
+     * @id prop-tree-emerald
+     * @external-png assets/sprites/trees/tree_emerald_banyan.png
+     * @fallback-procedural prop-tree-emerald (120x128)
+     * @grid-footprint 4x4 tiles (64x32px trunk collision base)
+     * @visual-size 128x128px (or 64x64px native upscaled 2x)
+     * @origin 0.5, 0.92
+     * @frames 1 static frame with spirit hollow
+     */
     makeTex('prop-tree-emerald', 120, 128, ctx => {
       drawAmbientShadow(ctx, 60, 116, 40, 12);
       drawOrganicTrunk(ctx, 60, 114, 56, 16, ['#1e1612', '#36271e', '#523c2e'], true);
@@ -408,6 +428,16 @@ export class LandmarkGenerator {
     });
 
     // --- Dhaka Landmarks ---
+    /**
+     * @asset-spec
+     * @id prop-curzon
+     * @external-png assets/sprites/landmarks/curzon_hall_facade.png
+     * @fallback-procedural prop-curzon (428x261)
+     * @grid-footprint 14x4 tiles (448x128px solid collision base with 2x2 entrance arch trigger)
+     * @visual-size 448x256px (or 224x128px native pixel art upscaled 2x)
+     * @origin 0.5, 0.95
+     * @frames 1 monumental static facade
+     */
     makeTex('prop-curzon', 190 * CURZON_K, 116 * CURZON_K, ctx => {
       // ===== Curzon Hall — Indo-Saracenic red-brick facade (matches the reference photo) =====
       // Drawn in a fixed 190x116 design grid, then scaled up by CURZON_K so the canvas size is never a limit.
@@ -1272,6 +1302,16 @@ export class LandmarkGenerator {
       ctx.fillStyle = '#e63946'; ctx.fillRect(101.5, 96, 1, 1); // Alpha star mark
     });
 
+    /**
+     * @asset-spec
+     * @id prop-teastall
+     * @external-png assets/sprites/stalls/tsc_teastall.png
+     * @fallback-procedural prop-teastall (216x152)
+     * @grid-footprint 6x3 tiles (192x96px solid collision base)
+     * @visual-size 224x160px (or 112x80px native pixel art upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 1 static frame (or 2-4 horizontal frames animated)
+     */
     makeTex('prop-teastall', 216, 152, ctx => {
       const W = 216, H = 152;
       const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
@@ -1553,12 +1593,32 @@ export class LandmarkGenerator {
       ctx.fillText("MAMA'S FUCHKA", 100, 12.5);
     };
 
+    /**
+     * @asset-spec
+     * @id prop-fuchkacart
+     * @external-png assets/sprites/stalls/fuchka_cart.png
+     * @fallback-procedural prop-fuchkacart (216x152)
+     * @grid-footprint 6x3 tiles (192x96px solid collision base)
+     * @visual-size 224x160px (or 112x80px native pixel art upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 2 horizontal frames (striped canopy & steam)
+     */
     makeTex('prop-fuchkacart', 216, 152, ctx => drawFuchkaCartTexture(ctx, 0));
     [0, 1].forEach(frame => {
       makeTex(`prop-fuchkacart-${frame}`, 216, 152, ctx => drawFuchkaCartTexture(ctx, frame));
     });
 
     // --- Animated Charukola Clay Art Studio (4-Frame Rotating Pottery Wheel: -0, -1, -2, -3) ---
+    /**
+     * @asset-spec
+     * @id prop-charukola
+     * @external-png assets/sprites/stalls/charukola_exhibit.png
+     * @fallback-procedural prop-charukola-0 (216x152)
+     * @grid-footprint 6x3 tiles (192x96px solid collision base)
+     * @visual-size 224x160px (or 112x80px native pixel art upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 horizontal frames (rotating pottery wheel & fluttering art banners)
+     */
     [0, 1, 2, 3].forEach(frame => {
       makeTex(`prop-charukola-${frame}`, 216, 152, (ctx, cw, ch) => {
         const W = 216, H = 152;
@@ -1684,6 +1744,16 @@ export class LandmarkGenerator {
       });
     });
 
+    /**
+     * @asset-spec
+     * @id prop-doicart
+     * @external-png assets/sprites/stalls/pabna_doi_cart.png
+     * @fallback-procedural prop-doicart (216x152)
+     * @grid-footprint 6x3 tiles (192x96px solid collision base)
+     * @visual-size 224x160px (or 112x80px native pixel art upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 2 horizontal frames (earthen pots display & awning)
+     */
     makeTex('prop-doicart', 216, 152, ctx => {
       const W = 216, H = 152;
       let seed = 778899;
@@ -1850,6 +1920,17 @@ export class LandmarkGenerator {
       ctx.textAlign = 'center';
       ctx.fillText('MISHTI DOI & LASSI', 100, 12.5);
     });
+
+    /**
+     * @asset-spec
+     * @id prop-rickshaw
+     * @external-png assets/sprites/vehicles/dhaka_rickshaw.png
+     * @fallback-procedural prop-rickshaw (96x76)
+     * @grid-footprint 3x2 tiles (96x64px solid collision base)
+     * @visual-size 96x76px (or 48x38px native pixel art upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 1 static side-view vehicle
+     */
     makeTex('prop-rickshaw', 96, 76, ctx => {
       // ===== Dhaka cycle-rickshaw (side view, facing right): folded painted hood, floral body, bicycle front =====
       const C = {
@@ -1989,6 +2070,16 @@ export class LandmarkGenerator {
       return { W, F, N, WL, pt, yAt, path, rev, shift, stroke, R };
     })();
 
+    /**
+     * @asset-spec
+     * @id prop-boat
+     * @external-png assets/sprites/vehicles/dhanmondi_rowboat.png
+     * @fallback-procedural prop-boat (156x72)
+     * @grid-footprint 5x2 tiles (160x64px solid collision base)
+     * @visual-size 160x72px (or 80x36px native pixel art upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 1 static watercraft with oars and lanterns
+     */
     makeTex('prop-boat', 156, 72, ctx => {
       const { W, F, N, pt, yAt, path, rev, shift, stroke, R } = boatKit;
       // hull cavity: dark inner walls

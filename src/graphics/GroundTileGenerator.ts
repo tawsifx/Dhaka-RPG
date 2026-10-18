@@ -2,7 +2,10 @@
 // Migrated 100% intact from game.js
 
 export class GroundTileGenerator {
-  static generate(makeTex: (key: string, w: number, h: number, drawFn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void) => void) {
+  static generate(
+    makeTex: (key: string, w: number, h: number, drawFn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void) => void,
+    scene?: any
+  ) {
     // --- World Ground & Path Tiles ---
     // --- World Ground & Path Tiles (PRO TILESET: seamless, dithered, multi-layer pixel art) ---
     const tk = (() => {
@@ -79,11 +82,16 @@ export class GroundTileGenerator {
 
     const GS = 128; // ground tile size: big enough that repetition isn't noticeable
 
-    // --- Cohesive 32x32 Ground Tileset for Dhaka Valley Tilemap ---
-    // Frame size: 32x32. Total atlas: 128x96 (4 cols x 3 rows = 12 distinct tiles)
-    // Row 0: Grass variations (Plain lush, soft mottle, single tuft, twin tuft)
-    // Row 1: Flower variations (Red blossom, Bluebell cluster, Jasmine/Golden star, Daisy scatter)
-    // Row 2: Path & dirt ground (Fine sand/dirt, clover patch, stone pebble, dry soil)
+    /**
+     * @asset-spec
+     * @id dhaka-tileset-32
+     * @external-png assets/tilesets/dhaka_valley_tileset.png
+     * @fallback-procedural dhaka-tileset-32 (128x96)
+     * @grid-footprint 4x3 tiles (32x32px unit)
+     * @visual-size 128x96px (12 distinct 32x32 tiles)
+     * @origin 0, 0
+     * @frames 12 tiles (Row 0=Grass, Row 1=Flowers, Row 2=Dirt/Pebbles)
+     */
     makeTex('dhaka-tileset-32', 128, 96, (ctx, W, H) => {
       const TS = 32;
       const drawBase = (ox, oy, ramp, seedVal) => {
@@ -221,6 +229,16 @@ export class GroundTileGenerator {
       drawClover(96 + 12, 64 + 23);
     });
 
+    /**
+     * @asset-spec
+     * @id tile-grass
+     * @external-png assets/tilesets/past_the_future_grass.png
+     * @fallback-procedural tile-grass (128x128 seamless)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 128x128px
+     * @origin 0, 0
+     * @frames 1 seamless repeating texture
+     */
     makeTex('tile-grass', GS, GS, ctx => {
       const r = tk.rng(101);
       tk.paintBase(ctx, GS, ['#4a8944', '#56974b', '#62a053', '#6eab5e', '#7bb96b'], 7, 8, 2.0);
@@ -255,6 +273,16 @@ export class GroundTileGenerator {
       }
     });
 
+    /**
+     * @asset-spec
+     * @id tile-forest
+     * @external-png assets/tilesets/realm_forest_tileset.png
+     * @fallback-procedural tile-forest (128x128 seamless)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 128x128px
+     * @origin 0, 0
+     * @frames 1 seamless repeating texture
+     */
     makeTex('tile-forest', GS, GS, ctx => {
       const r = tk.rng(202);
       tk.paintBase(ctx, GS, ['#15301f', '#1b3a28', '#224731', '#2b553b', '#356346'], 19, 8, 2.0);
@@ -292,6 +320,16 @@ export class GroundTileGenerator {
       }
     });
 
+    /**
+     * @asset-spec
+     * @id tile-sunken
+     * @external-png assets/tilesets/realm_sunken_tileset.png
+     * @fallback-procedural tile-sunken (128x128 seamless)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 128x128px
+     * @origin 0, 0
+     * @frames 1 seamless repeating texture
+     */
     makeTex('tile-sunken', GS, GS, ctx => {
       const r = tk.rng(303);
       tk.paintBase(ctx, GS, ['#1b4d69', '#225b78', '#296a87', '#317a96', '#3b8aa3'], 29, 6, 2.0);
@@ -337,6 +375,16 @@ export class GroundTileGenerator {
       }
     });
 
+    /**
+     * @asset-spec
+     * @id tile-ember
+     * @external-png assets/tilesets/realm_ember_tileset.png
+     * @fallback-procedural tile-ember (128x128 seamless)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 128x128px
+     * @origin 0, 0
+     * @frames 1 seamless repeating texture
+     */
     makeTex('tile-ember', GS, GS, ctx => {
       const r = tk.rng(404);
       tk.paintBase(ctx, GS, ['#1b0e0c', '#26140f', '#321c16', '#42271e', '#553429'], 37, 6, 2.0);
@@ -365,6 +413,16 @@ export class GroundTileGenerator {
       }
     });
 
+    /**
+     * @asset-spec
+     * @id tile-frost
+     * @external-png assets/tilesets/realm_frost_tileset.png
+     * @fallback-procedural tile-frost (128x128 seamless)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 128x128px
+     * @origin 0, 0
+     * @frames 1 seamless repeating texture
+     */
     makeTex('tile-frost', GS, GS, ctx => {
       const r = tk.rng(505);
       tk.paintBase(ctx, GS, ['#a3c6e2', '#b3d2ea', '#c3dcf0', '#d3e8f7', '#e5f3fc'], 43, 6, 2.0);
@@ -396,6 +454,16 @@ export class GroundTileGenerator {
       }
     });
 
+    /**
+     * @asset-spec
+     * @id tile-astral
+     * @external-png assets/tilesets/realm_astral_tileset.png
+     * @fallback-procedural tile-astral (128x128 seamless)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 128x128px
+     * @origin 0, 0
+     * @frames 1 seamless repeating texture
+     */
     makeTex('tile-astral', GS, GS, ctx => {
       const r = tk.rng(606);
       tk.paintBase(ctx, GS, ['#0d0820', '#130c2b', '#1a1235', '#221842', '#2b1f54'], 53, 5, 2.0);
@@ -544,6 +612,301 @@ export class GroundTileGenerator {
       }
     });
 
+    // --- 16-Tile 4-Bit Wang Autotiles (32x32 Grid Standard) ---
+    /**
+     * @asset-spec
+     * @id autotile-stone-path
+     * @external-png assets/tilesets/autotile_stone_path.png
+     * @fallback-procedural tile-path (48x48)
+     * @grid-footprint 4x4 tiles (32x32px unit)
+     * @visual-size 128x128px (16 connected tiles)
+     * @origin 0, 0
+     * @frames 16 tiles (4-bit Wang blob autotile: N=1, E=2, S=4, W=8)
+     */
+    makeTex('autotile-stone-path', 128, 128, (ctx) => {
+      for (let mask = 0; mask < 16; mask++) {
+        const col = mask % 4;
+        const row = Math.floor(mask / 4);
+        const ox = col * 32;
+        const oy = row * 32;
+
+        // Base flagstone earth
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(ox, oy, 32, 32);
+
+        // Cobblestones
+        ctx.fillStyle = '#d4bfa0';
+        ctx.fillRect(ox + 2, oy + 2, 28, 28);
+        ctx.fillStyle = '#ebd8be';
+        ctx.fillRect(ox + 3, oy + 3, 26, 12);
+        ctx.fillStyle = '#a89070';
+        ctx.fillRect(ox + 3, oy + 17, 26, 12);
+
+        // Chisel grooves
+        ctx.fillStyle = '#5c3d1f';
+        ctx.fillRect(ox + 2, oy + 15, 28, 2);
+        ctx.fillRect(ox + 15, oy + 2, 2, 28);
+
+        // Borders where neighbor is missing (4-bit mask: N=1, E=2, S=4, W=8)
+        ctx.fillStyle = '#3a6632'; // Grass fringe
+        if (!(mask & 1)) { // North border
+          ctx.fillRect(ox, oy, 32, 3);
+          ctx.fillStyle = '#2d5027'; ctx.fillRect(ox, oy + 3, 32, 1);
+        }
+        if (!(mask & 2)) { // East border
+          ctx.fillStyle = '#3a6632'; ctx.fillRect(ox + 29, oy, 3, 32);
+          ctx.fillStyle = '#2d5027'; ctx.fillRect(ox + 28, oy, 1, 32);
+        }
+        if (!(mask & 4)) { // South border
+          ctx.fillStyle = '#3a6632'; ctx.fillRect(ox, oy + 29, 32, 3);
+          ctx.fillStyle = '#2d5027'; ctx.fillRect(ox, oy + 28, 32, 1);
+        }
+        if (!(mask & 8)) { // West border
+          ctx.fillStyle = '#3a6632'; ctx.fillRect(ox, oy, 3, 32);
+          ctx.fillStyle = '#2d5027'; ctx.fillRect(ox + 3, oy, 1, 32);
+        }
+      }
+    });
+
+    /**
+     * @asset-spec
+     * @id autotile-farm-soil
+     * @external-png assets/tilesets/autotile_farm_soil.png
+     * @fallback-procedural tile-grass (128x128)
+     * @grid-footprint 4x4 tiles (32x32px unit)
+     * @visual-size 128x128px (16 connected tiles)
+     * @origin 0, 0
+     * @frames 16 tiles (4-bit Wang autotile for untilled/tilled/watered soil)
+     */
+    makeTex('autotile-farm-soil', 128, 128, (ctx) => {
+      for (let mask = 0; mask < 16; mask++) {
+        const col = mask % 4;
+        const row = Math.floor(mask / 4);
+        const ox = col * 32;
+        const oy = row * 32;
+
+        // Rich Bengali tilled loam
+        ctx.fillStyle = '#4a2d18';
+        ctx.fillRect(ox, oy, 32, 32);
+
+        // Furrows
+        ctx.fillStyle = '#663e21';
+        for (let fy = 3; fy < 30; fy += 6) {
+          ctx.fillRect(ox + 2, oy + fy, 28, 3);
+          ctx.fillStyle = '#2b190d';
+          ctx.fillRect(ox + 2, oy + fy + 3, 28, 1);
+          ctx.fillStyle = '#663e21';
+        }
+
+        // Borders where neighbor is not tilled
+        ctx.fillStyle = '#4a8944'; // Grass edge
+        if (!(mask & 1)) ctx.fillRect(ox, oy, 32, 2);
+        if (!(mask & 2)) ctx.fillRect(ox + 30, oy, 2, 32);
+        if (!(mask & 4)) ctx.fillRect(ox, oy + 30, 32, 2);
+        if (!(mask & 8)) ctx.fillRect(ox, oy, 2, 32);
+      }
+    });
+
+    // --- Stardew Valley Crop Growth Stages (192x48 px = 6 stages of 32x48 px) ---
+    const makeCropStages = (key: string, name: string, matureColor: string, fruitColor: string, isTall = false) => {
+      makeTex(key, 192, 48, (ctx) => {
+        for (let stage = 0; stage < 6; stage++) {
+          const ox = stage * 32;
+          const cx = ox + 16;
+          const baseY = 44;
+
+          // Stage 0: Seed / soil mound
+          ctx.fillStyle = '#3e2415';
+          ctx.beginPath(); ctx.ellipse(cx, baseY, 6, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+          if (stage === 0) {
+            ctx.fillStyle = '#d4a373';
+            ctx.fillRect(cx - 1, baseY - 2, 2, 2);
+            continue;
+          }
+
+          // Stage 1: Tiny Sprout
+          if (stage === 1) {
+            ctx.fillStyle = '#52b788';
+            ctx.fillRect(cx - 0.5, baseY - 7, 2, 7);
+            ctx.fillRect(cx - 4, baseY - 8, 3, 2);
+            ctx.fillRect(cx + 2, baseY - 8, 3, 2);
+            continue;
+          }
+
+          // Stage 2: Young Vegetative Plant
+          if (stage === 2) {
+            ctx.fillStyle = '#2d6a4f';
+            ctx.fillRect(cx - 1, baseY - 14, 2.5, 14);
+            ctx.fillStyle = '#40916c';
+            ctx.beginPath();
+            ctx.ellipse(cx - 5, baseY - 8, 5, 3, -0.3, 0, Math.PI * 2);
+            ctx.ellipse(cx + 5, baseY - 10, 5, 3, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            continue;
+          }
+
+          // Stage 3: Budding / Flowering
+          if (stage === 3) {
+            ctx.fillStyle = '#1b4332';
+            ctx.fillRect(cx - 1, baseY - 22, 3, 22);
+            ctx.fillStyle = '#2d6a4f';
+            ctx.beginPath();
+            ctx.ellipse(cx - 7, baseY - 14, 6, 4, -0.25, 0, Math.PI * 2);
+            ctx.ellipse(cx + 7, baseY - 16, 6, 4, 0.25, 0, Math.PI * 2);
+            ctx.fill();
+            // Tiny Flower Buds
+            ctx.fillStyle = '#fde047';
+            ctx.fillRect(cx - 3, baseY - 24, 2, 2);
+            ctx.fillRect(cx + 2, baseY - 24, 2, 2);
+            continue;
+          }
+
+          // Stage 4: Mature Harvestable Crop
+          if (stage === 4) {
+            const h = isTall ? 36 : 28;
+            ctx.fillStyle = '#1b4332';
+            ctx.fillRect(cx - 1.5, baseY - h, 3, h);
+            ctx.fillStyle = matureColor;
+            ctx.beginPath();
+            ctx.ellipse(cx, baseY - h * 0.6, 12, h * 0.45, 0, 0, Math.PI * 2);
+            ctx.fill();
+            // Hanging Fruits / Blossoms
+            ctx.fillStyle = fruitColor;
+            ctx.beginPath();
+            ctx.arc(cx - 4, baseY - h * 0.7, 3.5, 0, Math.PI * 2);
+            ctx.arc(cx + 5, baseY - h * 0.5, 3.5, 0, Math.PI * 2);
+            ctx.arc(cx, baseY - h * 0.3, 3, 0, Math.PI * 2);
+            ctx.fill();
+            continue;
+          }
+
+          // Stage 5: Regrow / Harvested Stubble
+          if (stage === 5) {
+            ctx.fillStyle = '#2d6a4f';
+            ctx.fillRect(cx - 1, baseY - 10, 2, 10);
+            ctx.fillStyle = '#52b788';
+            ctx.fillRect(cx - 4, baseY - 7, 3, 2);
+            ctx.fillRect(cx + 2, baseY - 7, 3, 2);
+          }
+        }
+      });
+    };
+
+    /**
+     * @asset-spec
+     * @id crop-mango
+     * @external-png assets/sprites/crops/crop_mango.png
+     * @fallback-procedural crop-mango (192x48)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 32x48px (6 stages: 192x48px sheet)
+     * @origin 0.5, 0.9
+     * @frames 6 stages (Seed, Sprout, Young, Flowering, Ripe Mango, Regrow)
+     */
+    makeCropStages('crop-mango', 'Rajshahi Fazli Mango', '#2d6a4f', '#f59e0b', true);
+
+    /**
+     * @asset-spec
+     * @id crop-tea
+     * @external-png assets/sprites/crops/crop_tea.png
+     * @fallback-procedural crop-tea (192x48)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 32x48px (6 stages: 192x48px sheet)
+     * @origin 0.5, 0.9
+     * @frames 6 stages (Seed, Sprout, Young, Flush, Prime Harvest, Pruned)
+     */
+    makeCropStages('crop-tea', 'Sylhet Camellia Tea Bush', '#1b4332', '#86efac', false);
+
+    /**
+     * @asset-spec
+     * @id crop-jute
+     * @external-png assets/sprites/crops/crop_jute.png
+     * @fallback-procedural crop-jute (192x48)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 32x48px (6 stages: 192x48px sheet)
+     * @origin 0.5, 0.9
+     * @frames 6 stages (Seed, Shoot, Mid Cane, Tall Stalk, Golden Mature, Stubble)
+     */
+    makeCropStages('crop-jute', 'Golden Valley Jute', '#4d7c0f', '#ca8a04', true);
+
+    /**
+     * @asset-spec
+     * @id crop-beli
+     * @external-png assets/sprites/crops/crop_beli.png
+     * @fallback-procedural crop-beli (192x48)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 32x48px (6 stages: 192x48px sheet)
+     * @origin 0.5, 0.9
+     * @frames 6 stages (Seed, Sprout, Budding, White Flower, Full Blossom, Harvested)
+     */
+    makeCropStages('crop-beli', 'Curzon Beli Garland Bloom', '#15803d', '#ffffff', false);
+
+    /**
+     * @asset-spec
+     * @id crop-naga
+     * @external-png assets/sprites/crops/crop_naga.png
+     * @fallback-procedural crop-naga (192x48)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 32x48px (6 stages: 192x48px sheet)
+     * @origin 0.5, 0.9
+     * @frames 6 stages (Seed, Sprout, Green Plant, White Flower, Crimson Chili, Regrow)
+     */
+    makeCropStages('crop-naga', 'Sreemangal Naga Fire Chili', '#166534', '#ef4444', false);
+
+    /**
+     * @asset-spec
+     * @id crop-spirit-melon
+     * @external-png assets/sprites/crops/crop_spirit_melon.png
+     * @fallback-procedural crop-spirit-melon (192x48)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 32x48px (6 stages: 192x48px sheet)
+     * @origin 0.5, 0.9
+     * @frames 6 stages (Spore, Sprout, Glowing Vine, Young Gourd, Ripe Spirit Melon, Harvested)
+     */
+    makeCropStages('crop-spirit-melon', 'Whispering Spirit Melon', '#0f766e', '#2dd4bf', false);
+
+    /**
+     * @asset-spec
+     * @id crop-star-berry
+     * @external-png assets/sprites/crops/crop_star_berry.png
+     * @fallback-procedural crop-star-berry (192x48)
+     * @grid-footprint 1x1 tile (32x32px unit)
+     * @visual-size 32x48px (6 stages: 192x48px sheet)
+     * @origin 0.5, 0.9
+     * @frames 6 stages (Seed, Ice Shoot, Frost Vine, Blue Blossom, Luminous Star Berry, Regrow)
+     */
+    makeCropStages('crop-star-berry', 'Cryo Star Berry', '#1e40af', '#60a5fa', false);
+
+    // Slice 16 frames for autotile sheets and crops if scene is available
+    if (scene && scene.textures) {
+      const slice16Frames = (key: string) => {
+        const tex = scene.textures.get(key);
+        if (!tex) return;
+        for (let mask = 0; mask < 16; mask++) {
+          const col = mask % 4;
+          const row = Math.floor(mask / 4);
+          const frameKey = `${key}-${mask}`;
+          if (!tex.has(frameKey)) {
+            tex.add(frameKey, 0, col * 32, row * 32, 32, 32);
+          }
+        }
+      };
+      slice16Frames('autotile-stone-path');
+      slice16Frames('autotile-farm-soil');
+
+      // Slice 6 growth stage frames for each crop
+      const crops = ['crop-mango', 'crop-tea', 'crop-jute', 'crop-beli', 'crop-naga', 'crop-spirit-melon', 'crop-star-berry'];
+      crops.forEach(ck => {
+        const tex = scene.textures.get(ck);
+        if (!tex) return;
+        for (let st = 0; st < 6; st++) {
+          const frameKey = `${ck}-${st}`;
+          if (!tex.has(frameKey)) {
+            tex.add(frameKey, 0, st * 32, 0, 32, 48);
+          }
+        }
+      });
+    }
 
   }
 }
+

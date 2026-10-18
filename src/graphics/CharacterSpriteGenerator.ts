@@ -3,7 +3,17 @@
 
 export class CharacterSpriteGenerator {
   static generate(scene: any, makeTex: (key: string, w: number, h: number, drawFn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void) => void) {
-      // --- Moon Walker & Totoro Sprites ---
+    // --- Moon Walker & Totoro Sprites ---
+    /**
+     * @asset-spec
+     * @id player
+     * @external-png assets/sprites/characters/moon_walker.png
+     * @fallback-procedural player-0 (48x56)
+     * @grid-footprint 1x1 tile (20x14px solid foot collision)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     [0, 1].forEach(step => {
       makeTex(`player-${step}`, 48, 56, ctx => {
         const bob = step === 1 ? -1.5 : 0;
@@ -246,6 +256,16 @@ export class CharacterSpriteGenerator {
         ctx.fill();
       });
 
+      /**
+       * @asset-spec
+       * @id totoro
+       * @external-png assets/sprites/characters/totoro.png
+       * @fallback-procedural totoro-0 (68x76)
+       * @grid-footprint 2x1 tiles (58x26px base shadow collision)
+       * @visual-size 64x76px (or 32x38px native upscaled 2x)
+       * @origin 0.5, 0.88
+       * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+       */
       makeTex(`totoro-${step}`, 68, 76, ctx => {
         const bob = step === 1 ? -2 : 0;
         const lFootOff = step === 1 ? -1.8 : 0;
@@ -672,6 +692,16 @@ export class CharacterSpriteGenerator {
       });
     };
 
+    /**
+     * @asset-spec
+     * @id npc-ahona
+     * @external-png assets/sprites/characters/npc_ahona.png
+     * @fallback-procedural npc-ahona (38x62)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeFashionista('npc-ahona', {
       dressShadow: '#831843',
       dressMain:   '#be185d', // Vibrant Crimson-Magenta Jamdani Kurti
@@ -689,6 +719,16 @@ export class CharacterSpriteGenerator {
       heelCol:     '#9f1239'
     });
 
+    /**
+     * @asset-spec
+     * @id npc-apshora
+     * @external-png assets/sprites/characters/npc_apshora.png
+     * @fallback-procedural npc-apshora (38x62)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeFashionista('npc-apshora', {
       dressShadow: '#3b0764',
       dressMain:   '#6b21a8', // Royal Violet Silk Kameez
@@ -1502,12 +1542,88 @@ export class CharacterSpriteGenerator {
     };
 
     // Vendors & Story Characters (Dhaka Valley)
+    /**
+     * @asset-spec
+     * @id npc-tea
+     * @external-png assets/sprites/characters/npc_tea_vendor.png
+     * @fallback-procedural npc-tea (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-tea',      '#c96551', '#3b2416', '#f5e1c0', 'tea');
+
+    /**
+     * @asset-spec
+     * @id npc-fuchka
+     * @external-png assets/sprites/characters/npc_fuchka_vendor.png
+     * @fallback-procedural npc-fuchka (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-fuchka',   '#2d8a56', '#241d1d', '#f7cb45', 'fuchka');
+
+    /**
+     * @asset-spec
+     * @id npc-books
+     * @external-png assets/sprites/characters/npc_book_vendor.png
+     * @fallback-procedural npc-books (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-books',    '#3b6e8c', '#4a2e1b', '#e6d3b8', 'books');
+
+    /**
+     * @asset-spec
+     * @id npc-guitar
+     * @external-png assets/sprites/characters/npc_guitar_player.png
+     * @fallback-procedural npc-guitar (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-guitar',   '#7e57c2', '#1c1924', '#f4a9c0', 'guitar');
+
+    /**
+     * @asset-spec
+     * @id npc-artist
+     * @external-png assets/sprites/characters/npc_charukola_artist.png
+     * @fallback-procedural npc-artist (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-artist',   '#d97757', '#2b5876', '#f7cb45', 'artist');
+
+    /**
+     * @asset-spec
+     * @id npc-doi
+     * @external-png assets/sprites/characters/npc_doi_vendor.png
+     * @fallback-procedural npc-doi (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-doi',      '#c28b38', '#4a2e1b', '#fff5de', 'doi');
+
+    /**
+     * @asset-spec
+     * @id npc-phulwali
+     * @external-png assets/sprites/characters/npc_phulwali.png
+     * @fallback-procedural npc-phulwali (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-phulwali', '#d45779', '#2b1912', '#fff3a1', 'phulwali');
 
     // --- Animated Nilkhet Bookstall (3 Frames: -0, -1, -2 with Flickering Edison Bulbs) ---
@@ -1831,6 +1947,16 @@ export class CharacterSpriteGenerator {
       });
     });
 
+    /**
+     * @asset-spec
+     * @id npc-rakin
+     * @external-png assets/sprites/characters/npc_rakin.png
+     * @fallback-procedural npc-rakin (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeTex('npc-rakin', 52, 58, ctx => {
       const tex = scene.textures.get('npc-rakin-0');
       if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
@@ -1844,13 +1970,77 @@ export class CharacterSpriteGenerator {
     makeWalkerNPC('npc-jogger',   '#e11d48', '#271610', '#fb7185', 'jogger');   // Tania (Dhanmondi Jogger)
 
     // Dedicated Realm Guardians & Guides (Worlds 2 to 6)
+    /**
+     * @asset-spec
+     * @id npc-sage
+     * @external-png assets/sprites/characters/npc_sage.png
+     * @fallback-procedural npc-sage (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-sage',       '#166534', '#e2e8f0', '#4ade80', 'sage');       // Elder Banyan Sage
+
+    /**
+     * @asset-spec
+     * @id npc-marina
+     * @external-png assets/sprites/characters/npc_marina.png
+     * @fallback-procedural npc-marina (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-marina',     '#0d9488', '#5eead4', '#f43f5e', 'marina');     // Tidekeeper Marina
+
+    /**
+     * @asset-spec
+     * @id npc-kael
+     * @external-png assets/sprites/characters/npc_kael.png
+     * @fallback-procedural npc-kael (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-kael',       '#451a03', '#c2410c', '#f97316', 'kael');       // Master Blacksmith Kael
+
+    /**
+     * @asset-spec
+     * @id npc-lyra
+     * @external-png assets/sprites/characters/npc_lyra.png
+     * @fallback-procedural npc-lyra (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-lyra',       '#1e1b4b', '#93c5fd', '#facc15', 'lyra');       // Astronomer Lyra
+
+    /**
+     * @asset-spec
+     * @id npc-chronicler
+     * @external-png assets/sprites/characters/npc_chronicler.png
+     * @fallback-procedural npc-chronicler (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     makeWalkerNPC('npc-chronicler', '#581c87', '#e9d5ff', '#fde047', 'chronicler'); // Celestial Chronicler
 
     // Dedicated Sprite for Anamika (Moon Walker's Bestie & Star Kebab Partner: 4-Frame Walk)
+    /**
+     * @asset-spec
+     * @id npc-anamika
+     * @external-png assets/sprites/characters/npc_anamika.png
+     * @fallback-procedural npc-anamika (52x58)
+     * @grid-footprint 1x1 tile (20x14px foot collision base)
+     * @visual-size 32x48px (or 16x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up
+     */
     [0, 1, 2, 3].forEach(step => {
       makeTex(`npc-anamika-${step}`, 52, 58, ctx => {
         const bob = (step === 1 || step === 3) ? -1.8 : 0;

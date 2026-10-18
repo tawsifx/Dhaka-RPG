@@ -34,7 +34,7 @@ export class TextureGenerator {
     const makeTex = this.createMakeTex(scene);
 
     console.log('🎨 [TextureGenerator] Generating ground & terrain tilesets...');
-    GroundTileGenerator.generate(makeTex);
+    GroundTileGenerator.generate(makeTex, scene);
 
     console.log('🎨 [TextureGenerator] Generating characters & NPC sprites...');
     CharacterSpriteGenerator.generate(scene, makeTex);

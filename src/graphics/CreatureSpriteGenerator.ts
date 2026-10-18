@@ -5,6 +5,16 @@ export class CreatureSpriteGenerator {
   static generate(makeTex: (key: string, w: number, h: number, drawFn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void) => void) {
     // --- Portals, Enemies & Guardian Bosses ---
     // --- Animated Interdimensional Realm Fracture Portals (3 Frames: -0, -1, -2 for Swirling Vortex) ---
+    /**
+     * @asset-spec
+     * @id prop-portal
+     * @external-png assets/sprites/landmarks/realm_portal.png
+     * @fallback-procedural prop-portal-0 (112x128)
+     * @grid-footprint 4x4 tiles (64x32px base threshold)
+     * @visual-size 112x128px (or 56x64px native pixel art upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 3 horizontal frames (swirling interdimensional vortex)
+     */
     [0, 1, 2].forEach(frame => {
       makeTex(`prop-portal-${frame}`, 112, 128, (ctx, cw, ch) => {
         const W = 112, H = 128;
@@ -98,6 +108,16 @@ export class CreatureSpriteGenerator {
     };
 
     // 1. World 2 Enemy: Briar Bogling (Mossy Forest Imp with Sprouting Mushroom Cap & Thorny Vines)
+    /**
+     * @asset-spec
+     * @id enemy-slime
+     * @external-png assets/sprites/enemies/briar_bogling.png
+     * @fallback-procedural enemy-slime (54x54)
+     * @grid-footprint 2x2 tiles (48x38px base collision)
+     * @visual-size 64x64px (or 32x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 2 horizontal frames (squash-and-stretch hopping)
+     */
     makeAnimCreature('enemy-slime', 54, 54, (ctx, w, h, f) => {
       const cx = 27, squash = f === 1 ? 2.5 : 0;
       ctx.fillStyle = 'rgba(10, 18, 12, 0.32)';
@@ -139,6 +159,16 @@ export class CreatureSpriteGenerator {
     });
 
     // 2. World 3 Enemy: Tidepool Crabler (Armored Hermit-Carapace Crab with Snapping Pincers)
+    /**
+     * @asset-spec
+     * @id enemy-crab
+     * @external-png assets/sprites/enemies/tidepool_crabler.png
+     * @fallback-procedural enemy-crab (58x52)
+     * @grid-footprint 2x2 tiles (48x38px base collision)
+     * @visual-size 64x64px (or 32x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 2 horizontal frames (side scuttle with pincers)
+     */
     makeAnimCreature('enemy-crab', 58, 52, (ctx, w, h, f) => {
       const cx = 29, scuttle = f === 1 ? 2.5 : -2.5;
       const pinch = f === 1 ? 3 : 0;
@@ -200,6 +230,16 @@ export class CreatureSpriteGenerator {
     });
 
     // 3. World 4 Enemy: Cinder Hound (Armored Magma Wolf with Flaming Mane & Tail)
+    /**
+     * @asset-spec
+     * @id enemy-wisp
+     * @external-png assets/sprites/enemies/cinder_hound.png
+     * @fallback-procedural enemy-wisp (58x54)
+     * @grid-footprint 2x2 tiles (48x38px base collision)
+     * @visual-size 64x64px (or 32x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 2 horizontal frames (magma hound prowling stride)
+     */
     makeAnimCreature('enemy-wisp', 58, 54, (ctx, w, h, f) => {
       const cx = 29, bound = f === 1 ? -2.5 : 1.5;
       const stride = f === 1 ? 4 : -2;
@@ -269,6 +309,16 @@ export class CreatureSpriteGenerator {
     });
 
     // 4. World 5 & 6 Enemy: Glacier / Void Wraith (Cloaked Spectral Phantom with Scythe Claws & Lantern)
+    /**
+     * @asset-spec
+     * @id enemy-wraith
+     * @external-png assets/sprites/enemies/glacier_wraith.png
+     * @fallback-procedural enemy-wraith (56x60)
+     * @grid-footprint 2x2 tiles (48x38px base collision)
+     * @visual-size 64x64px (or 32x32px native upscaled 2x)
+     * @origin 0.5, 0.88
+     * @frames 2 horizontal frames (spectral hovering with scythe claws)
+     */
     makeAnimCreature('enemy-wraith', 56, 60, (ctx, w, h, f) => {
       const cx = 28, hover = f === 1 ? -3 : 1;
       const sway = f === 1 ? 2.5 : -2.5;
@@ -325,6 +375,16 @@ export class CreatureSpriteGenerator {
     // ================= 5 GUARDIAN BOSSES (Detailed 2-Frame Animated Boss Sprites) =================
 
     // BOSS 1 (World 2): Sylvan Briar Stag (Majestic Emerald-Antlered Forest Guardian)
+    /**
+     * @asset-spec
+     * @id boss-stag
+     * @external-png assets/sprites/bosses/sylvan_briar_stag.png
+     * @fallback-procedural boss-stag (112x112)
+     * @grid-footprint 4x4 tiles (112x80px solid collision base)
+     * @visual-size 128x128px (or 64x64px native upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 2 horizontal frames (regal guardian breathing & hoof stomping)
+     */
     makeAnimCreature('boss-stag', 112, 112, (ctx, w, h, f) => {
       const cx = 56, bob = f === 1 ? -2.5 : 0;
       const legShift = f === 1 ? 3.5 : -2.5;
@@ -391,6 +451,16 @@ export class CreatureSpriteGenerator {
     });
 
     // BOSS 2 (World 3): Abyssal Coral Leviathan (Coiled Sea-Serpent with Bioluminescent Fin-Frills)
+    /**
+     * @asset-spec
+     * @id boss-leviathan
+     * @external-png assets/sprites/bosses/abyssal_coral_leviathan.png
+     * @fallback-procedural boss-leviathan (112x112)
+     * @grid-footprint 4x4 tiles (112x80px solid collision base)
+     * @visual-size 128x128px (or 64x64px native upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 2 horizontal frames (undulating aquatic coils & fin ripple)
+     */
     makeAnimCreature('boss-leviathan', 112, 112, (ctx, w, h, f) => {
       const cx = 56, wave = f === 1 ? 3 : -3;
 
@@ -456,6 +526,16 @@ export class CreatureSpriteGenerator {
     });
 
     // BOSS 3 (World 4): Ignis, the Magma Drake (Winged Volcanic Dragon with Molten Chest Core)
+    /**
+     * @asset-spec
+     * @id boss-drake
+     * @external-png assets/sprites/bosses/ignis_magma_drake.png
+     * @fallback-procedural boss-drake (118x114)
+     * @grid-footprint 4x4 tiles (112x80px solid collision base)
+     * @visual-size 128x128px (or 64x64px native upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 2 horizontal frames (heavy wing beat & magma flare)
+     */
     makeAnimCreature('boss-drake', 118, 114, (ctx, w, h, f) => {
       const cx = 59, hover = f === 1 ? -4 : 1;
       const wingY = f === 1 ? 12 : 34;
@@ -534,6 +614,16 @@ export class CreatureSpriteGenerator {
     });
 
     // BOSS 4 (World 5): Cryon, Warden of Eternal Frost (Colossal Permafrost Ice Golem with Floating Pauldrons)
+    /**
+     * @asset-spec
+     * @id boss-warden
+     * @external-png assets/sprites/bosses/cryon_frost_warden.png
+     * @fallback-procedural boss-warden (114x114)
+     * @grid-footprint 4x4 tiles (112x80px solid collision base)
+     * @visual-size 128x128px (or 64x64px native upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 2 horizontal frames (glacial stomp & shield slam)
+     */
     makeAnimCreature('boss-warden', 114, 114, (ctx, w, h, f) => {
       const cx = 57, pulse = f === 1 ? -3 : 1;
       const armBob = f === 1 ? -4 : 3;
@@ -604,6 +694,16 @@ export class CreatureSpriteGenerator {
     });
 
     // BOSS 5 (World 6 Final Boss): Chrono-Fracture Archon (6-Winged Celestial Seraph & Clockwork Halo)
+    /**
+     * @asset-spec
+     * @id boss-archon
+     * @external-png assets/sprites/bosses/chrono_fracture_archon.png
+     * @fallback-procedural boss-archon (124x120)
+     * @grid-footprint 4x4 tiles (112x80px solid collision base)
+     * @visual-size 128x128px (or 64x64px native upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 2 horizontal frames (astral ring rotation & seraph wing spread)
+     */
     makeAnimCreature('boss-archon', 124, 120, (ctx, w, h, f) => {
       const cx = 62, floatY = f === 1 ? -4 : 1;
       const wingSpread = f === 1 ? 5 : 0;
@@ -1664,6 +1764,16 @@ export class CreatureSpriteGenerator {
     // =========================================================================
 
     // 1. Traditional Red Timber Barn (prop-farm-barn: 196 x 140 px)
+    /**
+     * @asset-spec
+     * @id prop-farm-barn
+     * @external-png assets/sprites/landmarks/farm_barn.png
+     * @fallback-procedural prop-farm-barn (196x140)
+     * @grid-footprint 6x5 tiles (192x80px solid collision base)
+     * @visual-size 196x140px (or 98x70px native pixel art upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 1 static timber barn with sliding hay door
+     */
     makeTex('prop-farm-barn', 196, 140, (ctx, W, H) => {
       // Ground Shadow
       ctx.fillStyle = 'rgba(12, 18, 10, 0.32)';
@@ -1737,6 +1847,16 @@ export class CreatureSpriteGenerator {
     });
 
     // 2. Grain Silo (prop-farm-silo: 64 x 130 px)
+    /**
+     * @asset-spec
+     * @id prop-farm-silo
+     * @external-png assets/sprites/landmarks/farm_silo.png
+     * @fallback-procedural prop-farm-silo (64x130)
+     * @grid-footprint 2x4 tiles (64x48px solid collision base)
+     * @visual-size 64x130px (or 32x65px native pixel art upscaled 2x)
+     * @origin 0.5, 0.9
+     * @frames 1 static grain storage silo
+     */
     makeTex('prop-farm-silo', 64, 130, (ctx, W, H) => {
       // Shadow
       ctx.fillStyle = 'rgba(12, 18, 10, 0.28)';
@@ -1796,6 +1916,16 @@ export class CreatureSpriteGenerator {
     });
 
     // 3A. Grand Rustic Farmhouse Timber Archway & Gateway (prop-farm-arch: 192 x 128 px)
+    /**
+     * @asset-spec
+     * @id prop-farm-arch
+     * @external-png assets/sprites/landmarks/farm_archway.png
+     * @fallback-procedural prop-farm-arch (192x128)
+     * @grid-footprint 6x4 tiles (192x32px base threshold with center road opening)
+     * @visual-size 192x128px (or 96x64px native pixel art upscaled 2x)
+     * @origin 0.5, 0.95
+     * @frames 1 spanning entrance arch with hanging lanterns
+     */
     makeTex('prop-farm-arch', 192, 128, (ctx, W, H) => {
       // 1. Soft Ground Shadows under Stone Bases and Swing Gates
       ctx.fillStyle = 'rgba(12, 18, 10, 0.32)';
