@@ -545,6 +545,294 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       styleSearchTags: ['celestial chronicler', 'starlight archivist', 'astral entity', 'floating cosmic sage']
     }
   },
+  'npc-guitar': {
+    id: 'npc-guitar',
+    name: 'TSC Acoustic Singer (Guitarist)',
+    category: 'character',
+    description: 'Charming campus musician in denim jacket strumming acoustic melodies by TSC.',
+    externalPath: 'assets/sprites/characters/npc_guitarist.png',
+    fallbackProceduralKey: 'npc-guitar',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['acoustic singer', 'campus guitarist', 'denim jacket student', 'pixel art musician']
+    }
+  },
+  'npc-artist': {
+    id: 'npc-artist',
+    name: 'Charukola Clay Artist',
+    category: 'character',
+    description: 'Artisan sculpting terracotta pottery and painting traditional folk motifs.',
+    externalPath: 'assets/sprites/characters/npc_clay_artist.png',
+    fallbackProceduralKey: 'npc-artist',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['clay sculptor', 'terracotta artisan', 'Charukola painter', 'fine arts student']
+    }
+  },
+  'npc-doi': {
+    id: 'npc-doi',
+    name: 'Pabnar Mishti Doi Vendor',
+    category: 'character',
+    description: 'Friendly vendor serving sweet chilled Bogurar and Pabnar clay-pot yogurt.',
+    externalPath: 'assets/sprites/characters/npc_doi_vendor.png',
+    fallbackProceduralKey: 'npc-doi',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['mishti doi vendor', 'sweet yogurt seller', 'Dhaka traditional dessert master']
+    }
+  },
+  'npc-salat': {
+    id: 'npc-salat',
+    name: 'Salat (Fountain Plaza Resident)',
+    category: 'character',
+    description: 'Thoughtful young woman waiting near the Mintu Road fountain plaza.',
+    externalPath: 'assets/sprites/characters/npc_salat.png',
+    fallbackProceduralKey: 'npc-salat',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['townsperson girl', 'fountain plaza resident', 'student female RPG']
+    }
+  },
+  'npc-enan': {
+    id: 'npc-enan',
+    name: 'Enan (Tech Professional)',
+    category: 'character',
+    description: 'Busy young professional balancing smartphone notifications and campus strolls.',
+    externalPath: 'assets/sprites/characters/npc_enan.png',
+    fallbackProceduralKey: 'npc-enan',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['young professional', 'smartphone tech boy', 'campus male RPG']
+    }
+  },
+  'npc-ananya-ghost': {
+    id: 'npc-ananya-ghost',
+    name: 'Ananya (Weeping Petni Ghost)',
+    category: 'character',
+    description: 'Sorrowful spirit floating among the ancient banyans of the Whispering Emerald Forest.',
+    externalPath: 'assets/sprites/characters/npc_ananya_ghost.png',
+    fallbackProceduralKey: 'npc-ananya-ghost',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Floating spirit walk cycle',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['petni ghost', 'spirit maiden', 'spectral girl', 'white floating ghost']
+    }
+  },
+  'npc-kofil-ghost': {
+    id: 'npc-kofil-ghost',
+    name: 'Kofil Chacha (Phantom Rickshaw Puller)',
+    category: 'character',
+    description: 'Faithful spirit rickshaw puller navigating the marsh pathways of the Emerald Forest.',
+    externalPath: 'assets/sprites/characters/npc_kofil_ghost.png',
+    fallbackProceduralKey: 'npc-kofil-ghost',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['phantom rickshaw puller', 'spirit boatman', 'gamcha elder ghost']
+    }
+  },
+  'npc-shamsher-investigator': {
+    id: 'npc-shamsher-investigator',
+    name: 'Prof. Shamsher (Occult Investigator)',
+    category: 'character',
+    description: 'Dhaka University paranormal researcher tracking electromagnetic anomalies and the Nishi.',
+    externalPath: 'assets/sprites/characters/npc_shamsher.png',
+    fallbackProceduralKey: 'npc-shamsher-investigator',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['occult investigator', 'paranormal researcher', 'trench coat scientist']
+    }
+  },
+  'npc-walker1': {
+    id: 'npc-walker1',
+    name: 'Arif (DU Physics Senior)',
+    category: 'character',
+    description: 'Physics undergraduate strolling along Fuller Road with notebooks and lab gear.',
+    externalPath: 'assets/sprites/characters/npc_walker1.png',
+    fallbackProceduralKey: 'npc-walker1',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['university student male', 'campus walker', 'physics senior']
+    }
+  },
+  'npc-walker2': {
+    id: 'npc-walker2',
+    name: 'Nadia (Charukola Sketcher)',
+    category: 'character',
+    description: 'Enthusiastic fine arts student sketching campus landmarks in charcoal and watercolor.',
+    externalPath: 'assets/sprites/characters/npc_walker2.png',
+    fallbackProceduralKey: 'npc-walker2',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['sketcher girl', 'artist student', 'beret sketchpad female']
+    }
+  },
+  'npc-walker3': {
+    id: 'npc-walker3',
+    name: 'Baki Bhai (Nilkhet Poet)',
+    category: 'character',
+    description: 'Contemplative poet carrying vintage verse manuscripts through Nilkhet and Curzon.',
+    externalPath: 'assets/sprites/characters/npc_walker3.png',
+    fallbackProceduralKey: 'npc-walker3',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['nilkhet poet', 'intellectual scholar', 'panjabi kurti poet']
+    }
+  },
+  'npc-photo': {
+    id: 'npc-photo',
+    name: 'Sami (Street Photographer)',
+    category: 'character',
+    description: 'Dhaka street photographer capturing candid portraits of campus life and lovers.',
+    externalPath: 'assets/sprites/characters/npc_photo.png',
+    fallbackProceduralKey: 'npc-photo',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['street photographer', 'cameraman NPC', 'camera around neck']
+    }
+  },
+  'npc-jogger': {
+    id: 'npc-jogger',
+    name: 'Tania (Dhanmondi Jogger)',
+    category: 'character',
+    description: 'Athletic jogger doing morning laps along the Dhanmondi Lake wooden pier.',
+    externalPath: 'assets/sprites/characters/npc_jogger.png',
+    fallbackProceduralKey: 'npc-jogger',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['athletic jogger', 'tracksuit runner', 'pier jogger']
+    }
+  },
+  'npc-prof-satyendra': {
+    id: 'npc-prof-satyendra',
+    name: 'Prof. Satyendra (Physics Chair)',
+    category: 'character',
+    description: 'Distinguished physicist lecturing on quantum statistics in Curzon Hall Bose Lab.',
+    externalPath: 'assets/sprites/characters/npc_prof_satyendra.png',
+    fallbackProceduralKey: 'npc-prof-satyendra',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['physics professor', 'bose statistics', 'academic chair']
+    }
+  },
+  'npc-student-faiza': {
+    id: 'npc-student-faiza',
+    name: 'Faiza (Physics Undergrad)',
+    category: 'character',
+    description: 'Dedicated student verifying quantum optics experiments in Curzon Hall.',
+    externalPath: 'assets/sprites/characters/npc_student_faiza.png',
+    fallbackProceduralKey: 'npc-student-faiza',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['undergrad student female', 'curzon lab student', 'lab coat scholar']
+    }
+  },
+  'npc-prof-sultana': {
+    id: 'npc-prof-sultana',
+    name: 'Prof. Sultana (Botany Chair)',
+    category: 'character',
+    description: 'Renowned botanist cataloguing endemic medicinal flora in the Curzon Hall Herbarium.',
+    externalPath: 'assets/sprites/characters/npc_prof_sultana.png',
+    fallbackProceduralKey: 'npc-prof-sultana',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['botany professor', 'herbarium curator', 'elder academic female']
+    }
+  },
+  'npc-dr-kabir': {
+    id: 'npc-dr-kabir',
+    name: 'Dr. Kabir (Chemistry Master)',
+    category: 'character',
+    description: 'Polymer chemistry researcher distilling rare botanical alkaloids in Curzon Hall.',
+    externalPath: 'assets/sprites/characters/npc_dr_kabir.png',
+    fallbackProceduralKey: 'npc-dr-kabir',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['chemistry researcher', 'lab scientist', 'alkaloid distiller']
+    }
+  },
+  'npc-student-tanvir': {
+    id: 'npc-student-tanvir',
+    name: 'Tanvir (Biochemistry Student)',
+    category: 'character',
+    description: 'Diligent researcher running chromatography columns and brewing caffeine extracts.',
+    externalPath: 'assets/sprites/characters/npc_student_tanvir.png',
+    fallbackProceduralKey: 'npc-student-tanvir',
+    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 32, height: 48 },
+      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
+      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
+      origin: { x: 0.5, y: 0.88 },
+      styleSearchTags: ['biochemistry student', 'lab technician', 'chromatography scholar']
+    }
+  },
 
   // =========================================================================
   // 3. CROPS & FLORA ('crop')

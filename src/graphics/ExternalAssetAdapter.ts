@@ -25,8 +25,8 @@ export class ExternalAssetAdapter {
 
     for (const [id, spec] of Object.entries(ASSET_SPECS_MANIFEST)) {
       if (!spec.externalPath) continue;
-      // Do not duplicate load if already in queue or exists
-      if (!scene.textures.exists(id) && !scene.textures.exists(`ext-${id}`)) {
+      // Do not duplicate load if already loaded in this scene
+      if (!scene.textures.exists(`ext-${id}`)) {
         scene.load.image(`ext-${id}`, spec.externalPath);
       }
     }
@@ -139,6 +139,7 @@ export class ExternalAssetAdapter {
 
     const dirNames = ['down', 'left', 'right', 'up'];
 
+    // 1. Slice directional frames and register directional walk/idle anims
     for (let r = 0; r < rows; r++) {
       const dir = dirNames[r] || `row-${r}`;
       const animFrames: Phaser.Types.Animations.AnimationFrame[] = [];
@@ -156,36 +157,112 @@ export class ExternalAssetAdapter {
 
       // Create walk cycle animation
       const walkAnimKey = `${id}-walk-${dir}`;
-      if (!scene.anims.exists(walkAnimKey)) {
-        scene.anims.create({
-          key: walkAnimKey,
-          frames: animFrames,
-          frameRate: 6,
-          repeat: -1
-        });
-      }
+      if (scene.anims.exists(walkAnimKey)) scene.anims.remove(walkAnimKey);
+      scene.anims.create({
+        key: walkAnimKey,
+        frames: animFrames,
+        frameRate: 6,
+        repeat: -1
+      });
 
       // First frame of each row is that direction's idle frame
       const idleAnimKey = `${id}-idle-${dir}`;
-      if (!scene.anims.exists(idleAnimKey)) {
-        scene.anims.create({
-          key: idleAnimKey,
-          frames: [animFrames[0]],
-          frameRate: 1,
-          repeat: 0
-        });
+      if (scene.anims.exists(idleAnimKey)) scene.anims.remove(idleAnimKey);
+      scene.anims.create({
+        key: idleAnimKey,
+        frames: [animFrames[0]],
+        frameRate: 1,
+        repeat: 0
+      });
+    }
+
+    // 2. Extract individual frame textures ${id}-0, ${id}-1, ${id}-2, ${id}-3 from Row 0 (Down)
+    // and alias ${id} to ${id}-0 for seamless scene backwards compatibility
+    for (let c = 0; c < cols; c++) {
+      const frameTexKey = `${id}-${c}`;
+      let fCanvas: any = scene.textures.exists(frameTexKey)
+        ? scene.textures.get(frameTexKey)
+        : scene.textures.createCanvas(frameTexKey, frameW, frameH);
+
+      if (fCanvas && fCanvas.getContext) {
+        const fCtx = fCanvas.getContext();
+        fCtx.clearRect(0, 0, frameW, frameH);
+        fCtx.imageSmoothingEnabled = false;
+        fCtx.drawImage(img, c * frameW, 0, frameW, frameH, 0, 0, frameW, frameH);
+        fCanvas.refresh();
       }
     }
 
-    // Default global idle animation
-    if (!scene.anims.exists(`${id}-idle`)) {
+    // 3. Register standard walk animation anim-${id} used by getOrCreateWalkAnim
+    const standardAnimKey = `anim-${id}`;
+    if (scene.anims.exists(standardAnimKey)) scene.anims.remove(standardAnimKey);
+    scene.anims.create({
+      key: standardAnimKey,
+      frames: [
+        { key: `${id}-0` },
+        { key: `${id}-1` },
+        { key: `${id}-0` },
+        { key: `${id}-3` }
+      ],
+      frameRate: 5,
+      repeat: -1
+    });
+
+    // 4. Player & Totoro specific walk animation bindings
+    if (id === 'player') {
+      if (scene.anims.exists('player-walk')) scene.anims.remove('player-walk');
       scene.anims.create({
-        key: `${id}-idle`,
-        frames: [{ key: texKey, frame: `${id}-down-0` }],
+        key: 'player-walk',
+        frames: [
+          { key: 'player-0' },
+          { key: 'player-1' },
+          { key: 'player-0' },
+          { key: 'player-3' }
+        ],
+        frameRate: 6,
+        repeat: -1
+      });
+
+      if (scene.anims.exists('player-idle')) scene.anims.remove('player-idle');
+      scene.anims.create({
+        key: 'player-idle',
+        frames: [{ key: 'player-0' }],
         frameRate: 1,
         repeat: -1
       });
     }
+
+    if (id === 'totoro') {
+      if (scene.anims.exists('totoro-walk')) scene.anims.remove('totoro-walk');
+      scene.anims.create({
+        key: 'totoro-walk',
+        frames: [
+          { key: 'totoro-0' },
+          { key: 'totoro-1' },
+          { key: 'totoro-0' },
+          { key: 'totoro-3' }
+        ],
+        frameRate: 4,
+        repeat: -1
+      });
+
+      if (scene.anims.exists('totoro-idle')) scene.anims.remove('totoro-idle');
+      scene.anims.create({
+        key: 'totoro-idle',
+        frames: [{ key: 'totoro-0' }],
+        frameRate: 1,
+        repeat: -1
+      });
+    }
+
+    // Default global idle animation
+    if (scene.anims.exists(`${id}-idle`)) scene.anims.remove(`${id}-idle`);
+    scene.anims.create({
+      key: `${id}-idle`,
+      frames: [{ key: `${id}-0` }],
+      frameRate: 1,
+      repeat: -1
+    });
 
     console.log(`🏃 [ExternalAssetAdapter] Sliced & registered 4-directional animations for "${id}".`);
   }
@@ -238,7 +315,7 @@ export class ExternalAssetAdapter {
    * Helper to create a texture alias in Phaser's TextureManager
    */
   private static createTextureAlias(scene: Phaser.Scene, targetKey: string, sourceKey: string): void {
-    if (targetKey === sourceKey || scene.textures.exists(targetKey)) return;
+    if (targetKey === sourceKey) return;
 
     const sourceTex = scene.textures.get(sourceKey);
     if (!sourceTex) return;
@@ -246,10 +323,14 @@ export class ExternalAssetAdapter {
     const img = sourceTex.getSourceImage();
     if (!img) return;
 
-    const canvas = scene.textures.createCanvas(targetKey, img.width, img.height);
-    if (canvas) {
+    let canvas: any = scene.textures.exists(targetKey)
+      ? scene.textures.get(targetKey)
+      : scene.textures.createCanvas(targetKey, img.width, img.height);
+
+    if (canvas && canvas.getContext) {
       const ctx = canvas.getContext();
       ctx.imageSmoothingEnabled = false;
+      ctx.clearRect(0, 0, img.width, img.height);
       ctx.drawImage(img as any, 0, 0);
       canvas.refresh();
     }

@@ -223,27 +223,45 @@ When external pixel art is placed into `public/assets/`, `ExternalAssetAdapter` 
 - **AI / Search Tags**: `interior parquet floor`, `red carpet runner`, `Victorian university hall`, `teakwood tile`
 
 
-### Characters & Companions (17 slots)
+### Characters & Companions (35 slots)
 
-| ID / Texture Key | Target PNG Path | Preferred Frame Size | Grid Footprint | Fallback Key | Sheet Layout & Conventions |
-|---|---|---|---|---|---|
-| `player` | `assets/sprites/characters/moon_walker.png` | 32×48 px | 1×1 tiles | `player-0` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up (Frames 0,1,2,3 walk cycle) |
-| `totoro` | `assets/sprites/characters/totoro.png` | 64×76 px | 2×1 tiles | `totoro-0` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up (Heavy waddling step animation) |
-| `npc-ahona` | `assets/sprites/characters/npc_ahona.png` | 32×48 px | 1×1 tiles | `npc-ahona` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-apshora` | `assets/sprites/characters/npc_apshora.png` | 32×48 px | 1×1 tiles | `npc-apshora` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-tea` | `assets/sprites/characters/npc_tea_vendor.png` | 32×48 px | 1×1 tiles | `npc-tea` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-fuchka` | `assets/sprites/characters/npc_fuchka_vendor.png` | 32×48 px | 1×1 tiles | `npc-fuchka` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-books` | `assets/sprites/characters/npc_book_vendor.png` | 32×48 px | 1×1 tiles | `npc-books` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-phulwali` | `assets/sprites/characters/npc_phulwali.png` | 32×48 px | 1×1 tiles | `npc-phulwali` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-rakin` | `assets/sprites/characters/npc_rakin.png` | 32×48 px | 1×1 tiles | `npc-rakin` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-anamika` | `assets/sprites/characters/npc_anamika.png` | 32×48 px | 1×1 tiles | `npc-anamika` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-cat` | `assets/sprites/characters/npc_cat_mimi.png` | 32×32 px | 1×1 tiles | `npc-cat` | 4 cols x 4 rows: Walk cycle in 4 directions + sit idle |
-| `npc-farmer-rafiq` | `assets/sprites/characters/npc_farmer_rafiq.png` | 32×48 px | 1×1 tiles | `npc-farmer-rafiq-0` | 4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up |
-| `npc-sage` | `assets/sprites/characters/npc_sage.png` | 32×48 px | 1×1 tiles | `npc-sage` | 4 cols x 4 rows: 4-directional walk and meditative idle |
-| `npc-marina` | `assets/sprites/characters/npc_marina.png` | 32×48 px | 1×1 tiles | `npc-marina` | 4 cols x 4 rows: 4-directional walk with flowing water hair |
-| `npc-kael` | `assets/sprites/characters/npc_kael.png` | 32×48 px | 1×1 tiles | `npc-kael` | 4 cols x 4 rows: 4-directional walk with hammer swing |
-| `npc-lyra` | `assets/sprites/characters/npc_lyra.png` | 32×48 px | 1×1 tiles | `npc-lyra` | 4 cols x 4 rows: 4-directional walk with fur hood |
-| `npc-chronicler` | `assets/sprites/characters/npc_chronicler.png` | 32×48 px | 1×1 tiles | `npc-chronicler` | 4 cols x 4 rows: Floating celestial aura walk cycle |
+| ID / Texture Key | Target PNG Path | Preferred Frame Size | Grid Footprint | Fallback Key | Sheet Layout & Conventions | Source / Provenance |
+|---|---|---|---|---|---|---|
+| `player` | `assets/sprites/characters/moon_walker.png` | 32×64 px | 1×1 tiles | `player-0` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Studio Ghibli Satsuki Kusakabe (*My Neighbor Totoro*) |
+| `totoro` | `assets/sprites/characters/totoro.png` | 64×76 px | 2×1 tiles | `totoro-0` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Studio Ghibli Totoro (*My Neighbor Totoro*) |
+| `npc-ahona` | `assets/sprites/characters/npc_ahona.png` | 32×64 px | 1×1 tiles | `npc-ahona` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Cooltrainer Female) |
+| `npc-apshora` | `assets/sprites/characters/npc_apshora.png` | 32×64 px | 1×1 tiles | `npc-apshora` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Beauty) |
+| `npc-tea` | `assets/sprites/characters/npc_tea_vendor.png` | 32×64 px | 1×1 tiles | `npc-tea` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Chef / Tea Master) |
+| `npc-fuchka` | `assets/sprites/characters/npc_fuchka_vendor.png` | 32×64 px | 1×1 tiles | `npc-fuchka` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Cook / Fuchkawala) |
+| `npc-books` | `assets/sprites/characters/npc_book_vendor.png` | 32×64 px | 1×1 tiles | `npc-books` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Professor Oak / Scholar) |
+| `npc-phulwali` | `assets/sprites/characters/npc_phulwali.png` | 32×64 px | 1×1 tiles | `npc-phulwali` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Leaf / Flower Maiden) |
+| `npc-rakin` | `assets/sprites/characters/npc_rakin.png` | 32×64 px | 1×1 tiles | `npc-rakin` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Blue / Musician Rival) |
+| `npc-anamika` | `assets/sprites/characters/npc_anamika.png` | 32×64 px | 1×1 tiles | `npc-anamika` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Girl 3 / Bestie Scholar) |
+| `npc-guitar` | `assets/sprites/characters/npc_guitarist.png` | 32×64 px | 1×1 tiles | `npc-guitar` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Cooltrainer Male) |
+| `npc-artist` | `assets/sprites/characters/npc_clay_artist.png` | 32×64 px | 1×1 tiles | `npc-artist` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Artist) |
+| `npc-doi` | `assets/sprites/characters/npc_doi_vendor.png` | 32×64 px | 1×1 tiles | `npc-doi` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Woman 1 / Waitress) |
+| `npc-salat` | `assets/sprites/characters/npc_salat.png` | 32×64 px | 1×1 tiles | `npc-salat` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Girl 1) |
+| `npc-enan` | `assets/sprites/characters/npc_enan.png` | 32×64 px | 1×1 tiles | `npc-enan` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Boy 1) |
+| `npc-farmer-rafiq` | `assets/sprites/characters/npc_farmer_rafiq.png` | 32×64 px | 1×1 tiles | `npc-farmer-rafiq-0` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Old Man 1 / Agrarian Elder) |
+| `npc-sage` | `assets/sprites/characters/npc_sage.png` | 32×64 px | 1×1 tiles | `npc-sage` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Expert Male / Forest Sage) |
+| `npc-marina` | `assets/sprites/characters/npc_marina.png` | 32×64 px | 1×1 tiles | `npc-marina` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Swimmer Female / Ocean Guardian) |
+| `npc-kael` | `assets/sprites/characters/npc_kael.png` | 32×64 px | 1×1 tiles | `npc-kael` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Hiker / Volcanic Blacksmith) |
+| `npc-lyra` | `assets/sprites/characters/npc_lyra.png` | 32×64 px | 1×1 tiles | `npc-lyra` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Hex Maniac / Astronomer) |
+| `npc-chronicler` | `assets/sprites/characters/npc_chronicler.png` | 32×64 px | 1×1 tiles | `npc-chronicler` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Psychic Male / Astral Sage) |
+| `npc-ananya-ghost` | `assets/sprites/characters/npc_ananya_ghost.png` | 32×64 px | 1×1 tiles | `npc-ananya-ghost` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Channeler / Weeping Petni) |
+| `npc-kofil-ghost` | `assets/sprites/characters/npc_kofil_ghost.png` | 32×64 px | 1×1 tiles | `npc-kofil-ghost` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Sailor / Phantom Rickshaw) |
+| `npc-shamsher` | `assets/sprites/characters/npc_shamsher.png` | 32×64 px | 1×1 tiles | `npc-shamsher-investigator` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Scientist 1 / Paranormal Researcher) |
+| `npc-walker1` | `assets/sprites/characters/npc_walker1.png` | 32×64 px | 1×1 tiles | `npc-walker1` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Picnicker / DU Senior) |
+| `npc-walker2` | `assets/sprites/characters/npc_walker2.png` | 32×64 px | 1×1 tiles | `npc-walker2` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Reporter Female / Sketcher) |
+| `npc-walker3` | `assets/sprites/characters/npc_walker3.png` | 32×64 px | 1×1 tiles | `npc-walker3` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Gentleman / Nilkhet Poet) |
+| `npc-photo` | `assets/sprites/characters/npc_photo.png` | 32×64 px | 1×1 tiles | `npc-photo` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Cameraman / Street Photographer) |
+| `npc-jogger` | `assets/sprites/characters/npc_jogger.png` | 32×64 px | 1×1 tiles | `npc-jogger` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Triathlete Female / Jogger) |
+| `npc-prof-satyendra` | `assets/sprites/characters/npc_prof_satyendra.png` | 32×64 px | 1×1 tiles | `npc-prof-satyendra` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Gentleman / Physics Chair) |
+| `npc-student-faiza` | `assets/sprites/characters/npc_student_faiza.png` | 32×64 px | 1×1 tiles | `npc-student-faiza` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Girl 2 / Undergrad) |
+| `npc-prof-sultana` | `assets/sprites/characters/npc_prof_sultana.png` | 32×64 px | 1×1 tiles | `npc-prof-sultana` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Old Woman / Botany Chair) |
+| `npc-dr-kabir` | `assets/sprites/characters/npc_dr_kabir.png` | 32×64 px | 1×1 tiles | `npc-dr-kabir` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Scientist 2 / Chemistry Master) |
+| `npc-student-tanvir` | `assets/sprites/characters/npc_student_tanvir.png` | 32×64 px | 1×1 tiles | `npc-student-tanvir` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Youngster / Biochem Student) |
+| `npc-cat` | `assets/sprites/characters/npc_cat_mimi.png` | 32×32 px | 1×1 tiles | `npc-cat` | 4 cols x 4 rows: Walk cycle in 4 directions + sit idle | Campus Calico Cat (Procedural + Sprite) |
 
 #### Detailed Specifications for Characters & Companions
 

@@ -138,26 +138,32 @@ export class DhakaValleyScene extends Phaser.Scene {
       repeat: -1
     });
 
-    this.anims.create({
-      key: 'player-walk',
-      frames: [{ key: 'player-0' }, { key: 'player-1' }],
-      frameRate: 6,
-      repeat: -1
-    });
+    if (!this.anims.exists('player-walk')) {
+      this.anims.create({
+        key: 'player-walk',
+        frames: [{ key: 'player-0' }, { key: 'player-1' }],
+        frameRate: 6,
+        repeat: -1
+      });
+    }
 
-    this.anims.create({
-      key: 'totoro-walk',
-      frames: [{ key: 'totoro-0' }, { key: 'totoro-1' }],
-      frameRate: 6,
-      repeat: -1
-    });
+    if (!this.anims.exists('totoro-walk')) {
+      this.anims.create({
+        key: 'totoro-walk',
+        frames: [{ key: 'totoro-0' }, { key: 'totoro-1' }],
+        frameRate: 6,
+        repeat: -1
+      });
+    }
 
-    this.anims.create({
-      key: 'totoro-idle',
-      frames: [{ key: 'totoro-0' }, { key: 'totoro-1' }],
-      frameRate: 2,
-      repeat: -1
-    });
+    if (!this.anims.exists('totoro-idle')) {
+      this.anims.create({
+        key: 'totoro-idle',
+        frames: [{ key: 'totoro-0' }, { key: 'totoro-1' }],
+        frameRate: 2,
+        repeat: -1
+      });
+    }
   }
 
   getOrCreateWalkAnim(baseTex, frameRate = 4) {
@@ -1122,7 +1128,9 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // Spawn Player & Totoro
     this.player = this.physics.add.sprite(spawnPos.x, spawnPos.y, 'player-0').setOrigin(0.5, 1);
-    this.player.body.setSize(22, 16).setOffset(13, 38);
+    const pBoxW = 20;
+    const pBoxH = 14;
+    this.player.body.setSize(pBoxW, pBoxH).setOffset((this.player.width - pBoxW) / 2, this.player.height - pBoxH);
     this.player.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, this.obstacles);
 
@@ -5595,7 +5603,9 @@ export class DhakaValleyScene extends Phaser.Scene {
     // 11. Spawn Player & Totoro
     const pSpawn = spawnPos || { x: 600, y: 780 };
     this.player = this.physics.add.sprite(pSpawn.x, pSpawn.y, 'player-0').setOrigin(0.5, 1);
-    this.player.body.setSize(22, 16).setOffset(13, 38);
+    const pBoxW = 20;
+    const pBoxH = 14;
+    this.player.body.setSize(pBoxW, pBoxH).setOffset((this.player.width - pBoxW) / 2, this.player.height - pBoxH);
     this.player.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, this.obstacles);
 
@@ -6105,7 +6115,9 @@ export class DhakaValleyScene extends Phaser.Scene {
     // 10. Spawn Player & Totoro
     const pSpawn = spawnPos || { x: 600, y: 780 };
     this.player = this.physics.add.sprite(pSpawn.x, pSpawn.y, 'player-0').setOrigin(0.5, 1);
-    this.player.body.setSize(22, 16).setOffset(13, 38);
+    const pBoxW = 20;
+    const pBoxH = 14;
+    this.player.body.setSize(pBoxW, pBoxH).setOffset((this.player.width - pBoxW) / 2, this.player.height - pBoxH);
     this.player.setCollideWorldBounds(true);
     this.physics.add.collider(this.player, this.obstacles);
 
