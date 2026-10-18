@@ -6706,6 +6706,9 @@ export class DhakaValleyScene extends Phaser.Scene {
           if (fallbackAnim && (!w.sprite.anims.isPlaying || w.sprite.anims.currentAnim.key !== fallbackAnim)) {
             w.sprite.play(fallbackAnim);
           }
+          if (Math.abs(dx) > 0.5) {
+            w.sprite.setFlipX(dx < 0);
+          }
         }
         w.badge.setPosition(w.x, w.y - w.sprite.height - 6).setDepth(w.y + 5);
       }
@@ -6861,7 +6864,12 @@ export class DhakaValleyScene extends Phaser.Scene {
     } else {
       if (this.player.anims.isPlaying) {
         this.player.stop();
-        this.player.setTexture('player-0');
+        const pIdleKey = `player-idle-${pDir}`;
+        if (this.anims.exists(pIdleKey)) {
+          this.player.play(pIdleKey);
+        } else {
+          this.player.setTexture('player-0');
+        }
       }
     }
 
@@ -6893,6 +6901,7 @@ export class DhakaValleyScene extends Phaser.Scene {
             } else if (Math.abs(tdy) > 0) {
               tDir = tdy < 0 ? 'up' : 'down';
             }
+            this.totoroLastDir = tDir;
             this.totoro.setFlipX(false);
             const tWalkKey = `totoro-walk-${tDir}`;
             const targetAnim = moving ? (this.anims.exists(tWalkKey) ? tWalkKey : 'totoro-walk') : 'totoro-idle';
@@ -6902,8 +6911,10 @@ export class DhakaValleyScene extends Phaser.Scene {
           }
         }
         if (!moving) {
-          if (!this.totoro.anims.isPlaying || this.totoro.anims.currentAnim.key !== 'totoro-idle') {
-            this.totoro.play('totoro-idle');
+          const tIdleKey = `totoro-idle-${this.totoroLastDir || 'down'}`;
+          const targetIdle = this.anims.exists(tIdleKey) ? tIdleKey : 'totoro-idle';
+          if (!this.totoro.anims.isPlaying || this.totoro.anims.currentAnim.key !== targetIdle) {
+            this.totoro.play(targetIdle);
           }
         }
         this.totoro.setDepth(this.totoro.y);

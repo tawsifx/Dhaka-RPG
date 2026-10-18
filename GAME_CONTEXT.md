@@ -379,7 +379,17 @@ Every visual entity is registered with standardized specifications:
   - Scaling: Native 16×32 or 16×24 pixel art is automatically upscaled **2× nearest-neighbor** (`ctx.imageSmoothingEnabled = false`) to 32×64 or 32×48 px so pixels remain razor-sharp.
 - **Totoro Companion**:
   - Footprint: `68×76 px` (~2.5 tiles tall).
-  - Walk animation: Directional 2-frame or 4-frame waddle cycles with ear and umbrella physics.
+  - Sheet Layout: `4 cols × 4 rows` (Row 0: Down, Row 1: Left, Row 2: Right, Row 3: Up).
+  - Walk animation: Directional 4-frame waddle cycles with ear and umbrella physics.
+
+> [!IMPORTANT]
+> **Strict Sprite Sheet Row Ordering & Forward-Facing Walking Rule**:
+> Every character, protagonist, companion, and NPC sheet in `public/assets/sprites/characters/` is strictly calibrated so that:
+> - **Row 0: Down** (character facing toward camera)
+> - **Row 1: Left** (character facing toward the left side of screen)
+> - **Row 2: Right** (character facing toward the right side of screen)
+> - **Row 3: Up** (character facing toward top of screen / back to camera)
+> When moving horizontally, `walk-left` selects Row 1 and `walk-right` selects Row 2. `setFlipX(false)` is enforced on all 4-directional sheets so characters walk facing forward in their direction of travel with zero backwards walking. Directional idle retention ensures characters stay facing the direction of their last step when stopping.
 
 ### Standardized `@asset-spec` JSDoc Annotation Format
 Whenever defining textures or sprites in source code, embed this machine-readable block:
