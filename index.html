@@ -9,13 +9,19 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Totoro & Moon Walker: Chronicles of the Six Realms</title>
-  <!-- Google Fonts for Retro Pixel & Clean Readable UI -->
+  <!-- Google Fonts for Modern Game UI, Headbars & Shop Signs -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Press+Start+2P&family=Rajdhani:wght@500;600;700&family=VT323&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <!-- Hidden Font Pre-warmer for Canvas Text -->
+  <div style="position: absolute; left: -9999px; top: -9999px; visibility: hidden; pointer-events: none;" aria-hidden="true">
+    <span style="font-family: 'Rajdhani'; font-weight: 700;">Rajdhani Prewarm</span>
+    <span style="font-family: 'Chakra Petch'; font-weight: 700;">Chakra Petch Prewarm</span>
+    <span style="font-family: 'Outfit'; font-weight: 700;">Outfit Prewarm</span>
+  </div>
   <!-- Phaser Canvas Mount -->
   <div id="phaser-mount"></div>
 
@@ -43,6 +49,15 @@
         <div class="stat-bar sp-bar"><div id="hud-sp-fill" class="bar-fill"></div><span id="hud-sp-text">SP 50/50</span></div>
         <div class="stat-bar xp-bar"><div id="hud-xp-fill" class="bar-fill"></div><span id="hud-xp-text">XP 0/100</span></div>
       </div>
+      <div class="totoro-bond-meter" title="Totoro Bond Pips (Roar [Q]: 1 | Slam [E]: 2 | Swiftness [F]: 1)">
+        <div class="bond-pips-group">
+          <span class="bond-pip" id="bond-pip-1">🐾</span>
+          <span class="bond-pip" id="bond-pip-2">🐾</span>
+          <span class="bond-pip" id="bond-pip-3">🐾</span>
+          <span class="bond-pip" id="bond-pip-4">🐾</span>
+        </div>
+        <span id="hud-bond-text">BOND 1.0/4</span>
+      </div>
     </div>
 
     <div class="hud-card hud-quest-card">
@@ -63,15 +78,8 @@
         <button id="btn-open-bag" class="drawer-item-btn" type="button">🎒 Bag &amp; Craft (I)</button>
         <button id="btn-open-map" class="drawer-item-btn" type="button">🗺️ Realm Map (M)</button>
         <button id="btn-save-game" class="drawer-item-btn" type="button">💾 Quick Save</button>
-        <button id="btn-telegram-status" class="drawer-item-btn" type="button">🛰️ Telegram Live (10s)</button>
         <button id="btn-bgm" class="drawer-item-btn" type="button">🎵 BGM: ON</button>
       </div>
-    </div>
-
-    <!-- Live Telemetry Status Pill -->
-    <div id="telegram-live-indicator" class="hud-live-pill" title="Gemini Antigravity Live Status (Every 10s)">
-      <span class="live-dot"></span>
-      <span id="telegram-live-text">TG LIVE: 10s</span>
     </div>
 
   </header>
@@ -82,11 +90,14 @@
     <div id="minimap-world-label">World 1: Dhaka Valley</div>
   </div>
 
-  <!-- Boss Health Bar Overlay -->
+  <!-- Boss Health & Poise Bar Overlay -->
   <div id="boss-hud" hidden>
     <div id="boss-name">GUARDIAN BOSS</div>
     <div class="boss-bar-outer">
       <div id="boss-hp-fill"></div>
+    </div>
+    <div class="boss-poise-outer" title="Boss Poise Meter">
+      <div id="boss-poise-fill"></div>
     </div>
   </div>
 
@@ -95,10 +106,12 @@
     <div id="combat-hints">
       <span><b>WASD</b> Move</span>
       <span><b>SPACE/E</b> Interact</span>
-      <span><b>J / Click</b> 3-Hit Combo</span>
+      <span><b>J / Click</b> Attack Combo</span>
+      <span><b>Hold J / R-Click</b> Parry/Guard</span>
       <span><b>K / Shift</b> Dash</span>
-      <span><b>Q</b> Spirit Roar</span>
-      <span><b>R / F</b> Belly Slam</span>
+      <span><b>Q</b> Roar (1 Pip)</span>
+      <span><b>E</b> Slam (2 Pips)</span>
+      <span><b>F</b> Swiftness (1 Pip)</span>
     </div>
     <div id="inventory-bar"></div>
   </footer>
@@ -189,8 +202,8 @@
   </div>
 
 <!-- Classic 16-Bit RPG Title Screen Window -->
-  <audio id="menu-bgm" src="assets/audio/spirited_away_piano.mp3" loop preload="auto"></audio>
-  <audio id="game-bgm" src="assets/audio/game_bgm.mp3" loop preload="auto"></audio>
+  <audio id="menu-bgm" loop preload="none"></audio>
+  <audio id="game-bgm" loop preload="none"></audio>
 
   <div id="title-screen-overlay">
     <div class="rpg-title-backdrop"></div>

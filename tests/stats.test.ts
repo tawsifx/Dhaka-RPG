@@ -88,4 +88,42 @@ describe('RPGStats System', () => {
     const expectedAtk = DateState.baseAtk + (level - 1) * 4 + (ITEMS_DB[DateState.equipped.weapon]?.atk || 0);
     expect(RPGStats.getAtk()).toBe(expectedAtk);
   });
+
+  it('calculates damage using hyperbolic defense formula without flooring at zero', () => {
+    // ATK: 20, DEF: 0, mult: 1.0 => 20 * 1 * (50/50) = 20
+    const dmg0 = RPGStats.calculateDamage(20, 0, 1.0, 8); // seed 8 gives 0% variance
+    expect(dmg0).toBe(20);
+
+    // ATK: 20, DEF: 50, mult: 1.0 => 20 * 1 * (50/100) = 10
+    const dmg50 = RPGStats.calculateDamage(20, 50, 1.0, 8);
+    expect(dmg50).toBe(10);
+
+    // High DEF (150) still takes damage (5) instead of flooring at 1 or 0
+    const dmg150 = RPGStats.calculateDamage(20, 150, 1.0, 8); // 20 * 50/200 = 5
+    expect(dmg150).toBe(5);
+
+    // Minimum 1 damage guaranteed
+    const dmgMin = RPGStats.calculateDamage(1, 9999, 1.0, 8);
+    expect(dmgMin).toBe(1);
+  });
+
+  it('manages Totoro bond pips (0 to 4 pips)', () => {
+    DateState.bond = 0;
+    RPGStats.addBond(1.5);
+    expect(RPGStats.getBond()).toBe(1.5);
+
+    // Overfill clamp
+    RPGStats.addBond(5.0);
+    expect(RPGStats.getBond()).toBe(4.0);
+
+    // Spend bond
+    const spentSuccess = RPGStats.spendBond(2.0);
+    expect(spentSuccess).toBe(true);
+    expect(RPGStats.getBond()).toBe(2.0);
+
+    // Cannot spend more than available
+    const spentFail = RPGStats.spendBond(3.0);
+    expect(spentFail).toBe(false);
+    expect(RPGStats.getBond()).toBe(2.0);
+  });
 });

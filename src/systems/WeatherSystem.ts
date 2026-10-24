@@ -23,12 +23,11 @@ export class WeatherSystem {
     if (scene.puddles && scene.tweens) {
       scene.puddles.forEach((p: any) => scene.tweens.add({ targets: p, alpha: 0.85, duration: 2000 }));
     }
-    if (scene.taroLeaf) scene.taroLeaf.setVisible(true);
 
     UI.showToast('⛈️', 'Kalbaishakhi Monsoon!', 'A sudden warm Dhaka shower sweeps over campus!');
     UI.startDialogue([
-      { speaker: 'Totoro', portrait: '🐾', text: 'Whoa! The sky opened up! Classic Dhaka Kalbaishakhi rain! Here Moon Walker, huddle close under this giant taro leaf!' },
-      { speaker: 'Moon Walker', portrait: '🌙', text: 'It smells just like wet red earth (shondha matir gondho)... Good thing you are wide enough to block all the rain drops, Totoro!' }
+      { speaker: 'Totoro', portrait: '🐾', text: 'Whoa! The sky opened up! Classic Dhaka Kalbaishakhi rain! Fresh raindrops feel wonderful on my fur!' },
+      { speaker: 'Moon Walker', portrait: '🌙', text: 'It smells just like wet red earth (shondha matir gondho)... Good thing you love the rain as much as I do, Totoro!' }
     ]);
 
     // Automatically clear the storm after 50 seconds
@@ -44,7 +43,6 @@ export class WeatherSystem {
 
   stopMonsoonEvent(scene: any): void {
     this.isRaining = false;
-    if (scene.taroLeaf) scene.taroLeaf.setVisible(false);
     if (scene.puddles && scene.tweens) {
       scene.puddles.forEach((p: any) => scene.tweens.add({ targets: p, alpha: 0, duration: 3000 }));
     }

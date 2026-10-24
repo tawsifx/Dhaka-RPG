@@ -143,20 +143,23 @@ body, html {
 .hud-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-family: 'Cinzel', serif;
-  font-size: 0.98rem;
+  gap: 7px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1.15rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
   color: var(--accent-gold);
+  text-shadow: 0 0 10px rgba(247, 203, 69, 0.35);
 }
 
 .hud-subrow {
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-family: 'Rajdhani', 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.6px;
   color: #dfd3c3;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
 .hud-stats-card {
@@ -171,10 +174,11 @@ body, html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  font-size: 0.82rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.96rem;
   font-weight: 700;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
 }
 
 .heart-container {
@@ -213,11 +217,11 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.65rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.4px;
-  text-shadow: 0 1px 2px #000;
+  letter-spacing: 0.8px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 
 .hud-quest-card {
@@ -226,13 +230,14 @@ body, html {
 }
 
 .quest-header {
-  font-family: 'Cinzel', serif;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  font-size: 0.65rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  font-size: 0.78rem;
   text-transform: uppercase;
   color: var(--accent-gold);
-  margin-bottom: 3px;
+  margin-bottom: 2px;
+  text-shadow: 0 0 8px rgba(247, 203, 69, 0.3);
 }
 
 #hud-quest {
@@ -293,10 +298,11 @@ body, html {
 }
 
 #minimap-world-label {
-  font-family: 'Cinzel', serif;
-  font-size: 0.72rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
   color: var(--accent-gold);
   margin-top: 4px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
@@ -318,10 +324,14 @@ body, html {
 }
 
 #boss-name {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.68rem;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
   color: #ffb3c4;
   margin-bottom: 6px;
+  text-shadow: 0 0 10px rgba(255, 94, 126, 0.6);
 }
 
 .boss-bar-outer {
@@ -338,6 +348,69 @@ body, html {
   height: 100%;
   background: linear-gradient(90deg, #b81d38, #ff5277);
   transition: width 0.15s ease;
+}
+
+.boss-poise-outer {
+  width: 100%;
+  height: 6px;
+  background: #1e1b4b;
+  border: 1px solid #818cf8;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+#boss-poise-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  transition: width 0.15s ease;
+}
+
+/* Totoro Bond Meter */
+.totoro-bond-meter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 5px;
+  padding: 3px 6px;
+  background: rgba(30, 27, 75, 0.7);
+  border: 1px solid rgba(168, 85, 247, 0.6);
+  border-radius: 6px;
+}
+
+.bond-pips-group {
+  display: flex;
+  gap: 4px;
+}
+
+.bond-pip {
+  font-size: 0.88rem;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.bond-pip.bond-full {
+  opacity: 1;
+  filter: drop-shadow(0 0 5px #c084fc);
+  transform: scale(1.15);
+}
+
+.bond-pip.bond-half {
+  opacity: 0.6;
+  filter: drop-shadow(0 0 2px #a855f7);
+}
+
+.bond-pip.bond-empty {
+  opacity: 0.2;
+  filter: grayscale(1);
+}
+
+#hud-bond-text {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #e9d5ff;
 }
 
 /* ================= BOTTOM HOTBAR ================= */
@@ -1034,9 +1107,10 @@ body, html {
   border: 1.5px solid #6e4e37;
   border-radius: 8px;
   padding: 10px 12px;
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Rajdhani', sans-serif;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.98rem;
+  letter-spacing: 0.6px;
   text-align: left;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;

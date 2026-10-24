@@ -1,5 +1,5 @@
 // src/systems/FarmingSystem.ts - 2D grid state machine (till, water, plant, daily growth tick, harvest)
-import { FarmGridCell, FarmCropState } from '../types/stardew.types';
+import { FarmGridCell } from '../types/stardew.types';
 import { CROPS_DB } from '../config/crops.db';
 import { RPGStats } from '../state/RPGStats';
 

@@ -44,6 +44,7 @@ export const SaveManager = {
       if (parsed.state.rickshawDone && !DateState.rickshawTourDone) DateState.rickshawTourDone = true;
       if (parsed.state.telescopeDone && !DateState.stargazingDone) DateState.stargazingDone = true;
       if (typeof DateState.rickshawBest !== 'number') DateState.rickshawBest = 0;
+      if (!DateState.npcOverrides) DateState.npcOverrides = {};
       if (parsed.volumes && SoundEngine.setVolumes) {
         SoundEngine.setVolumes(parsed.volumes.musicVol ?? 0.85, parsed.volumes.sfxVol ?? 0.9);
       }

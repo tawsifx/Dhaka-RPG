@@ -1,0 +1,42 @@
+{
+  "slotId": "boss-stag",
+  "frameWidth": 128,
+  "frameHeight": 128,
+  "anchor": {
+    "x": 0.5,
+    "y": 0.9
+  },
+  "animations": [
+    {
+      "name": "idle",
+      "frames": [0, 1, 2, 3],
+      "frameRate": 4,
+      "loop": true,
+      "events": []
+    },
+    {
+      "name": "walk",
+      "frames": [4, 5, 6, 7],
+      "frameRate": 5,
+      "loop": true,
+      "events": []
+    },
+    {
+      "name": "attack",
+      "frames": [8, 9, 10, 11],
+      "frameRate": 6,
+      "loop": false,
+      "events": [
+        { "frame": 9, "type": "hitbox_on" },
+        { "frame": 11, "type": "hitbox_off" }
+      ]
+    },
+    {
+      "name": "stagger",
+      "frames": [12, 13, 14, 15],
+      "frameRate": 5,
+      "loop": true,
+      "events": []
+    }
+  ]
+}

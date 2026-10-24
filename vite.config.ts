@@ -7,8 +7,17 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
-    sourcemap: true,
-    target: 'es2022'
+    sourcemap: false,
+    target: 'es2022',
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/phaser')) {
+            return 'phaser';
+          }
+        }
+      }
+    }
   },
   server: {
     port: 3000,

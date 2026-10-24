@@ -9,6 +9,11 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "validate:npc": "vitest run tests/npc/validator.test.ts",
+    "assets:validate": "vitest run tests/combat/assets_validation.test.ts",
+    "assets:report": "vitest run tests/combat/assets_validation.test.ts",
+    "assets:compress": "python3 scripts/compress_images.py",
+    "deploy:cf": "npm run build && wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true",
     "start": "node telegram-bot.js",
     "bot": "caffeinate -s -i node telegram-bot.js"
   },
@@ -21,6 +26,7 @@
     "@types/node": "^26.6.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.1"
   }
 }

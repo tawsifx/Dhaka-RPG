@@ -1962,6 +1962,150 @@ export class CharacterSpriteGenerator {
       if (tex) ctx.drawImage(tex.getSourceImage(), 0, 0);
     });
 
+    // --- Rakin Acoustic Guitar Concert Sprites (2-Frame Singing & Strumming Animation) ---
+    [0, 1].forEach(frame => {
+      makeTex(`npc-rakin-guitar-${frame}`, 56, 60, ctx => {
+        const bob = frame === 1 ? -1.4 : 0;
+        const cx = 28;
+
+        // 1. Contact Ground Shadow
+        ctx.fillStyle = 'rgba(12, 8, 20, 0.26)';
+        ctx.beginPath();
+        ctx.ellipse(cx, 54, 11.5, 3.6, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Dark Slim-Fit Chinos & Polished Leather Oxford Shoes
+        ctx.fillStyle = '#1c2430';
+        ctx.fillRect(cx - 6.5, 40, 5, 10);
+        ctx.fillRect(cx + 1.5, 40, 5, 10);
+        ctx.fillStyle = '#3b2219';
+        ctx.beginPath();
+        ctx.ellipse(cx - 4, 51.5, 3.8, 2, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx + 4, 51.5, 3.8, 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. Tailored Navy-Blue Silk Panjabi with Silver Embroidery
+        ctx.fillStyle = '#172554';
+        ctx.beginPath();
+        ctx.roundRect(cx - 8.5, 23 + bob, 17, 18, 2.5);
+        ctx.fill();
+        ctx.fillStyle = '#1e3a8a';
+        ctx.fillRect(cx - 7.5, 23.5 + bob, 15, 17);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(cx - 1, 23.5 + bob, 2, 9);
+
+        // 4. Leather Guitar Strap Across Shoulder
+        ctx.strokeStyle = '#5c3822';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6, 24 + bob);
+        ctx.lineTo(cx + 6, 37 + bob);
+        ctx.stroke();
+
+        // 5. Handcrafted Sunburst Acoustic Guitar Slung Across Chest
+        ctx.save();
+        ctx.translate(cx - 1, 35 + bob);
+        ctx.rotate(-0.28);
+        // Guitar lower & upper bouts
+        ctx.fillStyle = '#92400e';
+        ctx.beginPath();
+        ctx.ellipse(-3, 1, 9.5, 7, 0, 0, Math.PI * 2);
+        ctx.ellipse(4, 0, 6.8, 5.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#d97706'; // Honey sunburst top
+        ctx.beginPath();
+        ctx.ellipse(-3, 1, 8, 5.6, 0, 0, Math.PI * 2);
+        ctx.ellipse(4, 0, 5.5, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Soundhole & mother-of-pearl rosette
+        ctx.strokeStyle = '#fef08a';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(0, 0.5, 3.2, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = '#1c1917';
+        ctx.beginPath();
+        ctx.arc(0, 0.5, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        // Rosewood bridge
+        ctx.fillStyle = '#3b2219';
+        ctx.fillRect(-6.5, -1.8, 2, 4.5);
+        // Mahogany neck & fretboard
+        ctx.fillStyle = '#451a03';
+        ctx.fillRect(8, -1.6, 13, 3.2);
+        // Headstock & silver tuning pegs
+        ctx.fillStyle = '#29150c';
+        ctx.fillRect(20.5, -2.2, 4, 4.2);
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillRect(21, -3.2, 3, 1);
+        ctx.fillRect(21, 2, 3, 1);
+        // Vibrating acoustic strings
+        ctx.strokeStyle = frame === 1 ? '#ffffff' : 'rgba(254, 240, 138, 0.85)';
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        ctx.moveTo(-5, -0.5);
+        ctx.lineTo(20, -0.5 + (frame === 1 ? 0.6 : -0.4));
+        ctx.moveTo(-5, 1.2);
+        ctx.lineTo(20, 1.2 + (frame === 1 ? -0.6 : 0.4));
+        ctx.stroke();
+        ctx.restore();
+
+        // 6. Left Strumming Hand & Right Chord-Fretting Hand
+        ctx.fillStyle = '#1e3a8a';
+        ctx.fillRect(cx - 11.5, 24.5 + bob, 3.5, 7.5);
+        ctx.fillRect(cx + 8, 24.5 + bob, 3.5, 7);
+        // Strumming hand over soundhole (moves down/up with frame)
+        ctx.fillStyle = '#f0c4a5';
+        ctx.fillRect(cx - 5, 31.5 + bob + (frame === 1 ? 2.2 : -1.0), 3.6, 3.6);
+        // Fretting hand on guitar neck
+        ctx.fillRect(cx + 10.5, 28.5 + bob + (frame === 1 ? -0.8 : 0.5), 3.5, 3.5);
+
+        // 7. Neck, Head & Soulful Singing Expression
+        ctx.fillStyle = '#dfaa78';
+        ctx.fillRect(cx - 2.5, 20 + bob, 5, 4);
+        ctx.fillStyle = '#f5cfb0';
+        ctx.beginPath();
+        ctx.arc(cx, 15.2 + bob, 7.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eyes (passionate closed eyes on frame 1, warm sparkling eyes on frame 0)
+        ctx.fillStyle = '#1f1614';
+        if (frame === 1) {
+          ctx.fillRect(cx - 4.8, 14.5 + bob, 2.8, 1.1);
+          ctx.fillRect(cx + 2.0, 14.5 + bob, 2.8, 1.1);
+        } else {
+          ctx.fillRect(cx - 4.5, 13.8 + bob, 2.2, 2.2);
+          ctx.fillRect(cx + 2.3, 13.8 + bob, 2.2, 2.2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(cx - 4.2, 14 + bob, 1, 1);
+          ctx.fillRect(cx + 2.6, 14 + bob, 1, 1);
+        }
+
+        // Singing mouth (open oval singing on frame 1, warm melodic smile on frame 0)
+        ctx.fillStyle = '#991b1b';
+        if (frame === 1) {
+          ctx.beginPath();
+          ctx.ellipse(cx, 18.5 + bob, 2.0, 1.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.fillRect(cx - 2.0, 18.2 + bob, 4.0, 1.3);
+        }
+
+        // 8. Styled DU Student Hair
+        ctx.fillStyle = '#1c1817';
+        ctx.beginPath();
+        ctx.arc(cx, 11.5 + bob, 8.2, Math.PI, 0);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, 11.5 + bob);
+        ctx.quadraticCurveTo(cx, 6.5 + bob, cx + 8.5, 12.5 + bob);
+        ctx.lineTo(cx + 7, 9.5 + bob);
+        ctx.quadraticCurveTo(cx, 4.5 + bob, cx - 7, 9.5 + bob);
+        ctx.closePath();
+        ctx.fill();
+      });
+    });
+
     // Wandering Dhaka Citizens (Fuller Road, TSC, Curzon, Dhanmondi Lake)
     makeWalkerNPC('npc-walker1',  '#2d5a3c', '#1c1917', '#bfa07a', 'physics');  // Arif (DU Physics Senior)
     makeWalkerNPC('npc-walker2',  '#c2593f', '#26150f', '#f59e0b', 'sketcher'); // Nadia (Charukola Sketcher)

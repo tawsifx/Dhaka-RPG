@@ -1,0 +1,42 @@
+{
+  "slotId": "enemy-slime",
+  "frameWidth": 64,
+  "frameHeight": 64,
+  "anchor": {
+    "x": 0.5,
+    "y": 0.88
+  },
+  "animations": [
+    {
+      "name": "idle",
+      "frames": [0, 1, 2, 3],
+      "frameRate": 4,
+      "loop": true,
+      "events": []
+    },
+    {
+      "name": "walk",
+      "frames": [4, 5, 6, 7],
+      "frameRate": 6,
+      "loop": true,
+      "events": []
+    },
+    {
+      "name": "attack",
+      "frames": [8, 9, 10, 11],
+      "frameRate": 8,
+      "loop": false,
+      "events": [
+        { "frame": 9, "type": "hitbox_on" },
+        { "frame": 11, "type": "hitbox_off" }
+      ]
+    },
+    {
+      "name": "stagger",
+      "frames": [12, 13, 14, 15],
+      "frameRate": 6,
+      "loop": true,
+      "events": []
+    }
+  ]
+}

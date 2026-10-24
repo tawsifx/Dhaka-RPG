@@ -585,11 +585,399 @@ export class GroundTileGenerator {
     makePathVariant('tile-path-ice', '#7fa6c4', '#e1f2ff', '#bcdcf3', 'ice');
     makePathVariant('tile-path-star', '#342461', '#7d5cc4', '#5a3fa0', 'star');
 
+    // --- NEW PATHWAY TYPE 2: Mughal Heritage Red-Brick Herringbone (Lal-Eet / Curzon & DU Academic Walks) ---
+    makeTex('tile-path-brick', 48, 48, ctx => {
+      const S = 48, r = tk.rng(7711);
+      // Lime-sand mortar bed
+      ctx.fillStyle = '#593628'; ctx.fillRect(0, 0, S, S);
+      const brickPal = ['#a8382b', '#bf4636', '#942c20', '#c9533c', '#87261b'];
+      // Interlocking running & herringbone brick courses (8 rows of 6px)
+      for (let row = 0; row < 8; row++) {
+        const y = row * 6;
+        const offset = (row % 2) * 6 + ((row >> 1) % 2) * 3;
+        for (let col = 0; col < 4; col++) {
+          const x = (col * 12 + offset) % S;
+          const bw = 11, bh = 5;
+          const c = brickPal[(row * 3 + col + ((r() * 3) | 0)) % brickPal.length];
+          const lit = tk.mix(c, '#ffd6b8', 0.28);
+          const shd = tk.mix(c, '#1f0a06', 0.36);
+          tk.px(ctx, S, x, y, bw, bh, c);
+          tk.px(ctx, S, x, y, bw, 1, lit);
+          tk.px(ctx, S, x, y + 1, 1, bh - 2, lit);
+          tk.px(ctx, S, x, y + bh - 1, bw, 1, shd);
+          tk.px(ctx, S, x + bw - 1, y + 1, 1, bh - 2, shd);
+          // Kiln-fired clay speckles
+          if (r() < 0.45) {
+            tk.px(ctx, S, x + 2 + ((r() * 6) | 0), y + 2, 2, 1, r() < 0.5 ? lit : shd);
+          }
+          // Subtle monsoon moss in mortar joints
+          if (r() < 0.18) {
+            tk.px(ctx, S, x + 1, y + bh, 3, 1, '#4a7c36');
+          }
+        }
+      }
+      // Occasional fallen crimson Krishnachura petal on the warm bricks
+      for (let p = 0; p < 2; p++) {
+        const px = (r() * 40 + 4) | 0, py = (r() * 40 + 4) | 0;
+        ctx.fillStyle = '#e11d48'; ctx.fillRect(px, py, 2, 2);
+        ctx.fillStyle = '#fda4af'; ctx.fillRect(px, py, 1, 1);
+      }
+    });
+
+    // --- NEW PATHWAY TYPE 3: Chini-Tikri Mosaic & Cobblestone Courtyard Plaza ---
+    makeTex('tile-path-plaza', 64, 64, ctx => {
+      const S = 64, r = tk.rng(8823);
+      ctx.fillStyle = '#473c35'; ctx.fillRect(0, 0, S, S);
+      // 4x4 grid of 16x16 ornamental octagonal sandstone & Chini-tikri ceramic diamond inlays
+      for (let gy = 0; gy < 4; gy++) {
+        for (let gx = 0; gx < 4; gx++) {
+          const ox = gx * 16, oy = gy * 16;
+          const isAlt = (gx + gy) % 2 === 0;
+          const base = isAlt ? '#efe2cc' : '#dfd0b8';
+          const lit = '#fbf5ea';
+          const shd = '#9e8c74';
+          // Octagonal slab
+          ctx.fillStyle = base;
+          ctx.fillRect(ox + 2, oy + 1, 12, 14);
+          ctx.fillRect(ox + 1, oy + 2, 14, 12);
+          ctx.fillStyle = lit;
+          ctx.fillRect(ox + 2, oy + 1, 12, 1);
+          ctx.fillRect(ox + 1, oy + 2, 1, 12);
+          ctx.fillStyle = shd;
+          ctx.fillRect(ox + 2, oy + 14, 12, 1);
+          ctx.fillRect(ox + 14, oy + 2, 1, 12);
+          // Center Chini-tikri glazed ceramic motif
+          ctx.fillStyle = isAlt ? '#c2410c' : '#0284c7';
+          ctx.fillRect(ox + 7, oy + 6, 2, 4);
+          ctx.fillRect(ox + 6, oy + 7, 4, 2);
+          ctx.fillStyle = '#fef08a';
+          ctx.fillRect(ox + 7, oy + 7, 2, 2);
+          // Corner diamond keystones at intersections
+          ctx.fillStyle = '#8c2d19';
+          ctx.fillRect(ox, oy, 2, 2);
+          ctx.fillRect(ox + 14, oy + 14, 2, 2);
+        }
+      }
+      // Subtle surface texture
+      for (let i = 0; i < 24; i++) {
+        ctx.fillStyle = r() < 0.5 ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.12)';
+        ctx.fillRect((r() * S) | 0, (r() * S) | 0, 1, 1);
+      }
+    });
+
+    // --- NEW PATHWAY TYPE 4: Ramna Garden Stepping Stones & Laterite Pebble Trail ---
+    makeTex('tile-path-stepping', 64, 64, ctx => {
+      const S = 64, r = tk.rng(9941);
+      // Lush meadow grass base so stepping stones blend seamlessly with the park lawn
+      tk.paintBase(ctx, S, ['#4a8944', '#56974b', '#62a053', '#6eab5e'], 7, 4, 1.8);
+      // Warm laterite (Lal Mati) & pea-gravel organic trail bed down the middle
+      const gravelCols = ['#b88a5e', '#c99b6e', '#9c7148', '#d9b289'];
+      for (let i = 0; i < 110; i++) {
+        const gx = (r() * S) | 0, gy = (r() * S) | 0;
+        ctx.fillStyle = gravelCols[(i + ((r() * 4) | 0)) % 4];
+        ctx.fillRect(gx, gy, r() < 0.4 ? 3 : 2, 2);
+      }
+      // Natural rounded river-slate & sandstone stepping slabs
+      const slabs = [
+        { x: 6, y: 5, w: 20, h: 14, c: '#d8ccb8' },
+        { x: 34, y: 7, w: 22, h: 15, c: '#c4b59f' },
+        { x: 14, y: 24, w: 22, h: 14, c: '#cbbba4' },
+        { x: 42, y: 26, w: 17, h: 13, c: '#dfd3c0' },
+        { x: 5, y: 44, w: 23, h: 14, c: '#c7b8a1' },
+        { x: 33, y: 45, w: 22, h: 15, c: '#d6c8b4' }
+      ];
+      slabs.forEach(s => {
+        // Drop shadow
+        ctx.fillStyle = 'rgba(22, 48, 22, 0.55)';
+        ctx.fillRect(s.x + 1, s.y + 2, s.w - 2, s.h - 1);
+        // Rounded stone body
+        ctx.fillStyle = s.c;
+        ctx.fillRect(s.x + 2, s.y, s.w - 4, s.h);
+        ctx.fillRect(s.x, s.y + 2, s.w, s.h - 4);
+        ctx.fillRect(s.x + 1, s.y + 1, s.w - 2, s.h - 2);
+        // Top sunlit bevel
+        ctx.fillStyle = tk.mix(s.c, '#ffffff', 0.35);
+        ctx.fillRect(s.x + 2, s.y, s.w - 4, 1);
+        ctx.fillRect(s.x + 1, s.y + 1, s.w - 3, 1);
+        // Bottom shade bevel
+        ctx.fillStyle = tk.mix(s.c, '#000000', 0.32);
+        ctx.fillRect(s.x + 2, s.y + s.h - 1, s.w - 4, 1);
+        // Tiny clover / grass blade overlapping stone corner
+        ctx.fillStyle = '#3a7439';
+        ctx.fillRect(s.x + s.w - 3, s.y + s.h - 3, 2, 3);
+        ctx.fillStyle = '#8ce070';
+        ctx.fillRect(s.x + s.w - 3, s.y + s.h - 4, 1, 1);
+      });
+    });
+
+    // --- NEW PATHWAY TYPE 5: Pastoral Country Loam & Cobble Wheel-Track Lane (Farmhouse Road) ---
+    makeTex('tile-path-dirt', 48, 48, ctx => {
+      const S = 48, r = tk.rng(5519);
+      tk.paintBase(ctx, S, ['#8c643e', '#9c7248', '#ab8054', '#b88e62'], 31, 4, 1.7);
+      // Subtle compacted cart/rickshaw wheel ruts & embedded fieldstone cobbles
+      for (let y = 0; y < S; y += 8) {
+        // Left & right rustic fieldstone cobble border stones
+        const cL = r() < 0.5 ? '#b5a28c' : '#9e8b76';
+        const cR = r() < 0.5 ? '#ad9a84' : '#c2b09b';
+        ctx.fillStyle = 'rgba(35,20,10,0.45)';
+        ctx.fillRect(3, y + 2, 8, 6);
+        ctx.fillRect(S - 11, y + 2, 8, 6);
+        ctx.fillStyle = cL; ctx.fillRect(3, y + 1, 7, 5);
+        ctx.fillStyle = '#dfd3c3'; ctx.fillRect(4, y + 1, 5, 1);
+        ctx.fillStyle = cR; ctx.fillRect(S - 11, y + 1, 7, 5);
+        ctx.fillStyle = '#dfd3c3'; ctx.fillRect(S - 10, y + 1, 5, 1);
+      }
+      //Scattered pebbles & clover tufts
+      for (let i = 0; i < 14; i++) {
+        const px = 12 + ((r() * 24) | 0), py = (r() * S) | 0;
+        ctx.fillStyle = r() < 0.5 ? '#735030' : '#cfa87e';
+        ctx.fillRect(px, py, 2, 2);
+      }
+      for (let i = 0; i < 5; i++) {
+        const gx = (r() < 0.5 ? 1 : S - 4), gy = (r() * S) | 0;
+        ctx.fillStyle = '#4a8944'; ctx.fillRect(gx, gy, 3, 3);
+        ctx.fillStyle = '#8ce070'; ctx.fillRect(gx + 1, gy, 1, 1);
+      }
+    });
+
+    // --- NEW PATHWAY TYPE 6: Weathered Teakwood Boardwalk & Bridge Decking ---
+    makeTex('tile-path-boardwalk', 48, 48, ctx => {
+      const S = 48, r = tk.rng(6637);
+      ctx.fillStyle = '#2b180d'; ctx.fillRect(0, 0, S, S);
+      // 6 horizontal weathered teak planks (8px each)
+      const woods = ['#73482b', '#825334', '#694025', '#7a4d2f'];
+      for (let i = 0; i < 6; i++) {
+        const y = i * 8;
+        const c = woods[i % woods.length];
+        ctx.fillStyle = c; ctx.fillRect(0, y, S, 7);
+        ctx.fillStyle = tk.mix(c, '#ffd6b0', 0.22); ctx.fillRect(0, y, S, 1);
+        ctx.fillStyle = tk.mix(c, '#1a0d06', 0.35); ctx.fillRect(0, y + 6, S, 1);
+        // Wood grain streaks
+        ctx.fillStyle = tk.mix(c, '#3d2212', 0.25);
+        ctx.fillRect(6 + ((i * 11) % 18), y + 3, 14, 1);
+        ctx.fillRect(28 + ((i * 7) % 12), y + 4, 10, 1);
+        // Side rail beam & brass nail heads
+        ctx.fillStyle = '#52301b';
+        ctx.fillRect(0, y, 3, 7); ctx.fillRect(S - 3, y, 3, 7);
+        ctx.fillStyle = '#d4a359';
+        ctx.fillRect(4, y + 2, 2, 2); ctx.fillRect(S - 6, y + 2, 2, 2);
+      }
+    });
+
+    // --- NATURAL PATHWAY END-CAPS, CURBS, STEPPING TRAILS & PLAZA MEDALLIONS ---
+    // Generates rounded, feathered stone/brick/dirt pathway end-caps so pathways never terminate with a harsh cut
+    const makePathCap = (key: string, dir: 'n' | 's' | 'e' | 'w', style: 'stone' | 'brick' | 'dirt') => {
+      const isHoriz = dir === 'e' || dir === 'w';
+      const W = isHoriz ? 56 : 96;
+      const H = isHoriz ? 96 : 56;
+      makeTex(key, W, H, ctx => {
+        const r = tk.rng(key.length * 419 + dir.charCodeAt(0) * 73);
+        const pal = style === 'brick'
+          ? { mortar: '#593628', a: '#a8382b', b: '#c9533c', curb: '#d4bfa0' }
+          : style === 'dirt'
+            ? { mortar: '#6e4e30', a: '#9c7248', b: '#b88e62', curb: '#b5a28c' }
+            : { mortar: '#65462e', a: '#ebd8be', b: '#cfb495', curb: '#f5e8d3' };
+
+        // Semi-elliptical arch mask anchored at the connected edge
+        const cx = dir === 'w' ? W : dir === 'e' ? 0 : W / 2;
+        const cy = dir === 'n' ? H : dir === 's' ? 0 : H / 2;
+        const rx = isHoriz ? 38 : 46;
+        const ry = isHoriz ? 46 : 38;
+
+        for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+            const dx = (x - cx) / rx;
+            const dy = (y - cy) / ry;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d <= 0.88) {
+              // Inner paved arch
+              const isJoint = ((x + (y >> 3) * 5) % 11 === 0) || (y % 9 === 0);
+              ctx.fillStyle = isJoint ? pal.mortar : ( ((x >> 3) + (y >> 3)) % 2 === 0 ? pal.a : pal.b );
+              ctx.fillRect(x, y, 1, 1);
+            } else if (d <= 1.0) {
+              // Dressed bevelled arch curb ring
+              ctx.fillStyle = d < 0.94 ? pal.curb : tk.mix(pal.mortar, '#1f381e', 0.5);
+              ctx.fillRect(x, y, 1, 1);
+            }
+          }
+        }
+
+        // Tapered outer stepping stones & pebbles beyond the arch (dissolving naturally into the lawn)
+        const numStones = 9;
+        for (let i = 0; i < numStones; i++) {
+          const angle = -Math.PI * 0.42 + (i / (numStones - 1)) * Math.PI * 0.84;
+          const dist = 1.04 + (i % 2) * 0.16 + r() * 0.08;
+          let sx = cx, sy = cy;
+          if (dir === 'n') { sx = cx + Math.sin(angle) * rx * 0.9; sy = cy - Math.cos(angle) * ry * dist; }
+          if (dir === 's') { sx = cx + Math.sin(angle) * rx * 0.9; sy = cy + Math.cos(angle) * ry * dist; }
+          if (dir === 'w') { sx = cx - Math.cos(angle) * rx * dist; sy = cy + Math.sin(angle) * ry * 0.9; }
+          if (dir === 'e') { sx = cx + Math.cos(angle) * rx * dist; sy = cy + Math.sin(angle) * ry * 0.9; }
+          const sw = (i % 2 === 0) ? 7 : 5;
+          const sh = (i % 2 === 0) ? 5 : 4;
+          const ix = Math.round(sx - sw / 2), iy = Math.round(sy - sh / 2);
+          ctx.fillStyle = 'rgba(24, 52, 24, 0.45)';
+          ctx.fillRect(ix + 1, iy + 2, sw, sh);
+          ctx.fillStyle = i % 2 === 0 ? pal.a : pal.curb;
+          ctx.fillRect(ix, iy, sw, sh);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(ix + 1, iy, sw - 2, 1);
+        }
+
+        // Soft grass blades & clover tufts overlapping the curb border
+        for (let i = 0; i < 14; i++) {
+          const angle = -Math.PI * 0.46 + (i / 13) * Math.PI * 0.92;
+          let gx = cx, gy = cy;
+          if (dir === 'n') { gx = cx + Math.sin(angle) * rx * 0.95; gy = cy - Math.cos(angle) * ry * 0.96; }
+          if (dir === 's') { gx = cx + Math.sin(angle) * rx * 0.95; gy = cy + Math.cos(angle) * ry * 0.96; }
+          if (dir === 'w') { gx = cx - Math.cos(angle) * rx * 0.96; gy = cy + Math.sin(angle) * ry * 0.95; }
+          if (dir === 'e') { gx = cx + Math.cos(angle) * rx * 0.96; gy = cy + Math.sin(angle) * ry * 0.95; }
+          ctx.fillStyle = '#3a7439';
+          ctx.fillRect(Math.round(gx), Math.round(gy), 2, 3);
+          ctx.fillStyle = '#8ce070';
+          ctx.fillRect(Math.round(gx), Math.round(gy) - 1, 1, 2);
+        }
+      });
+    };
+
+    (['n', 's', 'e', 'w'] as const).forEach(d => {
+      makePathCap(`path-cap-stone-${d}`, d, 'stone');
+      makePathCap(`path-cap-brick-${d}`, d, 'brick');
+      makePathCap(`path-cap-dirt-${d}`, d, 'dirt');
+    });
+
+    // Roadside Dressed Curb Edging (Horizontal & Vertical) with grass tuft overhang
+    makeTex('tile-curb-h', 64, 12, ctx => {
+      ctx.fillStyle = 'rgba(25, 50, 25, 0.42)'; ctx.fillRect(0, 0, 64, 12);
+      for (let x = 0; x < 64; x += 16) {
+        ctx.fillStyle = '#e5d3b8'; ctx.fillRect(x + 1, 2, 14, 8);
+        ctx.fillStyle = '#fff5e4'; ctx.fillRect(x + 1, 2, 14, 2);
+        ctx.fillStyle = '#9c8468'; ctx.fillRect(x + 1, 8, 14, 2);
+        // Grass tuft overlapping outer edge
+        ctx.fillStyle = '#4a8944'; ctx.fillRect(x + 5, 0, 3, 3); ctx.fillRect(x + 11, 9, 3, 3);
+        ctx.fillStyle = '#8ce070'; ctx.fillRect(x + 6, 0, 1, 1);
+      }
+    });
+
+    makeTex('tile-curb-v', 12, 64, ctx => {
+      ctx.fillStyle = 'rgba(25, 50, 25, 0.42)'; ctx.fillRect(0, 0, 12, 64);
+      for (let y = 0; y < 64; y += 16) {
+        ctx.fillStyle = '#e5d3b8'; ctx.fillRect(2, y + 1, 8, 14);
+        ctx.fillStyle = '#fff5e4'; ctx.fillRect(2, y + 1, 2, 14);
+        ctx.fillStyle = '#9c8468'; ctx.fillRect(8, y + 1, 2, 14);
+        ctx.fillStyle = '#4a8944'; ctx.fillRect(0, y + 5, 3, 3); ctx.fillRect(9, y + 11, 3, 3);
+        ctx.fillStyle = '#8ce070'; ctx.fillRect(0, y + 6, 1, 1);
+      }
+    });
+
+    // Organic Stepping-Stone Dissipation Trail (Transparent overlay for natural path endings & garden entries)
+    makeTex('prop-stepping-trail-h', 96, 48, ctx => {
+      const stones = [
+        { x: 6, y: 12, w: 18, h: 12, c: '#dfd1bc' },
+        { x: 10, y: 27, w: 15, h: 10, c: '#cbb99e' },
+        { x: 30, y: 16, w: 16, h: 12, c: '#e6d9c6' },
+        { x: 48, y: 24, w: 13, h: 10, c: '#d1bfa6' },
+        { x: 54, y: 11, w: 11, h: 8, c: '#dfd1bc' },
+        { x: 68, y: 19, w: 10, h: 8, c: '#c9b79c' },
+        { x: 82, y: 22, w: 7, h: 5, c: '#dfd1bc' },
+        { x: 88, y: 15, w: 5, h: 4, c: '#cbb99e' }
+      ];
+      stones.forEach(s => {
+        ctx.fillStyle = 'rgba(20, 45, 20, 0.45)';
+        ctx.fillRect(s.x + 1, s.y + 2, s.w, s.h);
+        ctx.fillStyle = s.c;
+        ctx.fillRect(s.x + 1, s.y, s.w - 2, s.h);
+        ctx.fillRect(s.x, s.y + 1, s.w, s.h - 2);
+        ctx.fillStyle = '#fff8eb';
+        ctx.fillRect(s.x + 1, s.y, s.w - 2, 1);
+        ctx.fillStyle = '#8c775c';
+        ctx.fillRect(s.x + 1, s.y + s.h - 1, s.w - 2, 1);
+      });
+    });
+
+    makeTex('prop-stepping-trail-v', 48, 96, ctx => {
+      const stones = [
+        { x: 12, y: 6, w: 14, h: 16, c: '#dfd1bc' },
+        { x: 27, y: 10, w: 11, h: 14, c: '#cbb99e' },
+        { x: 15, y: 28, w: 15, h: 14, c: '#e6d9c6' },
+        { x: 24, y: 46, w: 12, h: 12, c: '#d1bfa6' },
+        { x: 10, y: 52, w: 10, h: 9, c: '#dfd1bc' },
+        { x: 18, y: 66, w: 10, h: 9, c: '#c9b79c' },
+        { x: 22, y: 80, w: 7, h: 6, c: '#dfd1bc' },
+        { x: 14, y: 88, w: 5, h: 4, c: '#cbb99e' }
+      ];
+      stones.forEach(s => {
+        ctx.fillStyle = 'rgba(20, 45, 20, 0.45)';
+        ctx.fillRect(s.x + 1, s.y + 2, s.w, s.h);
+        ctx.fillStyle = s.c;
+        ctx.fillRect(s.x + 1, s.y, s.w - 2, s.h);
+        ctx.fillRect(s.x, s.y + 1, s.w, s.h - 2);
+        ctx.fillStyle = '#fff8eb';
+        ctx.fillRect(s.x + 1, s.y, s.w - 2, 1);
+        ctx.fillStyle = '#8c775c';
+        ctx.fillRect(s.x + 1, s.y + s.h - 1, s.w - 2, 1);
+      });
+    });
+
+    // Circular Chini-Tikri & Sandstone Plaza Medallions (For Road Junctions, Fountains & Landmarks)
+    const makePlazaCircle = (key: string, S: number, accentCol: string) => {
+      makeTex(key, S, S, ctx => {
+        const cx = S / 2, cy = S / 2, R = S / 2 - 4;
+        for (let y = 0; y < S; y++) {
+          for (let x = 0; x < S; x++) {
+            const dx = x - cx + 0.5, dy = y - cy + 0.5;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d > R) continue;
+            const ratio = d / R;
+            const angle = Math.atan2(dy, dx);
+            const spoke = Math.abs(Math.sin(angle * 8)) < 0.08;
+            const ringJoint = Math.abs((d % 12) - 6) < 0.9;
+            if (ratio > 0.90) {
+              // Outer dressed sandstone curb ring
+              ctx.fillStyle = ratio > 0.96 ? '#594230' : '#f2e3cb';
+            } else if (ratio > 0.78) {
+              // Mughal terracotta brick accent band
+              ctx.fillStyle = (spoke || ringJoint) ? '#593628' : accentCol;
+            } else if (ratio < 0.22) {
+              // Center lotus star medallion
+              ctx.fillStyle = ratio < 0.09 ? '#fef08a' : accentCol;
+            } else {
+              // Concentric fan cobblestone paving
+              ctx.fillStyle = (spoke || ringJoint) ? '#6e5239' : (((Math.floor(d / 12) + Math.floor((angle + Math.PI) * 5)) % 2 === 0) ? '#ead7bd' : '#d6be9f');
+            }
+            ctx.fillRect(x, y, 1, 1);
+          }
+        }
+      });
+    };
+    makePlazaCircle('prop-plaza-medallion', 136, '#b43e2b');
+    makePlazaCircle('prop-plaza-ring', 192, '#9e2f24');
+
+    // --- UPGRADED WATER, SHALLOW COVES, STEPPED BENGALI GHATS & ARCHED BRIDGE ---
     makeTex('tile-water', 64, 64, ctx => {
-      ctx.fillStyle = '#25648a'; ctx.fillRect(0, 0, 64, 64);
-      ctx.fillStyle = '#2f76a1'; ctx.fillRect(0, 8, 64, 14); ctx.fillRect(0, 38, 64, 14);
-      ctx.fillStyle = '#7ec8eb';
-      [[8, 12, 16], [36, 26, 18], [14, 44, 20], [42, 56, 14]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, 2));
+      const S = 64;
+      tk.paintBase(ctx, S, ['#174969', '#1d587d', '#246891', '#2c78a4', '#3588b5'], 901, 4, 1.8);
+      // Shimmering caustic wave bands
+      const w1 = tk.noise(S, 4, 911), w2 = tk.noise(S, 8, 922);
+      const wf = (x: number, y: number) => w1(x, y) * 0.6 + w2(x, y) * 0.4;
+      tk.iso(ctx, S, wf, 0.52, 0.022, 'rgba(126, 208, 242, 0.28)');
+      tk.iso(ctx, S, wf, 0.52, 0.008, 'rgba(224, 247, 255, 0.55)');
+      // Crisp horizontal surface wave glints
+      ctx.fillStyle = 'rgba(186, 235, 255, 0.65)';
+      [[6, 10, 14], [34, 22, 18], [16, 38, 16], [40, 52, 14]].forEach(([x, y, w]) => {
+        ctx.fillRect(x, y, w, 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x + 3, y, Math.max(4, w - 8), 1);
+        ctx.fillStyle = 'rgba(186, 235, 255, 0.65)';
+      });
+    });
+
+    makeTex('tile-water-shallow', 64, 64, ctx => {
+      const S = 64;
+      tk.paintBase(ctx, S, ['#24708f', '#2b82a1', '#3494b2', '#41a6c2', '#52b7d1'], 955, 4, 1.7);
+      // Warm submerged sandy-pebble shimmer & gentle ripples
+      tk.wash(ctx, S, tk.noise(S, 4, 961), 0.58, '#a7e8f2', 0.25, true);
+      ctx.fillStyle = 'rgba(230, 252, 255, 0.7)';
+      [[8, 14, 12], [36, 30, 14], [18, 48, 15]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, 1.5));
     });
 
     makeTex('tile-lava', 64, 64, ctx => {
@@ -598,17 +986,202 @@ export class GroundTileGenerator {
       ctx.fillStyle = '#ffdf4d'; ctx.fillRect(12, 14, 18, 4); ctx.fillRect(36, 44, 20, 4);
     });
 
+    // Dressed Stone & Brick Lake Embankment (with coping stones, moss & shoreline foam)
     makeTex('tile-bank', 48, 48, ctx => {
-      ctx.fillStyle = '#6e655f'; ctx.fillRect(0, 0, 48, 48);
-      for (let y = 2; y < 46; y += 12) {
-        ctx.fillStyle = '#998e86'; ctx.fillRect(3, y, 42, 9);
+      ctx.fillStyle = '#4a3f39'; ctx.fillRect(0, 0, 48, 48);
+      for (let y = 1; y < 47; y += 12) {
+        const isBrick = (y / 12) % 2 === 1;
+        ctx.fillStyle = isBrick ? '#9e4738' : '#b5a89a';
+        ctx.fillRect(2, y, 20, 10);
+        ctx.fillRect(25, y, 21, 10);
+        // Sunlit top bevel
+        ctx.fillStyle = isBrick ? '#c76554' : '#ded4c8';
+        ctx.fillRect(2, y, 20, 2);
+        ctx.fillRect(25, y, 21, 2);
+        // Bottom shadow & moss
+        ctx.fillStyle = '#2e2622';
+        ctx.fillRect(2, y + 9, 20, 1);
+        ctx.fillRect(25, y + 9, 21, 1);
+        ctx.fillStyle = '#4d7c38';
+        ctx.fillRect(6, y + 8, 5, 2);
       }
     });
 
+    // Traditional Bengali Stepped Ghat (Shiri Ghat - Horizontal & Vertical)
+    makeTex('tile-ghat-steps', 64, 48, ctx => {
+      // 4 descending red-brick & sandstone steps leading into shallow water
+      const stepCols = ['#d9c7b0', '#c4513d', '#ba9f84', '#8c3b2b'];
+      for (let s = 0; s < 4; s++) {
+        const y = s * 12;
+        ctx.fillStyle = stepCols[s];
+        ctx.fillRect(0, y, 64, 10);
+        // Sunlit step nosing
+        ctx.fillStyle = tk.mix(stepCols[s], '#ffffff', 0.32);
+        ctx.fillRect(0, y, 64, 2);
+        // Step riser shadow
+        ctx.fillStyle = '#382218';
+        ctx.fillRect(0, y + 10, 64, 2);
+        // Vertical masonry joints
+        for (let x = (s % 2) * 8; x < 64; x += 16) {
+          ctx.fillRect(x, y, 1, 10);
+        }
+      }
+      // Subtle lapping water wash on the lowest step
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.38)';
+      ctx.fillRect(0, 36, 64, 12);
+      ctx.fillStyle = 'rgba(224, 247, 255, 0.75)';
+      ctx.fillRect(4, 37, 22, 2); ctx.fillRect(36, 38, 20, 2);
+    });
+
+    makeTex('tile-ghat-steps-v', 48, 64, ctx => {
+      const stepCols = ['#d9c7b0', '#c4513d', '#ba9f84', '#8c3b2b'];
+      for (let s = 0; s < 4; s++) {
+        const x = s * 12;
+        ctx.fillStyle = stepCols[s];
+        ctx.fillRect(x, 0, 10, 64);
+        ctx.fillStyle = tk.mix(stepCols[s], '#ffffff', 0.32);
+        ctx.fillRect(x, 0, 2, 64);
+        ctx.fillStyle = '#382218';
+        ctx.fillRect(x + 10, 0, 2, 64);
+        for (let y = (s % 2) * 8; y < 64; y += 16) {
+          ctx.fillRect(x, y, 10, 1);
+        }
+      }
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.38)';
+      ctx.fillRect(36, 0, 12, 64);
+      ctx.fillStyle = 'rgba(224, 247, 255, 0.75)';
+      ctx.fillRect(37, 6, 2, 20); ctx.fillRect(38, 36, 2, 20);
+    });
+
+    // Arched Mughal Stone & Teakwood Footbridge (Spans over canals & streams)
+    makeTex('prop-stone-bridge', 160, 104, ctx => {
+      // Water shadow beneath bridge arch
+      ctx.fillStyle = 'rgba(10, 32, 48, 0.45)';
+      ctx.fillRect(16, 14, 128, 84);
+      // Stone abutment piers on left & right banks
+      const drawPier = (px: number) => {
+        ctx.fillStyle = '#594233'; ctx.fillRect(px, 6, 22, 92);
+        ctx.fillStyle = '#d9c5ab'; ctx.fillRect(px + 2, 8, 18, 88);
+        ctx.fillStyle = '#a8382b'; ctx.fillRect(px + 4, 14, 14, 76);
+        ctx.fillStyle = '#fff5e4'; ctx.fillRect(px + 2, 8, 18, 3);
+      };
+      drawPier(4);
+      drawPier(134);
+
+      // Teakwood & Flagstone Bridge Deck (y: 16..88)
+      ctx.fillStyle = '#3b2313';
+      ctx.fillRect(0, 14, 160, 76);
+      for (let x = 4; x < 156; x += 10) {
+        ctx.fillStyle = (x / 10) % 2 === 0 ? '#855534' : '#754829';
+        ctx.fillRect(x, 18, 9, 68);
+        ctx.fillStyle = '#a36e49';
+        ctx.fillRect(x, 18, 9, 3);
+        ctx.fillStyle = '#d4a359';
+        ctx.fillRect(x + 3, 22, 2, 2);
+        ctx.fillRect(x + 3, 80, 2, 2);
+      }
+      // Center sandstone runner strip
+      ctx.fillStyle = '#e5d2b8';
+      ctx.fillRect(0, 36, 160, 32);
+      for (let x = 2; x < 158; x += 16) {
+        ctx.fillStyle = '#cfb495';
+        ctx.fillRect(x, 38, 14, 28);
+        ctx.fillStyle = '#fff7e8';
+        ctx.fillRect(x, 38, 14, 2);
+      }
+
+      // Carved Top & Bottom Stone Balustrades / Railings with Lantern Pillars
+      const drawRail = (ry: number) => {
+        ctx.fillStyle = '#422d20'; ctx.fillRect(2, ry, 156, 12);
+        ctx.fillStyle = '#a8382b'; ctx.fillRect(4, ry + 2, 152, 8);
+        ctx.fillStyle = '#f0dfc8'; ctx.fillRect(2, ry, 156, 3);
+        // Baluster posts & gold finials
+        for (let bx = 8; bx <= 148; bx += 28) {
+          ctx.fillStyle = '#f5e8d3';
+          ctx.fillRect(bx - 3, ry - 2, 8, 14);
+          ctx.fillStyle = '#fbbf24';
+          ctx.fillRect(bx - 1, ry - 3, 4, 3);
+        }
+      };
+      drawRail(8);
+      drawRail(84);
+    });
+
+    // Aquatic Flora Props: Lily Pads, National Flower Shapla (Water Lily) & Shoreline Reeds
+    makeTex('prop-lilypad', 32, 24, ctx => {
+      ctx.fillStyle = 'rgba(12, 45, 64, 0.4)';
+      ctx.beginPath(); ctx.ellipse(16, 14, 11, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#2d8a4e';
+      ctx.beginPath(); ctx.ellipse(16, 12, 11, 7, 0, 0.25, Math.PI * 1.85); ctx.lineTo(16, 12); ctx.fill();
+      ctx.fillStyle = '#52b788';
+      ctx.beginPath(); ctx.ellipse(15, 11, 8, 4.5, 0, 0.3, Math.PI * 1.8); ctx.lineTo(15, 11); ctx.fill();
+      ctx.fillStyle = '#1b5e36';
+      ctx.fillRect(15, 11, 4, 1);
+    });
+
+    makeTex('prop-lotus', 32, 28, ctx => {
+      // Lily pad base
+      ctx.fillStyle = 'rgba(12, 45, 64, 0.42)';
+      ctx.beginPath(); ctx.ellipse(16, 18, 12, 7.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#247542';
+      ctx.beginPath(); ctx.ellipse(16, 16, 12, 7, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#40916c';
+      ctx.beginPath(); ctx.ellipse(15, 15, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // Blooming Pink & White Shapla (Water Lily) Petals
+      ctx.fillStyle = '#db2777';
+      ctx.fillRect(10, 9, 12, 7);
+      ctx.fillStyle = '#f472b6';
+      ctx.fillRect(8, 10, 4, 5); ctx.fillRect(20, 10, 4, 5);
+      ctx.fillRect(11, 6, 10, 8);
+      ctx.fillStyle = '#fbcfe8';
+      ctx.fillRect(13, 5, 6, 7);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(14, 6, 4, 4);
+      // Golden stamen heart
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(15, 9, 2, 2);
+    });
+
+    makeTex('prop-reeds', 32, 44, ctx => {
+      // Water ripple shadow
+      ctx.fillStyle = 'rgba(15, 50, 70, 0.45)';
+      ctx.fillRect(6, 38, 20, 4);
+      ctx.fillStyle = 'rgba(186, 235, 255, 0.55)';
+      ctx.fillRect(8, 40, 16, 1);
+      // Tall green reed stalks & brown cattail heads
+      const stalks = [
+        { x: 9, h: 26, c: '#2d6a4f', cattail: true },
+        { x: 13, h: 32, c: '#40916c', cattail: false },
+        { x: 16, h: 35, c: '#2d6a4f', cattail: true },
+        { x: 20, h: 28, c: '#52b788', cattail: false },
+        { x: 23, h: 22, c: '#1b4332', cattail: false }
+      ];
+      stalks.forEach(st => {
+        ctx.fillStyle = st.c;
+        ctx.fillRect(st.x, 40 - st.h, 2, st.h);
+        if (st.cattail) {
+          ctx.fillStyle = '#5c3317';
+          ctx.fillRect(st.x - 1, 40 - st.h + 3, 4, 9);
+          ctx.fillStyle = '#854d27';
+          ctx.fillRect(st.x, 40 - st.h + 4, 1, 7);
+          ctx.fillStyle = '#d4a373';
+          ctx.fillRect(st.x, 40 - st.h, 2, 3);
+        }
+      });
+    });
+
     makeTex('tile-pier', 48, 72, ctx => {
-      ctx.fillStyle = '#5c3822'; ctx.fillRect(0, 0, 48, 72);
+      ctx.fillStyle = '#422514'; ctx.fillRect(0, 0, 48, 72);
+      // Support pilings & crossbeams
+      ctx.fillStyle = '#2b160a';
+      ctx.fillRect(0, 2, 48, 5); ctx.fillRect(0, 65, 48, 5);
       for (let x = 2; x < 48; x += 12) {
         ctx.fillStyle = '#8f5b3c'; ctx.fillRect(x, 6, 10, 60);
+        ctx.fillStyle = '#a86f4c'; ctx.fillRect(x, 6, 10, 3);
+        ctx.fillStyle = '#6e4228'; ctx.fillRect(x, 63, 10, 3);
+        // Brass bolts
+        ctx.fillStyle = '#eab308';
+        ctx.fillRect(x + 4, 9, 2, 2); ctx.fillRect(x + 4, 60, 2, 2);
       }
     });
 

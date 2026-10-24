@@ -10,7 +10,7 @@ declare global {
 import { DateState } from '../state/DateState';
 import { RPGStats } from '../state/RPGStats';
 import { SoundEngine } from '../audio/SoundEngine';
-import { ITEMS_DB, WEAPON_FX } from '../config/items.db';
+import { ITEMS_DB } from '../config/items.db';
 import { CRAFT_RECIPES } from '../config/recipes.db';
 import { WORLDS_DB } from '../config/worlds.db';
 
@@ -85,6 +85,24 @@ export const UIController: any = (() => {
     if ($('hud-sp-text')) $('hud-sp-text').textContent = `SP ${Math.ceil(DateState.sp)}/${DateState.maxSp}`;
     if ($('hud-xp-fill')) $('hud-xp-fill').style.width = `${Math.min(100, (DateState.xp / DateState.xpToNext) * 100)}%`;
     if ($('hud-xp-text')) $('hud-xp-text').textContent = `XP ${DateState.xp}/${DateState.xpToNext}`;
+
+    // Update Totoro Bond Gauge (0 - 4 pips)
+    const bond = DateState.bond || 0;
+    for (let p = 1; p <= 4; p++) {
+      const pip = $(`bond-pip-${p}`);
+      if (pip) {
+        if (bond >= p) {
+          pip.className = 'bond-pip bond-full';
+        } else if (bond >= p - 0.5) {
+          pip.className = 'bond-pip bond-half';
+        } else {
+          pip.className = 'bond-pip bond-empty';
+        }
+      }
+    }
+    if ($('hud-bond-text')) {
+      $('hud-bond-text').textContent = `BOND ${bond.toFixed(1)}/4`;
+    }
   }
 
   function updateHearts(count) {
@@ -129,12 +147,20 @@ export const UIController: any = (() => {
 
   function updateQuestText() {
     let q = '';
-    if (DateState.currentWorld !== 'dhaka') {
+    if (DateState.currentWorld === 'curzon_interior') {
+      q = '🏛️ [Curzon Hall] Greet the faculty chairs, explore the physics lab, and interact with the historic exhibits!';
+    } else if (DateState.currentWorld === 'farmhouse') {
+      q = '🏡 [Farmhouse] Feed the chickens, greet dairy cow Shuravi, pet the goats, and enjoy the countryside!';
+    } else if (DateState.currentWorld !== 'dhaka') {
       const w = WORLDS_DB[DateState.currentWorld];
-      const bossDead = DateState.defeatedBosses.includes(w.bossSpec.id);
-      q = bossDead
-        ? `✨ ${w.name} Cleared! Step into the Eastern Astral Portal to travel to the next realm.`
-        : `⚔️ [${w.name}] Gather realm crystals, craft gear (I), and defeat ${w.bossSpec.name} in the East Arena!`;
+      if (w && w.bossSpec) {
+        const bossDead = DateState.defeatedBosses.includes(w.bossSpec.id);
+        q = bossDead
+          ? `✨ ${w.name} Cleared! Step into the Eastern Astral Portal to travel to the next realm.`
+          : `⚔️ [${w.name}] Gather realm crystals, craft gear (I), and defeat ${w.bossSpec.name} in the East Arena!`;
+      } else {
+        q = `✨ Exploring ${w?.name || 'Dhaka'}!`;
+      }
     } else if (!DateState.totoroJoined) {
       q = '1. Find Totoro waiting under the Krishnachura tree at Curzon Hall (South-West).';
     } else if (!DateState.teaDone) {
@@ -653,64 +679,71 @@ export const UIController: any = (() => {
         });
       }
 
-      // Title Screen Wiring & Menu BGM Manager
+      // Title Screen Wiring & Menu BGM Manager (via Web Audio API)
       const titleOverlay = $('title-screen-overlay');
-      const menuBgm = $('menu-bgm');
       const audioStatusText = $('menu-audio-text');
 
       function startMenuMusic() {
-        if (!menuBgm) return;
-        if (!(menuBgm as any).src || !(menuBgm as any).src.endsWith('.mp3')) {
-          (menuBgm as any).src = 'assets/audio/spirited_away_piano.mp3';
-        }
-        try { (menuBgm as any).volume = 0.75; } catch(e){}
-        (menuBgm as any).loop = true;
-
-        (menuBgm as any).play().then(() => {
-          if (audioStatusText) audioStatusText.textContent = "MUSIC: SPIRITED AWAY — ONE SUMMER'S DAY (PIANO) ♫";
-        }).catch((err) => {
-          console.warn("Autoplay blocked or pending click:", err);
+        SoundEngine.playMenuBGM().then((played) => {
+          if (played && audioStatusText) {
+            audioStatusText.textContent = "MUSIC: SPIRITED AWAY — ONE SUMMER'S DAY (PIANO) ♫";
+          }
         });
       }
 
-      function fadeOutMenuMusic(callback) {
-        if (!menuBgm || (menuBgm as any).paused) {
-          if (callback) callback();
-          return;
-        }
-        if (window.__activeScene && window.__activeScene.tweens) {
-          window.__activeScene.tweens.add({
-            targets: menuBgm,
-            volume: 0,
-            duration: 350,
-            ease: 'Linear',
-            onComplete: () => {
-              (menuBgm as any).pause();
-              (menuBgm as any).currentTime = 0;
-              if (callback) callback();
-            }
-          });
-          return;
-        }
-        let vol = (menuBgm as any).volume;
-        const fade = setInterval(() => {
-          vol = Math.max(0, vol - 0.1);
-          (menuBgm as any).volume = vol;
-          if (vol <= 0.05) {
-            clearInterval(fade);
-            (menuBgm as any).pause();
-            (menuBgm as any).currentTime = 0;
-            if (callback) callback();
-          }
-        }, 35);
+      function fadeOutMenuMusic(callback?: () => void) {
+        SoundEngine.fadeOutMenuBGM(300, callback);
       }
 
       function enterMainGame() {
-        fadeOutMenuMusic(() => {
-          if (titleOverlay) titleOverlay.hidden = true;
-          // Start in-game procedural music only AFTER the player leaves the menu
+        if (!titleOverlay) return;
+
+        // Visual feedback on the button immediately
+        const newBtn = $('btn-title-new');
+        if (newBtn) {
+          newBtn.classList.add('loading-adventure');
+        }
+
+        // Check if Phaser active scene is ready
+        const isReady = () => Boolean(
+          (window as any).__activeScene &&
+          (window as any).__activeScene.scene &&
+          (window as any).__activeScene.scene.isActive() &&
+          (window as any).__activeScene.player
+        );
+
+        const dismiss = () => {
+          // Smooth fade-out of title overlay
+          titleOverlay.style.transition = 'opacity 0.22s ease-out';
+          titleOverlay.style.opacity = '0';
+          titleOverlay.style.pointerEvents = 'none';
+
+          setTimeout(() => {
+            titleOverlay.hidden = true;
+            titleOverlay.style.opacity = '';
+            titleOverlay.style.transition = '';
+            titleOverlay.style.pointerEvents = '';
+            if (newBtn) newBtn.classList.remove('loading-adventure');
+          }, 240);
+
+          // Fade out menu music and start in-game BGM in parallel
+          fadeOutMenuMusic();
           SoundEngine.playBGM();
-        });
+        };
+
+        if (isReady()) {
+          dismiss();
+        } else {
+          // If still booting on slow devices, show brief status on button
+          const label = newBtn?.querySelector('.cmd-label');
+          if (label) label.textContent = 'ENTERING DHAKA...';
+          const waitInterval = setInterval(() => {
+            if (isReady()) {
+              clearInterval(waitInterval);
+              dismiss();
+            }
+          }, 40);
+        }
       }
 
       if (titleOverlay) {
@@ -800,13 +833,14 @@ export const UIController: any = (() => {
     showScrapbook,
     openRPGMenu,
     setZone: name => { if ($('hud-zone')) $('hud-zone').textContent = name; },
-    setBossHUD: (visible, name = '', hp = 1, maxHp = 1) => {
+    setBossHUD: (visible: boolean, name = '', hp = 1, maxHp = 1, poise = 1, maxPoise = 1) => {
       const el = $('boss-hud');
       if (!el) return;
       el.hidden = !visible;
       if (visible) {
-        $('boss-name').textContent = name;
-        $('boss-hp-fill').style.width = `${Math.max(0, (hp / maxHp) * 100)}%`;
+        if ($('boss-name')) $('boss-name').textContent = name;
+        if ($('boss-hp-fill')) $('boss-hp-fill').style.width = `${Math.max(0, (hp / maxHp) * 100)}%`;
+        if ($('boss-poise-fill')) $('boss-poise-fill').style.width = `${Math.max(0, (poise / maxPoise) * 100)}%`;
       }
     }
   };

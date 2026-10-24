@@ -23,6 +23,39 @@ export const RPGStats = {
     return total;
   },
 
+  /**
+   * Data-Driven RPG Damage Formula:
+   * damage = ATK * damageMult * (50 / (50 + DEF)), min 1, +-8% variance
+   */
+  calculateDamage(atk: number, def: number, mult = 1.0, varianceSeed?: number): number {
+    const raw = atk * mult * (50 / (50 + Math.max(0, def)));
+    const varianceFactor = varianceSeed !== undefined
+      ? 1 + ((Math.abs(varianceSeed) % 17) - 8) * 0.01
+      : 1 + (Math.random() * 0.16 - 0.08);
+    return Math.max(1, Math.round(raw * varianceFactor));
+  },
+
+  /**
+   * Totoro Bond Helpers (0 to 4 pips)
+   */
+  addBond(amount: number): void {
+    DateState.bond = Math.min(DateState.maxBond || 4, Math.max(0, (DateState.bond || 0) + amount));
+    const ui = typeof window !== 'undefined' ? (window as any).UI : null;
+    if (ui && ui.updateRPGStats) ui.updateRPGStats();
+  },
+
+  spendBond(pips: number): boolean {
+    if ((DateState.bond || 0) < pips) return false;
+    DateState.bond = Math.max(0, (DateState.bond || 0) - pips);
+    const ui = typeof window !== 'undefined' ? (window as any).UI : null;
+    if (ui && ui.updateRPGStats) ui.updateRPGStats();
+    return true;
+  },
+
+  getBond(): number {
+    return DateState.bond || 0;
+  },
+
   addItem(itemId: string, qty = 1): void {
     if (!DateState.itemCounts) DateState.itemCounts = {};
     if (!DateState.inventory) DateState.inventory = [];

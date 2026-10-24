@@ -3,7 +3,6 @@
 
 import Phaser from 'phaser';
 import { ASSET_SPECS_MANIFEST, AssetSpec, AssetCategory } from '../config/assetSpecs.manifest';
-import { TILE_SIZE } from '../config/constants';
 
 export class ExternalAssetAdapter {
   private static registeredErrorHandlers = new Set<Phaser.Scene>();
@@ -24,10 +23,17 @@ export class ExternalAssetAdapter {
     }
 
     for (const [id, spec] of Object.entries(ASSET_SPECS_MANIFEST)) {
-      if (!spec.externalPath) continue;
+      // Only request files from the network if marked as available external files.
+      // Unintegrated / shopping list slots instantly bypass network requests and bind fallbacks.
+      if (!spec.externalPath || !spec.hasExternalFile) continue;
+
       // Do not duplicate load if already loaded in this scene
       if (!scene.textures.exists(`ext-${id}`)) {
         scene.load.image(`ext-${id}`, spec.externalPath);
+      }
+      if (spec.hasAnimJson) {
+        const animPath = spec.externalPath.replace(/\.png$/i, '.anim.json');
+        scene.load.json(`anim-data-${id}`, animPath);
       }
     }
   }
@@ -35,7 +41,7 @@ export class ExternalAssetAdapter {
   /**
    * Post-load normalization: inspects loaded external textures, performs integer 2x scaling
    * with nearest-neighbor interpolation (zero blur), slices frames, and registers animations.
-   * If an asset failed to load, securely aliases the procedural fallback texture.
+   * If an asset failed to load or is a fallback slot, securely aliases the procedural fallback texture.
    */
   static normalizeLoadedAssets(scene: Phaser.Scene): void {
     if (this.normalizedScenes.has(scene)) return;
@@ -45,16 +51,54 @@ export class ExternalAssetAdapter {
 
     for (const [id, spec] of Object.entries(ASSET_SPECS_MANIFEST)) {
       const extKey = `ext-${id}`;
-      const hasExternal = scene.textures.exists(extKey);
+      const hasExternal = Boolean(spec.hasExternalFile && scene.textures.exists(extKey));
 
       if (hasExternal) {
         this.processExternalAsset(scene, id, extKey, spec);
       } else {
         this.bindProceduralFallback(scene, id, spec);
       }
+
+      if (scene.cache.json.exists(`anim-data-${id}`)) {
+        const animData = scene.cache.json.get(`anim-data-${id}`);
+        this.registerJsonAnimations(scene, id, animData);
+      }
     }
 
     console.log('✨ [ExternalAssetAdapter] All asset slots normalized and verified.');
+  }
+
+  /**
+   * Registers animations from an authored .anim.json definition
+   */
+  private static registerJsonAnimations(scene: Phaser.Scene, id: string, animData: any): void {
+    if (!animData || !animData.animations) return;
+    for (const anim of animData.animations) {
+      const animKey = `${id}-${anim.name}`;
+      if (scene.anims.exists(animKey)) scene.anims.remove(animKey);
+
+      const frames: Phaser.Types.Animations.AnimationFrame[] = [];
+      if (Array.isArray(anim.frames)) {
+        for (const f of anim.frames) {
+          const fIdx = typeof f === 'number' ? f : f.index;
+          const frameTextureKey = `${id}-${fIdx}`;
+          if (scene.textures.exists(frameTextureKey)) {
+            frames.push({ key: frameTextureKey });
+          } else {
+            frames.push({ key: id, frame: fIdx });
+          }
+        }
+      }
+
+      if (frames.length > 0) {
+        scene.anims.create({
+          key: animKey,
+          frames,
+          frameRate: anim.frameRate || 6,
+          repeat: anim.loop ? -1 : 0
+        });
+      }
+    }
   }
 
   /**
@@ -107,6 +151,8 @@ export class ExternalAssetAdapter {
     // If character sheet or multi-frame entity, slice frames and register animations
     if (spec.category === 'character' || spec.category === 'companion') {
       this.sliceAndRegisterCharacterAnimations(scene, id, workingKey, spec);
+    } else if (spec.category === 'enemy' || spec.category === 'boss') {
+      this.sliceAndRegisterEnemyBossAnimations(scene, id, workingKey, spec);
     } else if (spec.category === 'crop') {
       this.sliceCropStages(scene, id, workingKey);
     } else {
@@ -176,36 +222,59 @@ export class ExternalAssetAdapter {
       });
     }
 
-    // 2. Extract individual frame textures ${id}-0, ${id}-1, ${id}-2, ${id}-3 from Row 0 (Down)
-    // and alias ${id} to ${id}-0 for seamless scene backwards compatibility
-    for (let c = 0; c < cols; c++) {
-      const frameTexKey = `${id}-${c}`;
-      let fCanvas: any = scene.textures.exists(frameTexKey)
-        ? scene.textures.get(frameTexKey)
-        : scene.textures.createCanvas(frameTexKey, frameW, frameH);
+    // 2. Extract directional idle frame textures:
+    // Row 0 = Down (${id}-0, ${id}-down)
+    // Row 1 = Left (${id}-1, ${id}-left)
+    // Row 2 = Right (${id}-2, ${id}-right)
+    // Row 3 = Up (${id}-3, ${id}-up)
+    const dirRowMap: Record<number, string> = { 0: 'down', 1: 'left', 2: 'right', 3: 'up' };
+    for (let r = 0; r < rows; r++) {
+      const dName = dirRowMap[r] || `row-${r}`;
+      const dirIdleKey = `${id}-${r}`;
+      let fCanvas: any = scene.textures.exists(dirIdleKey)
+        ? scene.textures.get(dirIdleKey)
+        : scene.textures.createCanvas(dirIdleKey, frameW, frameH);
 
       if (fCanvas && fCanvas.getContext) {
         const fCtx = fCanvas.getContext();
         fCtx.clearRect(0, 0, frameW, frameH);
         fCtx.imageSmoothingEnabled = false;
-        fCtx.drawImage(img, c * frameW, 0, frameW, frameH, 0, 0, frameW, frameH);
+        fCtx.drawImage(img, 0, r * frameH, frameW, frameH, 0, 0, frameW, frameH);
         fCanvas.refresh();
+      }
+      this.createTextureAlias(scene, `${id}-${dName}`, dirIdleKey);
+    }
+
+    // Extract Row 0 walk cycle step frames for standard walk animation
+    for (let c = 0; c < cols; c++) {
+      const stepFrameKey = `${id}-step-${c}`;
+      let sCanvas: any = scene.textures.exists(stepFrameKey)
+        ? scene.textures.get(stepFrameKey)
+        : scene.textures.createCanvas(stepFrameKey, frameW, frameH);
+
+      if (sCanvas && sCanvas.getContext) {
+        const sCtx = sCanvas.getContext();
+        sCtx.clearRect(0, 0, frameW, frameH);
+        sCtx.imageSmoothingEnabled = false;
+        sCtx.drawImage(img, c * frameW, 0, frameW, frameH, 0, 0, frameW, frameH);
+        sCanvas.refresh();
       }
     }
 
-    // Alias primary key ${id} directly to ${id}-0 so scene.add.sprite(x, y, id) resolves to single frame
+    // Alias primary key ${id} directly to ${id}-0 (Down idle) so scene.add.sprite(x, y, id) resolves to single frame
     this.createTextureAlias(scene, id, `${id}-0`);
 
     // 3. Register standard walk animation anim-${id} used by getOrCreateWalkAnim
+    // CRITICAL: Uses Row 0 step frames so fallback walk animations step forward without 360-degree spinning!
     const standardAnimKey = `anim-${id}`;
     if (scene.anims.exists(standardAnimKey)) scene.anims.remove(standardAnimKey);
     scene.anims.create({
       key: standardAnimKey,
       frames: [
-        { key: `${id}-0` },
-        { key: `${id}-1` },
-        { key: `${id}-2` },
-        { key: `${id}-3` }
+        { key: `${id}-step-0` },
+        { key: `${id}-step-1` },
+        { key: `${id}-step-2` },
+        { key: `${id}-step-3` }
       ],
       frameRate: 5,
       repeat: -1
@@ -271,6 +340,139 @@ export class ExternalAssetAdapter {
   }
 
   /**
+   * Slices 4x4 animated enemy and boss sheets (Row 0=Idle, Row 1=Move/Walk, Row 2=Attack, Row 3=Stagger/Hurt)
+   * into 16 discrete sub-frame textures (${id}-0 through ${id}-15), aliasing primary ${id} to ${id}-0,
+   * and registers anim-${id}, ${id}-idle, ${id}-walk, ${id}-attack, and ${id}-stagger animations.
+   */
+  private static sliceAndRegisterEnemyBossAnimations(
+    scene: Phaser.Scene,
+    id: string,
+    texKey: string,
+    spec: AssetSpec
+  ): void {
+    const tex = scene.textures.get(texKey);
+    if (!tex) return;
+
+    const img = tex.getSourceImage() as HTMLImageElement;
+    const cols = 4;
+    const rows = 4;
+    const frameW = Math.floor(img.width / cols);
+    const frameH = Math.floor(img.height / rows);
+
+    if (frameW < 8 || frameH < 8) return;
+
+    // Slice all 16 frames into canvas textures so scene.textures.exists(`${id}-${i}`) is true
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const frameIdx = r * cols + c;
+        const subFrameName = `${id}-${frameIdx}`;
+        const fx = c * frameW;
+        const fy = r * frameH;
+
+        if (!tex.has(subFrameName)) {
+          tex.add(subFrameName, 0, fx, fy, frameW, frameH);
+        }
+        if (!tex.has(String(frameIdx))) {
+          tex.add(String(frameIdx), 0, fx, fy, frameW, frameH);
+        }
+
+        let fCanvas: any = scene.textures.exists(subFrameName)
+          ? scene.textures.get(subFrameName)
+          : scene.textures.createCanvas(subFrameName, frameW, frameH);
+
+        if (fCanvas && fCanvas.getContext) {
+          const fCtx = fCanvas.getContext();
+          fCtx.clearRect(0, 0, frameW, frameH);
+          fCtx.imageSmoothingEnabled = false;
+          fCtx.drawImage(img, fx, fy, frameW, frameH, 0, 0, frameW, frameH);
+          fCanvas.refresh();
+        }
+      }
+    }
+
+    // Alias base texture ${id} directly to ${id}-0
+    this.createTextureAlias(scene, id, `${id}-0`);
+
+    // 1. anim-${id} (standard walk animation checked by DhakaValleyScene.getOrCreateWalkAnim)
+    // Uses Row 1 frames 4, 5, 6, 7 (Walk/Stride)
+    const standardAnimKey = `anim-${id}`;
+    if (scene.anims.exists(standardAnimKey)) scene.anims.remove(standardAnimKey);
+    scene.anims.create({
+      key: standardAnimKey,
+      frames: [
+        { key: `${id}-4` },
+        { key: `${id}-5` },
+        { key: `${id}-6` },
+        { key: `${id}-7` }
+      ],
+      frameRate: spec.category === 'boss' ? 5 : 6,
+      repeat: -1
+    });
+
+    // 2. ${id}-idle: Row 0 frames 0, 1, 2, 3
+    const idleKey = `${id}-idle`;
+    if (scene.anims.exists(idleKey)) scene.anims.remove(idleKey);
+    scene.anims.create({
+      key: idleKey,
+      frames: [
+        { key: `${id}-0` },
+        { key: `${id}-1` },
+        { key: `${id}-2` },
+        { key: `${id}-3` }
+      ],
+      frameRate: 4,
+      repeat: -1
+    });
+
+    // 3. ${id}-walk: Row 1 frames 4, 5, 6, 7
+    const walkKey = `${id}-walk`;
+    if (scene.anims.exists(walkKey)) scene.anims.remove(walkKey);
+    scene.anims.create({
+      key: walkKey,
+      frames: [
+        { key: `${id}-4` },
+        { key: `${id}-5` },
+        { key: `${id}-6` },
+        { key: `${id}-7` }
+      ],
+      frameRate: spec.category === 'boss' ? 5 : 6,
+      repeat: -1
+    });
+
+    // 4. ${id}-attack: Row 2 frames 8, 9, 10, 11
+    const attackKey = `${id}-attack`;
+    if (scene.anims.exists(attackKey)) scene.anims.remove(attackKey);
+    scene.anims.create({
+      key: attackKey,
+      frames: [
+        { key: `${id}-8` },
+        { key: `${id}-9` },
+        { key: `${id}-10` },
+        { key: `${id}-11` }
+      ],
+      frameRate: 6,
+      repeat: 0
+    });
+
+    // 5. ${id}-stagger: Row 3 frames 12, 13, 14, 15
+    const staggerKey = `${id}-stagger`;
+    if (scene.anims.exists(staggerKey)) scene.anims.remove(staggerKey);
+    scene.anims.create({
+      key: staggerKey,
+      frames: [
+        { key: `${id}-12` },
+        { key: `${id}-13` },
+        { key: `${id}-14` },
+        { key: `${id}-15` }
+      ],
+      frameRate: 5,
+      repeat: -1
+    });
+
+    console.log(`👾 [ExternalAssetAdapter] Sliced & registered 4x4 combat animations for ${spec.category} "${id}".`);
+  }
+
+  /**
    * Slice 6 growth stages for crops (Seed, Sprout, Young, Flowering, Mature, Regrow)
    */
   private static sliceCropStages(scene: Phaser.Scene, id: string, texKey: string): void {
@@ -297,20 +499,65 @@ export class ExternalAssetAdapter {
   }
 
   /**
-   * Fallback binding guarantee: If external PNG is missing, safely binds the procedural
-   * texture generated by TextureGenerator.ts, ensuring zero crashes.
+   * Fallback binding guarantee: If external PNG is missing:
+   * 1. Safely binds existing procedural texture generated by TextureGenerator.ts (preserving existing fallbacks).
+   * 2. For any slot with no PNG and no procedural texture yet, registers a flat, labeled placeholder
+   *    rectangle (slot id + frame size) per Art Policy §0+, ensuring zero crashes.
    */
   private static bindProceduralFallback(scene: Phaser.Scene, id: string, spec: AssetSpec): void {
     const fallbackKey = spec.fallbackProceduralKey;
 
     if (scene.textures.exists(fallbackKey)) {
       this.createTextureAlias(scene, id, fallbackKey);
-    } else {
-      // If even the specified fallback key does not exist, use dhaka-tileset-32 or tile-grass as ultra-safe fallback
-      const ultraSafe = scene.textures.exists('tile-grass') ? 'tile-grass' : undefined;
-      if (ultraSafe) {
-        this.createTextureAlias(scene, id, ultraSafe);
-      }
+      this.createTextureAlias(scene, `${id}-0`, fallbackKey);
+      this.createTextureAlias(scene, `${id}-down`, fallbackKey);
+      return;
+    }
+
+    // Art Policy §0+: Flat, labeled placeholder rectangle (slot id + frame size)
+    const pref = spec.recommendedDownloadSpecs?.preferredFrameSize;
+    const w = (pref && pref.width) || 64;
+    const h = (pref && pref.height) || 64;
+
+    let canvas: any = scene.textures.exists(id)
+      ? scene.textures.get(id)
+      : scene.textures.createCanvas(id, w, h);
+
+    if (canvas && canvas.getContext) {
+      const ctx = canvas.getContext();
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, w, h);
+
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, w - 2, h - 2);
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(id.slice(0, 11), w / 2, h / 2 - 5);
+      ctx.fillText(`${w}x${h}`, w / 2, h / 2 + 7);
+
+      canvas.refresh();
+    }
+
+    for (let i = 0; i < 16; i++) {
+      this.createTextureAlias(scene, `${id}-${i}`, id);
+    }
+    this.createTextureAlias(scene, `${id}-down`, id);
+    this.createTextureAlias(scene, `${id}-left`, id);
+    this.createTextureAlias(scene, `${id}-right`, id);
+    this.createTextureAlias(scene, `${id}-up`, id);
+    this.createTextureAlias(scene, fallbackKey, id);
+
+    if (!scene.anims.exists(`${id}-idle`)) {
+      scene.anims.create({
+        key: `${id}-idle`,
+        frames: [{ key: id }],
+        frameRate: 1,
+        repeat: -1
+      });
     }
   }
 

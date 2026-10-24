@@ -12,16 +12,17 @@
 2. [Technical Architecture & Stack](#2-technical-architecture--stack)
 3. [World Map Directory (8 Playable Environments)](#3-world-map-directory-8-playable-environments)
 4. [Protagonists & Companion System](#4-protagonists--companion-system)
-5. [Complete Overworld Character Directory (32 NPCs)](#5-complete-overworld-character-directory-32-npcs)
+5. [Complete Overworld Character Directory (38 NPCs & Entities)](#5-complete-overworld-character-directory-38-npcs--entities)
 6. [Dhaka Heritage Date Activities & Mini-Quests](#6-dhaka-heritage-date-activities--mini-quests)
 7. [Stardew Valley 32×32 Grid & Farming Engine](#7-stardew-valley-3232-grid--farming-engine)
 8. [Action RPG Combat, Guardian Bosses & Progression](#8-action-rpg-combat-guardian-bosses--progression)
 9. [Atmosphere, Weather & Calendar Time Engine](#9-atmosphere-weather--calendar-time-engine)
-10. [Audio Pipeline & SoundEngine Architecture](#10-audio-pipeline--soundengine-architecture)
-11. [Hybrid External/Procedural Asset Adapter & Specifications](#11-hybrid-externalprocedural-asset-adapter--specifications)
-12. [State Management, Quests & Persistence](#12-state-management-quests--persistence)
-13. [Deployment, Build Commands & Verification Protocol](#13-deployment-build-commands--verification-protocol)
-14. [Protocol for Future AI Modifications](#14-protocol-for-future-ai-modifications)
+10. [Living-World NPC Behavior Engine (Stardew Valley & Pokémon HGSS Architecture)](#10-living-world-npc-behavior-engine-stardew-valley--pokémon-hgss-architecture)
+11. [Audio Pipeline & SoundEngine Architecture](#11-audio-pipeline--soundengine-architecture)
+12. [Hybrid External/Procedural Asset Adapter & Specifications](#12-hybrid-externalprocedural-asset-adapter--specifications)
+13. [State Management, Quests & Persistence](#13-state-management-quests--persistence)
+14. [Deployment, Build Commands & Verification Protocol](#14-deployment-build-commands--verification-protocol)
+15. [Protocol for Future AI Modifications](#15-protocol-for-future-ai-modifications)
 
 ---
 
@@ -45,7 +46,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | **Testing** | [Vitest](https://vitest.dev/) | Unit & regression testing for state, combat calculations, and farming systems |
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, Web Audio synth fallback |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling + procedural canvas fallback |
-| **Hosting & CI/CD** | [Vercel](https://vercel.com/) | Live production deployment at `https://moonwalkersday.vercel.app` |
+| **Hosting & CI/CD** | [Cloudflare Pages](https://pages.cloudflare.com/) + [Vercel](https://vercel.com/) | Live Cloudflare Pages production deployment: `https://moon-walkers-day.pages.dev` (Project: `moon-walkers-day`). Vercel mirror: `https://moonwalkersday.vercel.app`. |
 
 ### Source Code Directory Layout
 ```
@@ -55,11 +56,31 @@ dhaka-date-rpg/
 ├── package.json                     # Node dependencies, scripts, and build targets
 ├── tsconfig.json                    # TypeScript compiler options
 ├── vite.config.ts                   # Vite bundler configuration
+├── docs/
+│   └── npc-engine/                  # Living-World NPC Engine engineering dossier & visual proofs
+│       ├── 00-audit.md              # Current-state codebase audit & frame costs
+│       ├── 01-research.md           # Stardew Valley & Pokémon HGSS reverse-engineering dossier
+│       ├── 02-design.md             # Complete architectural design spec & FSM diagrams
+│       ├── DECISIONS.md             # Architectural Decision Records (ADR 001–007)
+│       ├── PROGRESS.md              # Master progress & milestone checklist (M1–M10)
+│       ├── mcp-inventory.md         # MCP tooling map
+│       ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
+│       ├── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
+│       └── screenshots/             # 9 headless browser proof captures
 ├── public/                          # Static public assets
 │   ├── assets/
 │   │   ├── audio/                   # Compressed BGM tracks & 16-channel SFX
 │   │   ├── sprites/characters/      # Normalized external character & companion spritesheets
 │   │   └── tilesets/                # Normalized external tileset sheets (16x16 and 32x32)
+├── tests/
+│   ├── stats.test.ts                # RPG combat & stats formulas
+│   ├── farming.test.ts              # Stardew farming simulation & seasons
+│   └── npc/                         # Living-World NPC Engine unit & integration tests
+│       ├── resolver.test.ts         # Pure deterministic schedule resolver (20 tests)
+│       ├── navigator.test.ts        # In-house A* terrain cost & door pathfinding (8 tests)
+│       ├── mover.test.ts            # Stepping controller, facing, freeze/restore (8 tests)
+│       ├── offscreen.test.ts        # Pure discrete offscreen analytic placement (3 tests)
+│       └── validator.test.ts        # CLI validator for all 38 NPC definitions (1 test)
 └── src/
     ├── audio/
     │   └── SoundEngine.ts           # Web Audio synthesizer, BGM crossfader, and SFX pool
@@ -68,8 +89,11 @@ dhaka-date-rpg/
     │   ├── constants.ts             # World dimensions, coordinate anchors, tile constants
     │   ├── crops.db.ts              # Seasonal crops, growth stages, yields, sell values
     │   ├── items.db.ts              # Weapons, armor, keepsakes, food, materials database
+    │   ├── npcSchedules.db.ts       # Declarative schedules & variants for all 38 NPCs
     │   ├── recipes.db.ts            # Crafting recipes & material requirements
     │   └── worlds.db.ts             # 6 Realms + Curzon Interior + Farmhouse definitions
+    ├── debug/
+    │   └── NpcDebugOverlay.ts       # F3 HUD overlay, route polylines, and window.__npc API
     ├── graphics/
     │   ├── CharacterSpriteGenerator.ts # Procedural pixel art character generator
     │   ├── CreatureSpriteGenerator.ts  # Procedural bosses, enemies, and farm animals
@@ -88,10 +112,17 @@ dhaka-date-rpg/
     │   ├── AtmosphereSystem.ts      # Real-time color grading, shadows, weather lighting
     │   ├── CombatSystem.ts          # Hitbox calculations, combos, dashes, cooldowns
     │   ├── FarmingSystem.ts         # 32x32 grid tilling, watering, crop growth simulation
-    │   ├── ScheduleSystem.ts        # NPC waypoint pathfinding & dynamic 4-dir animation
-    │   ├── TimeCalendarSystem.ts    # Day/Night clock, seasonal progression, minute events
-    │   └── WeatherSystem.ts         # Rain particles, puddles, lightning, wind gusts
+    │   ├── ScheduleSystem.ts        # Living-world orchestrator, active entity lifecycle & dispatcher
+    │   ├── TimeCalendarSystem.ts    # Day/Night clock, 5 Bengal seasons, event bus emitter
+    │   ├── WeatherSystem.ts         # Rain particles, puddles, lightning, wind gusts
+    │   └── npc/                     # Specialized living-world NPC subsystems
+    │       ├── NpcBehaviors.ts      # Seeded PRNG idle selection, activity badges & emotes
+    │       ├── NpcMover.ts          # Smooth tile-stepping controller & interaction freezing
+    │       ├── NpcNavigator.ts      # In-house A* pathfinding with terrain-cost weights
+    │       ├── OffscreenSimulator.ts# O(1) analytic placement across maps and time jumps
+    │       └── ScheduleResolver.ts  # Pure deterministic schedule & variant evaluator
     ├── types/
+    │   ├── npc.types.ts             # Strict living-world schedule & navigation interfaces
     │   ├── rpg.types.ts             # Combat, stats, items, recipes, dialog interfaces
     │   └── stardew.types.ts         # 32x32 grid, farming, crops, calendar interfaces
     └── ui/
@@ -120,13 +151,29 @@ The game features **8 fully realized playable maps**. Outdoor realms use an **80
 ## 4. Protagonists & Companion System
 
 ### Moon Walker (Satsuki Kusakabe)
-- **Visual Design**: Authentic Pokémon GBA/HGSS 16×32 native pixel art (upscaled 2× nearest-neighbor to 32×64 px). Short dark brown bob haircut, bright yellow collared short-sleeve shirt, orange-amber pinafore suspender dress, white ankle socks, dark brown loafers.
-- **Role & Mechanics**: Player-controlled protagonist. Features 4-directional walk cycles (`player-walk-down`, `player-walk-left`, `player-walk-right`, `player-walk-up`). Controls parasol strikes, dash dodges, hoeing soil, watering crops, item interaction, and dialogue triggers.
-- **Origin**: Inspired by Satsuki from Studio Ghibli's *My Neighbor Totoro*, embodying courageous curiosity, sisterly warmth, and devotion to nature.
+- **Visual Design**: Authentic Pokémon HeartGold/SoulSilver (HGSS) & Emerald overworld trainer chibi style (32×64 px frame, 128×256 px 4×4 sheet). Short neat dark brown bob hair with parted bangs (zero neon/orange hair or pigtails), bright pale yellow short-sleeve collared shirt, vibrant amber-orange pinafore suspender dress with shoulder straps, white ankle socks, and dark brown loafers. Perfectly proportioned to match fellow overworld NPCs (Anamika, Ahona, Apshora).
+- **Sprite Sheet Layout**: Exactly 4 columns × 4 rows in `public/assets/sprites/characters/moon_walker.png`:
+  - Row 0: Facing Down (front walk cycle)
+  - Row 1: Facing Left (side walk cycle, forward-facing)
+  - Row 2: Facing Right (side walk cycle, forward-facing mirror)
+  - Row 3: Facing Up (back walk cycle)
+- **Role & Dynamic Behaviors (`PlayerBehaviors.ts`)**: Player-controlled protagonist. Features 4-directional walk cycles (`player-walk-down`, `player-walk-left`, `player-walk-right`, `player-walk-up`) and directional idles. Governed by the `PlayerBehaviors` engine:
+  - **Dynamic Idle Breathing**: Rhythmic sinusoidal stretch (`scaleY: 1 ± 0.025`) when stationary.
+  - **Footstep Particles**: Dynamic dust puffs on soil/grass, pier wood echoes, and water splashes in puddles.
+  - **Ambient Idle Quirks**: Emits spontaneous situational emotes (`♪`, `🌸`, `☕`, `✨`) after standing still for 3–6 seconds.
+  - **Companion Heart Bonding**: Spawns floating heart reaction bubbles (`♥`) and happy chirps when lingering beside Totoro.
+  - **Rain Parasol**: Automatically raises a stylish amber-gold parasol with white scallops during Kalbaishakhi monsoon showers.
+  - **Farming Action Feedback**: Hoe swing dirt bursts, watering arc droplets with ground ripples, and harvest sparkle bursts.
+- **Origin**: Faithful recreation of Satsuki Kusakabe from Studio Ghibli's *My Neighbor Totoro*, embodying courageous curiosity, sisterly warmth, and devotion to nature.
 
 ### Totoro (Forest Spirit Avatar of Shared Affection)
-- **Visual Design**: Authentic Ghibli giant grey forest spirit, scaled to a substantial 68×76 px footprint (~2.5 grid tiles tall). Slate-grey body, cream-colored belly with dark chevron markings, pointed rabbit-like ears, wide round white eyes with dark pupils and catchlights, whiskers, holding a green taro leaf umbrella overhead.
-- **Role & Mechanics**: Follows Moon Walker through a 16-point trailing history array with natural rubber-band smoothing. Interacts during dialogues with comforting, whimsical commentary.
+- **Visual Design**: Authentic Ghibli giant grey forest spirit in Pokémon HGSS overworld follower style, scaled to a substantial 68×76 px footprint (272×304 px 4×4 sheet, ~2.5 grid tiles tall). Features a complete, realistic full-body sprite with **zero umbrella / held leaf**, free arms at his sides, cheerful smiling mouth, wide round curious eyes with black pupils, 3 black whiskers per cheek, pointed upright ears, cream belly with dark grey chevron markings, sturdy clawed feet, and a fluffy round tail visible in side and back views.
+- **Sprite Sheet Layout**: Exactly 4 columns × 4 rows in `public/assets/sprites/characters/totoro.png`:
+  - Row 0: Facing Down (4-frame front waddling walk cycle, smiling face)
+  - Row 1: Facing Left (4-frame side walk cycle, forward-facing with visible tail)
+  - Row 2: Facing Right (4-frame side walk cycle, forward-facing mirror with visible tail)
+  - Row 3: Facing Up (4-frame back walk cycle with fluffy round tail and pointed ears)
+- **Role & Mechanics**: Follows Moon Walker through a 16-point trailing history array with natural rubber-band smoothing. Interacts during dialogues with comforting, whimsical commentary. Enjoys fresh raindrops directly on his warm fur during Kalbaishakhi rainstorms.
 - **Combat Abilities**:
   - **Spirit Roar (`Q` / `R`)**: Emits a screen-shaking spiritual bellow that breaks enemy armor, stuns mobs in an AoE radius, and shatters Guardian boss barrier shields.
   - **Belly Slam**: Devastating body slam dealing heavy physical/spiritual damage.
@@ -134,7 +181,7 @@ The game features **8 fully realized playable maps**. Outdoor realms use an **80
 
 ---
 
-## 5. Complete Overworld Character Directory (32 NPCs)
+## 5. Complete Overworld Character Directory (38 NPCs & Entities)
 
 Every NPC features full 4-directional walk/idle frames, unique portrait icons, localized Dhaka personality, interactive dialogues, and reactive branching questlines.
 
@@ -251,22 +298,57 @@ graph TD
 
 ## 8. Action RPG Combat, Guardian Bosses & Progression
 
-Combat in the expedition realms combines active top-down hack-and-slash mechanics with companion coordination.
+Combat in the expedition realms features an overhauled, responsive, data-driven action RPG engine combining tight player frame data, readable telegraphs, poise/stagger mechanics, and a 4-pip Totoro Bond gauge.
 
-### Combat Mechanics & Keybindings
-- **Attack (`J` / Left-Click)**: Three-hit parasol or blade combo. Combo step 1 = quick jab, step 2 = horizontal slash, step 3 = sweeping 360° spin finisher.
-- **Dash / Dodge (`K` / Shift)**: Consumes 15 SP. Grants 280ms of invulnerability frames (i-frames) and bursts Moon Walker 95px forward with ghost trail particles.
-- **Totoro Spirit Roar (`Q` / `R`)**: Consumes 30 SP. Stuns all surrounding enemies within 140px for 2.2s and instantly breaks Guardian barrier shields.
-- **Totoro Belly Slam (`E` when prompted)**: Deals 2.5× physical crushing damage in an area.
+### 8.1 Data-Driven Attack Framework (`src/config/attacks.db.ts`)
+All player, enemy, and boss attacks are configured as data structures conforming to `AttackDef`:
+- `id`, `name`, `windupMs`, `activeMs`, `recoveryMs`.
+- `hitbox`: `shape` (`circle` | `arc` | `line` | `cone`), size parameters (`radius`, `angleDeg`, `width`, `length`).
+- `damageMult`, `poiseDamage`, `knockback`, `hitStopMs`, `shake`.
+- `cancelInto`: Array of attack IDs that can interrupt recovery frames.
+- `telegraph`: Real-time telegraph decal configuration (`shape`, `color`, `fillStyle`).
+- `parryable`, `dodgeOnly`, `totoroInterrupt`.
 
-### RPG Attributes & Formulas (`src/state/RPGStats.ts`)
-- **Health Points (HP)**: Base 100 + `level * 18`. Drops to 0 triggers knocked-out revival at Curzon Hall.
-- **Spirit Points (SP)**: Base 60 + `level * 8`. Used for dashes, skills, and parasol specials.
-- **Attack Power (ATK)**: `Base (12 + level * 3) + Weapon Bonus`.
-- **Defense (DEF)**: `Base (5 + level * 2) + Armor Bonus`. Damage taken formula: `Damage = Math.max(1, IncomingATK - DEF * 0.6)`.
-- **Leveling**: XP required for next level: `Math.floor(100 * Math.pow(1.32, level - 1))`. Level cap: 50.
+#### Strict Telegraph Color Language
+- 🟡 **GOLD**: Ground / body glow = **Parry-able** with Parasol Parry (150ms window).
+- 🔴 **RED**: Heavy strike = **Dodge only**, cannot be blocked or parried (breaks guard).
+- 🟣 **PURPLE**: Lethal charge / channeling = **Totoro Interrupt** required (Spirit Roar `Q` or Belly Slam `E`).
+- 🔵 **BLUE**: Dazed stagger tell / safe vulnerability window (1.5× damage multiplier).
 
-### Realm Enemies & Guardian Bosses (`src/config/worlds.db.ts`)
+### 8.2 Player Combat Spec: Frame Data & Feel
+- **Jab (Step 0)**: 70ms windup, 60ms active, 110ms recovery, 10px lunge, 45ms hit-stop, cancelable into Slash at 60% recovery.
+- **Slash (Step 1)**: 90ms windup, 80ms active, 130ms recovery, 14px lunge, 60ms hit-stop, wide forward arc.
+- **Spin Finisher (Step 2)**: 120ms windup, 140ms active, 260ms recovery, 360° hit radius, 90ms hit-stop, high knockback. Automatically triggers **Totoro Assist Tackle** if Totoro is within 220px.
+- **Input Buffer**: 150ms buffer window for smooth combo chaining without mash-dropping.
+- **Soft Aim Assist**: Automatically steers player attack facing vector toward the closest enemy within 60px.
+- **Combo Idle Reset**: Combo resets to Step 0 after 600ms of inactivity.
+
+### 8.3 Defensive Mechanics: Parasol Parry & Dash
+- **Parasol Parry & Guard (`Hold J` / Right-Click)**:
+  - **Perfect Parry**: Active during the initial 150ms of guard startup. Successfully parrying a GOLD attack staggers the attacker for 1.2s, refunds +10 SP, awards **+1 Bond Pip**, and triggers a 120ms slow-mo freeze.
+  - **Sustained Guard**: Holding guard after 150ms blocks 70% of incoming damage while draining 8 SP per blocked hit. Cannot block RED attacks (guard broken).
+- **Dash / Dodge (`K` / Shift)**:
+  - Consumes 15 SP. Grants 200ms of invulnerability frames (i-frames) with a 500ms cooldown. Cancels any attack recovery immediately.
+  - **Perfect Dodge**: Dashing through an active enemy telegraph in its final 100ms awards **+1 Bond Pip** and triggers 0.25s time dilation.
+
+### 8.4 Totoro Bond System (0 – 4 Pips)
+Totoro's abilities are powered by a 4-pip Affection Bond Gauge (`DateState.bond`), replacing raw SP costs:
+- **Bond Fills From**: Landing combo strikes (+0.08), Perfect Parry (+1.0), Perfect Dodge (+1.0), and passive proximity (<70px, +0.05 pips/sec).
+- **Spirit Roar (`Q`, 1 Pip)**: AoE soundwave stun for 2.2s within 140px. Breaks shields and **interrupts PURPLE attacks**.
+- **Seismic Belly Slam (`E`, 2 Pips)**: Totoro leaps high and crashes down with a massive shockwave, dealing 50 poise damage to break boss poise and force a **Dazed Vulnerability Stagger**.
+- **Leaf Swiftness (`F`, 1 Pip)**: Grants Moon Walker +40% movement speed for 6 seconds and clears environmental hazards.
+- **Totoro Assist Tackle (Free, 0 Pips)**: Automatically executed when Moon Walker lands the 3rd combo hit (Spin Finisher), lunging 55px forward for bonus impact damage.
+
+### 8.5 RPG Attributes, Damage Formula & Poise System
+- **Hyperbolic Damage Formula**:
+  $$\text{Damage} = \text{ATK} \times \text{damageMult} \times \left(\frac{50}{50 + \text{DEF}}\right) \pm 8\% \text{ variance (min 1)}$$
+  Eliminates hard floor clipping of flat subtraction formulas when DEF scales high.
+- **Poise / Stagger Meter**:
+  - Every enemy and boss possesses a Poise meter (`maxPoise`).
+  - Depleting Poise to 0 inflicts **Stagger for 1.5s**, during which the target takes **1.5× critical damage** with orbiting stun stars.
+  - Bosses display a dedicated Poise Bar under their Boss HP bar (`#boss-poise-fill`) and enter a **Dazed Blue Telegraph** state when broken. Poise regenerates after stagger recovery.
+
+### 8.6 Realm Enemies & Guardian Bosses (`src/config/worlds.db.ts`)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -275,27 +357,48 @@ sequenceDiagram
     participant Boss as Guardian Boss
 
     Player->>Arena: Enter Realm Caldera / Arena
-    Arena->>Boss: Awaken Guardian (HP Bar HUD displayed)
-    loop Battle Phase
-        Boss->>Player: Elemental Attack / Charge Telegraphed
-        Player->>Player: Dash (K / Shift) with i-Frames
-        Player->>Boss: 3-Hit Combo (J / Left-Click)
-        Boss->>Boss: Activates Barrier Shield
-        Player->>Boss: Totoro Spirit Roar (Q/R) - Breaks Shield!
-        Player->>Boss: Critical Vulnerability Strike
+    Arena->>Boss: Awaken Guardian (HP & Poise HUD displayed)
+    loop Dynamic Combat Loop
+        Boss->>Player: Telegraphed Attack (GOLD / RED / PURPLE)
+        alt GOLD Attack
+            Player->>Boss: Parasol Parry (Hold J / R-Click) -> Stagger + 1 Bond Pip
+        else RED Attack
+            Player->>Player: Perfect Dodge (K / Shift) -> 0.25s Slow-Mo + 1 Bond Pip
+        else PURPLE Attack
+            Player->>Boss: Totoro Roar (Q, 1 Pip) -> INTERRUPT & 2.2s Stun!
+        end
+        Player->>Boss: 3-Hit Combo (Jab -> Slash -> Spin) + Totoro Assist Tackle
+        Player->>Boss: Totoro Belly Slam (E, 2 Pips) -> Depletes Poise
+        Boss->>Boss: Staggered (BLUE Tell, takes 1.5x damage)
     end
     Boss->>Arena: Defeated!
     Arena->>Player: Drops Realm Seal Keepsake + High XP
     Player->>Arena: Activates Return Portal to Dhaka Valley
 ```
 
-| Realm | Mob Enemy | Enemy Stats | Guardian Boss | Boss HP / ATK | Unique Drop / Seal |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Forest** | Briar Bogling | HP: 55, ATK: 10, Drop: `spirit_dew` | **Sylvan Briar Stag** | HP: 260, ATK: 18 | `seal_forest` (Forest Realm Seal) |
-| **Sunken** | Tidepool Crabler | HP: 90, ATK: 16, Drop: `coral_shard` | **Abyssal Coral Leviathan** | HP: 420, ATK: 24 | `seal_sunken` (Sunken Realm Seal) |
-| **Ember** | Cinder Hound | HP: 135, ATK: 22, Drop: `ember_ore` | **Ignis, the Magma Drake** | HP: 620, ATK: 32 | `seal_ember` (Ember Realm Seal) |
-| **Frost** | Glacier Wraith | HP: 180, ATK: 28, Drop: `frost_crystal` | **Cryon, Warden of Eternal Frost**| HP: 850, ATK: 38 | `seal_frost` (Frost Realm Seal) |
-| **Astral** | Void Echo | HP: 230, ATK: 34, Drop: `frost_crystal` | **Chrono-Fracture Archon** | HP: 1200, ATK: 45| `seal_astral` (Master Reality Seal) |
+| Realm | Mob Enemy | Enemy Stats | Guardian Boss | Boss HP / Poise / ATK | Unique Drop / Seal | External Art Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Forest** | Briar Bogling | HP: 55, Poise: 30, ATK: 10 | **Sylvan Briar Stag** | HP: 260, Poise: 80, ATK: 18 | `seal_forest` (Forest Realm Seal) | **Integrated External Pixel Art** (`briar_bogling.png` 64x64 4x4 & `sylvan_briar_stag.png` 128x128 4x4 with `.anim.json`) |
+| **Sunken** | Tidepool Crabler | HP: 90, Poise: 45, ATK: 16 | **Abyssal Coral Leviathan** | HP: 420, Poise: 110, ATK: 24 | `seal_sunken` (Sunken Realm Seal) | Placeholder Fallback |
+| **Ember** | Cinder Hound | HP: 135, Poise: 60, ATK: 22 | **Ignis, the Magma Drake** | HP: 620, Poise: 140, ATK: 32 | `seal_ember` (Ember Realm Seal) | Placeholder Fallback |
+| **Frost** | Glacier Wraith | HP: 180, Poise: 75, ATK: 28 | **Cryon, Warden of Eternal Frost**| HP: 850, Poise: 175, ATK: 38 | `seal_frost` (Frost Realm Seal) | Placeholder Fallback |
+| **Astral** | Void Echo | HP: 230, Poise: 90, ATK: 34 | **Chrono-Fracture Archon** | HP: 1200, Poise: 220, ATK: 45| `seal_astral` (Master Reality Seal) | Placeholder Fallback |
+
+### 8.7 External Enemy & Boss Spritesheet Pipeline
+Forest biome entities feature authentic downloaded external pixel art assets registered through `ExternalAssetAdapter.ts`:
+- **Briar Bogling (`enemy-slime`)**: CC0 1.0 animated slime spritesheet (`public/assets/sprites/enemies/briar_bogling.png`, 256×256 px, 4×4 grid of 64×64 frames). Authored timing via `public/assets/sprites/enemies/briar_bogling.anim.json`:
+  - Row 0: Idle (frames 0-3, 4 fps)
+  - Row 1: Hop / Walk (frames 4-7, 6 fps)
+  - Row 2: Leap Attack (frames 8-11, 8 fps, hitbox active frames 9-11)
+  - Row 3: Stagger / Dizzy (frames 12-15, 6 fps)
+- **Sylvan Briar Stag (`boss-stag`)**: Animated Gen 5 pixel art spritesheet (`public/assets/sprites/bosses/sylvan_briar_stag.png`, 512×512 px, 4×4 grid of 128×128 frames, bottom-aligned feet anchor `y: 0.9`). Authored timing via `public/assets/sprites/bosses/sylvan_briar_stag.anim.json`:
+  - Row 0: Regal Idle (frames 0-3, 4 fps)
+  - Row 1: Stride / Gallop (frames 4-7, 5 fps)
+  - Row 2: Antler Sweep / Barrier Surge (frames 8-11, 6 fps, hitbox active frames 9-11)
+  - Row 3: Dazed Stagger / Poise Break (frames 12-15, 5 fps)
+- **Engine Slicing & Animation Resolution**:
+  - `ExternalAssetAdapter.sliceAndRegisterEnemyBossAnimations` automatically slices all 16 frames into canvas textures `${id}-0` through `${id}-15` and registers `anim-${id}` (Row 1 walk cycle), `${id}-idle`, `${id}-walk`, `${id}-attack`, and `${id}-stagger`.
+  - `CombatSystem.ts` dynamically drives sprite animation playback across walk chasing, telegraphed strikes, poise-break dazed staggers, and idle recovery.
 
 ### Legendary Weapon Crafting (`src/config/recipes.db.ts`)
 - **Coral Tideglaive**: 6× `coral_shard` + 1× `item_parasol` → ATK: +24, Water splash trail.
@@ -323,7 +426,408 @@ The world lighting transitions dynamically across 6 time phases:
 
 ---
 
-## 10. Audio Pipeline & SoundEngine Architecture
+## 10. Living-World NPC Behavior Engine (Stardew Valley & Pokémon HGSS Architecture)
+
+The game features an advanced, 100% data-driven **Living-World NPC Behavior Engine** reverse-engineered from **Stardew Valley** (declarative priority-ordered daily schedules, offscreen analytic placement, weather/festival variants) and **Pokémon HeartGold/SoulSilver (HGSS)** (grid-aligned 32×32 tile stepping, 12 authentic walking manners, interaction freeze-and-restore facing the player).
+
+Every one of the **38 NPCs and entities** across the game's 8 maps operates under an autonomous, schedule-driven lifecycle managed by `ScheduleSystem.ts`.
+
+### 10.1 Deterministic Schedule Resolver (`src/systems/npc/ScheduleResolver.ts`)
+Each minute of in-game time (or whenever an event fires), the pure function `resolveScheduleVariant(def, ctx)` evaluates the highest-priority active schedule variant using the following strict hierarchy:
+
+```
+┌───────────────────────────────────────────────────────────┐
+│ 1. Active Debug / Console Override (DateState.npcOverrides)│
+├───────────────────────────────────────────────────────────┤
+│ 2. Romance / Story Quest State (ahonaQuestStage, etc.)    │
+├───────────────────────────────────────────────────────────┤
+│ 3. Weather / Rain Event (isRaining -> shelter variants)   │
+├───────────────────────────────────────────────────────────┤
+│ 4. Day of the Week (mon .. sun)                           │
+├───────────────────────────────────────────────────────────┤
+│ 5. Seasonal Cycle (spring, summer, monsoon, autumn, winter)│
+├───────────────────────────────────────────────────────────┤
+│ 6. Default Routine (fallback standard weekday schedule)   │
+└───────────────────────────────────────────────────────────┘
+```
+
+Once a variant is selected, `resolveCurrentStop(variant, totalMinutes)` calculates whether the NPC is dwelling at their current waypoint or traveling along an active leg towards their next destination.
+
+### 10.2 8-State Finite State Machine (FSM)
+Every active entity transitions smoothly across 8 core states:
+1. `idle`: Standing at scheduled waypoint, executing periodic idle animations (weight-shifted breathing, looking left/right).
+2. `walking`: Stepping tile-by-tile along an A* waypoint path with directional 4-way animations.
+3. `interrupted`: Player pressed `E` or approached; NPC freezes mid-step and turns to face Moon Walker for conversation. When dialogue closes, NPC resumes their interrupted step without stutter.
+4. `sheltering`: Triggered by monsoon rain; NPC retreats beneath shop awnings, curzon porticos, or covers stalls with waterproof tarps.
+5. `eating`: Enjoying campus street delicacies (tea, fuchka, mishti doi, Star Kebab takeaway).
+6. `performing`: Engaging in artistic or academic pursuits (TSC acoustic songs, terracotta painting, chess matches, quantum experiments).
+7. `sleeping`: Resting in dorms, barn coops, or nighttime shelters.
+8. `following`: Dynamic companion following (Totoro's 16-frame trail and partner mechanics).
+
+### 10.3 12 Walking Manners Catalog (`src/types/npc.types.ts`)
+NPC movement speeds and stride animations are calibrated to authentic character archetypes:
+- `brisk_jogger` (68 px/s): Fast continuous laps (Tania).
+- `campus_senior` (46 px/s): Thoughtful, steady campus walk (Arif).
+- `art_wanderer` (44 px/s): Meandering observations (Nadia).
+- `street_photographer` (48 px/s): Pause-and-shoot strides (Sami).
+- `bohemian_poet` (42 px/s): Slow reflective strolling (Baki Bhai).
+- `vendor_porter` (50 px/s): Purposeful utility stride (Tong-er Mama, Boiwala).
+- `anxious_lover` (48 px/s): Nervous pacing and lingering (Rakin).
+- `fashion_artisan` (46 px/s): Stylish energetic strides (Apshora).
+- `phone_glued` (38 px/s): Slow distracted walking while typing (Enan).
+- `distracted_beloved` (42 px/s): Gentle wistful fountain pacing (Salat).
+- `academic_chair` (44 px/s): Dignified lecture-hall traversal (Prof. Motahar, Prof. Satyendra).
+- `farm_master` (50 px/s): Grounded rural chore stride (Chacha Rafiq).
+- `pasture_grazer` (24–36 px/s): Randomized bounding paddock roaming (Shuravi, Kalu, Tuntuni, Piku).
+
+### 10.4 In-House A* Navigator with Terrain Costs (`src/systems/npc/NpcNavigator.ts`)
+The navigation system respects authentic terrain properties:
+- **Paved Paths & Cobblestone**: Weight `1.0` (preferred routes).
+- **Lawn Grass**: Weight `2.0`.
+- **Flower Beds & Ornamental Foliage**: Weight `5.0` (high avoidance).
+- **Tilled Farmland**: Weight `999.0` (NPCs never walk on farm soil unless tending crops).
+- **Growing Crops, Walls, Fences, Ponds & Water**: Weight `Infinity` (strictly impassable).
+
+### 10.5 O(1) Discrete Offscreen Analytic Simulation (`src/systems/npc/OffscreenSimulator.ts`)
+To maintain 60 FPS across large worlds, NPCs on unrendered maps have **zero Phaser sprites, zero physics colliders, and zero draw calls**. When Moon Walker enters a map (e.g., transitioning from Dhaka to Curzon Hall or Farmhouse), the simulator analytically solves:
+$$t = \text{totalMinutes} - \text{stop.departureMinutes}$$
+$$\text{progress} = \frac{t}{\text{stop.travelMinutes}}$$
+The NPC is spawned directly at their interpolated waypoint coordinates, eliminating temporal teleportation artifacts.
+
+### 10.6 The 4 NPC Tiers (All 38 Registered Entities)
+1. **Tier A: Dhaka Valley Overworld (19)**: Tong-er Mama, Tania, Sami, Arif, Nadia, Mimi the Cat, Baki Bhai, TSC Singer, Charukola Clay Artist, Nilkhet Boiwala, Phulwali, Naga Fuchka Mama, Mishti Doi Mama, Anamika, Ahona, Rakin, Apshora, Salat, Enan.
+2. **Tier B: Curzon Hall Science Interior (6)**: Prof. Motahar Hossain, Prof. Satyendra, Faiza, Prof. Sultana, Dr. Kabir, Tanvir.
+3. **Tier C: Green Meadows Farmhouse & Animals (5)**: Chacha Rafiq, Shuravi Cow, Kalu Goat, Tuntuni Hen, Piku Duckling.
+4. **Tier D: Expedition Realms & Night Spirits (8)**: Elder Banyan Sage, Ananya Ghost, Kofil Chacha, Prof. Shamsher, Tidekeeper Marina, Master Blacksmith Kael, Astronomer Lyra, Celestial Chronicler.
+
+### 10.7 Developer Telemetry & Console API (`src/debug/NpcDebugOverlay.ts`)
+- **`F3` Hotkey**: Toggles the real-time debug HUD showing active map entities, states, coordinates, time phases, and cyan A* path polylines.
+- **Global Console API (`window.__npc`)**:
+  - `__npc.list()`: Prints a structured console table of all 38 NPCs, home maps, and variant counts.
+  - `__npc.where(id, timeStr?)`: Query the exact simulated placement of any NPC at any time (e.g. `__npc.where('tania', '06:30')`).
+  - `__npc.explain(id)`: Logs active variant, priority evaluation, current stop, and travel progress.
+  - `__npc.jump(hour, min)`: Warps in-game clock (e.g., `__npc.jump(18, 0)`).
+  - `__npc.rain(true/false)`: Triggers/clears monsoon weather to verify rain sheltering.
+  - `__npc.forceOverride(id, col, row, map)`: Locks an NPC to debug coordinates.
+  - `__npc.clearOverrides()`: Clears all manual overrides.
+  - `__npc.toggleOverlay()`: Programmatically toggles the F3 HUD.
+### 10.8 Dynamic World Sprites & PlayerBehaviors Engine (`src/systems/player/PlayerBehaviors.ts`)
+To make the entire world feel truly alive rather than populated by static cardboard cutouts, all overworld elements feature continuous dynamic behaviors:
+1. **Stationary NPC Dynamics (Zero Spinning)**:
+   - Rather than cycling through 4-directional walk loops (which caused stationary entities to spin in place), stationary NPCs across all maps (outdoor Dhaka, Curzon interior, Farmhouse, Whispering Forest) are animated with subtle sinusoidal breathing tweens (`scaleY: 1.025`, period 1.6–2.0s, yoyo, repeat -1).
+   - **Farm Animal Idles**: Chickens and ducks execute periodic pecking and hopping tweens; cows and goats exhibit gentle rhythmic chewing and scale breathing.
+   - **Forest Spirits & Apparitions**: Ethereal ghosts (Ananya, Kofil Chacha) hover vertically (`y: -8px`, Sine ease) with shimmering opacity pulses (`alpha: 0.65–0.95`).
+2. **Dynamic Landmark Props & Scenery**:
+   - **Krishnachura & Biome Trees**: Continuous gentle wind sway (`angle: ±1.2°`, period 2.5–3.2s) synchronized with ambient gusts.
+   - **Mintu Road Fountain**: Pulsing water scale tween (`scaleY: 1.025`) accompanied by an ambient mist droplet emission particle system.
+   - **TSC Tea Stall**: Continuous wafting aromatic steam particles rising from the copper chai kettle.
+   - **Grand Rickshaw**: Suspension idle bounce tween (`scaleY: 1.02`, `y: -1.5px`) simulating spring cushion dynamics.
+   - **Dhanmondi Lake Pier & Rowboat**: Rhythmic water bobbing and vertical water reflections (`alpha: 0.22`, tint `#4a7c8c`).
+   - **Stargazing Telescope**: Periodic brass gleam and star twinkle sparkle particles (`✨`).
+   - **Pasture Sunflowers**: Wind sway breeze tweens along fence lines.
+3. **PlayerBehaviors State Machine**:
+   - Manages footstep dust and puddle splash particles based on terrain type (`pier`, `puddle`, `path`, `grass`).
+   - Tracks idle time to trigger ambient emotes (`♪`, `🌸`, `☕`, `✨`).
+   - Evaluates proximity to Totoro (< 90 px for > 2.5s) to trigger companion heart bonding with Web Audio chimes.
+   - Renders a protective golden-amber parasol canopy over Moon Walker during monsoon downpours.
+   - Directly binds Stardew farming actions (`triggerHoeAction`, `triggerWaterAction`, `triggerHarvestAction`) with impact sounds, dirt bursts, water drop arcs, and harvest sparkle tosses.
+
+### 10.9 Sprite Directionality, Nadia (`npc-walker2`) Reverse-Walking & Spinning Fix
+The character and walker animation architecture was rigorously audited to resolve reverse-walking (moonwalking) and 360-degree spinning in place:
+1. **Nadia (`npc-walker2`, Charukola Sketcher) Sheet Layout**:
+   - `public/assets/sprites/characters/npc_walker2.png` is an authentic 4×4 grid (128×256 px total, 32×64 px frames).
+   - **Row 0**: Down (step cycle frames 0–3)
+   - **Row 1**: Left (natively drawn facing Left with sketchpad/cup extended forward)
+   - **Row 2**: Right (natively drawn facing Right with sketchpad/cup extended forward)
+   - **Row 3**: Up (back view, walk frames 0–3)
+2. **Reverse Walking Root-Cause Resolution**:
+   - *Previous Defect*: Legacy wanderer logic applied `setFlipX(dx < 0)` whenever a fallback animation was played. Because Row 1 is already natively facing Left, applying horizontal flipping mirrored her to face Right while moving Left, producing a backwards moonwalk.
+   - *Fix*: `setFlipX(false)` is strictly enforced across both walking and idle states for all 4-directional character sheets (`ScheduleSystem.ts` lines 349–372 and `DhakaValleyScene.ts` lines 6920–6935).
+3. **Spinning Glitch Root-Cause Resolution**:
+   - *Previous Defect A (Compass Top Spinning)*: `ExternalAssetAdapter.ts` registered generic walk cycle `anim-${id}` from textures `${id}-0`, `${id}-1`, `${id}-2`, `${id}-3`. If those 4 textures were mapped to the 4 directions, playing `anim-${id}` cycled Down -> Left -> Right -> Up in a rapid 360-degree loop. Furthermore, initial wanderer spawn in `DhakaValleyScene.ts` played `getOrCreateWalkAnim` on stationary entities.
+   - *Previous Defect B (Idle Down-Snapping)*: `ScheduleSystem.ts` set idle textures to `${ent.baseTex}-${dirIndex}` where `ExternalAssetAdapter` had only sliced Row 0 (Down) frames. When stopping facing Left, Right, or Up, entities snapped to Down-facing stepping frames, then snapped to Left/Right upon taking a step, causing rapid visual rotation.
+   - *Fix*: 
+     - `ExternalAssetAdapter.ts` now extracts Row 0 Col 0 (Down), Row 1 Col 0 (Left), Row 2 Col 0 (Right), and Row 3 Col 0 (Up) as `${id}-0`, `${id}-1`, `${id}-2`, `${id}-3`, and aliases `${id}-down`, `${id}-left`, `${id}-right`, `${id}-up`.
+     - `anim-${id}` is constructed strictly from Row 0 step frames (`${id}-step-0` to `${id}-step-3`), ensuring fallback animations walk forward cleanly without 360-degree rotation.
+     - `ScheduleSystem.ts` plays the directional idle animation `${ent.baseTex}-idle-${mover.facing}` upon stopping, preserving exact orientation with gentle breathing.
+     - Scheduled stop arrivals now automatically align `ent.mover.facing` to the scheduled waypoint facing (e.g. Nadia facing Up at the Charukola Krishnachura wall).
+4. **Playwright End-to-End Automated Test Suite**:
+   - Added `scripts/test_nadia_playwright.js` (`npm run test:e2e`), launching Chromium to programmatically verify:
+     - All 8 directional animations (`walk-down`, `walk-left`, `walk-right`, `walk-up`, `idle-down`, `idle-left`, `idle-right`, `idle-up`).
+     - Rightward movement test: confirms `facing: 'right'`, `flipX: false`, `anim: 'npc-walker2-walk-right'`.
+     - Leftward movement test: confirms `facing: 'left'`, `flipX: false`, `anim: 'npc-walker2-walk-left'` (zero reverse walking).
+     - Idle orientation test in all 4 directions: confirms exact idle animation playback, `flipX: false`, zero spinning.
+     - High-resolution in-game screenshot verification (`nadia_playwright_verified.png`).
+
+### 10.10 Moon Walker (Satsuki Kusakabe) Image Recognition Analysis, Sprite Selection & Walk Orientation Fix
+In response to the user directive to replace Moon Walker's sprite without generating new designs from scratch, an automated Computer Vision & Image Recognition benchmark was executed against official Studio Ghibli reference stills (`totoro_004.png`, `totoro_001.png`):
+1. **Canonical Ghibli Feature Ground Truth**:
+   - **Hair**: Dark brunette / black neat cropped bob haircut (`#241814` to `#2B1B17`), parted center bangs (zero neon/orange hair, zero twin bows/pigtails).
+   - **Top**: Bright pale lemon-yellow collared short-sleeve shirt (`#EEE07A` / `#F9E858`).
+   - **Skirt**: Vibrant amber-orange pinafore suspender dress (`#E08219` / `#D96E24`) with shoulder straps over the yellow shirt.
+   - **Skin & Face**: Warm fair skin (`#ECC1A1` / `#F4CBB0`) with expressive dark eyes.
+   - **Footwear**: Crisp white socks (`#FFFFFF`) and dark loafers (`#3A4454`).
+2. **Computer Vision Benchmark & Candidate Ranking**:
+   - Evaluated 8 candidate sprite sheets across Color Histogram Intersection (CHI) in 3D HSV space, Spatial Layer Alignment (vertical quartile composition), and Palette Fidelity against canonical Studio Ghibli scene stills.
+   - *Original Dhaka-RPG Sprite*: Penalized due to bright ginger/orange hair and side pigtails (`has_orange_hair: True`).
+   - *Selected Winner*: **Satsuki HGSS Spritesheet v3** (`satsuki_sprite_sheet_v3_png_1792339381085.jpg`), achieving the highest likeness score for authentic Studio Ghibli color distribution, Pokémon HGSS 16-bit overworld chibi aesthetic, and proportion harmony with Totoro and fellow overworld NPCs.
+3. **Walk Directionality & Reverse Walking Fix**:
+   - *Previous Defect*: Raw candidate image had Row 2 (Right walk cycle) rendered facing Left. In previous builds, Row 2 was extracted as-is, causing Moon Walker to face Left while moving Right (walking backwards).
+   - *Fix*: In the newly compiled production asset `public/assets/sprites/characters/moon_walker.png` (128×256 px, 32×64 px frames):
+     - **Row 0**: Down (4 step frames facing forward)
+     - **Row 1**: Left (4 step frames facing Left)
+     - **Row 2**: Right (4 step frames mathematically flipped horizontally, facing Right with forward momentum)
+     - **Row 3**: Up (4 back view step frames showing crossed suspenders)
+     - Background is 100% transparent PNG with nearest-neighbor crisp integer pixel downscaling.
+4. **Playwright Automated Verification**:
+   - Ran `scripts/test_keyboard_walk_clean.js` and `scripts/test_satsuki_playwright.js`.
+   - Confirms live keyboard rightward movement (`KeyD` / `ArrowRight`) plays `player-walk-right` facing Right (`flipX: false`, velocity `+225 px/s`).
+   - Confirms live keyboard leftward movement (`KeyA` / `ArrowLeft`) plays `player-walk-left` facing Left (`flipX: false`, velocity `-225 px/s`).
+   - Captured visual proofs in artifacts: `satsuki_and_totoro_in_game.png`, `satsuki_live_walk_right.png`, and `satsuki_clean_walk_left.png`.
+
+### 10.11 Clean HUD Top-Bar Refactor (Telegram Live Status Removal)
+Per user request, the on-screen live telemetry indicator and drawer button were permanently removed from `index.html`:
+- Removed `#telegram-live-indicator` (`<div class="hud-live-pill">TG LIVE: 10s</div>`), cleaning the upper-right header area adjacent to the 3-bar menu toggle.
+- Removed `#btn-telegram-status` from `#hud-dropdown-menu`, streamlining the navigation drawer options to core game systems (Partner, Quests, Bag, Map, Quick Save, BGM).
+- Verified via Playwright automated testing (`scripts/verify_hud_clean.js`) that DOM elements are completely omitted and the top HUD renders cleanly without layout shifts (`hud_clean_no_tg.png`).
+
+### 10.12 Living-World NPC Dialogue Restoration & Interactive Choice Hubs
+Following an investigation into missing legacy dialogue trees across overworld NPCs, all 38 NPC interaction handlers in `NPC_SCHEDULES_DB` were audited against `ScheduleSystem.ts`:
+1. **Root-Cause Analysis**:
+   - When the multi-world Living-World `ScheduleSystem.ts` was implemented, 31 NPCs (vendors, faculty, farm animals, and realm guardians) were mapped to scene interaction methods.
+   - However, 7 overworld wandering citizens (`anamika`, `mimi`, `baki_bhai`, `sami`, `arif`, `nadia`, `tania`) were omitted from `ScheduleSystem.handleNpcInteraction()`'s `switch (id)` statement.
+   - Interacting with any of these 7 citizens caused them to fall through to the default generic greeting (`"Greetings, Moon Walker and Totoro! A beautiful day across Dhaka Valley."`), hiding their rich legacy branching choice trees, audio fanfares, cutscene triggers, and rotating ambient conversations.
+2. **Restored NPC Dialogue Trees & Mechanics**:
+   - **Anamika (`anamika`) - Moon Walker's Best Friend**:
+     - *Interactive Hub*: Full dialogue tree with authentic choices including Star Kebab parcel discussion, Shuvra's Barishal launch journey update (river fog & Guthia Sandesh), Ultimate Dhaka Date Food Ranking debate (Mutton Kacchi vs Naga Fuchka vs TSC Malai Cha vs Mishti Doi), and the Bestie High-Five & Energy Boost (`DateState.sp = DateState.maxSp`, `SoundEngine.itemFanfare()`, UI toast, and stat HUD refresh).
+     - *Apshora Haute Couture Questline*: Dynamically unlocks fashion startup cutscene hooks based on `DateState.apshoraQuestStage` (Pitch cutscene `playApshoraAnamikaPitchCutscene()`, Charukola atelier studio check `interactApshoraAnamikaStudio()`, Curzon Hall debut exhibition `playApshoraExhibitionCutscene()`, and post-launch London/Paris orders dialogue).
+     - *Ambient Lore Rotation*: 4 multi-turn conversations covering Sadarghat launch decks, Barishal dialect debates, and floating guava market trips.
+   - **Mimi the Campus Ginger Cat (`mimi`)**:
+     - *Interactive Hub*: Crunchy fish snack bite (`+20 HP` heal, `SoundEngine.catMeow()`, UI toast, stat HUD update), chin and ear scratch interaction (`SoundEngine.catMeow()`), and Chibi-Totoro leafy fishing line play.
+     - *Quest & State Progression*: Automatically sets `DateState.sideQuests.sq_cat_fish = true`.
+     - *Ambient Lore Rotation*: 4 multi-turn cat behavior dialogues (sun-patch naps, ankle figure-eights, and Star Kebab roast sniffing).
+   - **Baki Bhai the Nilkhet Poet (`baki_bhai`)**:
+     - *Interactive Hub*: Improvised couplet composition on Fuller Road (`SoundEngine.select()`) and advice on finding vintage margin notes and pressed Krishnachura petals in second-hand Nilkhet books.
+     - *Quest & State Progression*: Automatically sets `DateState.sideQuests.sq_poet_rhyme = true`.
+     - *Ambient Lore Rotation*: 4 multi-turn Dhaka poetry recitations (Jibanananda Das, Natore, and Aparajeyo Bangla).
+   - **Sami the Street Photographer (`sami`)**:
+     - *Interactive Hub*: 3 candid photo-shoot poses: Romantic Sunset Gaze, Playful Peace Sign & Goofy Totoro Faces, and Heroic Realm Guardians Stance.
+     - *Special FX*: Each photo shoot triggers authentic camera shutter audio (`SoundEngine.cameraShutter()`), full-screen camera flash (`scene.cameras.main.flash(350, 255, 255, 255)`), and Chronicle Scrapbook memory toast notifications.
+     - *Quest & State Progression*: Automatically sets `DateState.sideQuests.sq_photo_pose = true`.
+     - *Ambient Lore Rotation*: 4 multi-turn street photography dialogues (50mm prime shots, golden hour reflections on Dhanmondi Lake, and fountain candid snaps).
+   - **Arif the DU Physics Senior (`arif`)**:
+     - *Interactive Hub*: Physics equation of love ($F = G \frac{m_1 m_2}{r^2}$) generating infinite happiness, and scientific magnetometer analysis of the Eastern Spacetime Fracture Einstein-Rosen bridge.
+     - *Ambient Lore Rotation*: 4 multi-turn academic dialogues (Schrödinger equations vs Krishnachura breezes and cardamom Malai Cha solving problems).
+   - **Nadia the Charukola Sketcher (`nadia`)**:
+     - *Interactive Hub*: Charcoal sketchbook study reveal of Moon Walker and Totoro (`SoundEngine.brushStroke()`) and Pohela Boishakh Mangal Shobhajatra Totoro paper-mâché mask motif.
+     - *Ambient Lore Rotation*: 4 multi-turn fine arts dialogues (alpana murals on Charukola wall and crimson petals against Curzon red bricks).
+   - **Tania the Dhanmondi Jogger (`tania`)**:
+     - *Interactive Hub*: Training routine debate (3km cardio vs 10 Naga Fuchkas and Bogurar Mishti Doi) and Dhanmondi Lake pier evening view with brass stargazing telescope.
+     - *Ambient Lore Rotation*: 4 multi-turn jogging dialogues (Ramna Park laps and keeping hydrated with TSC Malai Cha).
+3. **Continuous Rotation Memory (`lineIdx`)**:
+   - Each `ActiveNpcEntity` tracks a persistent `lineIdx` counter.
+   - Players can choose the casual chat option to experience all 4 ambient dialogues in sequential order, ensuring 100% of the game's written dialogue remains accessible.
+4. **Playwright Automated Verification (`scripts/test_dialogue_restoration.js`)**:
+   - Programmatically launched headless Chrome to verify all 7 NPCs.
+   - Confirmed 100% test pass rate across dialogue visibility, authentic opening lines, choice button arrays, Anamika's SP restoration to 60/60, Mimi's HP restoration to 70/120, and Sami's `sq_photo_pose` side-quest flag triggering.
+   - In-game verification screenshots captured and stored in artifacts: `anamika_dialogue_restored.png` and `nadia_dialogue_restored.png`.
+
+### 10.13 Modern Game Fonts, Overhead Headbars & Artisanal Shop Signboards
+In response to user requests for sleek, modern game aesthetics, all in-game headbars, character nameplates, top HUD bars, and shop names were completely overhauled with high-readability modern game typography:
+1. **Modern Typography Engine (`Rajdhani` & `Chakra Petch`)**:
+   - Integrated Google Fonts **`Rajdhani:wght@500;600;700`** (primary UI & in-game typography) and **`Chakra Petch:wght@500;600;700`** in `index.html`.
+   - Injected a hidden DOM font pre-warmer into `index.html` to force browser font glyph rasterization before Phaser initializes WebGL canvas textures, eliminating font fallback snapping.
+2. **Top HUD Headbar Upgrades (`style.css` & `src/style.css`)**:
+   - `#hud-zone` / `.hud-row`: `font-family: 'Rajdhani', sans-serif`, `1.15rem`, `font-weight: 700`, uppercase with `1.2px` letter-spacing and golden atmospheric text glow (`text-shadow: 0 0 10px rgba(247, 203, 69, 0.35)`).
+   - `#hud-time` / `.hud-subrow`: `font-family: 'Rajdhani', 'Plus Jakarta Sans', sans-serif`, `0.88rem`, `font-weight: 600`, `letter-spacing: 0.6px`.
+   - `#hud-level` / `.stat-top`: `font-family: 'Rajdhani', sans-serif`, `0.98rem`, `font-weight: 700`, uppercase.
+   - `.stat-bar span`: `font-family: 'Rajdhani', sans-serif`, `0.78rem`, `font-weight: 700`, crisp numerical tracking.
+   - `.quest-header`: `font-family: 'Rajdhani', sans-serif`, `0.92rem`, `font-weight: 700`, uppercase with `1.2px` tracking.
+   - `#minimap-world-label`: `font-family: 'Rajdhani', sans-serif`, `0.82rem`, `font-weight: 700`, letter-spacing `0.8px`.
+   - `.drawer-item-btn` & `#boss-name`: `font-family: 'Rajdhani', sans-serif`, bold modern styling.
+3. **Role-Themed In-Game Overhead Headbars (`ScheduleSystem.ts`)**:
+   - All 38 NPCs in `ScheduleSystem.ts` and `DhakaValleyScene.ts` now feature role-based themed pill headbars with `'Rajdhani', 'Outfit', sans-serif` 12px bold typography, `3px` dark outline stroke, soft drop shadow, and `{ x: 7, y: 3 }` pill padding:
+     - **Bestie Anamika**: Emerald-Teal (`rgba(15, 118, 110, 0.92)` background, `#fff3a1` gold text, `#042f2e` stroke).
+     - **Artisanal Vendors** (Tong-er Mama, Nilkhet Boiwala, Naga Fuchka, Mishti Doi, Flower Cart): Warm Amber (`rgba(120, 53, 15, 0.92)` background, `#fef3c7` cream text, `#451a03` stroke).
+     - **Scholars & Faculty** (Arif, Prof. Satyendra, Prof. Motahar): Academic Indigo (`rgba(30, 27, 75, 0.92)` background, `#e0e7ff` text, `#0f172a` stroke).
+     - **Creative & Performing Artists** (Nadia, Clay Artist, TSC Singer): Purple/Violet (`rgba(88, 28, 135, 0.92)` background, `#fae8ff` text, `#3b0764` stroke).
+     - **Companion & Animals** (Mimi, Farm animals): Forest Green (`rgba(21, 128, 61, 0.92)` background, `#f0fdf4` text, `#14532d` stroke).
+     - **Spirits & Mystics** (Elder Banyan Sage, Weeping Petni): Orchid/Violet (`rgba(112, 26, 117, 0.92)` background, `#fdf4ff` text, `#4a044e` stroke).
+     - **Urban Citizens** (Sami, Baki Bhai, Tania): Dark Slate (`rgba(15, 23, 42, 0.90)` background, `#f8fafc` text, `#020617` stroke).
+4. **Artisanal Shop Signboards & Landmark Plaques (`DhakaValleyScene.ts`)**:
+   - Replaced blurry 8-bit `Press Start 2P` 9.5px all-caps text across 20+ locations in Dhaka Valley, Curzon Interior, Farmhouse, and Expedition Realms with modern game shop plaque signboards:
+     - Typography: `'Rajdhani', 'Outfit', sans-serif`, `13px`, bold (`fontStyle: 'bold'`).
+     - Text styling: `#fff3b0` gold text with `#241409` dark bronze stroke (`strokeThickness: 3.5px`).
+     - Plaque backing: Semi-transparent dark wooden backing pill (`rgba(24, 16, 11, 0.82)`) with `{ x: 10, y: 4 }` padding and `{ offsetX: 0, offsetY: 2, blur: 4 }` drop shadow.
+     - Locations upgraded: `CURZON HALL & KRISHNACHURA LAWN`, `TSC TEA STALL & ADDA ☕`, `APARAJEYO BANGLA 🇧🇩`, `CHARUKOLA FINE ARTS 🎨`, `NILKHET BOOK LANE 📚`, `MINTU ROAD FOUNTAIN PLAZA ⛲`, `RAMNA PARK BENCH 🌸`, `PHULWALI FLOWER CART 🌼`, `FULLER ROAD FOOD BAZAAR 🥙🍮`, `DHAKA RICKSHAW STAND 🛺`, `DHANMONDI LAKE PIER & TELESCOPE 🔭`, `GREEN MEADOWS FARMHOUSE ROAD 🏡`, Curzon interior laboratory halls, and Farmhouse pastoral paddocks.
+5. **Interactive Prompts, Boss Badges & Combat Floating Text**:
+   - Upgraded companion Totoro badges to `Rajdhani` 13px bold with pink-rose and emerald themed pills.
+   - Upgraded `promptBubble` / `interactPrompt` (`SPACE / TAP: Interact`) to `Rajdhani` 12px bold with high-contrast pill styling.
+   - Upgraded `spawnDamageNumber` in `CombatSystem.ts` and `DhakaValleyScene.ts` to `Rajdhani` 15px bold with dark outline and shadow.
+6. **Playwright Automated Verification**:
+   - Built and ran `scripts/verify_modern_fonts.js` using headless Chrome.
+   - Verified 100% computed styles: `#hud-zone` (`Rajdhani, sans-serif`, 900 weight), `#hud-level` (`Rajdhani, sans-serif`), and in-game shop plaques/badges (`'Rajdhani', 'Outfit', sans-serif`).
+   - Visual proofs captured in artifacts: `modern_headbars_curzon.png`, `modern_shop_names_fountain_plaza.png`, `modern_headbars_charukola_anamika.png`, and `anamika_bestie_headbar_and_shop.png`.
+
+### 10.14 Production Edge & Load-Time Performance Optimization
+To resolve load-time latency discrepancies between regional edge hosts (Cloudflare Pages with direct BDIX Dhaka peering vs Vercel routing through international hubs):
+1. **Audio Preload Elimination (`index.html`)**:
+   - Changed `<audio id="menu-bgm">` (3.7 MB) and `<audio id="game-bgm">` (4.9 MB) from `preload="auto"` to `preload="none"`.
+   - Prevented **8.6 MB of audio** from greedily choking HTTP streams on initial page load before the player has even interacted with the screen.
+2. **Vite Code Splitting & Vendor Chunking (`vite.config.ts`)**:
+   - Added `rollupOptions.output.manualChunks(id)` to isolate `phaser` (1.19 MB / 317 kB gzip) into a dedicated vendor chunk (`dist/assets/phaser-*.js`).
+   - Reduced primary application JS bundle from `1.82 MB` down to `629 kB` (`176 kB` gzip).
+   - Disabled heavy 11.3 MB sourcemaps in production builds (`sourcemap: false`).
+3. **Vercel Edge Caching Configuration (`vercel.json`)**:
+   - Injected edge and browser caching headers:
+     - `/assets/(.*)` and static media (`.mp3`, `.png`, `.jpg`, `.svg`): `Cache-Control: public, max-age=31536000, immutable`.
+     - `/index.html`: `Cache-Control: public, max-age=0, must-revalidate`.
+   - Ensured repeat visits and asset requests are served immediately from edge CDN and browser disk cache.
+
+### 10.15 Nadia Female Fine-Arts Painter & Sketcher Sprite Upgrade (`public/assets/sprites/characters/npc_walker2.png`)
+Nadia (`npc-walker2`), the enthusiastic Charukola fine arts student sketching campus landmarks in charcoal and watercolor, previously held a placeholder sprite depicting an infant/baby in diapers holding a rattle. This was permanently replaced with an authentic 16-bit retro Pokémon HeartGold/SoulSilver / Emerald overworld trainer sprite of a young female fine-arts painter:
+1. **Visual Asset Identity & Heritage**:
+   - Replaced toddler sprite with official Gen 3 / Pokémon Essentials Trainer Class 21 `PAINTER` female overworld character (`trchar021`).
+   - Depicts a young university woman fine-arts student with brown parted hair, artist beret/yellow highlights, lilac/purple painter's smock apron over clothes, and a shoulder-slung quiver/art tube case for parchment scrolls and brushes.
+2. **Spritesheet Grid & Frame Alignment**:
+   - Dimensions: Standard 4 columns × 4 rows, 128×256 px total (32×64 px frames).
+   - Bottom-Aligned Canvas: The native 32×48 px character frames were shifted with 16 px transparent top padding so that the character's feet land at $y = 62$ in each 64 px cell, identically matching `npc_walker1.png` (DU Senior Arif), `npc_walker3.png` (Poet Baki Bhai), and player sprites.
+   - Origin Compatibility: Perfectly aligns with Phaser's `{ origin: { x: 0.5, y: 0.88 } }` and `.setOrigin(0.5, 1)` without floating feet or tile penetration.
+3. **Directional Integrity & Walking Cycles**:
+   - **Row 0**: Walk Down (4-frame cycle: idle stance $\to$ left step $\to$ idle stance $\to$ right step).
+   - **Row 1**: Walk Left (4-frame cycle natively facing West with art tube resting on right back).
+   - **Row 2**: Walk Right (4-frame cycle natively facing East with art tube resting on left back, completely eliminating moonwalking/reverse-walking with `flipX === false`).
+   - **Row 3**: Walk Up (4-frame cycle back view showing art tube, hair, and artist smock).
+4. **Playwright Automated E2E Verification (`scripts/test_nadia_playwright.js`, `scripts/capture_nadia_showcase.js`)**:
+   - Headless Chrome tests confirmed:
+     - All 8 directional animations registered in Phaser (`walk-down`, `walk-left`, `walk-right`, `walk-up`, `idle-down`, `idle-left`, `idle-right`, `idle-up`).
+     - Rightward movement test: `facing: 'right'`, `flipX: false`, `anim: 'npc-walker2-walk-right'`.
+     - Leftward movement test: `facing: 'left'`, `flipX: false`, `anim: 'npc-walker2-walk-left'`.
+     - Idle orientation test: all 4 directions play their corresponding idle anim without 360-degree spinning.
+     - Full in-game visual proof captured in artifacts: `nadia_playwright_verified.png`, `nadia_female_painter_down.png`, `nadia_female_painter_left.png`, `nadia_female_painter_right.png`, `nadia_female_painter_up.png`, and `nadia_female_painter_dialogue.png`.
+
+### 10.16 Dynamic Ambient NPC Roaming Engine & Intelligent Cutscene Scattering
+
+To resolve NPC over-clustering along Row 25 (`y ≈ 810–820`) and eliminate statue-like freezing during long schedule dwell windows, the NPC simulation engine was enhanced with a high-fidelity dynamic ambient roaming loop and narrative-aware spatial repositioning:
+
+1. **Root Cause Analysis & Spatial Congestion Resolution**:
+   - **Row 25 Bottleneck**: 7 different NPCs (Nadia, Ahona, Apshora, Salat, Enan, Tania, Phulwali) previously shared destination anchors along Row 25, creating a traffic jam across the carriage road.
+   - **Static Dwell Freezing**: Schedules utilized multi-hour dwell durations (`dwellMin: 480`) without intermediate micro-wander cycles. Once an NPC arrived at their target tile, `hasActivePath()` returned `false`, leaving them frozen in place until the next macro schedule transition.
+   - **Crossroad Cutscene Overlaps**: Ahona & Apshora's Act I Bully Ambush was situated at `(670, 810)` directly in the crossroads between Charukola Art Corridor and the Central Fountain.
+
+2. **Dynamic Ambient Roaming Engine (`src/systems/ScheduleSystem.ts`)**:
+   - Added `NpcRoamData` state tracking per active entity:
+     ```ts
+     export interface NpcRoamData {
+       anchorTile: GridTile;
+       nextRoamTime: number; // in seconds
+       pauseDurationSec: number;
+       roamRadius: number;
+       isVendor: boolean;
+       isSleeping: boolean;
+     }
+     ```
+   - **Archetype-Specific Roaming Profiles (`getRoamProfile`)**:
+     - *Street Vendors* (`tong_er_mama`, `nilkhet_boiwala`, `naga_fuchka`, `mishti_doi`, `clay_artist`, `chacha_rafiq`): `roamRadius: 1`, `pauseDurationSec: 3.5`, `isVendor: true` (tend stalls, step 1 tile side to side).
+     - *High-Cardio Jogger* (`tania`): `roamRadius: 8`, `pauseDurationSec: 0.8`, `isVendor: false` (continuous running laps around park loops with momentary pauses).
+     - *Street Photographer* (`sami`): `roamRadius: 5`, `pauseDurationSec: 2.0`, `isVendor: false` (strolls between plaza angles, snapping photos).
+     - *Beli Garland Weaver* (`phulwali`): `roamRadius: 3`, `pauseDurationSec: 2.0`, `isVendor: false` (strolls along promenade).
+     - *Citizens, Artists & Lovers* (`nadia`, `arif`, `baki_bhai`, `mimi`, `anamika`, `ahona`, `apshora`, `rakin`, `salat`, `enan`, `tsc_singer`): `roamRadius: 4`, `pauseDurationSec: 2.2`, `isVendor: false` (stroll 3–5 tiles, pause briefly to sketch/read/sip tea, then resume walking).
+   - **High Walking Duty Cycle (50%–80%)**: When an NPC reaches their roam node, they pause for 1–3s, display their activity emote, and automatically compute a new walkable path using `NpcNavigator.findPath()`.
+   - **Dynamic Headbar Badge State**: Badges switch to `🚶 ` or `👟 ` when walking, and dynamically present contextual activity emojis (`🎨 Nadia`, `☕ Tong-er Mama`, `📸 Sami`, `📚 Nilkhet Boiwala`, `🐱 Mimi`) when pausing.
+   - **Dialogue Memory & Recovery**: Dialogue close events automatically trigger `mover.endInteraction()`, restoring original facing and resuming ambient patrol without getting permanently stuck.
+
+3. **Intelligent Cutscene & NPC Repositioning (`src/config/npcSchedules.db.ts`, `src/scenes/DhakaValleyScene.ts`)**:
+   - **Ahona & Apshora Act I Bully Ambush**: Relocated to the wide, grand **Krishnachura Avenue Gateway** (`col: 15, row: 33`, `x: 480, y: 1056`) directly outside Curzon Hall. Flanked by blooming Krishnachura shade trees, giving players a spacious cinematic confrontation before fleeing east to Ramna Park Bench (`col: 40, row: 15`).
+   - **Salat & Enan Digital Detox Quest**: Relocated from the Row 25 carriage road to the scenic **Mintu Road Fountain West Garden Terrace** (`col: 30, row: 23`, `x: 960, y: 736`) and **East Promenade** (`col: 36, row: 23`, `x: 1152, y: 736`), with clear sightlines across the pulsing water fountain.
+   - **Double Date Celebration**: Reconciled couple positions moved to `{ col: 32, row: 23 }` and `{ col: 34, row: 23 }` (`y: 736`), side-by-side beside Moon Walker and Totoro.
+
+4. **Multi-Tier Automated Test & Visual Proof**:
+   - **Schedule Validator (`npm run validate:npc`)**: 38/38 NPC schedules validated with 0 errors and positive travel slack.
+   - **Vitest Unit Suite (`npm test`)**: 10 test files, 71/71 tests passing (including `tests/npc/roaming.test.ts`).
+   - **Typecheck (`npm run typecheck`)**: 0 TypeScript errors.
+   - **Playwright Automated E2E (`scripts/test_npc_roaming_playwright.js`)**: Verified in headless Chrome that **19 out of 19 active NPCs** on Dhaka Valley actively walk and roam dynamically over time.
+   - **In-Game Visual Screenshots**:
+     - `npc_scatter_krishnachura_gateway.png`: Ahona & Apshora spacious confrontation scene under Krishnachura trees.
+     - `npc_scatter_fountain_terrace.png`: Mintu Road Fountain Terrace with Salat, Enan, Tania jogging, and Nadia walking.
+     - `npc_scatter_charukola_roaming.png`: Charukola Art Corridor with Clay Artist at stall, Nadia sketching, and strolls along brick avenue.
+     - `npc_scatter_dhanmondi_lake.png`: Lakeside promenade with Enan, Tania, and Rickshaw Tour stand.
+
+### 10.17 Curzon Hall & Green Meadows Farmhouse Interior Transition & Doorway Fixes
+
+Following reports of players being unable to exit Curzon Hall (`curzon_interior`) and Green Meadows Farmhouse (`farmhouse`) back to Dhaka Valley, a comprehensive architectural audit was performed:
+
+1. **Root-Cause Analysis**:
+   - **Missing Exit Method**: `DhakaValleyScene.buildCurzonInterior()` registered an interaction prompt:
+     ```ts
+     this.registerInteract(600, 836, null, 'Exit to Curzon Lawn 🚪', 85, () => this.exitCurzonHall());
+     ```
+     However, `this.exitCurzonHall()` was never defined as a member function on `DhakaValleyScene`, resulting in an unhandled `TypeError: this.exitCurzonHall is not a function` when interacting with the main exit door.
+   - **UI Quest Subsystem Crash on Non-Combat Interiors**: In `src/ui/UIController.ts`, `updateQuestText()` evaluated:
+     ```ts
+     if (DateState.currentWorld !== 'dhaka') {
+       const w = WORLDS_DB[DateState.currentWorld];
+       const bossDead = DateState.defeatedBosses.includes(w.bossSpec.id);
+     ```
+     Since `curzon_interior` and `farmhouse` are pastoral / academic social interiors (`isInterior: true`, `isActivity: true`), their `WORLDS_DB` entries have no `bossSpec`. Accessing `w.bossSpec.id` threw `TypeError: Cannot read properties of undefined (reading 'id')`, crashing scene initialization and freezing game loops before doorways could function.
+   - **Farmhouse Exit Spawn Warp-Loop**: `exitFarmhouse()` previously transitioned the player to `{ x: 740, y: 1455 }` in Dhaka Valley. The farmhouse entrance trigger was located at `{ x: 736, y: 1536 }` with an 85 px radius. The distance between spawn and trigger was ~81 px, causing immediate re-entry trigger loops upon exiting.
+   - **Fast-Travel Interior Default Spawns**: When entering interiors via fast-travel or default spawns, default fallback spawn `(340, 900)` placed players off-grid outside the interior room boundaries.
+
+2. **Implemented Solutions**:
+   - **Added `exitCurzonHall()`**:
+     ```ts
+     exitCurzonHall() {
+       if (this.isTransitioning || this.cutsceneLocked) return;
+       SoundEngine.portalWarp();
+       this.transitionToWorld('dhaka', { x: CURZON_X, y: CURZON_Y + 70 });
+     }
+     ```
+     Safely transitions the player to Dhaka Valley at `(208, 1398)` on the Curzon Hall lawn, well outside entrance collision bounds.
+   - **Safe Interior Handling in `UIController.ts`**:
+     Added explicit condition handling for non-combat interiors in `updateQuestText()`:
+     - `curzon_interior`: `"🏛️ [Curzon Hall] Greet the faculty chairs, explore the physics lab, and interact with the historic exhibits!"`
+     - `farmhouse`: `"🏡 [Farmhouse] Feed the chickens, greet dairy cow Shuravi, pet the goats, and enjoy the countryside!"`
+     - Guarded all other worlds with `if (w && w.bossSpec)` before evaluating boss completion.
+   - **Corrected Farmhouse Exit Spawn**:
+     Updated `exitFarmhouse()` to spawn the player at `{ x: 736, y: 1570 }`, on the open road safely south of the timber archway and well clear of the entrance trigger.
+   - **Dual-Exit Navigation (Interaction + Automatic Doorway Stepping)**:
+     - Retained `registerInteract()` with an expanded `95px` radius for manual Space / Tap interaction on the doorway / archway gate.
+     - Added automatic doorway / threshold stepping in `DhakaValleyScene.update()`:
+       ```ts
+       if (!this.isTransitioning && !this.cutsceneLocked) {
+         if (DateState.currentWorld === 'curzon_interior') {
+           if (py >= 830 && Math.abs(px - 600) < 65) {
+             this.exitCurzonHall();
+             return;
+           }
+         } else if (DateState.currentWorld === 'farmhouse') {
+           if (py >= 830 && Math.abs(px - 600) < 65) {
+             this.exitFarmhouse();
+             return;
+           }
+         }
+       }
+       ```
+       Players can now seamlessly walk south through the doorway or archway to transition, just like in authentic top-down RPGs.
+   - **Interior Fast-Travel Spawns**: Updated `transitionToWorld` so default spawn for `curzon_interior` and `farmhouse` is `{ x: 600, y: 780 }`.
+
+3. **Multi-Tier Automated Test & Visual Proof**:
+   - **Typecheck (`npm run typecheck`)**: 0 TypeScript errors.
+   - **Vitest Unit Suite (`npm test`)**: 71/71 tests passing across 10 test suites.
+   - **Playwright Automated E2E (`scripts/test_interiors_enter_exit.js`)**: Verified in headless Chrome:
+     1. Enter Curzon Hall $\to$ Exit via Space key on doorway $\to$ player returns to Dhaka Valley at `(208, 1398)`.
+     2. Enter Curzon Hall $\to$ Exit via walking south through doorway threshold $\to$ player returns to Dhaka Valley.
+     3. Enter Farmhouse $\to$ Exit via Space key on archway gate $\to$ player returns to Dhaka Valley at `(736, 1570)`.
+     4. Enter Farmhouse $\to$ Exit via walking south through archway gate threshold $\to$ player returns to Dhaka Valley.
+   - **Visual Proof Screenshots**:
+     - `curzon_interior_verified.png`: Player inside Curzon Hall near physics lab and faculty desks.
+     - `curzon_outside_lawn_verified.png`: Player returned to Curzon Hall lawn with interactive prompt active.
+     - `farmhouse_inside_verified.png`: Player inside Farmhouse paddock near dairy cow Shuravi and chickens.
+     - `farmhouse_outside_road_verified.png`: Player returned to Farmhouse country road outside archway.
+
+---
+
+## 11. Audio Pipeline & SoundEngine Architecture
 
 The audio engine (`src/audio/SoundEngine.ts`) delivers studio-quality retro immersion with seamless cross-fading and zero stuttering.
 
@@ -354,7 +858,7 @@ SFX instances are pre-buffered into audio pools of up to 6 simultaneous voices t
 
 ---
 
-## 11. Hybrid External/Procedural Asset Adapter & Specifications
+## 12. Hybrid External/Procedural Asset Adapter & Specifications
 
 The game features a **Hybrid Graphic Pipeline** ensuring **Zero Downtime**:
 - External PNG spritesheets are loaded if present in `public/assets/`.
@@ -370,7 +874,7 @@ Every visual entity is registered with standardized specifications:
 - `recommendedDownloadSpecs`: Preferred frame size, accepted native sizes, sheet layout, and search tags.
 
 ### Character Sheet Conventions
-- **Human Characters (Moon Walker & 32 NPCs)**:
+- **Human Characters (Moon Walker & 32 Human NPCs, plus 6 Creatures/Spirits for 38 total NPCs)**:
   - Frame layout: `4 cols × 4 rows`.
   - Row 0: Facing Down (Frames 0–3)
   - Row 1: Facing Left (Frames 4–7)
@@ -379,8 +883,9 @@ Every visual entity is registered with standardized specifications:
   - Scaling: Native 16×32 or 16×24 pixel art is automatically upscaled **2× nearest-neighbor** (`ctx.imageSmoothingEnabled = false`) to 32×64 or 32×48 px so pixels remain razor-sharp.
 - **Totoro Companion**:
   - Footprint: `68×76 px` (~2.5 tiles tall).
-  - Sheet Layout: `4 cols × 4 rows` (Row 0: Down, Row 1: Left, Row 2: Right, Row 3: Up).
-  - Walk animation: Directional 4-frame waddle cycles with ear and umbrella physics.
+  - Sheet Layout: `4 cols × 4 rows` (Row 0: Down, Row 1: Left, Row 2: Right, Row 3: Up). Sized `272×304 px` PNG RGBA.
+  - Appearance: Full-body sprite with free arms at sides, zero umbrella, cheerful smiling mouth, wide round curious eyes, beige chevron belly, pointy ears, whiskers, clawed feet, and fluffy tail.
+  - Walk animation: Directional 4-frame waddling walk cycles with realistic volume shading and natural bounce.
 
 > [!IMPORTANT]
 > **Strict Sprite Sheet Row Ordering & Forward-Facing Walking Rule**:
@@ -408,7 +913,7 @@ Whenever defining textures or sprites in source code, embed this machine-readabl
 
 ---
 
-## 12. State Management, Quests & Persistence
+## 13. State Management, Quests & Persistence
 
 All game progress is centralized in `DateState` and `RPGStats`, persisted to `localStorage` under key `'totoro_moonwalker_rpg_save_v2'` via `SaveManager.ts`.
 
@@ -423,6 +928,8 @@ export const DateState = {
   inventory: [],                    // Array of ItemInstance objects
   equippedWeapon: 'parasol',        // Currently equipped weapon ID
   equippedArmor: 'student_panjabi', // Currently equipped armor ID
+  npcOverrides: {},                 // Living-world manual coordinate overrides
+  savedCalendar: null,              // Serialized calendar date and season
   
   // Quest Flags & Progression Stages
   ahonaQuestStage: 0,               // Ahona & Rakin romance questline (0-4)
@@ -443,33 +950,44 @@ export const DateState = {
 
 ---
 
-## 13. Deployment, Build Commands & Verification Protocol
+## 14. Deployment, Build Commands & Verification Protocol
 
 ### Essential Scripts (`package.json`)
 - `npm run dev`: Launch local Vite development server on `http://localhost:3000/`.
-- `npm run build`: Execute TypeScript type-checking (`tsc -b`) followed by production Vite build to `dist/`.
-- `npm run test`: Run the Vitest test suite (`tests/` directory).
-- `npm run typecheck`: Run standalone TypeScript syntax and type integrity check.
+- `npm run build`: Execute production Vite build to `dist/`.
+- `npm run test`: Run the full Vitest test suite (`tests/` directory, 80/80 tests across 12 suites).
+- `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
+- `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
+- `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
+- `npm run validate:npc`: Run the Living-World NPC Schedule Validator (validates all 38 schedules, graph connectivity, travel times, and slack).
+- `node scripts/test_combat_overhaul.js`: Run Playwright E2E combat overhaul verification test suite (combos, parry, dodge, roar, slam, poise).
+- `npm run deploy:cf`: Build production bundle and deploy directly to Cloudflare Pages (`wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true`).
+
+### Live Production Deployments
+- **Cloudflare Pages (Primary)**: [`https://moon-walkers-day.pages.dev`](https://moon-walkers-day.pages.dev) (Project: `moon-walkers-day`, Branch: `main`)
+- **Vercel (Mirror)**: `https://moonwalkersday.vercel.app` (Mirror production deployment)
 
 ### Verification Checklist Before Commits
-1. Run `npm run typecheck` — zero TypeScript errors.
-2. Run `npm run test` — all test suites pass.
-3. Run `npm run build` — bundle compiles cleanly with no missing assets.
-4. Verify browser rendering via `http://localhost:3000/` or Chrome DevTools.
-5. Deploy to Vercel production: `npx vercel --prod --yes`.
-6. Live URL: `https://moonwalkersday.vercel.app`.
+1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
+2. Run `npm run typecheck` — zero TypeScript errors.
+3. Run `npm run test` — all Vitest suites pass (80/80 tests across 12 suites).
+4. Run `npm run assets:validate` & `npm run assets:report` — all combat asset specifications validated.
+5. Run `node scripts/test_combat_overhaul.js` — Playwright end-to-end combat test suite verifies player combos, parasol parry, perfect dodge, Totoro abilities, and boss poise breaks.
+6. Run `npm run build` — bundle compiles cleanly with no missing assets.
+7. Verify browser rendering via `http://localhost:3000/` or Chrome DevTools.
+8. Deploy to Cloudflare Pages: `npm run deploy:cf`.
 
 ---
 
-## 14. Protocol for Future AI Modifications
+## 15. Protocol for Future AI Modifications
 
 Whenever an AI model, pair programmer, or automated tool touches this repository:
 1. **Read `GAME_CONTEXT.md` First**: Obtain full context on characters, maps, coordinates, and mechanics.
-2. **Preserve Fallback Guarantees**: Never remove procedural fallbacks in `TextureGenerator.ts` or bypass `ExternalAssetAdapter.ts`.
+2. **Preserve Fallback Guarantees (§0+ Art Policy)**: Visuals come from EXTERNAL ART. Never write new procedural canvas generators for weapons, mobs, or decals. Missing assets fallback to labeled placeholder rectangles registered via `ExternalAssetAdapter`.
 3. **Preserve Dialogue Integrity**: Maintain the rich cultural Bengali and English dialogues, food names, and authentic Dhaka university landmarks.
 4. **Mandatory Synchronization**: If you add an NPC, modify an item, alter world dimensions, or introduce a new system:
    - Update the code.
    - Update `src/config/assetSpecs.manifest.ts`.
-   - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state.
+   - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: Current Session — Production Certified v2.5.0*
+*Last Updated: October 19, 2026 — Zero-404 Fast Asset Preload & Instant Title Transition v3.5.1*

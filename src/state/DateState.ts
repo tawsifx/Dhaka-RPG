@@ -44,6 +44,14 @@ export const DateState: any = {
   maxHp: 100,
   sp: 50,
   maxSp: 50,
+  // Totoro Bond System (0 - 4 pips)
+  bond: 1.0,
+  maxBond: 4.0,
+  // Player Combat & Defense State
+  isGuarding: false,
+  parryActiveUntil: 0,
+  dashCooldownUntil: 0,
+  timeDilationUntil: 0,
   baseAtk: 12,
   baseDef: 5,
   equipped: {
@@ -74,7 +82,9 @@ export const DateState: any = {
   forestSeanceComplete: false,
   ananyaQuestStage: 0,
   kofilQuestStage: 0,
-  shamsherQuestStage: 0
+  shamsherQuestStage: 0,
+  npcOverrides: {},
+  savedCalendar: null
 };
 
 if (typeof window !== 'undefined') {

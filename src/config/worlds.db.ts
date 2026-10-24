@@ -41,8 +41,8 @@ export const WORLDS_DB: Record<string, any> = {
     npcSpec:   { name: 'Elder Banyan Sage', tex: 'npc-sage', portrait: '🌿', x: 528, y: 848,
       lines: [
         'Welcome to the Whispering Emerald Forest, Moon Walker and Totoro! A reality fracture has agitated the Sylvan Briar Stag to the East.',
-        'Gather glowing Emerald Spirit Dew from the forest floor and use your Bag & Craft menu (I) to forge stronger gear!',
-        'Press J (or Left-Click) to swing your parasol, K (or Shift) to dash, and Q (or R) for Totoro’s Spirit Roar!'
+        'Press J to combo (Jab/Slash/Spin), Hold J or Right-Click to Guard/Parry, K/Shift to Dash with i-frames!',
+        'Totoro assists with Q (Spirit Roar stun), E (Belly Slam poise break), and F (Leaf Swiftness). Watch enemy tells: GOLD can be parried, RED must be dodged, and PURPLE requires Totoro!'
       ],
       getDialogue: (scene) => [
         {

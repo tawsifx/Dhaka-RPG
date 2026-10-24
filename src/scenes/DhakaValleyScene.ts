@@ -7,9 +7,8 @@ import { DateState } from '../state/DateState';
 import { RPGStats } from '../state/RPGStats';
 import { SoundEngine } from '../audio/SoundEngine';
 import { UI } from '../ui/UIController';
-import { ITEMS_DB, WEAPON_FX } from '../config/items.db';
+import { ITEMS_DB } from '../config/items.db';
 import { WORLDS_DB } from '../config/worlds.db';
-import { CRAFT_RECIPES } from '../config/recipes.db';
 import {
   CURZON_K,
   CURZON_X,
@@ -19,21 +18,21 @@ import {
   CURZON_INTERIOR_WIDTH,
   CURZON_INTERIOR_HEIGHT,
   FARMHOUSE_WIDTH,
-  FARMHOUSE_HEIGHT,
-  TILE_SIZE
+  FARMHOUSE_HEIGHT
 } from '../config/constants';
 import { CombatSystem } from '../systems/CombatSystem';
-import { WeatherSystem } from '../systems/WeatherSystem';
 import { ScheduleSystem } from '../systems/ScheduleSystem';
 import { TimeCalendarSystem } from '../systems/TimeCalendarSystem';
 import { FarmingSystem } from '../systems/FarmingSystem';
 import { AtmosphereSystem } from '../systems/AtmosphereSystem';
+import { PlayerBehaviors } from '../systems/player/PlayerBehaviors';
 
 export class DhakaValleyScene extends Phaser.Scene {
   [key: string]: any;
 
   constructor() {
     super('DhakaValleyScene');
+    this.playerBehaviors = null;
     this.trail = [];
     this.stepCounter = 0;
     this.touchDir = { up: false, down: false, left: false, right: false };
@@ -191,7 +190,11 @@ export class DhakaValleyScene extends Phaser.Scene {
   }
 
   create() {
-    window.__activeScene = this;
+    (window as any).__activeScene = this;
+    (window as any).DateState = DateState;
+    (window as any).RPGStats = RPGStats;
+    (window as any).CombatSystem = CombatSystem;
+    (window as any).UI = UI;
     this.isTransitioning = false;
 
     // Normalize external assets & register animations/fallbacks
@@ -211,6 +214,13 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // Initialize 2D Grid Farming System
     this.farmingSystem = new FarmingSystem(40, 30);
+    this.farming = this.farmingSystem;
+
+    // Initialize Living-World NPC Behavior Engine
+    this.scheduleSystem = new ScheduleSystem(this);
+
+    // Initialize Dynamic Player Behaviors Engine
+    this.playerBehaviors = new PlayerBehaviors(this);
 
     // Initialize Layer 6 Stardew Tile Cursor
     this.tileCursor = this.add.graphics().setDepth(3100);
@@ -252,20 +262,48 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // Guard against OS key-repeat (e.repeat) so holding SPACE/E doesn't skip dialogue
     this.input.keyboard.on('keydown-SPACE', e => { if (!e.repeat) this.handleActionPress(); });
-    this.input.keyboard.on('keydown-E', e => { if (!e.repeat) this.handleActionPress(); });
-    this.input.keyboard.on('keydown-J', e => { if (!e.repeat) this.performPlayerAttack(); });
-    this.input.keyboard.on('keydown-K', e => { if (!e.repeat) this.performPlayerDash(); });
-    this.input.keyboard.on('keydown-SHIFT', e => { if (!e.repeat) this.performPlayerDash(); });
-    this.input.keyboard.on('keydown-Q', e => { if (!e.repeat) this.performTotoroRoar(); });
-    this.input.keyboard.on('keydown-R', e => { if (!e.repeat) this.performTotoroGroundSlam(); });
-    this.input.keyboard.on('keydown-F', e => { if (!e.repeat) this.performTotoroGroundSlam(); });
+    this.input.keyboard.on('keydown-E', e => {
+      if (!e.repeat) {
+        if (this.currentInteractable) {
+          this.handleActionPress();
+        } else {
+          CombatSystem.performTotoroGroundSlam(this);
+        }
+      }
+    });
+    this.input.keyboard.on('keydown-J', e => {
+      if (!e.repeat) {
+        CombatSystem.performPlayerAttack(this);
+        this.jHoldTimer = this.time.delayedCall(160, () => {
+          CombatSystem.startGuard(this);
+        });
+      }
+    });
+    this.input.keyboard.on('keyup-J', () => {
+      if (this.jHoldTimer) this.jHoldTimer.remove();
+      CombatSystem.stopGuard(this);
+    });
+    this.input.keyboard.on('keydown-K', e => { if (!e.repeat) CombatSystem.performPlayerDash(this); });
+    this.input.keyboard.on('keydown-SHIFT', e => { if (!e.repeat) CombatSystem.performPlayerDash(this); });
+    this.input.keyboard.on('keydown-Q', e => { if (!e.repeat) CombatSystem.performTotoroRoar(this); });
+    this.input.keyboard.on('keydown-R', e => { if (!e.repeat) CombatSystem.performTotoroGroundSlam(this); });
+    this.input.keyboard.on('keydown-F', e => { if (!e.repeat) CombatSystem.performTotoroLeafGust(this); });
     this.input.keyboard.on('keydown-I', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('inventory'); });
     this.input.keyboard.on('keydown-M', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('map'); });
     this.input.keyboard.on('keydown-L', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('quests'); });
 
     this.input.on('pointerdown', pointer => {
-      if (!UI.isOpen() && pointer.leftButtonDown()) {
-        this.performPlayerAttack();
+      if (!UI.isOpen()) {
+        if (pointer.leftButtonDown()) {
+          CombatSystem.performPlayerAttack(this);
+        } else if (pointer.rightButtonDown()) {
+          CombatSystem.startGuard(this);
+        }
+      }
+    });
+    this.input.on('pointerup', pointer => {
+      if (pointer.rightButtonReleased()) {
+        CombatSystem.stopGuard(this);
       }
     });
 
@@ -388,7 +426,11 @@ export class DhakaValleyScene extends Phaser.Scene {
     SoundEngine.portalWarp();
     this.cameras.main.fadeOut(220, 15, 10, 25);
         this.time.delayedCall(230, () => {
-      const defaultSpawn = worldId === 'dhaka' ? { x: 480, y: 1380 } : { x: 340, y: 900 };
+      const defaultSpawn = worldId === 'dhaka'
+        ? { x: 480, y: 1380 }
+        : (worldId === 'curzon_interior' || worldId === 'farmhouse'
+            ? { x: 600, y: 780 }
+            : { x: 340, y: 900 });
       try {
         this.buildWorld(worldId, customSpawn || defaultSpawn);
       } catch (err) {
@@ -466,32 +508,42 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // ── Landmark Proximity Hubs (Trampled earth around social centers) ──
     const landmarks = [
-      { x: 208, y: 1328, r: 160 },                      // Curzon Hall courtyard
-      { x: 272, y: 272, r: 130 },                       // TSC Tea Stall adda
-      { x: 656, y: 272, r: 100 },                       // Aparajeyo Bangla Monument
-      { x: 208, y: 752, r: 130 },                       // Charukola Fine Arts
+      { x: 208, y: 1328, r: 165 },                      // Curzon Hall courtyard
+      { x: 272, y: 272, r: 135 },                       // TSC Tea Stall adda
+      { x: 656, y: 272, r: 105 },                       // Aparajeyo Bangla Monument
+      { x: 208, y: 752, r: 135 },                       // Charukola Fine Arts
       { x: 1072, y: 240, r: 130 },                      // Nilkhet Book Lane
-      { x: 1072, y: 816, r: 100 },                      // Mintu Road Fountain
-      { x: 1264, y: 496, r: 100, isFlowerCart: true },  // Flower Cart (beside Ramna Bench)
-      { x: 1584, y: 240, r: 100 },                      // Mama's Fuchka Cart (Food Bazaar)
-      { x: 1744, y: 240, r: 100 },                      // Pabna Mishti Doi (Food Bazaar)
-      { x: 1648, y: 816, r: 100 },                      // Rickshaw Stand
+      { x: 1072, y: 816, r: 120 },                      // Mintu Road Fountain Plaza
+      { x: 1264, y: 496, r: 110, isFlowerCart: true },  // Flower Cart (beside Ramna Bench)
+      { x: 1584, y: 240, r: 110 },                      // Mama's Fuchka Cart (Food Bazaar)
+      { x: 1744, y: 240, r: 110 },                      // Pabna Mishti Doi (Food Bazaar)
+      { x: 1648, y: 816, r: 105 },                      // Rickshaw Stand
+      { x: 2192, y: 816, r: 110 },                      // Whispering Forest Portal Sanctuary
     ];
 
-    // ── Main Paved Road Corridors (World coordinates - Snapped to 32x32) ──
+    // ── Redesigned Multi-Type Road & Garden Trail Corridors (Snapped to 32x32) ──
     const paths = [
-      { x: 0, y: 768, w: 2240, h: 96 },                 // Main East-West thoroughfare
-      { x: 416, y: 160, w: 96, h: 1472 },               // West North-South road (TSC to Curzon)
-      { x: 1024, y: 224, w: 96, h: 640 },               // Central Nilkhet spine
-      { x: 1472, y: 160, w: 96, h: 1472 },              // East North-South promenade
-      { x: 416, y: 256, w: 1120, h: 96 },               // North connecting avenue
-      { x: 1472, y: 224, w: 384, h: 96 },               // North-East Food Bazaar Plaza
-      { x: 672, y: 1408, w: 96, h: 416 },               // Farmhouse Country Lane
-      { x: 480, y: 1408, w: 224, h: 96 },               // West connecting lane to Farmhouse
+      { x: 224, y: 768, w: 1968, h: 96 },               // Main East-West Fuller Rd boulevard (Charukola to Portal)
+      { x: 416, y: 256, w: 96, h: 1216 },               // West DU Heritage Brick road (TSC to Curzon/Farm junction)
+      { x: 208, y: 1296, w: 256, h: 96 },               // Curzon Hall Mughal Brick Forecourt
+      { x: 1024, y: 256, w: 96, h: 560 },               // Central Nilkhet Brick spine
+      { x: 1472, y: 256, w: 96, h: 1104 },              // East North-South Lakeside promenade
+      { x: 256, y: 248, w: 1536, h: 88 },               // Continuous North Brick Avenue (TSC -> Nilkhet -> Food Bazaar)
+      { x: 1072, y: 464, w: 784, h: 64 },               // Ramna Park Stepping-Stone Trail (Nilkhet -> Flower Cart -> Upper Pond)
+      { x: 736, y: 1184, w: 784, h: 64 },               // Botanical Lotus Pond North Stepping-Stone Walk
+      { x: 688, y: 1408, w: 96, h: 352 },               // Farmhouse Country Dirt-Cobble Lane
+      { x: 464, y: 1408, w: 272, h: 88 },               // West connecting lane to Farmhouse Gate
     ];
 
-    // ── Dhanmondi Lake Boundary (World coordinates - Snapped to 32x32) ──
-    const lake = { x: 1568, y: 1056, w: 864, h: 768 };
+    // ── Redesigned Multi-Body Water Zones (Dhanmondi Lake + Coves + Ramna Canal + Botanical Lotus Pond) ──
+    const waterBodies = [
+      { x: 1568, y: 1056, w: 832, h: 744 },             // Dhanmondi Lake Main Deep Basin
+      { x: 1728, y: 928, w: 672, h: 128 },              // Dhanmondi Lake Northern Cove
+      { x: 1440, y: 1504, w: 128, h: 296 },             // Dhanmondi Lake Southern Inlet
+      { x: 1856, y: 384, w: 224, h: 144 },              // Upper Ramna Lotus Pond
+      { x: 1920, y: 528, w: 80, h: 400 },               // Serpentine Ramna-Dhanmondi Canal
+      { x: 1088, y: 1248, w: 256, h: 160 },             // Curzon Botanical Lotus Pond (Shapla Dighi)
+    ];
 
     // ── Build Tile Grid ──
     const data = [];
@@ -503,8 +555,19 @@ export class DhakaValleyScene extends Phaser.Scene {
         const rTile = makeRng(row * 10007 + col * 31 + 999);
         const rnd = rTile();
 
-        // 1. Inside Dhanmondi Lake: Plain grass tile under water surface
-        if (wx >= lake.x && wx <= lake.x + lake.w && wy >= lake.y && wy <= lake.y + lake.h) {
+        // 1. Inside any water body: Plain grass/earth foundation tile under water surface
+        let inWater = false;
+        let nearWaterShore = false;
+        for (const wb of waterBodies) {
+          if (wx >= wb.x && wx <= wb.x + wb.w && wy >= wb.y && wy <= wb.y + wb.h) {
+            inWater = true;
+            break;
+          }
+          if (wx >= wb.x - 56 && wx <= wb.x + wb.w + 56 && wy >= wb.y - 56 && wy <= wb.y + wb.h + 56) {
+            nearWaterShore = true;
+          }
+        }
+        if (inWater) {
           tileRow.push(0);
           continue;
         }
@@ -537,8 +600,8 @@ export class DhakaValleyScene extends Phaser.Scene {
           }
         }
 
-        // 4. Lake Shoreline Fringe (within 64px of lake edge)
-        const nearLakeShore = (wx >= lake.x - 64 && wx <= lake.x + lake.w + 64 && wy >= lake.y - 64 && wy <= lake.y + lake.h + 64);
+        // 4. Water Shoreline Fringe (within 56px of any water body edge)
+        const nearLakeShore = nearWaterShore;
 
         let tileId;
         if (nearLandmark) {
@@ -656,6 +719,71 @@ export class DhakaValleyScene extends Phaser.Scene {
       else if (tex.startsWith('prop-bookstall')) sp.play('anim-bookstall');
       else if (tex.startsWith('prop-fuchkacart')) sp.play('anim-fuchkacart');
       else if (tex.startsWith('prop-doicart')) sp.play('anim-doicart');
+      else if (tex === 'prop-fountain') {
+        // Dynamic fountain water pulsing
+        this.tweens.add({
+          targets: sp,
+          scaleX: { from: 1, to: 1.018 },
+          scaleY: { from: 1, to: 1.025 },
+          duration: 1400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+        // Ambient fountain mist droplets
+        this.time.addEvent({
+          delay: 380,
+          loop: true,
+          callback: () => {
+            if (!sp.active) return;
+            const drop = this.add.circle(x + (Math.random() - 0.5) * 32, y - 46 - Math.random() * 16, 2, 0x81d4fa, 0.7).setDepth(y + 2);
+            this.tweens.add({
+              targets: drop,
+              y: drop.y + 14,
+              alpha: 0,
+              duration: 420 + Math.random() * 180,
+              onComplete: () => drop.destroy()
+            });
+          }
+        });
+      } else if (tex === 'prop-teastall') {
+        // Rising aromatic tea steam motes
+        this.time.addEvent({
+          delay: 550,
+          loop: true,
+          callback: () => {
+            if (!sp.active) return;
+            const steam = this.add.circle(x - 24 + (Math.random() - 0.5) * 10, y - 44, 2.5, 0xffffff, 0.45).setDepth(y + 2);
+            this.tweens.add({
+              targets: steam,
+              y: steam.y - 18,
+              x: steam.x + (Math.random() - 0.5) * 8,
+              alpha: 0,
+              scale: 1.7,
+              duration: 850,
+              onComplete: () => steam.destroy()
+            });
+          }
+        });
+      } else if (tex === 'prop-curzon') {
+        this.tweens.add({
+          targets: sp,
+          alpha: { from: 0.96, to: 1.0 },
+          duration: 3200,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      } else if (tex === 'prop-monument') {
+        this.tweens.add({
+          targets: sp,
+          scaleY: { from: 1, to: 1.012 },
+          duration: 2600,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
 
       // Layer 5: Register overhead canopies for smooth alpha fading (0.42) when walking behind
       if (tex.includes('tree')) {
@@ -665,6 +793,16 @@ export class DhakaValleyScene extends Phaser.Scene {
           maxX: x + 48,
           minY: y - 110,
           maxY: y - 10
+        });
+        // Gentle canopy wind sway
+        this.tweens.add({
+          targets: sp,
+          angle: { from: -1.2, to: 1.2 },
+          duration: 2500 + Math.random() * 800,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+          delay: Math.random() * 1000
         });
       } else if (tex === 'prop-curzon') {
         this.overheadCanopies.push({
@@ -697,13 +835,58 @@ export class DhakaValleyScene extends Phaser.Scene {
         else if (tex.startsWith('prop-fuchkacart')) sp.play('anim-fuchkacart');
         else if (tex.startsWith('prop-doicart')) sp.play('anim-doicart');
         else if (tex.startsWith('npc-')) {
-          // Stationary interactable NPC: display clean static idle pose
+          // Stationary interactable NPC: rhythmic breathing so they are alive & dynamic
+          this.tweens.add({
+            targets: sp,
+            scaleY: { from: 1, to: 1.025 },
+            duration: 1600 + Math.random() * 400,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+            delay: Math.random() * 600
+          });
+        } else if (tex === 'prop-rickshaw') {
+          // Dynamic rickshaw suspension bounce
+          this.tweens.add({
+            targets: sp,
+            scaleY: { from: 1, to: 1.02 },
+            y: { from: y, to: y - 1.5 },
+            duration: 1800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+        } else if (tex === 'prop-telescope') {
+          // Brass telescope twinkle sparkle
+          this.time.addEvent({
+            delay: 2400,
+            loop: true,
+            callback: () => {
+              if (!sp.active) return;
+              const glint = this.add.text(x + 10, y - 46, '✨', { fontSize: '10px' }).setDepth(y + 2);
+              this.tweens.add({
+                targets: glint,
+                alpha: 0,
+                y: glint.y - 12,
+                duration: 650,
+                onComplete: () => glint.destroy()
+              });
+            }
+          });
         }
       }
       const badgeY = sp ? y - sp.height - 8 : y - 58;
+      const isShop = name.includes('Mama') || name.includes('Cha') || name.includes('Fuchka') || name.includes('Doi') || name.includes('Gajra') || name.includes('Book') || name.includes('Clay') || name.includes('Tour');
       const badge = this.add.text(x, badgeY, '💬 ' + name, {
-        fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
-        backgroundColor: 'rgba(43,29,20,0.86)', color: '#fdf5e6', padding: { x: 6, y: 3 }
+        fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+        fontSize: '12px',
+        fontStyle: 'bold',
+        backgroundColor: isShop ? 'rgba(120, 53, 15, 0.90)' : 'rgba(28, 20, 16, 0.88)',
+        color: isShop ? '#fef3c7' : '#fdf5e6',
+        stroke: '#140f0c',
+        strokeThickness: 3,
+        shadow: { offsetX: 0, offsetY: 2, color: 'rgba(0, 0, 0, 0.65)', blur: 4, stroke: true, fill: true },
+        padding: { x: 8, y: 3 }
       }).setOrigin(0.5, 1).setDepth(y + 10);
       const entry = { x, y, radius, sprite: sp, badge, name, onInteract };
       this.interactables.push(entry);
@@ -717,28 +900,212 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, wCfg.groundTex).setDepth(0);
     }
 
+    this.extraWaterSprites = [];
+
     if (worldId === 'dhaka') {
-      // --- WORLD 1: DHAKA VALLEY (Full 80x60 Grid Map + Stardew / HGSS Layers) ---
+      // --- WORLD 1: DHAKA VALLEY (Multi-Type Pathways, Natural Endings & Organic Water Network) ---
 
-      // Layer 2: Paved Road Corridors & Autotile Stone Walkways
-      this.add.tileSprite(1120, 816, 2240, 96, 'tile-path').setDepth(1);
-      this.add.tileSprite(464, 896, 96, 1472, 'tile-path').setDepth(1);
-      this.add.tileSprite(1072, 544, 96, 640, 'tile-path').setDepth(1);
-      this.add.tileSprite(1520, 896, 96, 1472, 'tile-path').setDepth(1);
-      this.add.tileSprite(976, 304, 1120, 96, 'tile-path').setDepth(1);
-      this.add.tileSprite(1664, 272, 384, 96, 'tile-path').setDepth(1);
-      this.add.tileSprite(720, 1616, 96, 416, 'tile-path').setDepth(1);
-      this.add.tileSprite(592, 1456, 224, 96, 'tile-path').setDepth(1);
+      // Helper for Horizontal Paved Corridors with Dressed Curbs, Rounded Arch Caps & Stepping-Stone Dissipation
+      const addPathH = (
+        cx: number, cy: number, w: number, h: number, tex: string,
+        capW: 'stone' | 'brick' | 'dirt' | null = null,
+        capE: 'stone' | 'brick' | 'dirt' | null = null,
+        withCurbs = true
+      ) => {
+        this.add.tileSprite(cx, cy, w, h, tex).setDepth(1.1);
+        if (withCurbs) {
+          this.add.tileSprite(cx, cy - h / 2, w, 12, 'tile-curb-h').setDepth(1.25);
+          this.add.tileSprite(cx, cy + h / 2, w, 12, 'tile-curb-h').setDepth(1.25);
+        }
+        if (capW) {
+          this.add.sprite(cx - w / 2 + 2, cy, `path-cap-${capW}-w`).setOrigin(1, 0.5).setDepth(1.3);
+          this.add.sprite(cx - w / 2 - 42, cy, 'prop-stepping-trail-h').setOrigin(1, 0.5).setFlipX(true).setDepth(1.05);
+        }
+        if (capE) {
+          this.add.sprite(cx + w / 2 - 2, cy, `path-cap-${capE}-e`).setOrigin(0, 0.5).setDepth(1.3);
+          this.add.sprite(cx + w / 2 + 42, cy, 'prop-stepping-trail-h').setOrigin(0, 0.5).setDepth(1.05);
+        }
+      };
 
-      // Layer 0: Water & Shore with Animated Ripples & HGSS Vertical Reflections
-      this.lakeWater = this.add.tileSprite(2064, 1440, 992, 768, 'tile-water').setDepth(1);
-      this.add.tileSprite(1568, 1440, 24, 768, 'tile-bank').setDepth(2);
-      this.add.tileSprite(2064, 1056, 992, 24, 'tile-bank').setDepth(2);
-      this.add.tileSprite(1744, 1328, 384, 72, 'tile-pier').setDepth(3);
+      // Helper for Vertical Paved Corridors with Dressed Curbs, Rounded Arch Caps & Stepping-Stone Dissipation
+      const addPathV = (
+        cx: number, cy: number, w: number, h: number, tex: string,
+        capN: 'stone' | 'brick' | 'dirt' | null = null,
+        capS: 'stone' | 'brick' | 'dirt' | null = null,
+        withCurbs = true
+      ) => {
+        this.add.tileSprite(cx, cy, w, h, tex).setDepth(1.1);
+        if (withCurbs) {
+          this.add.tileSprite(cx - w / 2, cy, 12, h, 'tile-curb-v').setDepth(1.25);
+          this.add.tileSprite(cx + w / 2, cy, 12, h, 'tile-curb-v').setDepth(1.25);
+        }
+        if (capN) {
+          this.add.sprite(cx, cy - h / 2 + 2, `path-cap-${capN}-n`).setOrigin(0.5, 1).setDepth(1.3);
+          this.add.sprite(cx, cy - h / 2 - 42, 'prop-stepping-trail-v').setOrigin(0.5, 1).setFlipY(true).setDepth(1.05);
+        }
+        if (capS) {
+          this.add.sprite(cx, cy + h / 2 - 2, `path-cap-${capS}-s`).setOrigin(0.5, 0).setDepth(1.3);
+          this.add.sprite(cx, cy + h / 2 + 42, 'prop-stepping-trail-v').setOrigin(0.5, 0).setDepth(1.05);
+        }
+      };
 
-      blockRect(2064, 1184, 992, 256);
-      blockRect(2064, 1600, 992, 448);
-      blockRect(2192, 1328, 480, 64);
+      // ── 1. PATHWAY TYPE 4: Ramna Garden Stepping Stones & Laterite Pebble Trails (Depth 1.0) ──
+      // Ramna Park Flower Cart & Bench Garden Trail (Nilkhet Spine -> Flower Cart -> East Promenade -> Upper Ramna Pond)
+      this.add.tileSprite(1464, 480, 784, 56, 'tile-path-stepping').setDepth(1.0);
+      this.add.sprite(1856, 480, 'prop-stepping-trail-h').setOrigin(0, 0.5).setDepth(1.05);
+      // Curzon Botanical Lotus Pond Garden Walk (West DU Avenue -> Botanical Pond -> Lakeside Pierhead)
+      this.add.tileSprite(1128, 1208, 784, 56, 'tile-path-stepping').setDepth(1.0);
+      this.add.tileSprite(960, 1328, 56, 240, 'tile-path-stepping').setDepth(1.0);
+
+      // ── 2. PATHWAY TYPE 2: Mughal Heritage Red-Brick Herringbone Avenues ('tile-path-brick') ──
+      // Continuous Northern Academic & Bazaar Brick Avenue (TSC -> Aparajeyo Bangla -> Nilkhet -> Food Bazaar)
+      addPathH(1016, 288, 1520, 88, 'tile-path-brick', 'brick', 'brick');
+      // West DU & Curzon Hall Heritage Brick Avenue (TSC Adda down to Curzon / Farmhouse Junction, no orphan stubs!)
+      addPathV(464, 872, 92, 1168, 'tile-path-brick', null, 'brick');
+      // Curzon Hall Grand Mughal Forecourt (Connects Curzon Hall entrance directly to West DU Brick Avenue)
+      addPathH(336, 1344, 256, 88, 'tile-path-brick', 'brick', null);
+      // Central Nilkhet Book Lane Brick Spine (Nilkhet Book Stall to Mintu Road Fountain Plaza)
+      addPathV(1072, 536, 88, 544, 'tile-path-brick', 'brick', null);
+
+      // ── 3. PATHWAY TYPE 1: Royal Dressed Sandstone & Limestone Boulevard ('tile-path') ──
+      // Main East-West Fuller Road & Mintu Road Thoroughfare (Charukola Courtyard to Whispering Forest Portal)
+      addPathH(1200, 816, 1920, 96, 'tile-path', 'stone', 'stone');
+      // East North-South Lakeside Promenade (Food Bazaar Court down to Dhanmondi Lake Pierhead)
+      addPathV(1520, 816, 92, 1056, 'tile-path', null, 'stone');
+
+      // ── 4. PATHWAY TYPE 5: Pastoral Country Loam & Cobble Wheel-Track Lane ('tile-path-dirt') ──
+      // Green Meadows Farmhouse Country Lane & West Branch
+      addPathH(600, 1456, 272, 80, 'tile-path-dirt', null, null, false);
+      addPathV(736, 1592, 88, 336, 'tile-path-dirt', 'dirt', 'dirt', false);
+
+      // ── 5. PATHWAY TYPE 3: Chini-Tikri Mosaic Courtyards & Circular Plaza Medallions ──
+      // Fuller Road Food Bazaar Mosaic Court (Mama's Naga Fuchka & Pabnar Mishti Doi)
+      this.add.tileSprite(1664, 272, 288, 96, 'tile-path-plaza').setDepth(1.32);
+      // Charukola Banyan Artisan Mosaic Courtyard
+      this.add.tileSprite(224, 784, 160, 104, 'tile-path-plaza').setDepth(1.32);
+      // Grand Circular Medallions at Key Plazas & Road Intersections
+      this.add.sprite(1072, 816, 'prop-plaza-ring').setDepth(1.4);        // Mintu Road Fountain Grand Plaza
+      this.add.sprite(464, 816, 'prop-plaza-medallion').setDepth(1.38);   // West DU Crossroads
+      this.add.sprite(1520, 816, 'prop-plaza-medallion').setDepth(1.38);  // East Promenade Crossroads
+      this.add.sprite(208, 1344, 'prop-plaza-medallion').setDepth(1.38);  // Curzon Hall Entrance Forecourt
+      this.add.sprite(272, 288, 'prop-plaza-medallion').setDepth(1.38);   // TSC Adda Rotunda Courtyard
+      this.add.sprite(656, 288, 'prop-plaza-medallion').setDepth(1.38);   // Aparajeyo Bangla Monument Plinth
+      this.add.sprite(1072, 272, 'prop-plaza-medallion').setDepth(1.38);  // Nilkhet Book Lane Hub
+      this.add.sprite(1648, 816, 'prop-plaza-medallion').setDepth(1.38);  // Dhaka Rickshaw Stand Bay
+      this.add.sprite(1520, 1328, 'prop-plaza-medallion').setDepth(1.38); // Dhanmondi Lake Pierhead Plaza
+      this.add.sprite(2192, 816, 'prop-plaza-medallion').setDepth(1.38);  // Whispering Forest Portal Sanctuary
+
+      // ── 6. REDESIGNED WATER BODIES, STEPPED BENGALI GHATS, CANAL BRIDGE & AQUATIC FLORA ──
+
+      // Water Body A: Dhanmondi Lake (Multi-Tiered Terraced Bay + Northern Cove + Southern Inlet)
+      this.lakeWater = this.add.tileSprite(1984, 1428, 832, 744, 'tile-water').setDepth(1.0);
+      const lakeNorthCove = this.add.tileSprite(2064, 992, 672, 128, 'tile-water').setDepth(1.0);
+      const lakeSouthInlet = this.add.tileSprite(1504, 1652, 128, 296, 'tile-water').setDepth(1.0);
+      // Shallow Turquoise Shoreline Margins
+      const shWest = this.add.tileSprite(1592, 1280, 48, 448, 'tile-water-shallow').setDepth(1.15);
+      const shNorth = this.add.tileSprite(2064, 952, 672, 48, 'tile-water-shallow').setDepth(1.15);
+      const shSouth = this.add.tileSprite(1464, 1652, 48, 296, 'tile-water-shallow').setDepth(1.15);
+      this.extraWaterSprites.push(lakeNorthCove, lakeSouthInlet, shWest, shNorth, shSouth);
+
+      // Dressed Stone Embankments & Traditional Stepped Brick Ghats (Shiri Ghat)
+      this.add.tileSprite(1568, 1280, 24, 448, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1648, 1056, 184, 24, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1728, 992, 24, 152, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(2064, 928, 672, 24, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1504, 1504, 152, 24, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1440, 1652, 24, 296, 'tile-bank').setDepth(2.0);
+      // Stepped Bengali Ghats descending into Dhanmondi Lake
+      this.add.tileSprite(1588, 1184, 48, 128, 'tile-ghat-steps-v').setDepth(2.2);
+      this.add.tileSprite(1840, 946, 128, 48, 'tile-ghat-steps').setDepth(2.2);
+
+      // PATHWAY TYPE 6: Teakwood Lakeside Boardwalk & Dhanmondi Lake Pier
+      this.add.tileSprite(1556, 1328, 64, 84, 'tile-path-boardwalk').setDepth(2.6);
+      this.add.tileSprite(1744, 1328, 384, 72, 'tile-pier').setDepth(3.0);
+
+      // Dhanmondi Lake Physics Collisions (Keeping Pier at y: 1296..1360 walkable)
+      blockRect(2064, 992, 672, 128);
+      blockRect(1984, 1176, 832, 240);
+      blockRect(1984, 1580, 832, 440);
+      blockRect(2168, 1328, 464, 64);
+      blockRect(1504, 1652, 128, 296);
+
+      // Water Body B: Upper Ramna Lotus Pond & Serpentine Canal with Arched Stone Bridge
+      const ramnaPondShallow = this.add.tileSprite(1968, 456, 224, 144, 'tile-water-shallow').setDepth(1.0);
+      const ramnaPondDeep = this.add.tileSprite(1968, 456, 176, 96, 'tile-water').setDepth(1.1);
+      const canalWater = this.add.tileSprite(1960, 728, 80, 400, 'tile-water').setDepth(1.05);
+      this.extraWaterSprites.push(ramnaPondShallow, ramnaPondDeep, canalWater);
+
+      // Upper Ramna Pond & Canal Stone Embankments + Stepped Ghat
+      this.add.tileSprite(1968, 384, 232, 18, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1856, 456, 18, 148, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(2080, 456, 18, 148, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1888, 528, 72, 18, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(2040, 528, 88, 18, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1968, 396, 96, 36, 'tile-ghat-steps').setDepth(2.2);
+      this.add.tileSprite(1916, 728, 16, 400, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(2004, 728, 16, 400, 'tile-bank').setDepth(2.0);
+
+      // Arched Stone & Teakwood Footbridge spanning the Ramna-Dhanmondi Canal at y=816
+      this.add.sprite(1960, 816, 'prop-stone-bridge').setOrigin(0.5, 0.5).setDepth(3.2);
+
+      // Upper Pond & Canal Collisions (Bridge passage at y: 768..864 remains completely open!)
+      blockRect(1968, 456, 220, 140);
+      blockRect(1960, 644, 84, 232);
+      blockRect(1960, 896, 84, 64);
+
+      // Water Body C: Curzon Botanical Lotus Pond / Shahidullah Hall Dighi (South-Central Lawn)
+      const botPondShallow = this.add.tileSprite(1216, 1328, 256, 160, 'tile-water-shallow').setDepth(1.0);
+      const botPondDeep = this.add.tileSprite(1216, 1328, 208, 112, 'tile-water').setDepth(1.1);
+      this.extraWaterSprites.push(botPondShallow, botPondDeep);
+
+      this.add.tileSprite(1216, 1248, 264, 20, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1216, 1408, 264, 20, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1088, 1328, 20, 164, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1344, 1328, 20, 164, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1216, 1262, 96, 36, 'tile-ghat-steps').setDepth(2.2);
+      blockRect(1216, 1328, 252, 156);
+
+      // Floating Shapla (National Water Lilies), Lily Pads & Swaying Shoreline Reeds across all Water Bodies
+      const aquaticFlora = [
+        // Curzon Botanical Lotus Pond
+        { x: 1148, y: 1304, tex: 'prop-lotus' },
+        { x: 1272, y: 1348, tex: 'prop-lotus' },
+        { x: 1196, y: 1364, tex: 'prop-lilypad' },
+        { x: 1252, y: 1296, tex: 'prop-lilypad' },
+        { x: 1112, y: 1384, tex: 'prop-reeds' },
+        { x: 1320, y: 1384, tex: 'prop-reeds' },
+        // Upper Ramna Lotus Pond & Canal
+        { x: 1916, y: 444, tex: 'prop-lotus' },
+        { x: 2016, y: 472, tex: 'prop-lotus' },
+        { x: 1964, y: 488, tex: 'prop-lilypad' },
+        { x: 1884, y: 508, tex: 'prop-reeds' },
+        { x: 2052, y: 508, tex: 'prop-reeds' },
+        { x: 1940, y: 620, tex: 'prop-lilypad' },
+        { x: 1978, y: 700, tex: 'prop-lotus' },
+        // Dhanmondi Lake Coves & Shoreline
+        { x: 1784, y: 984, tex: 'prop-lotus' },
+        { x: 1912, y: 1004, tex: 'prop-lilypad' },
+        { x: 2140, y: 976, tex: 'prop-lotus' },
+        { x: 1624, y: 1112, tex: 'prop-lotus' },
+        { x: 1640, y: 1236, tex: 'prop-lilypad' },
+        { x: 1604, y: 1084, tex: 'prop-reeds' },
+        { x: 1752, y: 964, tex: 'prop-reeds' },
+        { x: 1488, y: 1560, tex: 'prop-lotus' },
+        { x: 1528, y: 1640, tex: 'prop-lilypad' },
+        { x: 1468, y: 1536, tex: 'prop-reeds' }
+      ];
+      aquaticFlora.forEach((fl, idx) => {
+        const sp = this.add.sprite(fl.x, fl.y, fl.tex).setOrigin(0.5, 0.5).setDepth(2.3);
+        this.tweens.add({
+          targets: sp,
+          y: fl.y + (fl.tex === 'prop-reeds' ? 1 : 2.2),
+          angle: fl.tex === 'prop-reeds' ? { from: -2.5, to: 2.5 } : { from: -1, to: 1 },
+          duration: 1800 + (idx % 5) * 320,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      });
 
       // Pokémon HGSS Vertical Water Reflections (alpha: 0.22)
       this.boatReflection = this.add.sprite(2032, 1376, 'prop-boat')
@@ -826,20 +1193,32 @@ export class DhakaValleyScene extends Phaser.Scene {
         });
       }
 
-      const labelStyle = { fontFamily: 'Press Start 2P', fontSize: '9.5px', color: '#fff8eb', stroke: '#2b1d14', strokeThickness: 4 };
-      this.add.text(CURZON_X, CURZON_Y - 116 * CURZON_K - 18, 'CURZON HALL & KRISHNACHURA LAWN', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(272, 96, 'TSC TEA STALL & ADDA', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(656, 136, 'APARAJEYO BANGLA', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(208, 528, 'CHARUKOLA FINE ARTS 🎨', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1072, 80, 'NILKHET BOOK LANE 📚', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1072, 720, 'MiNTU ROAD FOUNTAIN PLAZA', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1328, 396, 'RAMNA PARK BENCH 🌸', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1264, 396, 'PHULWALI FLOWER CART 🌼', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1664, 80, "FULLER ROAD FOOD BAZAAR 🥙🍮", labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1648, 752, 'DHAKA RICKSHAW STAND 🛺', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1776, 1200, 'DHANMONDI LAKE PIER & TELESCOPE 🔭', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(736, 1432, 'GREEN MEADOWS FARMHOUSE ROAD 🏡', labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(2192, 712, 'WHISPERING FOREST PORTAL 🌀', labelStyle).setOrigin(0.5).setDepth(2000);
+      const shopSignStyle = {
+        fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+        fontSize: '13px',
+        fontStyle: 'bold',
+        color: '#fff3b0',
+        stroke: '#241409',
+        strokeThickness: 3.5,
+        backgroundColor: 'rgba(24, 16, 11, 0.82)',
+        padding: { x: 10, y: 4 },
+        shadow: { offsetX: 0, offsetY: 2, color: 'rgba(0, 0, 0, 0.75)', blur: 4, stroke: true, fill: true }
+      };
+      this.add.text(CURZON_X, CURZON_Y - 116 * CURZON_K - 18, 'CURZON HALL & KRISHNACHURA LAWN', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(272, 96, 'TSC TEA STALL & ADDA ☕', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(656, 136, 'APARAJEYO BANGLA 🇧🇩', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(208, 528, 'CHARUKOLA FINE ARTS 🎨', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1072, 80, 'NILKHET BOOK LANE 📚', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1072, 720, 'MINTU ROAD FOUNTAIN PLAZA ⛲', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1328, 396, 'RAMNA PARK BENCH 🌸', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1264, 396, 'PHULWALI FLOWER CART 🌼', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1664, 80, "FULLER ROAD FOOD BAZAAR 🥙🍮", shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1648, 752, 'DHAKA RICKSHAW STAND 🛺', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1776, 1200, 'DHANMONDI LAKE PIER & TELESCOPE 🔭', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1216, 1216, 'BOTANICAL LOTUS POND (SHAPLA DIGHI) 🪷', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1960, 736, 'RAMNA CANAL STONE BRIDGE 🌉', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(736, 1432, 'GREEN MEADOWS FARMHOUSE ROAD 🏡', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(2192, 712, 'WHISPERING FOREST PORTAL 🌀', shopSignStyle).setOrigin(0.5).setDepth(2000);
 
       // Farmstead Timber Archway & Pastoral Entrance (32x32 Snapped)
       this.add.sprite(736, 1488, 'prop-farm-arch').setOrigin(0.5, 1).setDepth(1488);
@@ -889,13 +1268,15 @@ export class DhakaValleyScene extends Phaser.Scene {
 
       registerInteract(CURZON_X, CURZON_Y + 12, null, 'Enter Curzon Hall 🏛️', 92, () => this.enterCurzonHall());
       registerInteract(736, 1536, null, 'Visit Green Meadows Farmhouse 🏡', 85, () => this.enterFarmhouse());
-      registerInteract(272, 304, 'npc-tea-0', 'Tong-er Mama (Cha)', 105, () => this.interactTeaStall());
-      registerInteract(400, 304, 'npc-guitar-0', 'TSC Acoustic Singer', 90, () => this.interactGuitarist());
-      registerInteract(240, 752, 'npc-artist-0', 'Charukola Clay Art', 85, () => this.interactCharukola());
-      registerInteract(1072, 272, 'npc-books-0', 'Nilkhet Boiwala', 105, () => this.interactBookStall());
-      registerInteract(1264, 528, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
-      registerInteract(1584, 272, 'npc-fuchka-0', "Mama's Naga Fuchka", 105, () => this.interactFuchkaCart());
-      registerInteract(1744, 272, 'npc-doi-0', 'Pabnar Mishti Doi', 105, () => this.interactDoiCart());
+      if (!this.scheduleSystem) {
+        registerInteract(272, 304, 'npc-tea-0', 'Tong-er Mama (Cha)', 105, () => this.interactTeaStall());
+        registerInteract(400, 304, 'npc-guitar-0', 'TSC Acoustic Singer', 90, () => this.interactGuitarist());
+        registerInteract(240, 752, 'npc-artist-0', 'Charukola Clay Art', 85, () => this.interactCharukola());
+        registerInteract(1072, 272, 'npc-books-0', 'Nilkhet Boiwala', 105, () => this.interactBookStall());
+        registerInteract(1264, 528, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
+        registerInteract(1584, 272, 'npc-fuchka-0', "Mama's Naga Fuchka", 105, () => this.interactFuchkaCart());
+        registerInteract(1744, 272, 'npc-doi-0', 'Pabnar Mishti Doi', 105, () => this.interactDoiCart());
+      }
 
       const rickEntry = registerInteract(1648, 816, 'prop-rickshaw', 'Grand Dhaka Rickshaw Tour 🛺', 92, () => this.interactRickshawTour());
       this.rickshawSprite = rickEntry.sprite;
@@ -912,112 +1293,116 @@ export class DhakaValleyScene extends Phaser.Scene {
         this.transitionToWorld('forest');
       });
 
-      // Ahona, Apshora & Rakin Setup
-      const ahonaPos = DateState.bulliesDefeated ? { x: 1290, y: 480 } : { x: 670, y: 810 };
-      let apshoraPos = DateState.bulliesDefeated ? { x: 1335, y: 480 } : { x: 710, y: 810 };
-      if (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4) {
-        apshoraPos = { x: 320, y: 785 };
-      } else if (DateState.apshoraQuestStage >= 4) {
-        apshoraPos = { x: 1345, y: 480 };
-      }
-      this.ahona = this.add.sprite(ahonaPos.x, ahonaPos.y, 'npc-ahona-0').setOrigin(0.5, 1).setDepth(ahonaPos.y);
-      this.apshora = this.add.sprite(apshoraPos.x, apshoraPos.y, 'npc-apshora-0').setOrigin(0.5, 1).setDepth(apshoraPos.y);
+      if (this.scheduleSystem) {
+        this.scheduleSystem.initWorldNpcs('dhaka');
+      } else {
+        // Ahona, Apshora & Rakin Setup
+        // Placed intelligently at Krishnachura Avenue Gateway (x: 480, y: 1056) with cinematic breathing room
+        const ahonaPos = DateState.bulliesDefeated ? { x: 1290, y: 480 } : { x: 480, y: 1056 };
+        let apshoraPos = DateState.bulliesDefeated ? { x: 1335, y: 480 } : { x: 516, y: 1056 };
+        if (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4) {
+          apshoraPos = { x: 320, y: 785 };
+        } else if (DateState.apshoraQuestStage >= 4) {
+          apshoraPos = { x: 1345, y: 480 };
+        }
+        this.ahona = this.add.sprite(ahonaPos.x, ahonaPos.y, 'npc-ahona-0').setOrigin(0.5, 1).setDepth(ahonaPos.y);
+        this.apshora = this.add.sprite(apshoraPos.x, apshoraPos.y, 'npc-apshora-0').setOrigin(0.5, 1).setDepth(apshoraPos.y);
 
-      let rivalText = '😒 Ahona & Apshora';
-      if (DateState.ahonaQuestStage === 4) {
-        rivalText = (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4)
-          ? '💑 Ahona & Rakin'
-          : '💑 Ahona, Rakin & Apshora';
-      } else if (DateState.bulliesDefeated) {
-        rivalText = '😢 Ahona (On Bench)';
-      }
+        let rivalText = '😒 Ahona & Apshora';
+        if (DateState.ahonaQuestStage === 4) {
+          rivalText = (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4)
+            ? '💑 Ahona & Rakin'
+            : '💑 Ahona, Rakin & Apshora';
+        } else if (DateState.bulliesDefeated) {
+          rivalText = '😢 Ahona (On Bench)';
+        }
 
-      this.rivalBadge = this.add.text(ahonaPos.x + 20, ahonaPos.y - 67, rivalText, {
-        fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
-        backgroundColor: '#591c33', color: '#ffd6e4', padding: { x: 7, y: 3 }
-      }).setOrigin(0.5, 1).setDepth(2100);
-      this.rivalInteract = {
-        x: ahonaPos.x + 20, y: ahonaPos.y, radius: 95, sprite: this.ahona, badge: this.rivalBadge,
-        name: DateState.ahonaQuestStage === 4 ? 'Talk to Ahona & Rakin' : 'Talk to Ahona & Apshora',
-        onInteract: () => this.interactAhonaApshora()
-      };
-      this.interactables.push(this.rivalInteract);
-
-      // Dedicated Apshora Atelier Interactable when working at Charukola
-      if (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4) {
-        this.apshoraBadge = this.add.text(apshoraPos.x, apshoraPos.y - 67, '✨ Apshora & Anamika Atelier', {
-          fontFamily: 'Outfit', fontSize: '11px', fontStyle: 'bold',
-          backgroundColor: '#4c1d95', color: '#f3e8ff', padding: { x: 6, y: 3 }
+        this.rivalBadge = this.add.text(ahonaPos.x + 20, ahonaPos.y - 67, rivalText, {
+          fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
+          backgroundColor: '#591c33', color: '#ffd6e4', padding: { x: 7, y: 3 }
         }).setOrigin(0.5, 1).setDepth(2100);
-        this.apshoraInteract = {
-          x: apshoraPos.x, y: apshoraPos.y, radius: 90, sprite: this.apshora, badge: this.apshoraBadge,
-          name: 'Visit Apshora & Anamika Atelier',
-          onInteract: () => this.interactApshoraAnamikaStudio()
+        this.rivalInteract = {
+          x: ahonaPos.x + 20, y: ahonaPos.y, radius: 95, sprite: this.ahona, badge: this.rivalBadge,
+          name: DateState.ahonaQuestStage === 4 ? 'Talk to Ahona & Rakin' : 'Talk to Ahona & Apshora',
+          onInteract: () => this.interactAhonaApshora()
         };
-        this.interactables.push(this.apshoraInteract);
-      } else if (DateState.apshoraQuestStage >= 4) {
-        this.apshoraBadge = this.add.text(apshoraPos.x, apshoraPos.y - 67, '👑 Apshora (Fashion Mogul)', {
-          fontFamily: 'Outfit', fontSize: '11px', fontStyle: 'bold',
-          backgroundColor: '#581c87', color: '#faf5ff', padding: { x: 6, y: 3 }
+        this.interactables.push(this.rivalInteract);
+
+        // Dedicated Apshora Atelier Interactable when working at Charukola
+        if (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4) {
+          this.apshoraBadge = this.add.text(apshoraPos.x, apshoraPos.y - 67, '✨ Apshora & Anamika Atelier', {
+            fontFamily: 'Outfit', fontSize: '11px', fontStyle: 'bold',
+            backgroundColor: '#4c1d95', color: '#f3e8ff', padding: { x: 6, y: 3 }
+          }).setOrigin(0.5, 1).setDepth(2100);
+          this.apshoraInteract = {
+            x: apshoraPos.x, y: apshoraPos.y, radius: 90, sprite: this.apshora, badge: this.apshoraBadge,
+            name: 'Visit Apshora & Anamika Atelier',
+            onInteract: () => this.interactApshoraAnamikaStudio()
+          };
+          this.interactables.push(this.apshoraInteract);
+        } else if (DateState.apshoraQuestStage >= 4) {
+          this.apshoraBadge = this.add.text(apshoraPos.x, apshoraPos.y - 67, '👑 Apshora (Fashion Mogul)', {
+            fontFamily: 'Outfit', fontSize: '11px', fontStyle: 'bold',
+            backgroundColor: '#581c87', color: '#faf5ff', padding: { x: 6, y: 3 }
+          }).setOrigin(0.5, 1).setDepth(2100);
+          this.apshoraInteract = {
+            x: apshoraPos.x, y: apshoraPos.y, radius: 85, sprite: this.apshora, badge: this.apshoraBadge,
+            name: 'Talk to Fashion Mogul Apshora',
+            onInteract: () => this.interactApshoraSolo()
+          };
+          this.interactables.push(this.apshoraInteract);
+        }
+
+        const rakinPos = DateState.ahonaQuestStage >= 3 ? { x: 1255, y: 480 } : { x: 830, y: 325 };
+        this.rakin = this.add.sprite(rakinPos.x, rakinPos.y, 'npc-rakin-0').setOrigin(0.5, 1).setDepth(rakinPos.y);
+        this.rakinBadge = this.add.text(rakinPos.x, rakinPos.y - 65, '💌 Rakin', {
+          fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
+          backgroundColor: '#1d4e6e', color: '#e6f5ff', padding: { x: 7, y: 3 }
+        }).setOrigin(0.5, 1).setDepth(2100).setVisible(DateState.ahonaQuestStage < 4);
+        this.rakinInteract = {
+          x: rakinPos.x, y: rakinPos.y, radius: 85, sprite: this.rakin, badge: this.rakinBadge,
+          name: "Talk to Rakin",
+          onInteract: () => this.interactRakin()
+        };
+        this.interactables.push(this.rakinInteract);
+
+        // Enan & Salat Couple Setup (Mintu Road Fountain Plaza terraces, x: 960–1152, y: 736)
+        let salatPos = { x: 960, y: 736 };
+        let enanPos = { x: 1152, y: 736 };
+        let salatText = '💬 Salat (Wants to talk!)';
+        let enanText = '💼 Enan (Typing on phone...)';
+
+        if (DateState.enanQuestStage >= 5) {
+          salatPos = { x: 1024, y: 736 };
+          enanPos = { x: 1088, y: 736 };
+          salatText = '💑 Enan & Salat (Happy Couple)';
+          enanText = '💑 Enan & Salat (Happy Couple)';
+        } else if (DateState.enanQuestStage === 2) {
+          salatPos = { x: 960, y: 736 };
+          salatText = '😢 Salat (Crying by Fountain)';
+          enanText = '📱 Enan (Glued to Screen)';
+        } else if (DateState.enanQuestStage === 3) {
+          salatPos = { x: 960, y: 736 };
+          salatText = '🥺 Salat (Hoping Totoro Can Help)';
+          enanText = '📱 Enan (Glued to Screen)';
+        } else if (DateState.enanQuestStage === 4) {
+          salatPos = { x: 960, y: 736 };
+          salatText = '🥺 Salat (Waiting for Totoro)';
+          enanText = '❗ Enan (Totoro will talk to him!)';
+        }
+
+        this.salat = this.add.sprite(salatPos.x, salatPos.y, 'npc-salat-0').setOrigin(0.5, 1).setDepth(salatPos.y);
+        this.salatBadge = this.add.text(salatPos.x, salatPos.y - 65, salatText, {
+          fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
+          backgroundColor: '#831843', color: '#fce7f3', padding: { x: 7, y: 3 }
         }).setOrigin(0.5, 1).setDepth(2100);
-        this.apshoraInteract = {
-          x: apshoraPos.x, y: apshoraPos.y, radius: 85, sprite: this.apshora, badge: this.apshoraBadge,
-          name: 'Talk to Fashion Mogul Apshora',
-          onInteract: () => this.interactApshoraSolo()
+
+        this.salatInteract = {
+          x: salatPos.x, y: salatPos.y, radius: 85, sprite: this.salat, badge: this.salatBadge,
+          name: 'Talk to Salat',
+          onInteract: () => this.interactSalat()
         };
-        this.interactables.push(this.apshoraInteract);
-      }
-
-      const rakinPos = DateState.ahonaQuestStage >= 3 ? { x: 1255, y: 480 } : { x: 830, y: 325 };
-      this.rakin = this.add.sprite(rakinPos.x, rakinPos.y, 'npc-rakin-0').setOrigin(0.5, 1).setDepth(rakinPos.y);
-      this.rakinBadge = this.add.text(rakinPos.x, rakinPos.y - 65, '💌 Rakin', {
-        fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
-        backgroundColor: '#1d4e6e', color: '#e6f5ff', padding: { x: 7, y: 3 }
-      }).setOrigin(0.5, 1).setDepth(2100).setVisible(DateState.ahonaQuestStage < 4);
-      this.rakinInteract = {
-        x: rakinPos.x, y: rakinPos.y, radius: 85, sprite: this.rakin, badge: this.rakinBadge,
-        name: "Talk to Rakin",
-        onInteract: () => this.interactRakin()
-      };
-      this.interactables.push(this.rakinInteract);
-
-      // Enan & Salat Couple Setup (Mintu Road Fountain Plaza, x: 975–1145, y: 810)
-      let salatPos = { x: 975, y: 810 };
-      let enanPos = { x: 1145, y: 810 };
-      let salatText = '💬 Salat (Wants to talk!)';
-      let enanText = '💼 Enan (Typing on phone...)';
-
-      if (DateState.enanQuestStage >= 5) {
-        salatPos = { x: 1045, y: 810 };
-        enanPos = { x: 1080, y: 810 };
-        salatText = '💑 Enan & Salat (Happy Couple)';
-        enanText = '💑 Enan & Salat (Happy Couple)';
-      } else if (DateState.enanQuestStage === 2) {
-        salatPos = { x: 965, y: 810 };
-        salatText = '😢 Salat (Crying by Fountain)';
-        enanText = '📱 Enan (Glued to Screen)';
-      } else if (DateState.enanQuestStage === 3) {
-        salatPos = { x: 970, y: 810 };
-        salatText = '🥺 Salat (Hoping Totoro Can Help)';
-        enanText = '📱 Enan (Glued to Screen)';
-      } else if (DateState.enanQuestStage === 4) {
-        salatPos = { x: 975, y: 810 };
-        salatText = '🥺 Salat (Waiting for Totoro)';
-        enanText = '❗ Enan (Totoro will talk to him!)';
-      }
-
-      this.salat = this.add.sprite(salatPos.x, salatPos.y, 'npc-salat-0').setOrigin(0.5, 1).setDepth(salatPos.y);
-      this.salatBadge = this.add.text(salatPos.x, salatPos.y - 65, salatText, {
-        fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
-        backgroundColor: '#831843', color: '#fce7f3', padding: { x: 7, y: 3 }
-      }).setOrigin(0.5, 1).setDepth(2100);
-
-      this.salatInteract = {
-        x: salatPos.x, y: salatPos.y, radius: 85, sprite: this.salat, badge: this.salatBadge,
-        name: 'Talk to Salat',
-        onInteract: () => this.interactSalat()
-      };
-      this.interactables.push(this.salatInteract);
+        this.interactables.push(this.salatInteract);
 
       this.enan = this.add.sprite(enanPos.x, enanPos.y, 'npc-enan-0').setOrigin(0.5, 1).setDepth(enanPos.y);
 
@@ -1033,16 +1418,72 @@ export class DhakaValleyScene extends Phaser.Scene {
       };
       this.interactables.push(this.enanInteract);
 
-      this.createWanderingCitizens();
+        this.createWanderingCitizens();
+      }
     } else {
       // --- WORLDS 2 TO 6: EXPEDITION REALMS (Pathways, Shrines, Gatherables, Enemies & Boss Arena) ---
-      this.add.tileSprite(1200, 900, 2000, 110, wCfg.pathTex).setDepth(1);
-      this.add.tileSprite(1150, 900, 110, 1300, wCfg.pathTex).setDepth(1);
-      this.lakeWater = this.add.tileSprite(1200, 1620, 2200, 320, wCfg.waterTex).setDepth(1);
+      // Secondary Stepping-Stone & Brick Trails leading to Material Nodes & Spirit Groves
+      this.add.tileSprite(935, 690, 460, 48, 'tile-path-stepping').setDepth(1.0);
+      this.add.tileSprite(1245, 700, 220, 48, 'tile-path-stepping').setDepth(1.0);
+      this.add.tileSprite(1065, 1120, 200, 48, 'tile-path-stepping').setDepth(1.0);
+      this.add.tileSprite(1325, 1140, 380, 48, 'tile-path-stepping').setDepth(1.0);
 
-      const labelStyle = { fontFamily: 'Press Start 2P', fontSize: '11px', color: '#fff8eb', stroke: '#120d1f', strokeThickness: 4 };
+      // Main East-West & North-South Realm Causeways with Dressed Curbs & Rounded Arch End-Caps
+      this.add.tileSprite(1200, 900, 1920, 96, wCfg.pathTex).setDepth(1.1);
+      this.add.tileSprite(1200, 852, 1920, 12, 'tile-curb-h').setDepth(1.25);
+      this.add.tileSprite(1200, 948, 1920, 12, 'tile-curb-h').setDepth(1.25);
+      this.add.sprite(242, 900, 'path-cap-stone-w').setOrigin(1, 0.5).setDepth(1.3);
+      this.add.sprite(2158, 900, 'path-cap-stone-e').setOrigin(0, 0.5).setDepth(1.3);
+      this.add.sprite(192, 900, 'prop-stepping-trail-h').setOrigin(1, 0.5).setFlipX(true).setDepth(1.05);
+      this.add.sprite(2208, 900, 'prop-stepping-trail-h').setOrigin(0, 0.5).setDepth(1.05);
+
+      this.add.tileSprite(1150, 880, 96, 1160, wCfg.pathTex).setDepth(1.1);
+      this.add.tileSprite(1102, 880, 12, 1160, 'tile-curb-v').setDepth(1.25);
+      this.add.tileSprite(1198, 880, 12, 1160, 'tile-curb-v').setDepth(1.25);
+      this.add.sprite(1150, 302, 'path-cap-stone-n').setOrigin(0.5, 1).setDepth(1.3);
+      this.add.sprite(1150, 254, 'prop-stepping-trail-v').setOrigin(0.5, 1).setFlipY(true).setDepth(1.05);
+
+      // Circular Sanctuary & Boss Arena Plaza Medallions
+      this.add.sprite(240, 912, 'prop-plaza-medallion').setDepth(1.35);
+      this.add.sprite(528, 868, 'prop-plaza-medallion').setDepth(1.35);
+      this.add.sprite(1150, 900, 'prop-plaza-ring').setDepth(1.38);
+      this.add.sprite(1808, 912, 'prop-plaza-ring').setDepth(1.38);
+      this.add.sprite(2160, 912, 'prop-plaza-medallion').setDepth(1.35);
+
+      // Redesigned Multi-Tiered Realm Waterway, Embankments, Stepped Ghat & Causeway Bridge
+      this.lakeWater = this.add.tileSprite(1200, 1630, 2240, 300, wCfg.waterTex).setDepth(1.0);
+      const realmCoveL = this.add.tileSprite(620, 1430, 480, 100, wCfg.waterTex).setDepth(1.0);
+      const realmCoveR = this.add.tileSprite(1740, 1430, 520, 100, wCfg.waterTex).setDepth(1.0);
+      this.extraWaterSprites.push(realmCoveL, realmCoveR);
+
+      this.add.tileSprite(620, 1380, 488, 22, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1740, 1380, 528, 22, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(230, 1480, 300, 22, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1150, 1480, 580, 22, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(2160, 1480, 320, 22, 'tile-bank').setDepth(2.0);
+      this.add.tileSprite(1150, 1468, 128, 48, 'tile-ghat-steps').setDepth(2.2);
+      this.add.sprite(1150, 1524, 'prop-stone-bridge').setRotation(Math.PI / 2).setDepth(2.6);
+
+      const labelStyle = {
+        fontFamily: "'Rajdhani', 'Cinzel', sans-serif",
+        fontSize: '15px',
+        fontStyle: 'bold',
+        color: '#fff8eb',
+        stroke: '#120d1f',
+        strokeThickness: 3.5,
+        backgroundColor: 'rgba(18, 13, 31, 0.85)',
+        padding: { x: 12, y: 5 },
+        shadow: { offsetX: 0, offsetY: 2, color: 'rgba(0, 0, 0, 0.8)', blur: 5, stroke: true, fill: true }
+      };
       this.add.text(1200, 180, wCfg.name.toUpperCase(), labelStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1200, 210, wCfg.subtitle, { fontFamily: 'Outfit', fontSize: '15px', color: '#f7cb45' }).setOrigin(0.5).setDepth(2000);
+      this.add.text(1200, 215, wCfg.subtitle, {
+        fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+        fontSize: '14px',
+        fontStyle: 'bold',
+        color: '#f7cb45',
+        stroke: '#120d1f',
+        strokeThickness: 3
+      }).setOrigin(0.5).setDepth(2000);
 
       // Decorative Border & Grove Trees/Pillars
       [
@@ -1065,8 +1506,8 @@ export class DhakaValleyScene extends Phaser.Scene {
         this.transitionToWorld(wCfg.nextWorld);
       });
 
-      // Realm Guide NPC
-      if (wCfg.npcSpec) {
+      // Realm Guide NPC (Fallback if ScheduleSystem inactive)
+      if (!this.scheduleSystem && wCfg.npcSpec) {
         let lineCursor = 0;
         registerInteract(wCfg.npcSpec.x, wCfg.npcSpec.y, `${wCfg.npcSpec.tex}-0`, wCfg.npcSpec.name, 88, () => {
           if (wCfg.npcSpec.getDialogue) {
@@ -1092,23 +1533,34 @@ export class DhakaValleyScene extends Phaser.Scene {
 
       // World 2: Whispering Emerald Forest Spooky NPCs & Spirit Altar
       if (worldId === 'forest') {
-        // 1. Ananya the Weeping Petni (North Banyan Grove: x: 880, y: 460)
-        const ananyaEntry = registerInteract(880, 460, 'npc-ananya-ghost-0', 'Ananya (Weeping Petni) 👻', 90, () => this.interactAnanyaGhost());
-        const ananyaAnim = this.getOrCreateWalkAnim('npc-ananya-ghost', 2.5);
-        if (ananyaAnim && ananyaEntry.sprite) ananyaEntry.sprite.play(ananyaAnim);
+        if (!this.scheduleSystem) {
+          // 1. Ananya the Weeping Petni (North Banyan Grove: x: 880, y: 460)
+          const ananyaEntry = registerInteract(880, 460, 'npc-ananya-ghost-0', 'Ananya (Weeping Petni) 👻', 90, () => this.interactAnanyaGhost());
+          if (ananyaEntry.sprite) {
+            this.tweens.add({ targets: ananyaEntry.sprite, y: { from: 460, to: 452 }, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+            this.tweens.add({ targets: ananyaEntry.sprite, alpha: { from: 0.65, to: 0.95 }, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          }
 
-        // 2. Kofil Chacha & Phantom Rickshaw (Southwest Marsh: x: 420, y: 1320)
-        const kofilEntry = registerInteract(420, 1320, 'npc-kofil-ghost-0', 'Kofil Chacha (Phantom Rickshaw) 🛺', 95, () => this.interactKofilGhost());
-        const kofilAnim = this.getOrCreateWalkAnim('npc-kofil-ghost', 2.5);
-        if (kofilAnim && kofilEntry.sprite) kofilEntry.sprite.play(kofilAnim);
+          // 2. Kofil Chacha & Phantom Rickshaw (Southwest Marsh: x: 420, y: 1320)
+          const kofilEntry = registerInteract(420, 1320, 'npc-kofil-ghost-0', 'Kofil Chacha (Phantom Rickshaw) 🛺', 95, () => this.interactKofilGhost());
+          if (kofilEntry.sprite) {
+            this.tweens.add({ targets: kofilEntry.sprite, y: { from: 1320, to: 1314 }, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+            this.tweens.add({ targets: kofilEntry.sprite, alpha: { from: 0.7, to: 1.0 }, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          }
 
-        // 3. Prof. Shamsher (DU Occult Investigator: x: 1540, y: 460)
-        const shamsherEntry = registerInteract(1540, 460, 'npc-shamsher-investigator-0', 'Prof. Shamsher (Occult Investigator) 📻', 90, () => this.interactShamsherNishi());
-        const shamsherAnim = this.getOrCreateWalkAnim('npc-shamsher-investigator', 2.5);
-        if (shamsherAnim && shamsherEntry.sprite) shamsherEntry.sprite.play(shamsherAnim);
+          // 3. Prof. Shamsher (DU Occult Investigator: x: 1540, y: 460)
+          const shamsherEntry = registerInteract(1540, 460, 'npc-shamsher-investigator-0', 'Prof. Shamsher (Occult Investigator) 📻', 90, () => this.interactShamsherNishi());
+          if (shamsherEntry.sprite) {
+            this.tweens.add({ targets: shamsherEntry.sprite, scaleY: { from: 1, to: 1.025 }, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          }
+        }
 
         // 4. Ancient Spirit Altar (Central Grove: x: 1150, y: 640)
         registerInteract(1150, 640, 'prop-spirit-altar', 'Ancient Spirit Altar 🕯️', 95, () => this.interactSpiritAltar());
+      }
+
+      if (this.scheduleSystem) {
+        this.scheduleSystem.initWorldNpcs(worldId);
       }
 
       // Spawn Patrol Enemies & Guardian Boss
@@ -1129,8 +1581,15 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.totoro = this.add.sprite(totoroStart.x, totoroStart.y, 'totoro-0').setOrigin(0.5, 1).setDepth(totoroStart.y);
     this.totoroBadge = this.add.text(totoroStart.x, totoroStart.y - 68,
       DateState.totoroJoined ? '♥ Totoro' : '❗ Totoro (Waiting for you)', {
-      fontFamily: 'Outfit', fontSize: '13px', fontStyle: 'bold',
-      backgroundColor: '#d45779', color: '#ffffff', padding: { x: 8, y: 4 }
+      fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+      fontSize: '13px',
+      fontStyle: 'bold',
+      backgroundColor: 'rgba(212, 87, 121, 0.94)',
+      color: '#ffffff',
+      stroke: '#2a0815',
+      strokeThickness: 3,
+      shadow: { offsetX: 0, offsetY: 2, color: 'rgba(0, 0, 0, 0.6)', blur: 4, stroke: true, fill: true },
+      padding: { x: 9, y: 4 }
     }).setOrigin(0.5, 1).setDepth(2100);
     this.trail = Array(16).fill({ x: this.player.x, y: this.player.y });
 
@@ -1150,10 +1609,6 @@ export class DhakaValleyScene extends Phaser.Scene {
       len: Phaser.Math.Between(18, 30),
       speed: Phaser.Math.Between(650, 950)
     }));
-
-    // Taro Leaf Sprite attached to Totoro
-    this.taroLeaf = this.add.sprite(this.totoro.x, this.totoro.y - 65, 'prop-taro-leaf')
-      .setOrigin(0.5, 1).setDepth(this.totoro.depth + 2).setVisible(false);
 
     // Scattered Glossy Rain Puddles around Curzon Lawn & Dhanmondi Lake Bank
     this.puddles = [];
@@ -1202,8 +1657,15 @@ export class DhakaValleyScene extends Phaser.Scene {
     } 
 
     this.promptBubble = this.add.text(0, 0, 'SPACE / TAP: Interact', {
-      fontFamily: 'Press Start 2P', fontSize: '9px',
-      backgroundColor: '#fdf5e6', color: '#2b1d14', padding: { x: 6, y: 4 }
+      fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+      fontSize: '12px',
+      fontStyle: 'bold',
+      backgroundColor: '#fdf5e6',
+      color: '#1a1008',
+      stroke: '#2b1d14',
+      strokeThickness: 1.5,
+      padding: { x: 8, y: 4 },
+      shadow: { offsetX: 0, offsetY: 2, color: 'rgba(0, 0, 0, 0.5)', blur: 3, fill: true }
     }).setOrigin(0.5, 1).setDepth(3000).setVisible(false);
 
     this.ambientOverlay = this.add.rectangle(0, 0, MAP_W * 2, MAP_H * 2, 0x1a1438, 0)
@@ -1244,11 +1706,14 @@ export class DhakaValleyScene extends Phaser.Scene {
         homeY: pos.y,
         hp: eSpec.hp,
         maxHp: eSpec.hp,
+        poise: 30,
+        maxPoise: 30,
         atk: eSpec.atk,
         xp: eSpec.xp,
         drop: eSpec.drop,
         speed: 68,
-        lastHitPlayer: 0
+        lastHitPlayer: 0,
+        attackPhase: 'idle'
       });
     });
 
@@ -1259,8 +1724,10 @@ export class DhakaValleyScene extends Phaser.Scene {
       const bossAnim = this.getOrCreateWalkAnim(bSpec.tex, 3);
       if (bossAnim) bSp.play(bossAnim);
       const bLbl = this.add.text(bSpec.x, bSpec.y - 114, `👑 ${bSpec.name}`, {
-        fontFamily: 'Press Start 2P', fontSize: '9px',
-        backgroundColor: '#591c33', color: '#fff3a1', padding: { x: 6, y: 4 }
+        fontFamily: 'Rajdhani', fontSize: '13px', fontStyle: 'bold',
+        backgroundColor: 'rgba(89, 28, 51, 0.92)', color: '#fff3a1', padding: { x: 8, y: 3 },
+        stroke: '#2e0a18', strokeThickness: 3,
+        shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 3, fill: true }
       }).setOrigin(0.5, 1).setDepth(bSpec.y + 5);
 
       const bossObj = {
@@ -1276,12 +1743,16 @@ export class DhakaValleyScene extends Phaser.Scene {
         homeY: bSpec.y,
         hp: bSpec.hp,
         maxHp: bSpec.hp,
+        poise: 80,
+        maxPoise: 80,
         atk: bSpec.atk,
         xp: bSpec.xp,
         reward: bSpec.reward,
         speed: 82,
         lastHitPlayer: 0,
-        lastTelegraph: 0
+        lastTelegraph: 0,
+        attackPhase: 'idle',
+        phase2Triggered: false
       };
       this.enemies.push(bossObj);
       this.activeBoss = bossObj;
@@ -1349,560 +1820,57 @@ export class DhakaValleyScene extends Phaser.Scene {
     }
   }
 
-  /* Real-Time Combat: 3-Hit Weapon Combo System with Elemental Slashes */
+  /* Real-Time Combat: Overhauled Data-Driven Combos & Companion System */
   performPlayerAttack() {
-    if (UI.isOpen() || this.cutsceneLocked || !this.player) return;
-    const now = this.time.now;
-    if (now - this.lastAtkTime < 220) return;
-
-    if (now - this.lastAtkTime < 650) {
-      this.comboStep = (this.comboStep + 1) % 3;
-    } else {
-      this.comboStep = 0;
-    }
-    this.lastAtkTime = now;
-
-    const weaponId = (DateState.equipped && DateState.equipped.weapon) || 'umbrella_blade';
-    const wfx = WEAPON_FX[weaponId] || WEAPON_FX.umbrella_blade;
-    const baseAngle = Math.atan2(this.facingVec.y, this.facingVec.x);
-    const px = this.player.x;
-    const py = this.player.y - 18;
-
-    if (this.comboStep === 0) {
-      // --- COMBO HIT 1: Swift Crescent Slash ---
-      SoundEngine.attackSlash();
-
-      // Quick forward lunge & tilt
-      const lungeDist = 10;
-      this.tweens.add({
-        targets: this.player,
-        x: px + this.facingVec.x * lungeDist,
-        y: this.player.y + this.facingVec.y * lungeDist,
-        duration: 75,
-        yoyo: true,
-        ease: 'Quad.easeOut'
-      });
-      this.tweens.add({
-        targets: this.player,
-        angle: this.player.flipX ? 14 : -14,
-        duration: 70,
-        yoyo: true,
-        onComplete: () => this.player.setAngle(0)
-      });
-
-      // Luminous Crescent Slash Graphic
-      const slashGfx = this.add.graphics().setDepth(2900);
-      slashGfx.lineStyle(6, wfx.color, 0.95);
-      slashGfx.beginPath();
-      slashGfx.arc(px, py, 46, baseAngle - 0.95, baseAngle + 0.95, false);
-      slashGfx.strokePath();
-
-      slashGfx.lineStyle(2.5, wfx.glow, 1);
-      slashGfx.beginPath();
-      slashGfx.arc(px, py, 46, baseAngle - 0.75, baseAngle + 0.75, false);
-      slashGfx.strokePath();
-
-      this.tweens.add({
-        targets: slashGfx,
-        scaleX: 1.35,
-        scaleY: 1.35,
-        alpha: 0,
-        duration: 180,
-        ease: 'Quad.easeOut',
-        onComplete: () => slashGfx.destroy()
-      });
-
-      // Flying weapon spark particles
-      for (let i = 0; i < 3; i++) {
-        const offsetAng = baseAngle + (i - 1) * 0.45;
-        const spark = this.add.text(px + Math.cos(offsetAng) * 28, py + Math.sin(offsetAng) * 28, wfx.sparks[i % wfx.sparks.length], { fontSize: '11px' }).setOrigin(0.5).setDepth(2910);
-        this.tweens.add({
-          targets: spark,
-          x: px + Math.cos(offsetAng) * 58,
-          y: py + Math.sin(offsetAng) * 58,
-          alpha: 0,
-          scale: 0.4,
-          duration: 220,
-          onComplete: () => spark.destroy()
-        });
-      }
-
-      const dmg = RPGStats.getAtk() + Phaser.Math.Between(0, 3);
-      this.damageEnemiesInRadius(px + this.facingVec.x * 42, py + this.facingVec.y * 42, 70, dmg, 24);
-
-    } else if (this.comboStep === 1) {
-      // --- COMBO HIT 2: Piercing Starlight Thrust / Flurry Jab ---
-      SoundEngine.attackThrust();
-
-      // Extended lunge & stretch
-      const lungeDist = 18;
-      this.tweens.add({
-        targets: this.player,
-        x: px + this.facingVec.x * lungeDist,
-        y: this.player.y + this.facingVec.y * lungeDist,
-        scaleX: this.player.flipX ? -1.25 : 1.25,
-        scaleY: 0.88,
-        duration: 90,
-        yoyo: true,
-        ease: 'Cubic.easeOut',
-        onComplete: () => this.player.setScale(this.player.flipX ? -1 : 1, 1)
-      });
-
-      // Long Piercing Starlight Spear Beam
-      const tipX = px + this.facingVec.x * 74;
-      const tipY = py + this.facingVec.y * 74;
-      const thrustGfx = this.add.graphics().setDepth(2900);
-      thrustGfx.lineStyle(7, wfx.color, 0.85);
-      thrustGfx.lineBetween(px, py, tipX, tipY);
-      thrustGfx.lineStyle(3, wfx.glow, 1);
-      thrustGfx.lineBetween(px, py, tipX, tipY);
-      thrustGfx.fillStyle(wfx.glow, 1);
-      thrustGfx.fillCircle(tipX, tipY, 7);
-
-      this.tweens.add({
-        targets: thrustGfx,
-        alpha: 0,
-        duration: 200,
-        onComplete: () => thrustGfx.destroy()
-      });
-
-      // Piercing starburst on impact
-      for (let i = 0; i < 4; i++) {
-        const sang = (i / 4) * Math.PI * 2;
-        const spark = this.add.text(tipX, tipY, wfx.sparks[0], { fontSize: '12px' }).setOrigin(0.5).setDepth(2910);
-        this.tweens.add({
-          targets: spark,
-          x: tipX + Math.cos(sang) * 35,
-          y: tipY + Math.sin(sang) * 35,
-          alpha: 0,
-          scale: 0.3,
-          duration: 220,
-          onComplete: () => spark.destroy()
-        });
-      }
-
-      const dmg = Math.floor(RPGStats.getAtk() * 1.35) + Phaser.Math.Between(2, 6);
-      this.damageEnemiesInRadius(tipX, tipY, 68, dmg, 36);
-
-    } else {
-      // --- COMBO HIT 3: 360° Starlight Blossom Cyclone (Finisher) ---
-      SoundEngine.attackSpin();
-
-      // Full 360-degree whirlwind spin
-      this.tweens.add({
-        targets: this.player,
-        angle: this.player.flipX ? -360 : 360,
-        duration: 250,
-        ease: 'Cubic.easeInOut',
-        onComplete: () => this.player.setAngle(0)
-      });
-
-      this.cameras.main.shake(130, 0.009);
-
-      // Expanding 360° Blossom Ring
-      const ringGfx = this.add.graphics().setDepth(2900);
-      ringGfx.lineStyle(6, wfx.color, 0.95);
-      ringGfx.strokeCircle(px, py, 26);
-      ringGfx.lineStyle(2.5, wfx.glow, 1);
-      ringGfx.strokeCircle(px, py, 22);
-
-      this.tweens.add({
-        targets: ringGfx,
-        scaleX: 3.8,
-        scaleY: 3.8,
-        alpha: 0,
-        duration: 320,
-        ease: 'Quad.easeOut',
-        onComplete: () => ringGfx.destroy()
-      });
-
-      // 8-pointed mandala blossom burst
-      for (let i = 0; i < 8; i++) {
-        const rad = (i / 8) * Math.PI * 2;
-        const spark = this.add.text(px, py, wfx.sparks[i % wfx.sparks.length], { fontSize: '14px' })
-          .setOrigin(0.5).setDepth(2950);
-        this.tweens.add({
-          targets: spark,
-          x: px + Math.cos(rad) * 98,
-          y: py + Math.sin(rad) * 98,
-          alpha: 0,
-          scale: 0.45,
-          duration: 320,
-          ease: 'Sine.easeOut',
-          onComplete: () => spark.destroy()
-        });
-      }
-
-      const dmg = Math.floor(RPGStats.getAtk() * 1.9) + Phaser.Math.Between(6, 12);
-      this.damageEnemiesInRadius(px, py, 118, dmg, 48);
-
-      // Totoro Leaf Cyclone Synergy if Totoro is present and nearby
-      if (DateState.totoroJoined && this.totoro && Phaser.Math.Distance.Between(px, py, this.totoro.x, this.totoro.y) < 180) {
-        this.triggerTotoroLeafSynergy();
-      }
-    }
+    CombatSystem.performPlayerAttack(this);
   }
 
-  /* Totoro Leaf Cyclone Assist: Synced with Combo Finisher */
-  triggerTotoroLeafSynergy() {
-    SoundEngine.teaClink();
-    this.totoroBusyUntil = this.time.now + 380;
-    this.tweens.add({
-      targets: this.totoro,
-      angle: this.totoro.flipX ? -22 : 22,
-      duration: 110,
-      yoyo: true,
-      onComplete: () => this.totoro.setAngle(0)
-    });
-
-    const leaf = this.add.text(this.totoro.x, this.totoro.y - 25, '🍃', { fontSize: '18px' })
-      .setOrigin(0.5).setDepth(2900);
-    const targetX = this.totoro.x + this.facingVec.x * 145;
-    const targetY = this.totoro.y + this.facingVec.y * 145;
-
-    this.tweens.add({
-      targets: leaf,
-      x: targetX,
-      y: targetY,
-      angle: 360,
-      scale: 1.5,
-      duration: 280,
-      ease: 'Quad.easeOut',
-      onComplete: () => {
-        leaf.destroy();
-        this.damageEnemiesInRadius(targetX, targetY, 60, Math.floor(RPGStats.getAtk() * 0.8) + 4, 25);
-      }
-    });
+  performPlayerDash() {
+    CombatSystem.performPlayerDash(this);
   }
 
-  /* Companion Special Ability: Totoro's Spirit Shockwave Roar (Q or Mobile Roar) */
   performTotoroRoar() {
-    if (UI.isOpen() || this.cutsceneLocked) return;
-    if (!DateState.totoroJoined || !this.totoro) {
-      UI.showToast('🐾', 'Partner Needed', 'Meet Totoro at Curzon Hall to unlock companion abilities!');
-      return;
-    }
-    const now = this.time.now;
-    if (now - (this.lastSkillTime || 0) < 1800) return;
-    if (DateState.sp < 14) {
-      UI.showToast('💧', 'Low Spirit!', 'Sip TSC Malai Cha or wait for SP to regenerate.');
-      return;
-    }
-    this.lastSkillTime = now;
-    DateState.sp -= 14;
-    UI.updateRPGStats();
-
-    this.totoroBusyUntil = now + 650;
-    SoundEngine.totoroRoar();
-    this.cameras.main.shake(180, 0.007);
-
-    // Totoro squash, chest-puff and spirit leap
-    this.tweens.add({
-      targets: this.totoro,
-      scaleX: 1.35,
-      scaleY: 0.8,
-      duration: 100,
-      yoyo: true,
-      onComplete: () => {
-        this.tweens.add({
-          targets: this.totoro,
-          y: this.totoro.y - 18,
-          scaleX: 1.1,
-          scaleY: 1.25,
-          duration: 150,
-          yoyo: true,
-          ease: 'Sine.easeOut'
-        });
-      }
-    });
-
-    // Expanding dual spirit shockwave rings
-    const ring1 = this.add.circle(this.totoro.x, this.totoro.y - 24, 24, 0x80ffdb, 0.55).setDepth(2800);
-    this.tweens.add({
-      targets: ring1,
-      radius: 185,
-      alpha: 0,
-      duration: 420,
-      ease: 'Quad.easeOut',
-      onComplete: () => ring1.destroy()
-    });
-
-    const ring2 = this.add.circle(this.totoro.x, this.totoro.y - 24, 18, 0xfde047, 0.45).setDepth(2801);
-    this.tweens.add({
-      targets: ring2,
-      radius: 220,
-      alpha: 0,
-      duration: 500,
-      ease: 'Sine.easeOut',
-      onComplete: () => ring2.destroy()
-    });
-
-    // Swirl of spirit leaves & starlight particles
-    for (let i = 0; i < 10; i++) {
-      const angle = (i / 10) * Math.PI * 2;
-      const leaf = this.add.text(this.totoro.x, this.totoro.y - 24, i % 2 === 0 ? '🍃' : '✨', { fontSize: '13px' }).setOrigin(0.5).setDepth(2850);
-      this.tweens.add({
-        targets: leaf,
-        x: this.totoro.x + Math.cos(angle) * 125,
-        y: this.totoro.y - 24 + Math.sin(angle) * 125,
-        alpha: 0,
-        scale: 0.4,
-        duration: 460,
-        onComplete: () => leaf.destroy()
-      });
-    }
-
-    // Heal & Swiftness Speed Boost for Moon Walker
-    DateState.hp = Math.min(DateState.maxHp, DateState.hp + 16);
-    DateState.sp = Math.min(DateState.maxSp, DateState.sp + 8);
-    UI.updateRPGStats();
-    this.spawnDamageNumber(this.player.x, this.player.y - 50, '+16 HP 💚', '#4ade80');
-    this.swiftnessUntil = now + 3500;
-
-    // Deal heavy AoE magic spirit damage
-    const roarDmg = Math.floor(RPGStats.getAtk() * 1.8) + 6;
-    this.damageEnemiesInRadius(this.totoro.x, this.totoro.y, 185, roarDmg, 36);
+    CombatSystem.performTotoroRoar(this);
   }
 
-  /* Companion Special Ability: Totoro's Seismic Belly Slam / Ground Pound (R or Mobile Slam) */
   performTotoroGroundSlam() {
-    if (UI.isOpen() || this.cutsceneLocked) return;
-    if (!DateState.totoroJoined || !this.totoro) {
-      UI.showToast('🐾', 'Partner Needed', 'Meet Totoro at Curzon Hall to unlock companion abilities!');
-      return;
-    }
-    const now = this.time.now;
-    if (now - (this.lastSlamTime || 0) < 2400) return;
-    if (DateState.sp < 18) {
-      UI.showToast('💧', 'Low Spirit!', 'Sip TSC Malai Cha or wait for SP to regenerate.');
-      return;
-    }
-    this.lastSlamTime = now;
-    DateState.sp -= 18;
-    UI.updateRPGStats();
-
-    this.totoroBusyUntil = now + 1000;
-
-    // Pick leap target: nearest enemy within 240px, or 45px in player facing direction
-    let targetX = this.player.x + this.facingVec.x * 45;
-    let targetY = this.player.y + this.facingVec.y * 45;
-    let closestDist = 9999;
-    this.enemies.forEach(en => {
-      const d = Phaser.Math.Distance.Between(this.totoro.x, this.totoro.y, en.x, en.y);
-      if (d < 240 && d < closestDist) {
-        closestDist = d;
-        targetX = en.x;
-        targetY = en.y;
-      }
-    });
-
-    targetX = Phaser.Math.Clamp(targetX, 60, (this.currentMapW || 2400) - 60);
-    targetY = Phaser.Math.Clamp(targetY, 60, (this.currentMapH || 1800) - 60);
-
-    // Drop landing reticle shadow on ground
-    const shadow = this.add.ellipse(targetX, targetY, 44, 20, 0x111827, 0.45).setDepth(targetY - 1);
-    this.tweens.add({
-      targets: shadow,
-      scaleX: 1.6,
-      scaleY: 1.6,
-      alpha: 0.75,
-      duration: 380
-    });
-
-    // Totoro leaps high into the air with 360 somersault flip
-    this.tweens.add({
-      targets: this.totoro,
-      x: targetX,
-      y: targetY - 88,
-      angle: 360,
-      scaleX: 0.9,
-      scaleY: 1.25,
-      duration: 380,
-      ease: 'Sine.easeOut',
-      onComplete: () => {
-        this.totoro.setAngle(0);
-        this.totoro.setScale(1.4, 0.9); // Big belly bounce pose!
-
-        // Slam down fast!
-        this.tweens.add({
-          targets: this.totoro,
-          y: targetY,
-          duration: 130,
-          ease: 'Quad.easeIn',
-          onComplete: () => {
-            shadow.destroy();
-
-            // Screen shake & heavy slam sound
-            SoundEngine.totoroSlam();
-            this.cameras.main.shake(250, 0.015);
-
-            // Squash & stretch on impact
-            this.tweens.add({
-              targets: this.totoro,
-              scaleX: 1.55,
-              scaleY: 0.65,
-              duration: 80,
-              yoyo: true,
-              ease: 'Quad.easeOut',
-              onComplete: () => {
-                this.totoro.setScale(1, 1);
-              }
-            });
-
-            // Shockwave dust ring
-            const dustRing = this.add.circle(targetX, targetY, 20, 0xc2a67e, 0.6).setDepth(targetY - 1);
-            this.tweens.add({
-              targets: dustRing,
-              radius: 175,
-              alpha: 0,
-              duration: 420,
-              ease: 'Quad.easeOut',
-              onComplete: () => dustRing.destroy()
-            });
-
-            // Debris & dust puffs
-            for (let i = 0; i < 10; i++) {
-              const ang = (i / 10) * Math.PI * 2;
-              const dist = Phaser.Math.Between(40, 110);
-              const puff = this.add.circle(
-                targetX + Math.cos(ang) * 15,
-                targetY + Math.sin(ang) * 10,
-                Phaser.Math.Between(4, 7),
-                i % 2 === 0 ? 0x854d0e : 0xd8c7a0,
-                0.7
-              ).setDepth(targetY + 2);
-              this.tweens.add({
-                targets: puff,
-                x: targetX + Math.cos(ang) * dist,
-                y: targetY + Math.sin(ang) * (dist * 0.6) - 14,
-                scale: 1.8,
-                alpha: 0,
-                duration: 380,
-                onComplete: () => puff.destroy()
-              });
-            }
-
-            // Deal crushing damage & stun all enemies in radius
-            const slamDmg = Math.floor(RPGStats.getAtk() * 2.2) + Phaser.Math.Between(8, 15);
-            this.damageEnemiesInRadius(targetX, targetY, 175, slamDmg, 45, true);
-          }
-        });
-      }
-    });
+    CombatSystem.performTotoroGroundSlam(this);
   }
 
-  /* Backward compatibility for generic skill trigger */
+  performTotoroLeafGust() {
+    CombatSystem.performTotoroLeafGust(this);
+  }
+
   performTotoroSkill() {
-    this.performTotoroRoar();
-  }
-
-  /* Spawns orbiting dizzy stars around stunned enemy */
-  spawnStunStars(en) {
-    for (let i = 0; i < 3; i++) {
-      const star = this.add.text(en.x, en.y - 45, '⭐', { fontSize: '13px' }).setOrigin(0.5).setDepth(en.y + 10);
-      const angleOffset = (i / 3) * Math.PI * 2;
-      const startTime = this.time.now;
-      const timer = this.time.addEvent({
-        delay: 30,
-        repeat: 70,
-        callback: () => {
-          if (!en.sprite || !en.sprite.active || !en.stunnedUntil || this.time.now > en.stunnedUntil) {
-            star.destroy();
-            timer.remove();
-            return;
-          }
-          const elapsed = (this.time.now - startTime) * 0.007;
-          star.setPosition(en.x + Math.cos(elapsed + angleOffset) * 18, en.y - 46 + Math.sin(elapsed + angleOffset) * 7);
-        }
-      });
-      this.time.delayedCall(2200, () => {
-        if (star && star.active) star.destroy();
-      });
-    }
+    CombatSystem.performTotoroRoar(this);
   }
 
   damageEnemiesInRadius(cx, cy, radius, dmg, knockback = 26, isStun = false) {
-    for (let i = this.enemies.length - 1; i >= 0; i--) {
-      const en = this.enemies[i];
-      const d = Phaser.Math.Distance.Between(cx, cy, en.x, en.y - 20);
-      if (d <= radius) {
-        en.hp -= dmg;
-        SoundEngine.enemyHit();
-        this.spawnDamageNumber(en.x, en.y - 50, `-${dmg}`, isStun ? '#f59e0b' : '#ffea79');
-
-        if (isStun && !en.isBoss) {
-          en.stunnedUntil = this.time.now + 2200;
-          this.spawnDamageNumber(en.x, en.y - 70, 'STUNNED! 💫', '#67e8f9');
-          this.spawnStunStars(en);
-        }
-
-        const angle = Phaser.Math.Angle.Between(cx, cy, en.x, en.y);
-        en.x = Phaser.Math.Clamp(en.x + Math.cos(angle) * knockback, 60, 2340);
-        en.y = Phaser.Math.Clamp(en.y + Math.sin(angle) * knockback, 60, 1740);
-        en.sprite.setPosition(en.x, en.y);
-        if (en.label) {
-          en.label.setPosition(en.x, en.y - (en.isBoss ? 114 : 54));
-        }
-
-        if (en.hp <= 0) {
-          this.handleEnemyDefeated(en, i);
-        } else {
-          if (en.isBoss) {
-            UI.setBossHUD(true, en.name, en.hp, en.maxHp);
-          } else {
-            en.label.setText(`${en.name} (${en.hp})`);
-          }
-        }
-      }
-    }
+    const atk = {
+      id: 'custom_aoe',
+      name: 'AoE Strike',
+      source: 'player' as const,
+      windupMs: 0,
+      activeMs: 0,
+      recoveryMs: 0,
+      hitbox: { shape: 'circle' as const, radius },
+      damageMult: 1.0,
+      poiseDamage: isStun ? 50 : 20,
+      knockback,
+      hitStopMs: 40,
+      sfx: 'enemy_hit',
+      parryable: false,
+      dodgeOnly: false
+    };
+    CombatSystem.damageEnemiesInRadius(this, cx, cy, radius, atk, isStun);
   }
 
   handleEnemyDefeated(en, idx) {
-    en.sprite.destroy();
-    en.label.destroy();
-    this.enemies.splice(idx, 1);
-    RPGStats.gainXP(en.xp);
-
-    if (en.drop) {
-      UI.giveItem(en.drop);
-    }
-
-    if (en.isBoss) {
-      this.activeBoss = null;
-      UI.setBossHUD(false);
-      if (!DateState.defeatedBosses.includes(en.id)) {
-        DateState.defeatedBosses.push(en.id);
-      }
-      const wCfg = WORLDS_DB[DateState.currentWorld];
-      if (wCfg && wCfg.nextWorld && !DateState.unlockedWorlds.includes(wCfg.nextWorld)) {
-        DateState.unlockedWorlds.push(wCfg.nextWorld);
-      }
-      if (en.reward) {
-        UI.giveItem(en.reward, `Defeated ${en.name} in ${wCfg.name}!`);
-      }
-      UI.updateQuestText();
-      RPGStats.saveGame(this);
-
-      if (en.id === 'boss_astral') {
-        UI.startDialogue([
-          { speaker: 'Totoro', portrait: '🐾', text: 'Moon Walker! We shattered the Chrono-Fracture Archon! The Six Realms and all our Dhaka Valley memories are safe forever!' },
-          { speaker: 'Moon Walker', portrait: '🌙', text: 'From Curzon Hall to the stars of the Astral Realm... best adventure and best date in history!' }
-        ], () => UI.showScrapbook());
-      }
-    }
+    CombatSystem.handleEnemyDefeated(this, en, idx);
   }
 
   spawnDamageNumber(x, y, text, color = '#ffffff') {
-    const lbl = this.add.text(x, y, text, {
-      fontFamily: 'Press Start 2P', fontSize: '11px', color, stroke: '#000000', strokeThickness: 3
-    }).setOrigin(0.5).setDepth(3100);
-    this.tweens.add({
-      targets: lbl,
-      y: y - 34,
-      alpha: 0,
-      duration: 650,
-      onComplete: () => lbl.destroy()
-    });
+    CombatSystem.spawnDamageNumber(this, x, y, text, color);
   }
 
 /* Seven Dynamically Walking Citizens in Dhaka Valley (Including Bestie Anamika!) */
@@ -1963,7 +1931,7 @@ export class DhakaValleyScene extends Phaser.Scene {
       },
       {
         name: 'Nadia (Charukola Sketcher)', baseTex: 'npc-walker2', portrait: '🖌️',
-        waypoints: [{ x: 340, y: 820 }, { x: 820, y: 820 }],
+        waypoints: [{ x: 256, y: 640 }, { x: 320, y: 736 }, { x: 640, y: 736 }, { x: 320, y: 736 }],
         speed: 48,
         conversations: [
           [
@@ -2071,13 +2039,21 @@ export class DhakaValleyScene extends Phaser.Scene {
     specs.forEach(s => {
       const start = s.waypoints[0];
       const sp = this.add.sprite(start.x, start.y, `${s.baseTex}-0`).setOrigin(0.5, 1).setDepth(start.y);
-      const animKey = this.getOrCreateWalkAnim(s.baseTex, 4);
-      if (animKey) sp.play(animKey);
+      // Spawn stationary wanderers in idle stance; directional walk animation will trigger upon movement
+      const idleAnim = `${s.baseTex}-idle-down`;
+      if (this.anims.exists(idleAnim)) {
+        sp.play(idleAnim);
+      }
       const badge = this.add.text(start.x, start.y - sp.height - 6, '💬 ' + s.name, {
-        fontFamily: 'Outfit', fontSize: '11px', fontStyle: 'bold',
-        backgroundColor: s.isAnamika ? 'rgba(19, 78, 74, 0.92)' : 'rgba(31,30,28,0.75)',
+        fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+        fontSize: '12px',
+        fontStyle: 'bold',
+        backgroundColor: s.isAnamika ? 'rgba(15, 118, 110, 0.92)' : 'rgba(28, 20, 16, 0.88)',
         color: s.isAnamika ? '#fff3a1' : '#f7efe2',
-        padding: { x: 5, y: 2 }
+        stroke: '#140f0c',
+        strokeThickness: 3,
+        shadow: { offsetX: 0, offsetY: 2, color: 'rgba(0, 0, 0, 0.65)', blur: 4, stroke: true, fill: true },
+        padding: { x: 7, y: 3 }
       }).setOrigin(0.5, 1).setDepth(start.y + 5);
 
       const wObj = {
@@ -2421,12 +2397,11 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // Fade in puddles
     this.puddles.forEach(p => this.tweens.add({ targets: p, alpha: 0.85, duration: 2000 }));
-    if (this.taroLeaf) this.taroLeaf.setVisible(true);
 
     UI.showToast('⛈️', 'Kalbaishakhi Monsoon!', 'A sudden warm Dhaka shower sweeps over campus!');
     UI.startDialogue([
-      { speaker: 'Totoro', portrait: '🐾', text: 'Whoa! The sky opened up! Classic Dhaka Kalbaishakhi rain! Here Moon Walker, huddle close under this giant taro leaf!' },
-      { speaker: 'Moon Walker', portrait: '🌙', text: 'It smells just like wet red earth (shondha matir gondho)... Good thing you are wide enough to block all the rain drops, Totoro!' }
+      { speaker: 'Totoro', portrait: '🐾', text: 'Whoa! The sky opened up! Classic Dhaka Kalbaishakhi rain! Fresh raindrops feel wonderful on my fur!' },
+      { speaker: 'Moon Walker', portrait: '🌙', text: 'It smells just like wet red earth (shondha matir gondho)... Good thing you love the rain as much as I do, Totoro!' }
     ]);
 
     // Automatically clear the storm after 50 seconds
@@ -2440,7 +2415,6 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   stopMonsoonEvent() {
     this.isRaining = false;
-    if (this.taroLeaf) this.taroLeaf.setVisible(false);
     this.puddles.forEach(p => this.tweens.add({ targets: p, alpha: 0, duration: 3000 }));
     if (this.rainGraphics) this.rainGraphics.clear();
   }
@@ -2474,6 +2448,34 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     if (DateState.totoroJoined && distTotoro < 98) {
       this.talkToTotoroCompanion();
+      return;
+    }
+
+    // Dynamic Farming Soil Actions (Hoeing, Watering, Harvesting)
+    if (this.farmingSystem && this.facingVec) {
+      const targetCol = Math.floor((this.player.x + this.facingVec.x * 24) / 32);
+      const targetRow = Math.floor((this.player.y + this.facingVec.y * 24) / 32);
+      const cell = this.farmingSystem.getCell(targetCol, targetRow);
+      if (cell) {
+        if (!cell.isTilled && cell.isTillable) {
+          if (this.farmingSystem.tillSoil(targetCol, targetRow)) {
+            if (this.playerBehaviors) this.playerBehaviors.triggerHoeAction(targetCol, targetRow);
+            return;
+          }
+        } else if (cell.isTilled && !cell.isWatered) {
+          if (this.farmingSystem.waterSoil(targetCol, targetRow)) {
+            if (this.playerBehaviors) this.playerBehaviors.triggerWaterAction(targetCol, targetRow);
+            return;
+          }
+        } else if (cell.crop && cell.crop.isReadyForHarvest) {
+          const cropId = cell.crop.cropId;
+          const harvestResult = this.farmingSystem.harvestCrop(targetCol, targetRow);
+          if (harvestResult.success) {
+            if (this.playerBehaviors) this.playerBehaviors.triggerHarvestAction(cropId, targetCol, targetRow);
+            return;
+          }
+        }
+      }
     }
   }
 
@@ -3168,27 +3170,54 @@ export class DhakaValleyScene extends Phaser.Scene {
       return;
     }
 
+    // Ahona is happy (reconciled with Rakin): play the 'Ohona' song from the 20-second line!
+    SoundEngine.playOhonaSong(20);
+    if (this.ahona) {
+      const note = this.add.text(this.ahona.x, this.ahona.y - 68, '♪ 💖 ♫', {
+        fontFamily: 'Outfit, sans-serif',
+        fontSize: '15px',
+        color: '#fef08a',
+        stroke: '#1e1b4b',
+        strokeThickness: 3
+      }).setOrigin(0.5).setDepth(2400);
+      this.tweens.add({
+        targets: note,
+        y: note.y - 28,
+        alpha: 0,
+        duration: 1400,
+        ease: 'Sine.easeOut',
+        onComplete: () => note.destroy()
+      });
+    }
+
     this.reunionVisits = (this.reunionVisits || 0) + 1;
     UI.startDialogue([
       {
-        speaker: 'Ahona, Rakin & Apshora',
-        portrait: '💑',
-        text: 'Moon Walker! Totoro! The savior couple of Dhaka University! Who would you like to chat with on our bench?',
+        speaker: 'Ahona (Happy & Humming ♪)',
+        portrait: '😊',
+        text: '♪ "Ohona..." ♪ Moon Walker! Totoro! Whenever you come by, my heart feels so light and happy! Who would you like to chat with on our bench?',
         choices: [
           {
-            label: '🌹 Talk with Ahona (Reconciliation reflections & friendship)',
-            nextNodes: [
-              { speaker: 'Ahona', portrait: '😊', text: 'Moon Walker, I still can’t thank you enough. When I saw how gently Totoro treats you, it made me realize I was projecting all my insecurities onto you.' },
-              { speaker: 'Ahona', portrait: '🥺', text: 'You showed me that real love is about patience, trust, and lifting each other up. If you ever need anything on campus, you have a friend for life.' },
-              { speaker: 'Moon Walker', portrait: '🌙', text: 'I am so glad, Ahona. We all get stressed sometimes—what matters is coming back to kindness.' }
-            ]
+            label: '🎸 Watch Rakin’s Surprise Guitar Concert for Ahona! (Sing "Ohona" from 0:15)',
+            onPick: () => this.playRakinConcertForAhonaCutscene()
           },
           {
-            label: '💌 Talk with Rakin (Apology letters & poetry tips)',
+            label: '🌹 Talk with Ahona (Reconciliation reflections & "Ohona" song)',
+            onPick: () => {
+              SoundEngine.playOhonaSong(20);
+              UI.startDialogue([
+                { speaker: 'Ahona', portrait: '😊', text: 'Do you hear this song, Moon Walker? It is "Ohona" by Subconscious—every time I am happy with Rakin, this melody plays in my head!' },
+                { speaker: 'Ahona', portrait: '🥺', text: 'When I saw how gently Totoro treats you, it made me realize I was projecting all my insecurities onto you. You showed me that real love is about patience, trust, and lifting each other up.' },
+                { speaker: 'Moon Walker', portrait: '🌙', text: 'Seeing you smile and hearing your song makes the whole campus brighter, Ahona!' }
+              ]);
+            }
+          },
+          {
+            label: '💌 Talk with Rakin (Apology letters & acoustic guitar serenade)',
             nextNodes: [
-              { speaker: 'Rakin', portrait: '💌', text: 'Moon Walker, Ahona cried happy tears when she read the letter! Totoro, your advice about holding her hand immediately? Worked like magic.' },
-              { speaker: 'Totoro', portrait: '🐾', text: 'Told you, brother! A sincere apology plus holding hands solves 99% of arguments.' },
-              { speaker: 'Rakin', portrait: '😊', text: 'We are heading to Star Kebab later tonight—let us know if you and your bestie Anamika want to make it a double date!' }
+              { speaker: 'Rakin', portrait: '💌', text: 'Moon Walker, Ahona cried happy tears when she read the letter! And whenever I play "Ohona" for her on my acoustic guitar, her smile lights up all of Ramna Park.' },
+              { speaker: 'Totoro', portrait: '🐾', text: 'Told you, brother! A sincere apology, holding hands, and a heartfelt guitar serenade solves 100% of arguments.' },
+              { speaker: 'Rakin', portrait: '🎸', text: 'Anytime you want to hear the live concert again, just ask us or talk to me directly!' }
             ]
           },
           ...(DateState.apshoraQuestStage === 0 ? [{
@@ -3264,6 +3293,11 @@ export class DhakaValleyScene extends Phaser.Scene {
       return;
     }
 
+    if (DateState.ahonaQuestStage >= 4) {
+      this.playRakinConcertForAhonaCutscene();
+      return;
+    }
+
     this.playAhonaRakinReunionCutscene();
   }
 
@@ -3281,15 +3315,265 @@ export class DhakaValleyScene extends Phaser.Scene {
         { speaker: 'Rakin', portrait: '💌', text: 'Ahona! I was such an idiot earlier at TSC. I brought you fresh red roses, your favorite book from Nilkhet, and wrote everything I was too shy to say.' },
         { speaker: 'Ahona', portrait: '😭', text: 'Rakin! No, it was my fault. I was so miserable without you that I was rude to Moon Walker, and she still came all the way to Nilkhet to bring you back to me!' },
         { speaker: 'Apshora', portrait: '🥺', text: 'Moon Walker, Totoro... we owe you two the biggest apology. Please take this Peacekeeper Letter Charm as our thank-you gift!' },
-        { speaker: 'Totoro', portrait: '🐾', text: 'First I protect you from bullies, and then you turn them into friends and save their relationship. Is there anything you cannot do, Moon Walker?' }
+        { speaker: 'Rakin', portrait: '🎸', text: 'And wait—Ahona, don’t move! I brought my acoustic guitar and set up a surprise mini-concert right here at Ramna Park just to sing your song for you!' }
       ], () => {
         DateState.ahonaQuestStage = 4;
         this.rivalBadge.setText('💑 Ahona, Rakin & Apshora');
         this.rakinBadge.setVisible(false);
-        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
-        this.cutsceneLocked = false;
         UI.giveItem('charm', 'Helped Ahona and her boyfriend Rakin reconcile at Ramna Park.');
         this.advanceDateProgress();
+        // Launch Rakin's surprise guitar concert for Ahona right after reconciliation!
+        this.time.delayedCall(350, () => {
+          this.playRakinConcertForAhonaCutscene();
+        });
+      });
+    });
+  }
+
+  /* =========================================================================
+   *  RAKIN'S SURPRISE ACOUSTIC GUITAR CONCERT FOR AHONA ("OHONA" AT 15s)
+   * ========================================================================= */
+  playRakinConcertForAhonaCutscene() {
+    this.cutsceneLocked = true;
+
+    // Anchor concert around Ahona & Rakin's current garden spot (defaulting to Ramna Park 1290, 480)
+    const stageX = this.ahona ? this.ahona.x - 18 : 1272;
+    const stageY = this.ahona ? this.ahona.y + 8 : 488;
+    const ahonaX = stageX + 46;
+    const ahonaY = stageY;
+
+    if (this.ahona) {
+      this.ahona.setPosition(ahonaX, ahonaY).setDepth(ahonaY).setFlipX(true);
+    }
+    if (this.rakin) {
+      this.rakin.setPosition(stageX, stageY).setDepth(stageY + 2).setFlipX(false).setVisible(true);
+    }
+    if (this.apshora && DateState.apshoraQuestStage < 2) {
+      this.apshora.setPosition(ahonaX + 34, ahonaY + 6).setDepth(ahonaY + 6).setFlipX(true);
+    }
+
+    // Create temporary Concert Stage Props (Persian Stage Rug, String Fairy Lights, Mic Stand, Acoustic Amp)
+    const stageProps: any[] = [];
+
+    // 1. Ornate Crimson & Gold Concert Rug
+    const rug = this.add.graphics().setDepth(stageY - 40);
+    rug.fillStyle(0x7f1d1d, 0.92);
+    rug.fillRoundedRect(stageX - 42, stageY - 22, 84, 34, 6);
+    rug.lineStyle(2, 0xfacc15, 0.9);
+    rug.strokeRoundedRect(stageX - 38, stageY - 19, 76, 28, 4);
+    rug.fillStyle(0xfef08a, 0.35);
+    rug.fillCircle(stageX, stageY - 5, 11);
+    stageProps.push(rug);
+
+    // 2. Warm Golden Stage Spotlight Halo
+    const spotlight = this.add.circle(stageX + 16, stageY - 14, 92, 0xfde047, 0.14)
+      .setScale(1.3, 0.72)
+      .setDepth(stageY - 39);
+    this.tweens.add({
+      targets: spotlight,
+      alpha: { from: 0.10, to: 0.22 },
+      scaleX: { from: 1.25, to: 1.38 },
+      duration: 900,
+      yoyo: true,
+      repeat: -1
+    });
+    stageProps.push(spotlight);
+
+    // 3. Arching Fairy-Light Bulbs & Vintage Microphone Stand + Wooden Acoustic Amp
+    const stageGear = this.add.graphics().setDepth(stageY + 3);
+    // Arch poles
+    stageGear.lineStyle(2.5, 0x451a03, 1);
+    stageGear.lineBetween(stageX - 48, stageY, stageX - 48, stageY - 78);
+    stageGear.lineBetween(stageX + 86, stageY, stageX + 86, stageY - 78);
+    // Fairy string wire
+    stageGear.lineStyle(1.2, 0x78350f, 0.9);
+    stageGear.beginPath();
+    stageGear.moveTo(stageX - 48, stageY - 74);
+    for (let i = 0; i <= 8; i++) {
+      const t = i / 8;
+      const lx = Phaser.Math.Linear(stageX - 48, stageX + 86, t);
+      const sag = Math.sin(t * Math.PI) * 14;
+      const ly = stageY - 74 + sag;
+      stageGear.lineTo(lx, ly);
+    }
+    stageGear.strokePath();
+    // Glowing fairy bulbs
+    for (let i = 1; i < 8; i++) {
+      const t = i / 8;
+      const lx = Phaser.Math.Linear(stageX - 48, stageX + 86, t);
+      const ly = stageY - 74 + Math.sin(t * Math.PI) * 14;
+      const col = i % 2 === 0 ? 0xfef08a : 0xf472b6;
+      stageGear.fillStyle(col, 0.35);
+      stageGear.fillCircle(lx, ly + 3, 6);
+      stageGear.fillStyle(0xffffff, 0.95);
+      stageGear.fillCircle(lx, ly + 3, 2.2);
+    }
+    // Wooden Acoustic Amp Box (Left of Rakin)
+    stageGear.fillStyle(0x451a03, 1);
+    stageGear.fillRoundedRect(stageX - 36, stageY - 22, 18, 20, 2);
+    stageGear.lineStyle(1.2, 0xd97706, 1);
+    stageGear.strokeRoundedRect(stageX - 36, stageY - 22, 18, 20, 2);
+    stageGear.fillStyle(0x1c1917, 1);
+    stageGear.fillCircle(stageX - 27, stageY - 11, 5.5);
+    // Vintage Brass Microphone Stand (In front of Rakin)
+    stageGear.fillStyle(0x1e293b, 1);
+    stageGear.fillEllipse(stageX + 16, stageY + 1, 10, 4);
+    stageGear.lineStyle(1.8, 0x94a3b8, 1);
+    stageGear.lineBetween(stageX + 16, stageY + 1, stageX + 14, stageY - 32);
+    stageGear.fillStyle(0xfacc15, 1);
+    stageGear.fillEllipse(stageX + 13, stageY - 34, 4.5, 6);
+    stageProps.push(stageGear);
+
+    // 4. Floating Banner Header above the Stage
+    const concertBanner = this.add.text(stageX + 18, stageY - 86, '🎸 RAKIN’S LIVE CONCERT FOR AHONA ♪', {
+      fontFamily: 'Outfit, sans-serif',
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color: '#fef08a',
+      backgroundColor: 'rgba(15, 23, 42, 0.85)',
+      padding: { x: 8, y: 4 },
+      stroke: '#000000',
+      strokeThickness: 2
+    }).setOrigin(0.5).setDepth(2450);
+    stageProps.push(concertBanner);
+
+    // Pan & gently zoom camera onto the concert stage
+    this.cameras.main.stopFollow();
+    this.cameras.main.pan(stageX + 18, stageY - 18, 750, 'Sine.easeInOut');
+    this.cameras.main.zoomTo(1.18, 850, 'Sine.easeInOut');
+
+    // Create 2-frame Rakin Guitar Strumming animation if not yet registered
+    if (!this.anims.exists('rakin-guitar-strum')) {
+      this.anims.create({
+        key: 'rakin-guitar-strum',
+        frames: [
+          { key: 'npc-rakin-guitar-0' },
+          { key: 'npc-rakin-guitar-1' }
+        ],
+        frameRate: 4.5,
+        repeat: -1
+      });
+    }
+
+    if (this.rakin) {
+      this.rakin.play('rakin-guitar-strum');
+    }
+
+    // Start playing the 'Ohona' song from the 15-second mark!
+    SoundEngine.guitarChord();
+    SoundEngine.playOhonaSong(15);
+    UI.showToast('🎸', 'Now Playing: "Ohona" (Live Concert)', 'Rakin is singing "Ohona" with his acoustic guitar from 0:15 for Ahona!');
+
+    // Rhythmic swaying tweens for Rakin, Ahona, Moon Walker & Totoro
+    const rakinSway = this.rakin ? this.tweens.add({
+      targets: this.rakin,
+      angle: { from: -2.5, to: 2.5 },
+      y: stageY - 2,
+      duration: 420,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    }) : null;
+
+    const ahonaSway = this.ahona ? this.tweens.add({
+      targets: this.ahona,
+      angle: { from: 2, to: -2 },
+      y: ahonaY - 3,
+      duration: 480,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    }) : null;
+
+    // Spawn floating musical notes & hearts during the concert
+    const noteSymbols = ['♪', '♫', '🎼', '🎸', '💖', '✨', '🌸'];
+    const noteTimer = this.time.addEvent({
+      delay: 380,
+      loop: true,
+      callback: () => {
+        const isRakin = Math.random() < 0.65;
+        const bx = isRakin ? stageX + Phaser.Math.Between(-10, 14) : ahonaX + Phaser.Math.Between(-8, 8);
+        const by = (isRakin ? stageY : ahonaY) - 48;
+        const sym = isRakin
+          ? noteSymbols[Phaser.Math.Between(0, 3)]
+          : noteSymbols[Phaser.Math.Between(4, 6)];
+        const note = this.add.text(bx, by, sym, {
+          fontFamily: 'Outfit, sans-serif',
+          fontSize: isRakin ? '16px' : '14px',
+          color: isRakin ? '#fde047' : '#f472b6',
+          stroke: '#0f172a',
+          strokeThickness: 3
+        }).setOrigin(0.5).setDepth(2460);
+        this.tweens.add({
+          targets: note,
+          x: bx + Phaser.Math.Between(-18, 22),
+          y: by - Phaser.Math.Between(28, 46),
+          alpha: 0,
+          duration: 1250,
+          ease: 'Sine.easeOut',
+          onComplete: () => note.destroy()
+        });
+      }
+    });
+
+    this.time.delayedCall(800, () => {
+      UI.startDialogue([
+        {
+          speaker: 'Rakin (Strumming Acoustic Guitar 🎸)',
+          portrait: '🎸',
+          text: '*Taps the microphone and strums a warm acoustic chord* "Testing, one, two... Everyone at Ramna Park, this concert is dedicated to the girl who owns my entire heart—Ahona."'
+        },
+        {
+          speaker: 'Ahona (Blushing & Beaming)',
+          portrait: '🥺',
+          text: 'Rakin!! You set up fairy lights, a stage rug, and brought your acoustic guitar here?! Wait... I know this chord progression!'
+        },
+        {
+          speaker: 'Rakin (Singing "Ohona" Live ♪)',
+          portrait: '🎶',
+          text: '♪ *Singing with his guitar from the 0:15 verse* — "Ohona... every melody I ever learned was just another way of calling your name under the Dhaka sky..." ♪'
+        },
+        {
+          speaker: 'Ahona (Happy Tears & Swaying)',
+          portrait: '😍',
+          text: '♪ He is really singing "Ohona" for me!! Moon Walker, Totoro, listen to him play! I have never felt this happy in my whole life!'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: '*Sways happily to the acoustic guitar beat* Now THAT is how you put on a concert! Look at the whole park glowing with musical notes!'
+        },
+        {
+          speaker: 'Moon Walker',
+          portrait: '🌙',
+          text: 'Your voice and guitar sound incredible, Rakin! And seeing Ahona this happy makes the music even more magical.'
+        }
+      ], () => {
+        noteTimer.remove(false);
+        if (rakinSway) rakinSway.stop();
+        if (ahonaSway) ahonaSway.stop();
+        if (this.rakin) {
+          this.rakin.stop();
+          this.rakin.setAngle(0).setY(stageY).setTexture('npc-rakin-0');
+          if (DateState.ahonaQuestStage >= 4 && !this.scheduleSystem) {
+            this.rakinBadge.setVisible(false);
+          }
+        }
+        if (this.ahona) {
+          this.ahona.setAngle(0).setY(ahonaY);
+        }
+        stageProps.forEach(p => {
+          this.tweens.add({
+            targets: p,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => p.destroy()
+          });
+        });
+
+        this.cameras.main.zoomTo(1.0, 600, 'Sine.easeInOut');
+        this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+        this.cutsceneLocked = false;
       });
     });
   }
@@ -3484,13 +3768,14 @@ export class DhakaValleyScene extends Phaser.Scene {
   /* Cutscene 1: Enan brushes Salat off with excuses */
   playEnanExcusesCutscene() {
     this.cutsceneLocked = true;
-    this.cameras.main.pan(1060, 800, 600, 'Sine.easeInOut');
+    this.cameras.main.pan(1060, 750, 600, 'Sine.easeInOut');
 
     this.time.delayedCall(650, () => {
       // Salat walks over to Enan
       this.tweens.add({
         targets: [this.salat, this.salatBadge],
         x: 1105,
+        y: 736,
         duration: 750,
         ease: 'Power1',
         onComplete: () => {
@@ -3588,14 +3873,14 @@ export class DhakaValleyScene extends Phaser.Scene {
   /* Cutscene 2: Totoro sways Enan with profound wisdom and emotion */
   playTotoroSwaysEnanCutscene() {
     this.cutsceneLocked = true;
-    this.cameras.main.pan(1110, 800, 700, 'Sine.easeInOut');
+    this.cameras.main.pan(1110, 750, 700, 'Sine.easeInOut');
 
     this.time.delayedCall(750, () => {
       // Totoro steps forward in front of Enan
       this.tweens.add({
         targets: this.totoro,
         x: 1105,
-        y: 810,
+        y: 736,
         duration: 500,
         ease: 'Sine.easeOut',
         onComplete: () => {
@@ -3714,17 +3999,17 @@ export class DhakaValleyScene extends Phaser.Scene {
   /* Cutscene 3: The Grand Double Date Celebration */
   playDoubleDateCutscene() {
     this.cutsceneLocked = true;
-    this.cameras.main.pan(1060, 800, 600, 'Sine.easeInOut');
+    this.cameras.main.pan(1060, 750, 600, 'Sine.easeInOut');
 
     // Place all 4 characters in festive double date arrangement
-    this.salat.setPosition(1045, 810).setDepth(810);
-    this.enan.setPosition(1080, 810).setDepth(810);
-    this.salatBadge.setPosition(1062, 742).setText('💑 Enan & Salat (Happy Couple)');
+    this.salat.setPosition(1045, 750).setDepth(750);
+    this.enan.setPosition(1080, 750).setDepth(750);
+    this.salatBadge.setPosition(1062, 685).setText('💑 Enan & Salat (Happy Couple)');
     if (this.enanBadge) this.enanBadge.setVisible(false);
 
     // Totoro and Moon Walker join them
-    this.player.setPosition(1010, 810);
-    this.totoro.setPosition(975, 810);
+    this.player.setPosition(1010, 750);
+    this.totoro.setPosition(975, 750);
 
     // Floating festive hearts & confetti particles
     for (let i = 0; i < 16; i++) {
@@ -4803,10 +5088,10 @@ export class DhakaValleyScene extends Phaser.Scene {
     R.over = this.add.sprite(home.x, home.y, rs.texture.key).setOrigin(0.5, 1);
     if (R.over.setCrop) R.over.setCrop(0, Math.round(rs.height * 0.47), rs.width, Math.round(rs.height * 0.39));
     R.scoreTxt = this.add.text(home.x, home.y, '', {
-      fontFamily: 'Press Start 2P', fontSize: '9px', color: '#fff8eb', stroke: '#2b1d14', strokeThickness: 4
+      fontFamily: "'Rajdhani', sans-serif", fontSize: '13px', fontStyle: 'bold', color: '#fff8eb', stroke: '#2b1d14', strokeThickness: 3.5
     }).setOrigin(0.5, 1).setDepth(3200);
     R.prompt = this.add.text(home.x, home.y, '🔔 TRING!  SPACE / TAP', {
-      fontFamily: 'Press Start 2P', fontSize: '10px', color: '#2b1d14', backgroundColor: '#f7cb45', padding: { x: 6, y: 4 }
+      fontFamily: "'Rajdhani', sans-serif", fontSize: '12px', fontStyle: 'bold', color: '#1a1008', backgroundColor: '#f7cb45', padding: { x: 8, y: 4 }
     }).setOrigin(0.5, 1).setDepth(3200).setVisible(false);
 
     this.player.body.enable = false;                                   // riders are moved by hand, not by physics
@@ -5102,7 +5387,7 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     skyModal.innerHTML = `
       <div style="text-align:center;max-width:680px;">
-        <p style="margin:0;font-family:'Press Start 2P',monospace;font-size:0.6rem;color:#f7cb45;letter-spacing:0.12em;">★ DHANMONDI LAKE OBSERVATORY CUTSCENE ★</p>
+        <p style="margin:0;font-family:'Rajdhani',sans-serif;font-weight:700;font-size:0.85rem;color:#f7cb45;letter-spacing:0.16em;">★ DHANMONDI LAKE OBSERVATORY CUTSCENE ★</p>
         <h2 style="margin:8px 0 4px;font-size:1.55rem;">Click Each Glowing Constellation in the Dhaka Sky</h2>
         <p id="sky-sub-status" style="margin:0;font-size:0.95rem;color:#c9d6ea;">Totoro is standing right behind you, guiding the brass telescope...</p>
       </div>
@@ -5424,6 +5709,12 @@ export class DhakaValleyScene extends Phaser.Scene {
     }
   }
 
+  exitCurzonHall() {
+    if (this.isTransitioning || this.cutsceneLocked) return;
+    SoundEngine.portalWarp();
+    this.transitionToWorld('dhaka', { x: CURZON_X, y: CURZON_Y + 70 });
+  }
+
   /* ================= Farmhouse Pastoral Activity System ================= */
   enterFarmhouse() {
     if (this.isTransitioning || this.cutsceneLocked) return;
@@ -5439,7 +5730,7 @@ export class DhakaValleyScene extends Phaser.Scene {
   exitFarmhouse() {
     if (this.isTransitioning || this.cutsceneLocked) return;
     SoundEngine.portalWarp();
-    this.transitionToWorld('dhaka', { x: 740, y: 1455 });
+    this.transitionToWorld('dhaka', { x: 736, y: 1570 });
   }
 
   buildCurzonInterior(spawnPos) {
@@ -5483,13 +5774,27 @@ export class DhakaValleyScene extends Phaser.Scene {
     const registerInteract = (x, y, tex, name, radius, onInteract) => {
       const sp = tex ? this.add.sprite(x, y, tex).setOrigin(0.5, 1).setDepth(y) : null;
       if (sp && tex && tex.startsWith('npc-')) {
-        const anim = this.getOrCreateWalkAnim(tex.replace(/-\d+$/, ''), 2.5);
-        if (anim) sp.play(anim);
+        this.tweens.add({
+          targets: sp,
+          scaleY: { from: 1, to: 1.025 },
+          duration: 1600 + Math.random() * 400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+          delay: Math.random() * 500
+        });
       }
       const badgeY = sp ? y - sp.height - 8 : y - 58;
       const badge = this.add.text(x, badgeY, '💬 ' + name, {
-        fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
-        backgroundColor: 'rgba(43,29,20,0.88)', color: '#fdf5e6', padding: { x: 7, y: 3 }
+        fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+        fontSize: '12px',
+        fontStyle: 'bold',
+        backgroundColor: 'rgba(30, 27, 75, 0.90)',
+        color: '#e0e7ff',
+        stroke: '#0f0b2e',
+        strokeThickness: 3,
+        shadow: { offsetX: 0, offsetY: 2, color: 'rgba(0, 0, 0, 0.65)', blur: 4, stroke: true, fill: true },
+        padding: { x: 7, y: 3 }
       }).setOrigin(0.5, 1).setDepth(y + 10);
       const entry = { x, y, radius, sprite: sp, badge, name, onInteract };
       this.interactables.push(entry);
@@ -5528,14 +5833,16 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // Exit Doors at South Center
     this.add.sprite(600, 864, 'prop-exit-door').setOrigin(0.5, 1).setDepth(864);
-    registerInteract(600, 836, null, 'Exit to Curzon Lawn 🚪', 85, () => this.exitCurzonHall());
+    registerInteract(600, 840, null, 'Exit to Curzon Lawn 🚪', 95, () => this.exitCurzonHall());
 
     // 4. Central Dais: Auditorium & Mathematics
     this.add.sprite(600, 95, 'prop-portrait-du').setOrigin(0.5, 1).setDepth(96);
     this.add.sprite(600, 155, 'prop-blackboard-math').setOrigin(0.5, 1).setDepth(155);
     addLandmark(600, 230, 'prop-podium', 42, 24);
     addLandmark(600, 360, 'prop-chess-table', 52, 28);
-    registerInteract(645, 362, 'npc-prof-motahar-0', 'Prof. Motahar Hossain (Math & Chess Chair)', 92, () => this.interactProfMotahar());
+    if (!this.scheduleSystem) {
+      registerInteract(645, 362, 'npc-prof-motahar-0', 'Prof. Motahar Hossain (Math & Chess Chair)', 92, () => this.interactProfMotahar());
+    }
 
     // 5. West Wing: Department of Physics & S.N. Bose Quantum Lab
     this.add.sprite(180, 95, 'prop-portrait-bose').setOrigin(0.5, 1).setDepth(96);
@@ -5545,8 +5852,10 @@ export class DhakaValleyScene extends Phaser.Scene {
     addLandmark(72, 520, 'prop-curzon-bookshelf', 70, 28);
     addLandmark(260, 320, 'prop-labdesk', 90, 32);
     addLandmark(260, 480, 'prop-botany-table', 84, 30);
-    registerInteract(330, 322, 'npc-prof-satyendra-0', 'Prof. Satyendra (Physics Chair)', 92, () => this.interactProfSatyendra());
-    registerInteract(315, 482, 'npc-student-faiza-0', 'Faiza (Physics Undergrad)', 85, () => this.interactFaizaStudent());
+    if (!this.scheduleSystem) {
+      registerInteract(330, 322, 'npc-prof-satyendra-0', 'Prof. Satyendra (Physics Chair)', 92, () => this.interactProfSatyendra());
+      registerInteract(315, 482, 'npc-student-faiza-0', 'Faiza (Physics Undergrad)', 85, () => this.interactFaizaStudent());
+    }
 
     // 6. East Wing: Botany Herbarium & Chemistry Research Lab
     this.add.sprite(880, 155, 'prop-blackboard-chem').setOrigin(0.5, 1).setDepth(155);
@@ -5555,9 +5864,11 @@ export class DhakaValleyScene extends Phaser.Scene {
     addLandmark(1128, 520, 'prop-curzon-bookshelf', 70, 28);
     addLandmark(940, 320, 'prop-botany-table', 84, 30);
     addLandmark(940, 480, 'prop-labdesk', 90, 32);
-    registerInteract(875, 322, 'npc-prof-sultana-0', 'Prof. Sultana (Botany Chair)', 92, () => this.interactProfSultana());
-    registerInteract(875, 482, 'npc-dr-kabir-0', 'Dr. Kabir (Chemistry Master)', 92, () => this.interactDrKabir());
-    registerInteract(1010, 482, 'npc-student-tanvir-0', 'Tanvir (Biochemistry Student)', 85, () => this.interactTanvirStudent());
+    if (!this.scheduleSystem) {
+      registerInteract(875, 322, 'npc-prof-sultana-0', 'Prof. Sultana (Botany Chair)', 92, () => this.interactProfSultana());
+      registerInteract(875, 482, 'npc-dr-kabir-0', 'Dr. Kabir (Chemistry Master)', 92, () => this.interactDrKabir());
+      registerInteract(1010, 482, 'npc-student-tanvir-0', 'Tanvir (Biochemistry Student)', 85, () => this.interactTanvirStudent());
+    }
 
     // 7. Lighting & Chandeliers
     [
@@ -5584,10 +5895,20 @@ export class DhakaValleyScene extends Phaser.Scene {
     }));
 
     // 10. Architectural Labels
-    const labelStyle = { fontFamily: 'Press Start 2P', fontSize: '9px', color: '#fff8eb', stroke: '#2b1d14', strokeThickness: 4 };
-    this.add.text(600, 48, 'CENTRAL AUDITORIUM & MATHEMATICS DAIS', labelStyle).setOrigin(0.5).setDepth(2000);
-    this.add.text(260, 48, 'BOSE QUANTUM LABORATORY (PHYSICS)', labelStyle).setOrigin(0.5).setDepth(2000);
-    this.add.text(940, 48, 'BOTANICAL HERBARIUM & CHEMISTRY LAB', labelStyle).setOrigin(0.5).setDepth(2000);
+    const labelStyle = {
+      fontFamily: 'Rajdhani',
+      fontSize: '13px',
+      fontStyle: 'bold',
+      color: '#fff8eb',
+      stroke: '#2b1d14',
+      strokeThickness: 3.5,
+      backgroundColor: 'rgba(28, 20, 16, 0.78)',
+      padding: { x: 8, y: 3 },
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 3, fill: true }
+    };
+    this.add.text(600, 48, '🏛️ CENTRAL AUDITORIUM & MATHEMATICS DAIS', labelStyle).setOrigin(0.5).setDepth(2000);
+    this.add.text(260, 48, '🔬 BOSE QUANTUM LABORATORY (PHYSICS)', labelStyle).setOrigin(0.5).setDepth(2000);
+    this.add.text(940, 48, '🌿 BOTANICAL HERBARIUM & CHEMISTRY LAB', labelStyle).setOrigin(0.5).setDepth(2000);
 
     // 11. Spawn Player & Totoro
     const pSpawn = spawnPos || { x: 600, y: 780 };
@@ -5601,17 +5922,18 @@ export class DhakaValleyScene extends Phaser.Scene {
     const totoroPos = { x: pSpawn.x - 38, y: pSpawn.y };
     this.totoro = this.add.sprite(totoroPos.x, totoroPos.y, 'totoro-0').setOrigin(0.5, 1).setDepth(totoroPos.y);
     this.totoroBadge = this.add.text(totoroPos.x, totoroPos.y - 68, '♥ Totoro', {
-      fontFamily: 'Outfit', fontSize: '13px', fontStyle: 'bold',
-      backgroundColor: '#d45779', color: '#ffffff', padding: { x: 8, y: 4 }
+      fontFamily: 'Rajdhani', fontSize: '13px', fontStyle: 'bold',
+      backgroundColor: '#d45779', color: '#ffffff', padding: { x: 8, y: 3 },
+      stroke: '#4a1525', strokeThickness: 2.5,
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
     }).setOrigin(0.5, 1).setDepth(2100);
     this.trail = Array(16).fill({ x: this.player.x, y: this.player.y });
 
-    this.taroLeaf = this.add.sprite(this.totoro.x, this.totoro.y - 65, 'prop-taro-leaf')
-      .setOrigin(0.5, 1).setDepth(this.totoro.depth + 2).setVisible(false);
-
-    this.interactPrompt = this.add.text(0, 0, 'PRESS E', {
-      fontFamily: 'Press Start 2P', fontSize: '9px',
-      backgroundColor: '#fdf5e6', color: '#2b1d14', padding: { x: 6, y: 4 }
+    this.interactPrompt = this.add.text(0, 0, 'SPACE / TAP: Interact', {
+      fontFamily: 'Rajdhani', fontSize: '12px', fontStyle: 'bold',
+      backgroundColor: 'rgba(253, 245, 230, 0.95)', color: '#2b1d14', padding: { x: 8, y: 3 },
+      stroke: '#ffffff', strokeThickness: 1.5,
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
     }).setOrigin(0.5, 1).setDepth(3000).setVisible(false);
 
     this.ambientOverlay = this.add.rectangle(0, 0, MAP_W * 2, MAP_H * 2, 0x1a1438, 0)
@@ -5619,6 +5941,9 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    if (this.scheduleSystem) {
+      this.scheduleSystem.initWorldNpcs('curzon_interior');
+    }
     UI.updateQuestText();
   }
 
@@ -5957,39 +6282,138 @@ export class DhakaValleyScene extends Phaser.Scene {
     const addLandmark = (x, y, tex, w, h) => {
       const sp = this.add.sprite(x, y, tex).setOrigin(0.5, 1).setDepth(y);
       if (w && h) blockRect(x, y - h / 2, w, h);
+      if (tex.includes('tree')) {
+        this.tweens.add({
+          targets: sp,
+          angle: { from: -1.2, to: 1.2 },
+          duration: 2600 + Math.random() * 800,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      } else if (tex.includes('barn') || tex.includes('silo')) {
+        this.tweens.add({
+          targets: sp,
+          scaleY: { from: 1, to: 1.01 },
+          duration: 3000,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
       return sp;
     };
 
     const registerInteract = (x, y, tex, name, radius, onInteract) => {
       const sp = tex ? this.add.sprite(x, y, tex).setOrigin(0.5, 1).setDepth(y) : null;
       if (sp && tex && tex.startsWith('npc-')) {
-        const anim = this.getOrCreateWalkAnim(tex.replace(/-\d+$/, ''), 2.5);
-        if (anim) sp.play(anim);
+        if (tex.includes('chicken') || tex.includes('duck')) {
+          // Dynamic pecking / hopping idle animation
+          this.tweens.add({
+            targets: sp,
+            y: { from: y, to: y - 2.5 },
+            scaleX: { from: 1, to: 1.06 },
+            duration: 280,
+            yoyo: true,
+            repeat: -1,
+            repeatDelay: 1400 + Math.random() * 1200,
+            ease: 'Quad.easeOut'
+          });
+        } else if (tex.includes('cow') || tex.includes('goat')) {
+          // Dynamic gentle breathing & chewing
+          this.tweens.add({
+            targets: sp,
+            scaleY: { from: 1, to: 1.03 },
+            duration: 1800 + Math.random() * 400,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+        } else {
+          // Farmer Rafiq & human NPCs: dynamic breathing
+          this.tweens.add({
+            targets: sp,
+            scaleY: { from: 1, to: 1.025 },
+            duration: 1600 + Math.random() * 400,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+        }
       }
       const badgeY = sp ? y - sp.height - 8 : y - 58;
       const badge = this.add.text(x, badgeY, '💬 ' + name, {
-        fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
-        backgroundColor: 'rgba(30,50,20,0.88)', color: '#fef3c7', padding: { x: 7, y: 3 }
+        fontFamily: 'Rajdhani', fontSize: '12px', fontStyle: 'bold',
+        backgroundColor: 'rgba(21, 128, 61, 0.90)', color: '#fef3c7', padding: { x: 8, y: 3 },
+        stroke: '#14532d', strokeThickness: 2.5,
+        shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
       }).setOrigin(0.5, 1).setDepth(y + 10);
       const entry = { x, y, radius, sprite: sp, badge, name, onInteract };
       this.interactables.push(entry);
       return entry;
     };
 
+    this.extraWaterSprites = [];
+
     // 1. Base Terrain: Lush Pasture Grass
     this.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 'tile-grass').setDepth(0);
 
-    // 2. Rural Dirt / Cobblestone Roadways & Hubs
-    // Central North-South Farmyard Avenue
-    this.add.tileSprite(600, 520, 84, 580, 'tile-path').setDepth(1);
-    // East-West Connecting Lane
-    this.add.tileSprite(600, 480, 860, 68, 'tile-path').setDepth(1);
+    // 2. Multi-Type Rural Pathways (Country Loam Wheel-Track, Brick Barn Forecourt & Stepping-Stone Trails)
+    // Stepping-stone trails to Cow Pasture, Goat Pen, Chicken Coop & Duck Pond Jetty
+    this.add.tileSprite(300, 390, 56, 160, 'tile-path-stepping').setDepth(1.0);
+    this.add.tileSprite(880, 390, 56, 160, 'tile-path-stepping').setDepth(1.0);
+    this.add.tileSprite(780, 570, 56, 180, 'tile-path-stepping').setDepth(1.0);
 
-    // 3. Duckling Pond (South-East Meadow: x: 920, y: 640)
-    this.add.tileSprite(940, 660, 260, 180, 'tile-water').setDepth(1);
-    this.add.tileSprite(800, 660, 20, 180, 'tile-bank').setDepth(2);
-    this.add.tileSprite(940, 560, 260, 20, 'tile-bank').setDepth(2);
-    blockRect(940, 660, 240, 160);
+    // East-West Connecting Stone Lane with Dressed Curbs & Rounded Arch Caps
+    this.add.tileSprite(600, 480, 820, 68, 'tile-path').setDepth(1.1);
+    this.add.tileSprite(600, 446, 820, 12, 'tile-curb-h').setDepth(1.25);
+    this.add.tileSprite(600, 514, 820, 12, 'tile-curb-h').setDepth(1.25);
+    this.add.sprite(192, 480, 'path-cap-stone-w').setOrigin(1, 0.5).setDepth(1.3);
+    this.add.sprite(1008, 480, 'path-cap-stone-e').setOrigin(0, 0.5).setDepth(1.3);
+    this.add.sprite(144, 480, 'prop-stepping-trail-h').setOrigin(1, 0.5).setFlipX(true).setDepth(1.05);
+    this.add.sprite(1056, 480, 'prop-stepping-trail-h').setOrigin(0, 0.5).setDepth(1.05);
+
+    // Central North-South Country Loam & Cobble Wheel-Track Avenue
+    this.add.tileSprite(600, 530, 88, 560, 'tile-path-dirt').setDepth(1.15);
+    this.add.sprite(600, 252, 'path-cap-dirt-n').setOrigin(0.5, 1).setDepth(1.3);
+    this.add.sprite(600, 808, 'path-cap-dirt-s').setOrigin(0.5, 0).setDepth(1.3);
+
+    // Heritage Brick Barn Forecourt & Central Farmyard Plaza Medallion
+    this.add.tileSprite(600, 240, 220, 68, 'tile-path-brick').setDepth(1.2);
+    this.add.sprite(600, 480, 'prop-plaza-medallion').setDepth(1.35);
+
+    // 3. Redesigned Duckling Pond (Full 4-Sided Embankment, Shallow Margin, Stepped Ghat & Aquatic Flora)
+    const pondShallow = this.add.tileSprite(940, 660, 272, 188, 'tile-water-shallow').setDepth(1.0);
+    this.lakeWater = this.add.tileSprite(940, 660, 228, 144, 'tile-water').setDepth(1.1);
+    this.extraWaterSprites.push(pondShallow);
+
+    this.add.tileSprite(940, 564, 280, 20, 'tile-bank').setDepth(2.0);
+    this.add.tileSprite(940, 756, 280, 20, 'tile-bank').setDepth(2.0);
+    this.add.tileSprite(804, 660, 20, 196, 'tile-bank').setDepth(2.0);
+    this.add.tileSprite(1076, 660, 20, 196, 'tile-bank').setDepth(2.0);
+    // Stepped Brick Ghat & Wooden Duck-Feeding Deck on the West Bank
+    this.add.tileSprite(822, 648, 42, 72, 'tile-ghat-steps-v').setDepth(2.2);
+    this.add.tileSprite(786, 648, 36, 64, 'tile-path-boardwalk').setDepth(2.1);
+
+    [
+      { x: 900, y: 625, tex: 'prop-lotus' },
+      { x: 995, y: 685, tex: 'prop-lotus' },
+      { x: 950, y: 710, tex: 'prop-lilypad' },
+      { x: 865, y: 725, tex: 'prop-reeds' },
+      { x: 1035, y: 605, tex: 'prop-reeds' }
+    ].forEach((fl, idx) => {
+      const sp = this.add.sprite(fl.x, fl.y, fl.tex).setDepth(2.3);
+      this.tweens.add({
+        targets: sp,
+        y: fl.y + 1.8,
+        duration: 1800 + idx * 300,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    });
+
+    blockRect(940, 660, 248, 168);
 
     // 4. Pasture Fences (Separating Animal Paddocks)
     // Cow Pasture (North-West)
@@ -6067,23 +6491,25 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.add.circle(600, 840, 22, 0xca8a04, 0.25).setDepth(839);
     this.add.circle(600, 840, 12, 0xfef08a, 0.35).setDepth(839);
 
-    registerInteract(600, 840, null, 'Return to Dhaka Valley 🚶', 75, () => this.exitFarmhouse());
+    registerInteract(600, 840, null, 'Return to Dhaka Valley 🚶', 95, () => this.exitFarmhouse());
 
-    // 7. Interactive Animals & Farmer
-    // A. Chacha Rafiq (Farm Master)
-    registerInteract(580, 340, 'npc-farmer-rafiq-0', 'Chacha Rafiq (Farm Owner)', 95, () => this.interactFarmerRafiq());
+    // 7. Interactive Animals & Farmer (Fallback if ScheduleSystem inactive)
+    if (!this.scheduleSystem) {
+      // A. Chacha Rafiq (Farm Master)
+      registerInteract(580, 340, 'npc-farmer-rafiq-0', 'Chacha Rafiq (Farm Owner)', 95, () => this.interactFarmerRafiq());
 
-    // B. Shuravi the Gentle Dairy Cow (North-West Pasture)
-    registerInteract(280, 260, 'npc-cow-0', 'Shuravi the Dairy Cow 🐄', 95, () => this.interactCowShuravi());
+      // B. Shuravi the Gentle Dairy Cow (North-West Pasture)
+      registerInteract(280, 260, 'npc-cow-0', 'Shuravi the Dairy Cow 🐄', 95, () => this.interactCowShuravi());
 
-    // C. Kalu the Bengal Black Goat (North-East Pasture)
-    registerInteract(880, 260, 'npc-goat-0', 'Kalu the Bengal Goat 🐐', 90, () => this.interactGoatKalu());
+      // C. Kalu the Bengal Black Goat (North-East Pasture)
+      registerInteract(880, 260, 'npc-goat-0', 'Kalu the Bengal Goat 🐐', 90, () => this.interactGoatKalu());
 
-    // D. Tuntuni the Free-Range Hen (South-West Coop)
-    registerInteract(260, 520, 'npc-chicken-0', 'Tuntuni the Hen 🐔', 85, () => this.interactChickenTuntuni());
+      // D. Tuntuni the Free-Range Hen (South-West Coop)
+      registerInteract(260, 520, 'npc-chicken-0', 'Tuntuni the Hen 🐔', 85, () => this.interactChickenTuntuni());
 
-    // E. Piku the White Duckling (Pond Bank)
-    registerInteract(820, 640, 'npc-duck-0', 'Piku the Duckling 🦆', 85, () => this.interactDuckPiku());
+      // E. Piku the White Duckling (Pond Bank)
+      registerInteract(820, 640, 'npc-duck-0', 'Piku the Duckling 🦆', 85, () => this.interactDuckPiku());
+    }
 
     // 8. Pastoral Floating Petals / Dandelion Seeds
     this.petals = Array.from({ length: 24 }, () => ({
@@ -6094,12 +6520,22 @@ export class DhakaValleyScene extends Phaser.Scene {
     }));
 
     // 9. Zone Signs & Banners
-    const labelStyle = { fontFamily: 'Press Start 2P', fontSize: '9px', color: '#fff8eb', stroke: '#1c1917', strokeThickness: 4 };
-    this.add.text(600, 56, 'GREEN MEADOWS FARMHOUSE & BARN 🏡', labelStyle).setOrigin(0.5).setDepth(2000);
-    this.add.text(280, 160, 'DAIRY COW PASTURE 🐄', labelStyle).setOrigin(0.5).setDepth(2000);
-    this.add.text(880, 160, 'BENGAL GOAT PEN 🐐', labelStyle).setOrigin(0.5).setDepth(2000);
-    this.add.text(260, 440, 'CHICKEN COOP 🐔', labelStyle).setOrigin(0.5).setDepth(2000);
-    this.add.text(940, 525, 'DUCK POND & MEADOW 🦆', labelStyle).setOrigin(0.5).setDepth(2000);
+    const farmSignStyle = {
+      fontFamily: 'Rajdhani',
+      fontSize: '13px',
+      fontStyle: 'bold',
+      color: '#fff3b0',
+      stroke: '#241409',
+      strokeThickness: 3.5,
+      backgroundColor: 'rgba(24, 16, 11, 0.82)',
+      padding: { x: 8, y: 3 },
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 3, fill: true }
+    };
+    this.add.text(600, 56, 'GREEN MEADOWS FARMHOUSE & BARN 🏡', farmSignStyle).setOrigin(0.5).setDepth(2000);
+    this.add.text(280, 160, 'DAIRY COW PASTURE 🐄', farmSignStyle).setOrigin(0.5).setDepth(2000);
+    this.add.text(880, 160, 'BENGAL GOAT PEN 🐐', farmSignStyle).setOrigin(0.5).setDepth(2000);
+    this.add.text(260, 440, 'CHICKEN COOP 🐔', farmSignStyle).setOrigin(0.5).setDepth(2000);
+    this.add.text(940, 525, 'DUCK POND & MEADOW 🦆', farmSignStyle).setOrigin(0.5).setDepth(2000);
 
     // 10. Spawn Player & Totoro
     const pSpawn = spawnPos || { x: 600, y: 780 };
@@ -6113,17 +6549,18 @@ export class DhakaValleyScene extends Phaser.Scene {
     const totoroPos = { x: pSpawn.x - 38, y: pSpawn.y };
     this.totoro = this.add.sprite(totoroPos.x, totoroPos.y, 'totoro-0').setOrigin(0.5, 1).setDepth(totoroPos.y);
     this.totoroBadge = this.add.text(totoroPos.x, totoroPos.y - 68, '♥ Totoro', {
-      fontFamily: 'Outfit', fontSize: '13px', fontStyle: 'bold',
-      backgroundColor: '#15803d', color: '#ffffff', padding: { x: 8, y: 4 }
+      fontFamily: 'Rajdhani', fontSize: '13px', fontStyle: 'bold',
+      backgroundColor: '#15803d', color: '#ffffff', padding: { x: 8, y: 3 },
+      stroke: '#052e16', strokeThickness: 2.5,
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
     }).setOrigin(0.5, 1).setDepth(2100);
     this.trail = Array(16).fill({ x: this.player.x, y: this.player.y });
 
-    this.taroLeaf = this.add.sprite(this.totoro.x, this.totoro.y - 65, 'prop-taro-leaf')
-      .setOrigin(0.5, 1).setDepth(this.totoro.depth + 2).setVisible(false);
-
-    this.interactPrompt = this.add.text(0, 0, 'PRESS E', {
-      fontFamily: 'Press Start 2P', fontSize: '9px',
-      backgroundColor: '#fdf5e6', color: '#2b1d14', padding: { x: 6, y: 4 }
+    this.interactPrompt = this.add.text(0, 0, 'SPACE / TAP: Interact', {
+      fontFamily: 'Rajdhani', fontSize: '12px', fontStyle: 'bold',
+      backgroundColor: 'rgba(253, 245, 230, 0.95)', color: '#2b1d14', padding: { x: 8, y: 3 },
+      stroke: '#ffffff', strokeThickness: 1.5,
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
     }).setOrigin(0.5, 1).setDepth(3000).setVisible(false);
 
     this.ambientOverlay = this.add.rectangle(0, 0, MAP_W * 2, MAP_H * 2, 0x1a1438, 0)
@@ -6132,6 +6569,9 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.cameras.main.setZoom(1.22);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+    if (this.scheduleSystem) {
+      this.scheduleSystem.initWorldNpcs('farmhouse');
+    }
     UI.updateQuestText();
   }
 
@@ -6345,41 +6785,79 @@ export class DhakaValleyScene extends Phaser.Scene {
     ctx.strokeRect(0.5, 0.5, cvs.width - 1, cvs.height - 1);
 
     if (world === 'dhaka') {
-      // 2. Real Water Bodies: Dhanmondi Lake & Shorelines
-      ctx.fillStyle = '#1e3a5f'; // Deep lake water
-      ctx.fillRect(1568 * sx, 1040 * sy, 832 * sx, 760 * sy);
-      ctx.fillStyle = '#38bdf8'; // Surface reflection shimmer
-      ctx.fillRect(1600 * sx, 1080 * sy, 760 * sx, 3 * sy);
-      ctx.fillRect(1640 * sx, 1200 * sy, 680 * sx, 2.5 * sy);
-      ctx.fillRect(1580 * sx, 1380 * sy, 780 * sx, 2.5 * sy);
+      // 2. Real Water Bodies: Organic Dhanmondi Lake, Upper Ramna Lotus Pond & Canal, and Curzon Botanical Pond
+      // Shallow turquoise margins
+      ctx.fillStyle = '#0e7490';
+      ctx.fillRect(1568 * sx, 1056 * sy, 832 * sx, 744 * sy); // Main Basin
+      ctx.fillRect(1728 * sx, 928 * sy, 672 * sx, 128 * sy);  // Northern Cove
+      ctx.fillRect(1440 * sx, 1504 * sy, 128 * sx, 296 * sy); // Southern Inlet
+      ctx.fillRect(1856 * sx, 384 * sy, 224 * sx, 144 * sy);  // Upper Ramna Pond
+      ctx.fillRect(1920 * sx, 528 * sy, 80 * sx, 400 * sy);   // Serpentine Canal
+      ctx.fillRect(1088 * sx, 1248 * sy, 256 * sx, 160 * sy); // Curzon Botanical Pond
 
-      // Lake Pier
+      // Deep indigo cores
+      ctx.fillStyle = '#1e3a5f';
+      ctx.fillRect(1600 * sx, 1088 * sy, 800 * sx, 712 * sy);
+      ctx.fillRect(1760 * sx, 960 * sy, 640 * sx, 128 * sy);
+      ctx.fillRect(1880 * sx, 404 * sy, 176 * sx, 104 * sy);
+      ctx.fillRect(1112 * sx, 1272 * sy, 208 * sx, 112 * sy);
+
+      // Surface reflection shimmer
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(1640 * sx, 1120 * sy, 720 * sx, 2.5 * sy);
+      ctx.fillRect(1640 * sx, 1220 * sy, 680 * sx, 2.5 * sy);
+      ctx.fillRect(1620 * sx, 1420 * sy, 740 * sx, 2.5 * sy);
+      ctx.fillRect(1130 * sx, 1316 * sy, 160 * sx, 2 * sy);
+
+      // 3. Multi-Type Road & Promenade Network
+      // (A) Pastoral Loam & Cobble Country Lane (South to Farmhouse)
+      ctx.fillStyle = '#a47e53';
+      ctx.fillRect(692 * sx, 1380 * sy, 96 * sx, 340 * sy);
+      ctx.fillRect(528 * sx, 1420 * sy, 212 * sx, 72 * sy);
+
+      // (B) Sandstone Flagstone Boulevards (Main E-W & Eastern Lakeside Avenue)
+      ctx.fillStyle = '#d4b996';
+      ctx.fillRect(80 * sx, 768 * sy, 2112 * sx, 96 * sy);
+      ctx.fillRect(1472 * sx, 224 * sy, 96 * sx, 1216 * sy);
+
+      // (C) Mughal Red-Brick Herringbone Avenues (Lal-Eet Heritage Campus Roads)
+      ctx.fillStyle = '#b45342';
+      ctx.fillRect(432 * sx, 224 * sy, 96 * sx, 1232 * sy); // West N-S Road (TSC -> Curzon)
+      ctx.fillRect(1012 * sx, 256 * sy, 96 * sx, 560 * sy); // Central N-S Spine (Nilkhet -> Fountain)
+      ctx.fillRect(480 * sx, 278 * sy, 1040 * sx, 84 * sy); // North Campus Avenue
+      ctx.fillRect(1568 * sx, 240 * sy, 260 * sx, 96 * sy); // Fuller Road Food Bazaar
+
+      // (D) Ramna Garden Stepping Stones & Pebble Trails
+      ctx.fillStyle = '#a8a29e';
+      ctx.fillRect(1108 * sx, 492 * sy, 364 * sx, 56 * sy); // Ramna Park Trail
+      ctx.fillRect(788 * sx, 1300 * sy, 300 * sx, 56 * sy); // Botanical Pond West Trail
+      ctx.fillRect(1344 * sx, 1300 * sy, 128 * sx, 56 * sy); // Botanical Pond East Trail
+      ctx.fillRect(1568 * sx, 964 * sy, 160 * sx, 56 * sy);  // Lakeside Cove Walk
+
+      // (E) Chini-Tikri Circular Plaza Medallions at Hubs
+      ctx.fillStyle = '#e5dccb';
+      const hubs = [
+        [1060, 816, 4.5], [480, 816, 4], [1520, 816, 4],
+        [480, 320, 3.8], [1060, 320, 3.8], [1520, 320, 3.8],
+        [380, 1440, 4.5], [740, 1456, 3.5]
+      ];
+      hubs.forEach(([hx, hy, hr]) => {
+        ctx.beginPath();
+        ctx.arc(hx * sx, hy * sy, hr, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // (F) Arched Stone & Teakwood Canal Bridge + Dhanmondi Lake Pier
       ctx.fillStyle = '#b45309';
-      ctx.fillRect(1556 * sx, 1284 * sy, 384 * sx, 72 * sy);
-
-      // 3. Real Road & Promenade Network
-      ctx.fillStyle = '#d4b996'; // Warm paved pathways
-      // East-West Thoroughfare
-      ctx.fillRect(25 * sx, 772 * sy, 2175 * sx, 96 * sy);
-      // West North-South Road (TSC -> Curzon)
-      ctx.fillRect(432 * sx, 175 * sy, 96 * sx, 1450 * sy);
-      // Central Spine
-      ctx.fillRect(1012 * sx, 250 * sy, 96 * sx, 620 * sy);
-      // East North-South Road
-      ctx.fillRect(1472 * sx, 175 * sy, 96 * sx, 1450 * sy);
-      // North Avenue
-      ctx.fillRect(430 * sx, 278 * sy, 1100 * sx, 84 * sy);
-      // North-East Food Bazaar Promenade
-      ctx.fillRect(1472 * sx, 240 * sy, 380 * sx, 96 * sy);
-      // Farmhouse Country Lane & West Branch
-      ctx.fillRect(692 * sx, 1420 * sy, 96 * sx, 380 * sy);
-      ctx.fillRect(480 * sx, 1420 * sy, 220 * sx, 72 * sy);
+      ctx.fillRect(1552 * sx, 1292 * sy, 384 * sx, 72 * sy); // Lake Pier
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(1888 * sx, 764 * sy, 144 * sx, 104 * sy); // Canal Footbridge
 
       // Road shoulder strokes
       ctx.strokeStyle = 'rgba(120, 80, 50, 0.4)';
       ctx.lineWidth = 0.8;
-      ctx.strokeRect(25 * sx, 772 * sy, 2175 * sx, 96 * sy);
-      ctx.strokeRect(432 * sx, 175 * sy, 96 * sx, 1450 * sy);
+      ctx.strokeRect(80 * sx, 768 * sy, 2112 * sx, 96 * sy);
+      ctx.strokeRect(432 * sx, 224 * sy, 96 * sx, 1232 * sy);
 
       // 4. Distinct Landmark Buildings & Plinths
       // Curzon Hall Grand Complex (South-West)
@@ -6437,15 +6915,24 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     } else if (world === 'farmhouse') {
       // Farmhouse Layout: Central Yard, Pastures, Duck Pond, Barn & Silo
-      ctx.fillStyle = '#c2a67e'; // Dirt Farmyard Roads
-      ctx.fillRect(558 * sx, 230 * sy, 84 * sx, 580 * sy);
-      ctx.fillRect(170 * sx, 446 * sy, 860 * sx, 68 * sy);
+      ctx.fillStyle = '#a47e53'; // Loam & Cobble North-South Spine
+      ctx.fillRect(558 * sx, 230 * sy, 84 * sx, 590 * sy);
+      ctx.fillStyle = '#d4b996'; // Sandstone East-West Lane
+      ctx.fillRect(190 * sx, 446 * sy, 820 * sx, 68 * sy);
+      ctx.fillStyle = '#b45342'; // Brick Barn Forecourt
+      ctx.fillRect(490 * sx, 210 * sy, 220 * sx, 56 * sy);
+      ctx.fillStyle = '#a8a29e'; // Stepping Stone Trail to Duck Pond
+      ctx.fillRect(916 * sx, 514 * sy, 48 * sx, 66 * sy);
 
-      // Duck Pond (South-East)
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(810 * sx, 570 * sy, 260 * sx, 180 * sy);
+      // Duck Pond (South-East) with Shallow Margin & Timber Jetty
+      ctx.fillStyle = '#0e7490';
+      ctx.fillRect(800 * sx, 570 * sy, 280 * sx, 190 * sy);
+      ctx.fillStyle = '#1e3a5f';
+      ctx.fillRect(824 * sx, 594 * sy, 232 * sx, 142 * sy);
       ctx.fillStyle = '#38bdf8';
       ctx.fillRect(840 * sx, 620 * sy, 190 * sx, 4 * sy);
+      ctx.fillStyle = '#b45309';
+      ctx.fillRect(780 * sx, 641 * sy, 68 * sx, 38 * sy);
 
       // Red Barn Complex (North Center)
       ctx.fillStyle = '#991b1b';
@@ -6482,12 +6969,17 @@ export class DhakaValleyScene extends Phaser.Scene {
       ctx.fillRect(460 * sx, 190 * sy, 280 * sx, 70 * sy);
     } else {
       // Expedition Realms (Worlds 2 to 6)
-      ctx.fillStyle = '#475569';
-      ctx.fillRect(200 * sx, 845 * sy, 2000 * sx, 110 * sy);
-      ctx.fillRect(1095 * sx, 250 * sy, 110 * sx, 1300 * sy);
-      // Realm Lake
+      ctx.fillStyle = '#d4b996';
+      ctx.fillRect(240 * sx, 845 * sy, 1920 * sx, 110 * sy);
+      ctx.fillStyle = '#b45342';
+      ctx.fillRect(1095 * sx, 260 * sy, 110 * sx, 1150 * sy);
+      // Realm Multi-Basin Lake
+      ctx.fillStyle = '#0e7490';
+      ctx.fillRect(100 * sx, 1428 * sy, 2200 * sx, 352 * sy);
       ctx.fillStyle = '#0284c7';
       ctx.fillRect(100 * sx, 1460 * sy, 2200 * sx, 320 * sy);
+      ctx.fillRect(220 * sx, 1380 * sy, 360 * sx, 96 * sy);
+      ctx.fillRect(1720 * sx, 1380 * sy, 360 * sx, 96 * sy);
     }
 
     // 5. Draw Interactables (Golden star / diamond icons)
@@ -6554,9 +7046,10 @@ export class DhakaValleyScene extends Phaser.Scene {
   update(time, delta) {
     if (!this.player) return;
 
-    // Advance TimeCalendarSystem and AtmosphereSystem (Day/Night & Halos)
+    // Advance TimeCalendarSystem, AtmosphereSystem and Living-World NPC ScheduleSystem
     if (this.timeCalendar) this.timeCalendar.update(delta);
     if (this.atmosphere) this.atmosphere.update(time, delta);
+    if (this.scheduleSystem) this.scheduleSystem.update(time, delta);
 
     // Render Monsoon Rain Drops & Slanted Streaks (Batched single draw call)
     if (this.isRaining && this.rainGraphics) {
@@ -6577,11 +7070,6 @@ export class DhakaValleyScene extends Phaser.Scene {
         this.rainGraphics.lineTo(drop.x + slant, drop.y + drop.len);
       });
       this.rainGraphics.strokePath();
-
-      // Position Totoro's Taro Leaf over his head
-      if (this.taroLeaf && this.totoro) {
-        this.taroLeaf.setPosition(this.totoro.x, this.totoro.y - 68);
-      }
 
       // Random distant lightning flash & thunder
       if (time > this.nextThunder) {
@@ -6651,6 +7139,16 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.lakeWater.tilePositionX = Math.sin(time * 0.0012) * 14;
       this.lakeWater.tilePositionY += delta * 0.006;
     }
+    if (this.extraWaterSprites && this.extraWaterSprites.length > 0) {
+      const waveX = Math.sin(time * 0.0012) * 12;
+      const stepY = delta * 0.0055;
+      for (const ws of this.extraWaterSprites) {
+        if (ws && ws.active) {
+          ws.tilePositionX = waveX;
+          ws.tilePositionY += stepY;
+        }
+      }
+    }
     if (this.petals) {
       this.petals.forEach(p => {
         p.obj.x += p.vx * (delta / 1000) + Math.sin(time * 0.003 + p.phase) * 0.3;
@@ -6660,133 +7158,74 @@ export class DhakaValleyScene extends Phaser.Scene {
       });
     }
 
-    // 2. Update Wandering Citizens
     const px = this.player.x, py = this.player.y;
-    this.wanderers.forEach((w, idx) => {
-      const distToPlayer = Phaser.Math.Distance.Between(px, py, w.x, w.y);
-      if (UI.isOpen() || this.cutsceneLocked || distToPlayer < 68) {
-        if (w.sprite.anims && w.sprite.anims.isPlaying) {
-          w.sprite.anims.pause();
-          w.sprite.setTexture(`${w.baseTex}-0`);
-        }
-        return;
-      }
-      if (w.sprite.anims && w.sprite.anims.isPaused) {
-        w.sprite.anims.resume();
-      }
-      const target = w.waypoints[w.wpIdx];
-      const dx = target.x - w.x, dy = target.y - w.y;
-      const dist = Phaser.Math.Distance.Between(w.x, w.y, target.x, target.y);
-      if (dist < 6) {
-        w.wpIdx = (w.wpIdx + 1) % w.waypoints.length;
-        if (w.sprite.anims && w.sprite.anims.isPlaying) {
-          w.sprite.anims.stop();
-          w.sprite.setTexture(`${w.baseTex}-0`);
-        }
-      } else {
-        const step = (w.speed * delta) / 1000;
-        w.x += (dx / dist) * step;
-        w.y += (dy / dist) * step;
-        w.sprite.setPosition(w.x, w.y).setDepth(w.y);
 
-        let dir = 'down';
-        if (Math.abs(dx) > Math.abs(dy)) {
-          dir = dx < 0 ? 'left' : 'right';
-        } else {
-          dir = dy < 0 ? 'up' : 'down';
-        }
-        w.sprite.setFlipX(false);
-        const walkKey = `${w.baseTex}-walk-${dir}`;
-        if (this.anims.exists(walkKey)) {
-          if (!w.sprite.anims.isPlaying || w.sprite.anims.currentAnim.key !== walkKey) {
-            w.sprite.play(walkKey);
+    // 2. Update Wandering Citizens (Fallback if ScheduleSystem is inactive)
+    if (!this.scheduleSystem) {
+      this.wanderers.forEach((w, idx) => {
+        const distToPlayer = Phaser.Math.Distance.Between(px, py, w.x, w.y);
+        if (UI.isOpen() || this.cutsceneLocked || distToPlayer < 68) {
+          if (w.sprite.anims && w.sprite.anims.isPlaying) {
+            w.sprite.anims.pause();
+            w.sprite.setTexture(`${w.baseTex}-0`);
           }
-        } else {
-          const fallbackAnim = this.getOrCreateWalkAnim(w.baseTex, 4);
-          if (fallbackAnim && (!w.sprite.anims.isPlaying || w.sprite.anims.currentAnim.key !== fallbackAnim)) {
-            w.sprite.play(fallbackAnim);
-          }
-          if (Math.abs(dx) > 0.5) {
-            w.sprite.setFlipX(dx < 0);
-          }
-        }
-        w.badge.setPosition(w.x, w.y - w.sprite.height - 6).setDepth(w.y + 5);
-      }
-    });
-
-    // 3. Update Enemy & Boss AI (animations handled automatically by Phaser)
-    if (!UI.isOpen() && !this.cutsceneLocked) {
-      this.enemies.forEach((en, idx) => {
-        const dist = Phaser.Math.Distance.Between(px, py, en.x, en.y);
-        const detectRange = en.isBoss ? 440 : 250;
-
-        if (en.isBoss) {
-          UI.setBossHUD(dist < 540, en.name, en.hp, en.maxHp);
-        }
-
-        // Stunned condition: if stunned by Totoro's Seismic Belly Slam, enemy cannot chase or attack
-        if (en.stunnedUntil && time < en.stunnedUntil) {
-          en.sprite.setAngle(Math.sin(time * 0.02) * 8);
           return;
-        } else if (en.stunnedUntil) {
-          en.stunnedUntil = 0;
-          en.sprite.setAngle(0);
         }
-
-        if (dist < detectRange && dist > 26) {
-          // Chase Player
-          const dx = px - en.x, dy = py - en.y;
-          const step = (en.speed * delta) / 1000;
-          en.x += (dx / dist) * step;
-          en.y += (dy / dist) * step;
-          en.sprite.setFlipX(dx < -1);
-        } else if (!en.isBoss) {
-          // Gentle Patrol Orbit Around Home Position when Idle
-          const patrolAng = time * 0.0012 + idx * 1.7;
-          const tx = en.homeX + Math.cos(patrolAng) * 28;
-          const ty = en.homeY + Math.sin(patrolAng) * 18;
-          const dx = tx - en.x, dy = ty - en.y;
-          en.x += dx * 0.03;
-          en.y += dy * 0.03;
-          en.sprite.setFlipX(dx < -0.2);
+        if (w.sprite.anims && w.sprite.anims.isPaused) {
+          w.sprite.anims.resume();
         }
-
-        // Subtle breathing/floating bob + update depth & label
-        const floatBob = Math.sin(time * 0.005 + idx) * (en.isBoss ? 2.5 : 1.2);
-        en.sprite.setPosition(en.x, en.y + floatBob).setDepth(en.y);
-        en.label.setPosition(en.x, en.y - (en.isBoss ? 114 : 54)).setDepth(en.y + 5);
-
-        // Contact / Melee Attack on Player with Lunge Animation
-        if (dist < (en.isBoss ? 56 : 36) && time - en.lastHitPlayer > 1100) {
-          en.lastHitPlayer = time;
-          this.tweens.add({
-            targets: en.sprite,
-            scaleX: 1.22,
-            scaleY: 1.22,
-            duration: 95,
-            yoyo: true
-          });
-          const rawDmg = Math.max(2, en.atk - RPGStats.getDef());
-          DateState.hp = Math.max(0, DateState.hp - rawDmg);
-          SoundEngine.playerHurt();
-          this.spawnDamageNumber(px, py - 54, `-${rawDmg}`, '#ff4d6d');
-          UI.updateRPGStats();
-
-          if (DateState.hp <= 0) {
-            DateState.hp = DateState.maxHp;
-            DateState.sp = DateState.maxSp;
-            UI.updateRPGStats();
-            const spawnPos = DateState.currentWorld === 'dhaka' ? { x: 480, y: 1380 } : { x: 340, y: 900 };
-            this.player.setPosition(spawnPos.x, spawnPos.y);
-            if (this.player.body) this.player.body.reset(spawnPos.x, spawnPos.y);
-            this.trail = Array(16).fill({ x: spawnPos.x, y: spawnPos.y });
-            if (this.totoro) this.totoro.setPosition(spawnPos.x, spawnPos.y);
-            if (this.totoroBadge) this.totoroBadge.setPosition(spawnPos.x, spawnPos.y - 68);
-            UI.showToast('🐾', 'Totoro Rescued You!', 'Restored to full health at the realm entrance.');
+        const target = w.waypoints[w.wpIdx];
+        const dx = target.x - w.x, dy = target.y - w.y;
+        const dist = Phaser.Math.Distance.Between(w.x, w.y, target.x, target.y);
+        if (dist < 6) {
+          w.wpIdx = (w.wpIdx + 1) % w.waypoints.length;
+          w.sprite.setFlipX(false);
+          const idleAnim = `${w.baseTex}-idle-down`;
+          if (this.anims.exists(idleAnim)) {
+            w.sprite.play(idleAnim);
+          } else {
+            if (w.sprite.anims && w.sprite.anims.isPlaying) {
+              w.sprite.anims.stop();
+            }
+            w.sprite.setTexture(`${w.baseTex}-0`);
           }
+        } else {
+          const step = (w.speed * delta) / 1000;
+          w.x += (dx / dist) * step;
+          w.y += (dy / dist) * step;
+          w.sprite.setPosition(w.x, w.y).setDepth(w.y);
+
+          let dir = 'down';
+          if (Math.abs(dx) > Math.abs(dy)) {
+            dir = dx < 0 ? 'left' : 'right';
+          } else {
+            dir = dy < 0 ? 'up' : 'down';
+          }
+          w.sprite.setFlipX(false);
+          const walkKey = `${w.baseTex}-walk-${dir}`;
+          if (this.anims.exists(walkKey)) {
+            if (!w.sprite.anims.isPlaying || w.sprite.anims.currentAnim.key !== walkKey) {
+              w.sprite.play(walkKey);
+            }
+          } else {
+            const fallbackAnim = this.getOrCreateWalkAnim(w.baseTex, 4);
+            if (fallbackAnim && (!w.sprite.anims.isPlaying || w.sprite.anims.currentAnim.key !== fallbackAnim)) {
+              w.sprite.play(fallbackAnim);
+            }
+            // For 4-row sheets (like npc-walker2), Row 1 is natively Left and Row 2 is natively Right.
+            // Never flipX on 4-row character sheets to avoid reverse walking!
+            const isFourRowSheet = this.anims.exists(`${w.baseTex}-walk-down`);
+            if (!isFourRowSheet && Math.abs(dx) > 0.5) {
+              w.sprite.setFlipX(dx < 0);
+            }
+          }
+          w.badge.setPosition(w.x, w.y - w.sprite.height - 6).setDepth(w.y + 5);
         }
       });
     }
+
+    // 3. Update Enemy & Boss AI with Data-Driven Telegraphs, Poise & Parry
+    CombatSystem.updateEnemies(this, time, delta);
 
     if (UI.isOpen() || this.cutsceneLocked) {
       this.player.setVelocity(0, 0);
@@ -6850,9 +7289,21 @@ export class DhakaValleyScene extends Phaser.Scene {
 
       if (this.stepCounter > 250) {
         this.stepCounter = 0;
-        const onPier = DateState.currentWorld === 'dhaka' && px > 1550 && py >= 1290 && py <= 1350;
+        const onPier =
+          (DateState.currentWorld === 'dhaka' &&
+            ((px > 1550 && py >= 1290 && py <= 1360) ||
+             (px >= 1888 && px <= 2032 && py >= 768 && py <= 864))) ||
+          (DateState.currentWorld === 'farmhouse' && px >= 780 && px <= 848 && py >= 640 && py <= 680);
         const inPuddle = this.isRaining && this.puddles.some(p => Phaser.Math.Distance.Between(px, py, p.x, p.y) < 26);
-        const onPath = (py > 770 && py < 870) || (px > 430 && px < 530) || (px > 1470 && px < 1570);
+        const onPath =
+          (py > 768 && py < 864) ||
+          (px > 432 && px < 528 && py > 200 && py < 1480) ||
+          (px > 1472 && px < 1568 && py > 200 && py < 1460) ||
+          (px > 1012 && px < 1108 && py > 250 && py < 840) ||
+          (py > 278 && py < 362 && px > 460 && px < 1850) ||
+          (py > 490 && py < 550 && px > 1100 && px < 1480) ||
+          (py > 1298 && py < 1358 && px > 780 && px < 1480) ||
+          (px > 692 && px < 788 && py > 1360);
 
         if (inPuddle) {
           SoundEngine.step('puddle');
@@ -6873,11 +7324,31 @@ export class DhakaValleyScene extends Phaser.Scene {
       }
     }
 
+    // Player behaviors: dynamic breathing, footstep dust/splashes, idle quirks & rain parasol
+    if (this.playerBehaviors) {
+      this.playerBehaviors.update(time, delta, moving, pDir);
+    }
+
     // 5. Auto-trigger Ahona & Apshora Act I Ambush in Dhaka Valley
     if (DateState.currentWorld === 'dhaka' && DateState.totoroJoined && !DateState.bulliesDefeated && !this.cutsceneLocked && this.ahona) {
       if (Phaser.Math.Distance.Between(px, py, this.ahona.x + 24, this.ahona.y + 10) < 85) {
         this.interactAhonaApshora();
         return;
+      }
+    }
+
+    // 5.5. Auto-step through interior exit doorways/gates
+    if (!this.isTransitioning && !this.cutsceneLocked) {
+      if (DateState.currentWorld === 'curzon_interior') {
+        if (py >= 830 && Math.abs(px - 600) < 65) {
+          this.exitCurzonHall();
+          return;
+        }
+      } else if (DateState.currentWorld === 'farmhouse') {
+        if (py >= 830 && Math.abs(px - 600) < 65) {
+          this.exitFarmhouse();
+          return;
+        }
       }
     }
 
@@ -6975,9 +7446,15 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.promptBubble.setVisible(false);
     }
 
-    // Layer 0: Pokémon HGSS Vertical Water Reflections near Dhanmondi Lake
+    // Layer 0: Pokémon HGSS Vertical Water Reflections near Dhanmondi Lake, Canal & Lotus Ponds
     if (this.playerReflection) {
-      const nearLake = (DateState.currentWorld === 'dhaka' && px >= 1550 && px <= 2560 && py >= 1020 && py <= 1920);
+      const nearLake =
+        (DateState.currentWorld === 'dhaka' && (
+          (px >= 1420 && px <= 2420 && py >= 910 && py <= 1820) ||
+          (px >= 1840 && px <= 2100 && py >= 370 && py <= 930) ||
+          (px >= 1070 && px <= 1360 && py >= 1230 && py <= 1425)
+        )) ||
+        (DateState.currentWorld === 'farmhouse' && px >= 780 && px <= 1090 && py >= 555 && py <= 775);
       if (nearLake) {
         this.playerReflection.setVisible(true);
         this.playerReflection.setPosition(px + Math.sin(time * 0.004) * 2, py + 12);

@@ -34,6 +34,29 @@ export interface RecommendedDownloadSpecs {
   styleSearchTags: string[];
 }
 
+export interface AnimationEventDef {
+  frame: number;
+  type: 'hitbox_on' | 'hitbox_off' | 'sfx' | 'vfx' | 'shake' | 'spawn_projectile' | 'i_frames_on' | 'i_frames_off' | 'parry_window';
+  payload?: any;
+}
+
+export interface AnimationSpec {
+  name: string;
+  frameCount: number;
+  frameRate: number;
+  row?: number;
+  loop?: boolean;
+  events?: AnimationEventDef[];
+}
+
+export interface AssetSourceInfo {
+  author?: string;
+  url?: string;
+  license?: string;
+  date?: string;
+  provenance?: 'licensed' | 'cc0' | 'cc-by' | 'custom' | 'placeholder';
+}
+
 export interface AssetSpec {
   id: string;
   name: string;
@@ -43,6 +66,12 @@ export interface AssetSpec {
   fallbackProceduralKey: string;
   logicalGridFootprint: GridFootprint;
   recommendedDownloadSpecs: RecommendedDownloadSpecs;
+  hasAnimJson?: boolean;
+  hasExternalFile?: boolean;
+  anchor?: { x: number; y: number };
+  source?: AssetSourceInfo;
+  animations?: Record<string, AnimationSpec>;
+  attackRefs?: string[];
 }
 
 /**
@@ -107,6 +136,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'tileset',
     description: 'Open source CC-BY-SA 16x16 tile atlas auto-upscaled 2x to 32x32 for high-density ground diversity.',
     externalPath: 'assets/tilesets/PastTheFuture_Grass_Sand_Snow.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'dhaka-tileset-32',
     logicalGridFootprint: { cols: 16, rows: 16 },
     recommendedDownloadSpecs: {
@@ -123,6 +153,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'tileset',
     description: 'Classic 32x32 Japanese indie RPG maker base terrain and structural elements.',
     externalPath: 'assets/tilesets/pipo_BaseChip.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'dhaka-tileset-32',
     logicalGridFootprint: { cols: 16, rows: 32 },
     recommendedDownloadSpecs: {
@@ -139,6 +170,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'tileset',
     description: 'High-contrast 16-bit RPG outdoor foliage, fences, cliff ledges and river embankments.',
     externalPath: 'assets/tilesets/Outdoor_Tiles_by_Kelvin_Shadewing.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'dhaka-tileset-32',
     logicalGridFootprint: { cols: 16, rows: 20 },
     recommendedDownloadSpecs: {
@@ -155,6 +187,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'tileset',
     description: 'Lush bushes, reeds, water lilies, and decorative shrubbery.',
     externalPath: 'assets/tilesets/Vegetation_by_George.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'dhaka-tileset-32',
     logicalGridFootprint: { cols: 8, rows: 12 },
     recommendedDownloadSpecs: {
@@ -271,6 +304,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Joyful Ghibli-inspired heroine with amber-orange suspender skirt, pale yellow shirt, bob hair and parasol.',
     externalPath: 'assets/sprites/characters/moon_walker.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'player-0',
     logicalGridFootprint: {
       cols: 1,
@@ -291,6 +325,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'companion',
     description: 'Giant cuddly slate-sage forest spirit with cream chevron belly, bunny ears, chibi Totoro perched on head.',
     externalPath: 'assets/sprites/characters/totoro.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'totoro-0',
     logicalGridFootprint: {
       cols: 2,
@@ -311,6 +346,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Campus trendsetter in vibrant crimson-magenta Jamdani kurti, ivory quilted bag and emerald jhumkas.',
     externalPath: 'assets/sprites/characters/npc_ahona.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-ahona',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -327,6 +363,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'High-fashion socialite in royal violet silk kameez, rose-gold chiffon dupatta and metallic handbag.',
     externalPath: 'assets/sprites/characters/npc_apshora.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-apshora',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -343,6 +380,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Beloved tea vendor in checkered blue lungi and gamcha, boiling spiced cardamom milk tea.',
     externalPath: 'assets/sprites/characters/npc_tea_vendor.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-tea',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -359,6 +397,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Crispy puchka maker in green apron with spicy tamarind tok bowl and boiled potato mix.',
     externalPath: 'assets/sprites/characters/npc_fuchka_vendor.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-fuchka',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -375,6 +414,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Scholarly merchant surrounded by stacks of vintage novels, poetry, and academic texts.',
     externalPath: 'assets/sprites/characters/npc_book_vendor.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-books',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -391,6 +431,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Gentle flower weaver in magenta saree crafting fragrant white Jasmine & Beli garlands.',
     externalPath: 'assets/sprites/characters/npc_phulwali.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-phulwali',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -407,6 +448,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Charming campus musician in denim jacket with wooden acoustic guitar slung over shoulder.',
     externalPath: 'assets/sprites/characters/npc_rakin.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-rakin',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -423,6 +465,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Quiet literature scholar reading Kazi Nazrul and Tagore poems near Aparajeyo Bangla.',
     externalPath: 'assets/sprites/characters/npc_anamika.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-anamika',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -455,6 +498,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Warm elderly farmer in straw hat and plaid shirt tending heirloom crops and farm animals.',
     externalPath: 'assets/sprites/characters/npc_farmer_rafiq.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-farmer-rafiq-0',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -471,6 +515,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Ancient spirit elder of the Whispering Emerald Forest draped in living moss robes.',
     externalPath: 'assets/sprites/characters/npc_sage.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-sage',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -487,6 +532,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Guardian of the Sunken Kingdom adorned with glowing seafoam pearls and aquamarine coral.',
     externalPath: 'assets/sprites/characters/npc_marina.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-marina',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -503,6 +549,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Muscular volcanic blacksmith of Emberfall Highlands wielding a heavy obsidian forging hammer.',
     externalPath: 'assets/sprites/characters/npc_kael.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-kael',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -519,6 +566,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Star-watcher of the Kingdom of Eternal Frost bundled in fur cloak with a brass astrolabe.',
     externalPath: 'assets/sprites/characters/npc_lyra.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-lyra',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -535,6 +583,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Ascended cosmic entity recording historical memories across space and time.',
     externalPath: 'assets/sprites/characters/npc_chronicler.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-chronicler',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -551,6 +600,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Charming campus musician in denim jacket strumming acoustic melodies by TSC.',
     externalPath: 'assets/sprites/characters/npc_guitarist.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-guitar',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -567,6 +617,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Artisan sculpting terracotta pottery and painting traditional folk motifs.',
     externalPath: 'assets/sprites/characters/npc_clay_artist.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-artist',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -583,6 +634,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Friendly vendor serving sweet chilled Bogurar and Pabnar clay-pot yogurt.',
     externalPath: 'assets/sprites/characters/npc_doi_vendor.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-doi',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -599,6 +651,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Thoughtful young woman waiting near the Mintu Road fountain plaza.',
     externalPath: 'assets/sprites/characters/npc_salat.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-salat',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -615,6 +668,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Busy young professional balancing smartphone notifications and campus strolls.',
     externalPath: 'assets/sprites/characters/npc_enan.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-enan',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -631,6 +685,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Sorrowful spirit floating among the ancient banyans of the Whispering Emerald Forest.',
     externalPath: 'assets/sprites/characters/npc_ananya_ghost.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-ananya-ghost',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -647,6 +702,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Faithful spirit rickshaw puller navigating the marsh pathways of the Emerald Forest.',
     externalPath: 'assets/sprites/characters/npc_kofil_ghost.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-kofil-ghost',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -663,6 +719,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Dhaka University paranormal researcher tracking electromagnetic anomalies and the Nishi.',
     externalPath: 'assets/sprites/characters/npc_shamsher.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-shamsher-investigator',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -679,6 +736,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Physics undergraduate strolling along Fuller Road with notebooks and lab gear.',
     externalPath: 'assets/sprites/characters/npc_walker1.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-walker1',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -695,6 +753,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Enthusiastic fine arts student sketching campus landmarks in charcoal and watercolor.',
     externalPath: 'assets/sprites/characters/npc_walker2.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-walker2',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -711,6 +770,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Contemplative poet carrying vintage verse manuscripts through Nilkhet and Curzon.',
     externalPath: 'assets/sprites/characters/npc_walker3.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-walker3',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -727,6 +787,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Dhaka street photographer capturing candid portraits of campus life and lovers.',
     externalPath: 'assets/sprites/characters/npc_photo.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-photo',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -743,6 +804,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Athletic jogger doing morning laps along the Dhanmondi Lake wooden pier.',
     externalPath: 'assets/sprites/characters/npc_jogger.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-jogger',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -759,6 +821,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Distinguished physicist lecturing on quantum statistics in Curzon Hall Bose Lab.',
     externalPath: 'assets/sprites/characters/npc_prof_satyendra.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-prof-satyendra',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -775,6 +838,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Dedicated student verifying quantum optics experiments in Curzon Hall.',
     externalPath: 'assets/sprites/characters/npc_student_faiza.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-student-faiza',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -791,6 +855,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Renowned botanist cataloguing endemic medicinal flora in the Curzon Hall Herbarium.',
     externalPath: 'assets/sprites/characters/npc_prof_sultana.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-prof-sultana',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -807,6 +872,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Polymer chemistry researcher distilling rare botanical alkaloids in Curzon Hall.',
     externalPath: 'assets/sprites/characters/npc_dr_kabir.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-dr-kabir',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -823,6 +889,7 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'character',
     description: 'Diligent researcher running chromatography columns and brewing caffeine extracts.',
     externalPath: 'assets/sprites/characters/npc_student_tanvir.png',
+    hasExternalFile: true,
     fallbackProceduralKey: 'npc-student-tanvir',
     logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
     recommendedDownloadSpecs: {
@@ -1371,12 +1438,38 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'enemy',
     description: 'Mossy forest imp with bioluminescent spotted toadstool cap and thorny root feet.',
     externalPath: 'assets/sprites/enemies/briar_bogling.png',
+    hasExternalFile: true,
+    hasAnimJson: true,
     fallbackProceduralKey: 'enemy-slime',
     logicalGridFootprint: { cols: 2, rows: 2, collision: { widthTiles: 1.5, heightTiles: 1.2 } },
+    anchor: { x: 0.5, y: 0.88 },
+    source: {
+      author: 'OpenGameArt (Calciumtrice & cyberkrishna)',
+      url: 'https://opengameart.org/content/pixel-art-animated-slime',
+      license: 'CC0 1.0 Universal',
+      date: '2026-10-19',
+      provenance: 'cc0'
+    },
+    animations: {
+      idle: { name: 'idle', row: 0, frameCount: 4, frameRate: 4, loop: true },
+      walk: { name: 'walk', row: 1, frameCount: 4, frameRate: 6, loop: true },
+      attack: {
+        name: 'attack',
+        row: 2,
+        frameCount: 4,
+        frameRate: 8,
+        loop: false,
+        events: [
+          { frame: 1, type: 'hitbox_on' },
+          { frame: 3, type: 'hitbox_off' }
+        ]
+      },
+      stagger: { name: 'stagger', row: 3, frameCount: 4, frameRate: 6, loop: true }
+    },
     recommendedDownloadSpecs: {
       preferredFrameSize: { width: 64, height: 64 },
       acceptedNativeSizes: ['32x32 (auto-2x)', '54x54 (game.js fallback)', '64x64 (1:1)'],
-      sheetLayout: '2-4 frames: hopping squash-and-stretch animation cycle',
+      sheetLayout: '4 cols x 4 rows: Row 0=Idle, Row 1=Hop, Row 2=Leap Attack, Row 3=Squish Stagger',
       origin: { x: 0.5, y: 0.88 },
       styleSearchTags: ['forest slime sprite', 'mushroom imp monster', 'briar bogling', 'RPG nature creature']
     }
@@ -1439,16 +1532,42 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
     category: 'boss',
     description: 'Majestic forest guardian stag crowned with massive crystalline glowing antlers and emerald briars.',
     externalPath: 'assets/sprites/bosses/sylvan_briar_stag.png',
+    hasExternalFile: true,
+    hasAnimJson: true,
     fallbackProceduralKey: 'boss-stag',
     logicalGridFootprint: {
       cols: 4,
       rows: 4,
       collision: { widthTiles: 3.5, heightTiles: 2.5 }
     },
+    anchor: { x: 0.5, y: 0.9 },
+    source: {
+      author: 'Pokémon Showdown Gen 5 Animation Archive (Sawsbuck)',
+      url: 'https://play.pokemonshowdown.com/sprites/ani/sawsbuck.gif',
+      license: 'Fair Use / Fan Educational Game Asset Archive',
+      date: '2026-10-19',
+      provenance: 'licensed'
+    },
+    animations: {
+      idle: { name: 'idle', row: 0, frameCount: 4, frameRate: 4, loop: true },
+      walk: { name: 'walk', row: 1, frameCount: 4, frameRate: 5, loop: true },
+      attack: {
+        name: 'attack',
+        row: 2,
+        frameCount: 4,
+        frameRate: 6,
+        loop: false,
+        events: [
+          { frame: 1, type: 'hitbox_on' },
+          { frame: 3, type: 'hitbox_off' }
+        ]
+      },
+      stagger: { name: 'stagger', row: 3, frameCount: 4, frameRate: 5, loop: true }
+    },
     recommendedDownloadSpecs: {
       preferredFrameSize: { width: 128, height: 128 },
       acceptedNativeSizes: ['64x64 (auto-2x)', '112x112 (game.js fallback)', '128x128 (1:1)'],
-      sheetLayout: '2-4 frames: regal guardian breathing and hoof stomping cycle',
+      sheetLayout: '4 cols x 4 rows: Row 0=Idle, Row 1=Stride, Row 2=Antler Sweep, Row 3=Stagger/Hurt',
       origin: { x: 0.5, y: 0.9 },
       styleSearchTags: ['guardian stag boss', 'forest god deer', 'crystal antlers beast', 'Ghibli forest spirit boss']
     }
