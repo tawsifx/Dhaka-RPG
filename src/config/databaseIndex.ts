@@ -30,6 +30,41 @@ export interface SaveSlotRecord {
   volumes: { musicVol: number; sfxVol: number };
 }
 
+export interface PaginatedResult<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  startIndex: number;
+  endIndex: number;
+  hasPrev: boolean;
+  hasNext: boolean;
+}
+
+/**
+ * Generic O(1) slice paginator for any array or indexed collection.
+ */
+export function paginateList<T>(list: readonly T[], page = 1, pageSize = 6): PaginatedResult<T> {
+  const safePageSize = Math.max(1, Math.floor(pageSize));
+  const totalItems = list.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / safePageSize));
+  const safePage = Math.max(1, Math.min(Math.floor(page), totalPages));
+  const startIndex = (safePage - 1) * safePageSize;
+  const endIndex = Math.min(startIndex + safePageSize, totalItems);
+  return {
+    items: list.slice(startIndex, endIndex),
+    page: safePage,
+    pageSize: safePageSize,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    hasPrev: safePage > 1,
+    hasNext: safePage < totalPages
+  };
+}
+
 const IDB_NAME = 'dhaka_rpg_indexed_db';
 const IDB_VERSION = 1;
 
@@ -178,6 +213,49 @@ class GameDatabaseEngine {
 
   public getNpcsForMap(mapId: MapId): NpcScheduleDef[] {
     return this.npcsByScheduledMap.get(mapId) || [];
+  }
+
+  // Paginated In-Memory & IndexedDB Query Helpers
+  public paginate<T>(list: readonly T[], page = 1, pageSize = 6): PaginatedResult<T> {
+    return paginateList(list, page, pageSize);
+  }
+
+  public getItemsPaginated(page = 1, pageSize = 6, category?: string): PaginatedResult<ItemDef> {
+    const source = category && category !== 'all'
+      ? this.getItemsByCategory(category)
+      : Array.from(this.itemsById.values());
+    return paginateList(source, page, pageSize);
+  }
+
+  public getCropsPaginated(page = 1, pageSize = 6, season?: Season): PaginatedResult<CropDef> {
+    const source = season
+      ? this.getCropsForSeason(season)
+      : Array.from(this.cropsById.values());
+    return paginateList(source, page, pageSize);
+  }
+
+  public getRecipesPaginated(page = 1, pageSize = 6, materialId?: string): PaginatedResult<CraftRecipeDef> {
+    const source = materialId
+      ? this.getRecipesUsingMaterial(materialId)
+      : Array.from(this.recipesById.values());
+    return paginateList(source, page, pageSize);
+  }
+
+  public getNpcsPaginated(page = 1, pageSize = 6, mapId?: MapId): PaginatedResult<NpcScheduleDef> {
+    const source = mapId
+      ? this.getNpcsForMap(mapId)
+      : Array.from(this.npcsById.values());
+    return paginateList(source, page, pageSize);
+  }
+
+  public async queryCatalogPaginated(
+    indexName: 'by_table' | 'by_category' | 'by_map',
+    key: string,
+    page = 1,
+    pageSize = 6
+  ): Promise<PaginatedResult<CatalogRecord>> {
+    const all = await this.queryCatalogByIndex(indexName, key);
+    return paginateList(all, page, pageSize);
   }
 
   /**

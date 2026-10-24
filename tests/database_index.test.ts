@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { GameDB } from '../src/config/databaseIndex';
+import { GameDB, paginateList } from '../src/config/databaseIndex';
 
-describe('GameDB Indexed Database Engine', () => {
+describe('GameDB Indexed Database Engine & Pagination', () => {
   it('indexes all items by ID and category for O(1) lookup', () => {
     const cha = GameDB.getItem('cha');
     expect(cha).toBeDefined();
@@ -45,5 +45,29 @@ describe('GameDB Indexed Database Engine', () => {
     expect(GameDB.attacksById.size).toBeGreaterThan(0);
     const bossAttacks = GameDB.attacksBySource.get('boss') || [];
     expect(bossAttacks.length).toBeGreaterThan(0);
+  });
+
+  it('paginates large lists and database queries accurately', () => {
+    const sample = Array.from({ length: 16 }, (_, i) => `chapter_${i + 1}`);
+    const page1 = paginateList(sample, 1, 6);
+    expect(page1.items.length).toBe(6);
+    expect(page1.totalPages).toBe(3);
+    expect(page1.hasPrev).toBe(false);
+    expect(page1.hasNext).toBe(true);
+    expect(page1.startIndex).toBe(0);
+    expect(page1.endIndex).toBe(6);
+
+    const page3 = paginateList(sample, 3, 6);
+    expect(page3.items.length).toBe(4);
+    expect(page3.hasPrev).toBe(true);
+    expect(page3.hasNext).toBe(false);
+
+    const itemsPage = GameDB.getItemsPaginated(1, 5);
+    expect(itemsPage.items.length).toBe(5);
+    expect(itemsPage.totalItems).toBeGreaterThan(20);
+
+    const npcsPage = GameDB.getNpcsPaginated(2, 6, 'dhaka');
+    expect(npcsPage.page).toBe(2);
+    expect(npcsPage.items.length).toBe(6);
   });
 });

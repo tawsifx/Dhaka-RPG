@@ -13,6 +13,7 @@ import { SoundEngine } from '../audio/SoundEngine';
 import { ITEMS_DB } from '../config/items.db';
 import { CRAFT_RECIPES } from '../config/recipes.db';
 import { WORLDS_DB } from '../config/worlds.db';
+import { paginateList } from '../config/databaseIndex';
 
 export const UIController: any = (() => {
   const $: any = (id: string): any => (typeof document !== 'undefined' ? document.getElementById(id) : null);
@@ -25,6 +26,44 @@ export const UIController: any = (() => {
   let speakerPitch = 480;
   let speakerWave = 'sine';
   let currentTab = 'quests';
+
+  // Pagination & Filter state for large lists across modals
+  const pageState: Record<string, number> = {
+    questsMain: 1,
+    questsSide: 1,
+    inventory: 1,
+    crafting: 1,
+    map: 1,
+    jukebox: 1,
+    scrapbook: 1
+  };
+  let questFilter: 'all' | 'active' | 'done' = 'all';
+  let bagCatFilter = 'all';
+
+  function renderPaginationBar(key: string, page: number, totalPages: number, totalItems: number, startIdx: number, endIdx: number): string {
+    if (totalPages <= 1) return '';
+    return `
+      <div class="rpg-pagination-bar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:6px 10px;background:rgba(140,109,79,0.14);border:1.5px solid #bfa07a;border-radius:8px;font-size:0.8rem;">
+        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="-1" ${page <= 1 ? 'disabled' : ''} style="padding:4px 10px;opacity:${page <= 1 ? 0.45 : 1};" type="button">◀ Prev</button>
+        <span style="font-weight:700;color:#4a3525;">Page ${page} of ${totalPages} <small style="font-weight:500;opacity:0.8;">(${startIdx + 1}–${endIdx} of ${totalItems})</small></span>
+        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="1" ${page >= totalPages ? 'disabled' : ''} style="padding:4px 10px;opacity:${page >= totalPages ? 0.45 : 1};" type="button">Next ▶</button>
+      </div>
+    `;
+  }
+
+  function wirePaginationButtons(container: HTMLElement, onPageChange: () => void) {
+    container.querySelectorAll('.pg-nav-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const key = (btn as HTMLElement).dataset.pgKey;
+        const dir = parseInt((btn as HTMLElement).dataset.pgDir || '0', 10);
+        if (!key || !dir) return;
+        SoundEngine.select();
+        pageState[key] = Math.max(1, (pageState[key] || 1) + dir);
+        onPageChange();
+      });
+    });
+  }
 
   if (typeof document !== 'undefined') {
     const bgmBtn = $('btn-bgm');
@@ -342,11 +381,22 @@ export const UIController: any = (() => {
 
   function showScrapbook() {
     const grid = $('scrapbook-moments');
-    grid.innerHTML = DateState.memories.length
-      ? DateState.memories.map(m =>
+    if (!grid) return;
+    if (!DateState.memories.length) {
+      grid.innerHTML = `<p>Explore Dhaka Valley and the Six Realms with Totoro to fill your chronicle scrapbook!</p>`;
+    } else {
+      const pg = paginateList(DateState.memories, pageState.scrapbook, 6);
+      pageState.scrapbook = pg.page;
+      grid.innerHTML = `
+        ${pg.items.map(m =>
           `<div class="scrapbook-entry"><span>${m.emoji}</span><div><b>${m.title}</b><small>${m.note}</small></div></div>`
-        ).join('')
-      : `<p>Explore Dhaka Valley and the Six Realms with Totoro to fill your chronicle scrapbook!</p>`;
+        ).join('')}
+        <div style="grid-column: 1 / -1;">
+          ${renderPaginationBar('scrapbook', pg.page, pg.totalPages, pg.totalItems, pg.startIndex, pg.endIndex)}
+        </div>
+      `;
+      wirePaginationButtons(grid, showScrapbook);
+    }
     $('scrapbook-modal').hidden = false;
   }
 
@@ -406,34 +456,79 @@ export const UIController: any = (() => {
         { done: (DateState.itemCounts.frost_crystal || 0) >= 2, title: 'Side Quest: Starlight Glaciologist', desc: 'Collect at least 2 Permafrost Star Crystals in World 5.' }
       ];
 
+      const filterFn = (q: { done: boolean }) =>
+        questFilter === 'all' ? true : questFilter === 'done' ? Boolean(q.done) : !q.done;
+
+      const filteredMain = mainList.filter(filterFn);
+      const filteredSide = sideList.filter(filterFn);
+
+      const pgMain = paginateList(filteredMain, pageState.questsMain, 6);
+      pageState.questsMain = pgMain.page;
+
+      const pgSide = paginateList(filteredSide, pageState.questsSide, 6);
+      pageState.questsSide = pgSide.page;
+
       body.innerHTML = `
-        <h3 style="margin:0 0 8px;">🌟 Main Campaign Progression (${mainList.filter(q => q.done).length}/${mainList.length})</h3>
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+          <h3 style="margin:0;">🌟 Main Campaign (${mainList.filter(q => q.done).length}/${mainList.length})</h3>
+          <div style="display:flex;gap:6px;">
+            ${(['all', 'active', 'done'] as const).map(f => `
+              <button class="hud-btn q-filter-btn ${questFilter === f ? 'active' : ''}" data-qf="${f}" style="padding:3px 9px;font-size:0.75rem;" type="button">
+                ${f === 'all' ? 'All Quests' : f === 'active' ? '⏳ In Progress' : '✅ Completed'}
+              </button>
+            `).join('')}
+          </div>
+        </div>
         <div class="scrapbook-grid">
-          ${mainList.map(q => `
+          ${pgMain.items.length ? pgMain.items.map(q => `
             <div class="scrapbook-entry" style="border-color:${q.done ? '#2d8a56' : '#bfa07a'};background:${q.done ? '#e5f7ed' : '#f5e6ce'}">
               <span>${q.done ? '✅' : '⏳'}</span>
               <div><b>${q.title}</b><small>${q.desc}</small></div>
             </div>
-          `).join('')}
+          `).join('') : `<div class="scrapbook-entry"><small>No main quests match this filter.</small></div>`}
         </div>
-        <h3 style="margin:14px 0 8px;">🧭 Side Quests & Discoveries (${sideList.filter(q => q.done).length}/${sideList.length})</h3>
+        ${renderPaginationBar('questsMain', pgMain.page, pgMain.totalPages, pgMain.totalItems, pgMain.startIndex, pgMain.endIndex)}
+
+        <h3 style="margin:14px 0 8px;">🧭 Side Quests &amp; Discoveries (${sideList.filter(q => q.done).length}/${sideList.length})</h3>
         <div class="scrapbook-grid">
-          ${sideList.map(q => `
+          ${pgSide.items.length ? pgSide.items.map(q => `
             <div class="scrapbook-entry">
               <span>${q.done ? '🌟' : '📌'}</span>
               <div><b>${q.title}</b><small>${q.desc}</small></div>
             </div>
-          `).join('')}
+          `).join('') : `<div class="scrapbook-entry"><small>No side quests match this filter.</small></div>`}
         </div>
+        ${renderPaginationBar('questsSide', pgSide.page, pgSide.totalPages, pgSide.totalItems, pgSide.startIndex, pgSide.endIndex)}
       `;
+
+      body.querySelectorAll('.q-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          SoundEngine.select();
+          questFilter = ((btn as HTMLElement).dataset.qf as any) || 'all';
+          pageState.questsMain = 1;
+          pageState.questsSide = 1;
+          renderRPGTabBody();
+        });
+      });
+      wirePaginationButtons(body, renderRPGTabBody);
     } else if (currentTab === 'inventory') {
       const eqW = ITEMS_DB[DateState.equipped.weapon];
       const eqA = ITEMS_DB[DateState.equipped.armor];
       const eqAc = ITEMS_DB[DateState.equipped.accessory];
-      const ownedIds = Object.keys(DateState.itemCounts).filter(k => DateState.itemCounts[k] > 0);
+      const allOwnedIds = Object.keys(DateState.itemCounts).filter(k => DateState.itemCounts[k] > 0 && ITEMS_DB[k]);
+      const filteredIds = allOwnedIds.filter(id => {
+        if (bagCatFilter === 'all') return true;
+        const cat = ITEMS_DB[id]?.cat;
+        if (bagCatFilter === 'gear') return cat === 'weapon' || cat === 'armor' || cat === 'accessory';
+        if (bagCatFilter === 'materials') return cat === 'material' || cat === 'relic';
+        return cat === bagCatFilter;
+      });
+
+      const pgBag = paginateList(filteredIds, pageState.inventory, 6);
+      pageState.inventory = pgBag.page;
 
       body.innerHTML = `
-        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;background:#f3e3c9;padding:12px;border-radius:10px;border:2px solid #8c6d4f;margin-bottom:14px;">
+        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;background:#f3e3c9;padding:12px;border-radius:10px;border:2px solid #8c6d4f;margin-bottom:10px;">
           <div><b>Moon Walker (LV. ${DateState.level})</b> | HP: ${Math.ceil(DateState.hp)}/${DateState.maxHp} | SP: ${Math.ceil(DateState.sp)}/${DateState.maxSp}</div>
           <div><b>ATK:</b> ${RPGStats.getAtk()} | <b>DEF:</b> ${RPGStats.getDef()}</div>
           <div style="width:100%;font-size:0.88rem;">
@@ -442,8 +537,19 @@ export const UIController: any = (() => {
             <b>Accessory:</b> ${eqAc ? eqAc.emoji + ' ' + eqAc.name : 'None'}
           </div>
         </div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+          ${[
+            ['all', `All (${allOwnedIds.length})`],
+            ['keepsake', '🌺 Keepsakes'],
+            ['consumable', '🍵 Consumables'],
+            ['gear', '⚔️ Gear'],
+            ['materials', '💎 Materials & Relics']
+          ].map(([catKey, label]) => `
+            <button class="hud-btn bag-cat-btn ${bagCatFilter === catKey ? 'active' : ''}" data-bcat="${catKey}" style="padding:3px 9px;font-size:0.75rem;" type="button">${label}</button>
+          `).join('')}
+        </div>
         <div class="scrapbook-grid">
-          ${ownedIds.map(id => {
+          ${pgBag.items.length ? pgBag.items.map(id => {
             const it = ITEMS_DB[id];
             if (!it) return '';
             const count = DateState.itemCounts[id];
@@ -461,20 +567,33 @@ export const UIController: any = (() => {
                 <button class="hud-btn bag-act-btn" data-id="${id}" type="button">${actionLabel}</button>
               </div>
             `;
-          }).join('')}
+          }).join('') : `<div class="scrapbook-entry"><small>No items in this category yet.</small></div>`}
         </div>
+        ${renderPaginationBar('inventory', pgBag.page, pgBag.totalPages, pgBag.totalItems, pgBag.startIndex, pgBag.endIndex)}
       `;
+      body.querySelectorAll('.bag-cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          SoundEngine.select();
+          bagCatFilter = (btn as HTMLElement).dataset.bcat || 'all';
+          pageState.inventory = 1;
+          renderRPGTabBody();
+        });
+      });
       body.querySelectorAll('.bag-act-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           useOrInspectItem((btn as any).dataset.id);
           renderRPGTabBody();
         });
       });
+      wirePaginationButtons(body, renderRPGTabBody);
     } else if (currentTab === 'crafting') {
+      const pgCraft = paginateList(CRAFT_RECIPES, pageState.crafting, 4);
+      pageState.crafting = pgCraft.page;
+
       body.innerHTML = `
         <p style="margin-top:0;">Combine realm materials gathered from Worlds 2–6 to forge upgraded weapons, cloaks, and restorative TSC Malai Cha.</p>
         <div class="scrapbook-grid">
-          ${CRAFT_RECIPES.map(r => {
+          ${pgCraft.items.map(r => {
             const res = ITEMS_DB[r.result];
             const canCraft = Object.entries(r.reqs).every(([k, reqQty]) => (DateState.itemCounts[k] || 0) >= reqQty);
             return `
@@ -491,6 +610,7 @@ export const UIController: any = (() => {
             `;
           }).join('')}
         </div>
+        ${renderPaginationBar('crafting', pgCraft.page, pgCraft.totalPages, pgCraft.totalItems, pgCraft.startIndex, pgCraft.endIndex)}
       `;
       body.querySelectorAll('.craft-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -503,11 +623,16 @@ export const UIController: any = (() => {
           renderRPGTabBody();
         });
       });
+      wirePaginationButtons(body, renderRPGTabBody);
     } else if (currentTab === 'map') {
+      const worldsList = Object.values(WORLDS_DB);
+      const pgMap = paginateList(worldsList, pageState.map, 4);
+      pageState.map = pgMap.page;
+
       body.innerHTML = `
         <p style="margin-top:0;">Fast-travel between any unlocked realm. (Tip: You can also unlock all 6 realms immediately if you want to tour every world right away!)</p>
         <div class="scrapbook-grid">
-          ${Object.values(WORLDS_DB).map(w => {
+          ${pgMap.items.map(w => {
             const unlocked = DateState.unlockedWorlds.includes(w.id);
             const active = DateState.currentWorld === w.id;
             return `
@@ -521,6 +646,7 @@ export const UIController: any = (() => {
             `;
           }).join('')}
         </div>
+        ${renderPaginationBar('map', pgMap.page, pgMap.totalPages, pgMap.totalItems, pgMap.startIndex, pgMap.endIndex)}
       `;
       body.querySelectorAll('.warp-world-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -532,10 +658,13 @@ export const UIController: any = (() => {
           }
         });
       });
+      wirePaginationButtons(body, renderRPGTabBody);
     } else if (currentTab === 'system') {
       const vols = SoundEngine.getVolumes();
       const currTrack = SoundEngine.getCurrentTrack();
-      const allTracks = SoundEngine.getAllTracks();
+      const allTracks = Object.values(SoundEngine.getAllTracks());
+      const pgJukebox = paginateList(allTracks, pageState.jukebox, 4);
+      pageState.jukebox = pgJukebox.page;
       const autoTheme = SoundEngine.isAutoThemeEnabled();
 
       body.innerHTML = `
@@ -548,7 +677,7 @@ export const UIController: any = (() => {
             </div>
           </div>
 
-          <!-- Ghibli & Realm Jukebox -->
+          <!-- Ghibli & Realm Jukebox (Paginated) -->
           <div class="scrapbook-entry" style="flex-direction:column;gap:8px;background:rgba(20,14,10,0.5);">
             <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
               <div><b>📻 Ghibli &amp; Realm Jukebox</b><small>Select BGM tracks or let the game adapt to your location.</small></div>
@@ -567,12 +696,15 @@ export const UIController: any = (() => {
             </div>
 
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;box-sizing:border-box;margin-top:2px;">
-              ${Object.values(allTracks).map(t => `
+              ${pgJukebox.items.map(t => `
                 <button class="hud-btn sys-track-btn ${t.id === currTrack.id ? 'active' : ''}" data-tid="${t.id}" style="font-size:11px;text-align:left;padding:6px 8px;display:flex;flex-direction:column;gap:2px;" type="button">
                   <span style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.title.split('—')[0].trim()}</span>
                   <span style="font-size:9px;opacity:0.85;">${t.badge}</span>
                 </button>
               `).join('')}
+            </div>
+            <div style="width:100%;">
+              ${renderPaginationBar('jukebox', pgJukebox.page, pgJukebox.totalPages, pgJukebox.totalItems, pgJukebox.startIndex, pgJukebox.endIndex)}
             </div>
           </div>
 
@@ -600,6 +732,7 @@ export const UIController: any = (() => {
           if (autoCheckbox) (autoCheckbox as any).checked = false;
         });
       });
+      wirePaginationButtons(body, renderRPGTabBody);
 
       body.querySelector('#sys-auto-bgm')?.addEventListener('change', (e) => {
         SoundEngine.select();
