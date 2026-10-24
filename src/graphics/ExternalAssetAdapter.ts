@@ -390,15 +390,16 @@ export class ExternalAssetAdapter {
     });
 
     // 4. Player & Totoro specific walk animation bindings
+    // Use Row 0 step frames (step-0..3) rather than directional row idle textures (0=down, 1=left, 2=right, 3=up)
     if (id === 'player') {
       if (scene.anims.exists('player-walk')) scene.anims.remove('player-walk');
       scene.anims.create({
         key: 'player-walk',
         frames: [
-          { key: 'player-0' },
-          { key: 'player-1' },
-          { key: 'player-2' },
-          { key: 'player-3' }
+          { key: 'player-step-0' },
+          { key: 'player-step-1' },
+          { key: 'player-step-2' },
+          { key: 'player-step-3' }
         ],
         frameRate: 6,
         repeat: -1
@@ -418,10 +419,10 @@ export class ExternalAssetAdapter {
       scene.anims.create({
         key: 'totoro-walk',
         frames: [
-          { key: 'totoro-0' },
-          { key: 'totoro-1' },
-          { key: 'totoro-2' },
-          { key: 'totoro-3' }
+          { key: 'totoro-step-0' },
+          { key: 'totoro-step-1' },
+          { key: 'totoro-step-2' },
+          { key: 'totoro-step-3' }
         ],
         frameRate: 4,
         repeat: -1
