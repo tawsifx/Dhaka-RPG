@@ -1,8 +1,13 @@
 .vercel
+.wrangler
 .env
 .env.*
 node_modules
 .env*
+.dev.vars
+.dev.vars*
+*.pem
+*.key
+*secret*
 dist
 tools/
-

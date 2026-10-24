@@ -7,8 +7,11 @@
 
 ## Deployment & Infrastructure
 - **Dual Deployment Targets**: This project deploys simultaneously to both **Vercel** and **Cloudflare Pages** (`moon-walkers-day`).
+- **Secret & API Key Protection (Never Push Secrets)**:
+  - Never hardcode API keys, tokens (`TELEGRAM_BOT_TOKEN`, Cloudflare/Vercel tokens, etc.), or credentials in any source, config, or script file.
+  - Before running `git add` / `git commit` / `git push`, always inspect `git status --short` and scan staged diffs (`git diff --cached`) to verify that no `.env*`, `.dev.vars`, `*.pem`, `*.key`, or secret strings are staged. If any secret is detected, unstage/redact it immediately before committing.
 - **Mandatory Post-Edit Push & Deployment**: Every time you finish making any edit to the project (and verify the build passes), you **must** automatically:
-  1. Stage, commit, and push the changes to **GitHub** (`git add -A && git commit -m "<descriptive message>" && git push`).
+  1. Verify no API keys or secrets are present in modified/untracked files, then stage, commit, and push the changes to **GitHub** (`git add -A && git commit -m "<descriptive message>" && git push`).
   2. Deploy to **Cloudflare Pages** (`npm run deploy:cf`).
   3. Deploy to **Vercel** (`npx vercel --prod --yes`).
 - **Preserve Deployment Tooling**:
