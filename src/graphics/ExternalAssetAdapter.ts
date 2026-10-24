@@ -128,20 +128,38 @@ export class ExternalAssetAdapter {
 
     let workingKey = extKey;
 
+    if (spec.category === 'character' || spec.category === 'companion') {
+      const cleanedKey = `${id}-defringed`;
+      const cleanCanvas = scene.textures.exists(cleanedKey)
+        ? (scene.textures.get(cleanedKey) as any)
+        : scene.textures.createCanvas(cleanedKey, nativeW, nativeH);
+
+      if (cleanCanvas && cleanCanvas.getContext) {
+        const cCtx = cleanCanvas.getContext();
+        cCtx.imageSmoothingEnabled = false;
+        cCtx.clearRect(0, 0, nativeW, nativeH);
+        cCtx.drawImage(img, 0, 0, nativeW, nativeH);
+        this.defringeSpriteSheetCanvas(cCtx, nativeW, nativeH);
+        cleanCanvas.refresh();
+        workingKey = cleanedKey;
+      }
+    }
+
     if (needs2x) {
       const upscaledKey = `${id}-upscaled-2x`;
       const upW = nativeW * 2;
       const upH = nativeH * 2;
+      const srcImg = scene.textures.get(workingKey)?.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
 
       let upCanvas = scene.textures.exists(upscaledKey)
         ? (scene.textures.get(upscaledKey) as any)
         : scene.textures.createCanvas(upscaledKey, upW, upH);
 
-      if (upCanvas) {
+      if (upCanvas && srcImg) {
         const ctx = upCanvas.getContext();
         ctx.imageSmoothingEnabled = false; // Nearest-neighbor sharp pixel scaling
         ctx.clearRect(0, 0, upW, upH);
-        ctx.drawImage(img, 0, 0, upW, upH);
+        ctx.drawImage(srcImg, 0, 0, upW, upH);
         upCanvas.refresh();
         workingKey = upscaledKey;
         console.log(`🔍 [ExternalAssetAdapter] Upscaled "${id}" 2x nearest-neighbor (${nativeW}x${nativeH} -> ${upW}x${upH}).`);
@@ -158,6 +176,97 @@ export class ExternalAssetAdapter {
     } else {
       // Register primary key alias so scene.add.sprite(x, y, id) resolves directly
       this.createTextureAlias(scene, id, workingKey);
+    }
+  }
+
+  /**
+   * Removes residual white/light-grey background-removal border pixels sitting outside
+   * dark character/companion outlines while preserving interior sclera/clothing pixels.
+   */
+  private static defringeSpriteSheetCanvas(
+    ctx: CanvasRenderingContext2D,
+    width: number,
+    height: number
+  ): void {
+    if (typeof ctx.getImageData !== 'function' || typeof ctx.putImageData !== 'function') return;
+    const imgData = ctx.getImageData(0, 0, width, height);
+    const data = imgData.data;
+    if (!data || data.length < width * height * 4) return;
+
+    const total = width * height;
+    const isCand = new Uint8Array(total);
+    const isDark = new Uint8Array(total);
+    const isTrans = new Uint8Array(total);
+
+    for (let i = 0; i < total; i++) {
+      const idx = i * 4;
+      const a = data[idx + 3];
+      if (a === 0) {
+        isTrans[i] = 1;
+        continue;
+      }
+      const r = data[idx];
+      const g = data[idx + 1];
+      const b = data[idx + 2];
+      const lum = (r + g + b) / 3;
+      const sat = Math.max(r, g, b) - Math.min(r, g, b);
+      if (lum < 80) {
+        isDark[i] = 1;
+      } else if (lum >= 115 && sat <= 25) {
+        isCand[i] = 1;
+      }
+    }
+
+    let modified = false;
+    for (let pass = 0; pass < 2; pass++) {
+      const toClear: number[] = [];
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const i = y * width + x;
+          if (!isCand[i]) continue;
+
+          let touchesTrans = false;
+          let touchesDark = false;
+          let touchesInterior = false;
+
+          const neighbors = [
+            y > 0 ? (y - 1) * width + x : -1,
+            y < height - 1 ? (y + 1) * width + x : -1,
+            x > 0 ? y * width + (x - 1) : -1,
+            x < width - 1 ? y * width + (x + 1) : -1
+          ];
+
+          for (const ni of neighbors) {
+            if (ni === -1 || isTrans[ni]) {
+              touchesTrans = true;
+            } else if (isDark[ni]) {
+              touchesDark = true;
+            } else if (!isCand[ni]) {
+              touchesInterior = true;
+            }
+          }
+
+          if (touchesTrans && touchesDark && !touchesInterior) {
+            toClear.push(i);
+          }
+        }
+      }
+
+      if (toClear.length === 0) break;
+      modified = true;
+      for (const i of toClear) {
+        isCand[i] = 0;
+        isTrans[i] = 1;
+        const idx = i * 4;
+        data[idx] = 0;
+        data[idx + 1] = 0;
+        data[idx + 2] = 0;
+        data[idx + 3] = 0;
+      }
+    }
+
+    if (modified) {
+      ctx.putImageData(imgData, 0, 0);
     }
   }
 
