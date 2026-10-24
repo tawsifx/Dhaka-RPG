@@ -9,12 +9,40 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
     target: 'es2022',
-    rollupOptions: {
+    chunkSizeWarningLimit: 1250,
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/phaser')) {
-            return 'phaser';
-          }
+        codeSplitting: {
+          groups: [
+            {
+              name: 'phaser',
+              test: /node_modules[\\/]phaser/
+            },
+            {
+              name: 'graphics-characters',
+              test: /src[\\/]graphics[\\/]CharacterSpriteGenerator/
+            },
+            {
+              name: 'graphics-creatures',
+              test: /src[\\/]graphics[\\/]CreatureSpriteGenerator/
+            },
+            {
+              name: 'graphics-world',
+              test: /src[\\/]graphics[\\/](GroundTileGenerator|LandmarkGenerator|TextureGenerator|ExternalAssetAdapter)/
+            },
+            {
+              name: 'game-db',
+              test: /src[\\/]config[\\/]/
+            },
+            {
+              name: 'game-systems',
+              test: /src[\\/](systems|audio|ui|state|debug)[\\/]/
+            },
+            {
+              name: 'scene-dhaka',
+              test: /src[\\/]scenes[\\/]DhakaValleyScene/
+            }
+          ]
         }
       }
     }

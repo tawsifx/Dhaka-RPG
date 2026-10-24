@@ -1,6 +1,8 @@
 // src/main.ts - Application entry point & Phaser.Game bootstrap
 import Phaser from 'phaser';
 import { DhakaValleyScene } from './scenes/DhakaValleyScene';
+import { GameDB } from './config/databaseIndex';
+import { SaveManager } from './state/SaveManager';
 import './style.css';
 
 const config: Phaser.Types.Core.GameConfig = {
@@ -24,6 +26,17 @@ const config: Phaser.Types.Core.GameConfig = {
 let game: Phaser.Game | null = null;
 
 function bootGame() {
+  // Initialize IndexedDB catalog & hydrate any saved state in the background
+  GameDB.initIndexedDB().catch(() => {});
+  if (!SaveManager.hasSave()) {
+    SaveManager.loadFromIndexedDB('primary').then(restored => {
+      if (restored && typeof document !== 'undefined') {
+        const contBtn = document.getElementById('btn-title-continue') as HTMLButtonElement | null;
+        if (contBtn) contBtn.hidden = false;
+      }
+    }).catch(() => {});
+  }
+
   if (!game) {
     game = new Phaser.Game(config);
     if (typeof window !== 'undefined') {

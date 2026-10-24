@@ -1,6 +1,7 @@
 // src/systems/ScheduleSystem.ts - Living-World NPC Behavior Engine Orchestrator
 import Phaser from 'phaser';
 import { SoundEngine } from '../audio/SoundEngine';
+import { GameDB } from '../config/databaseIndex';
 import { NPC_SCHEDULES_DB } from '../config/npcSchedules.db';
 import { WORLDS_DB } from '../config/worlds.db';
 import { NpcDebugOverlay } from '../debug/NpcDebugOverlay';
@@ -296,9 +297,10 @@ export class ScheduleSystem {
       activeOverride: DateState.npcOverrides ? DateState.npcOverrides[worldId] : null
     };
 
-    // Filter which NPCs should currently appear on this map
-    Object.keys(NPC_SCHEDULES_DB).forEach(id => {
-      const def = NPC_SCHEDULES_DB[id];
+    // Filter which NPCs should currently appear on this map using the O(1) map index
+    const candidateNpcs = GameDB.getNpcsForMap(worldId);
+    const listToCheck = candidateNpcs.length > 0 ? candidateNpcs : Object.values(NPC_SCHEDULES_DB);
+    listToCheck.forEach(def => {
       const placement = this.simulator.simulatePlacement(def, ctx);
 
       if (placement.map === worldId) {
