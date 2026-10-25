@@ -640,7 +640,7 @@ In response to user requests for sleek, modern game aesthetics, all in-game head
 1. **Modern Typography Engine (`Rajdhani` & `Chakra Petch`)**:
    - Integrated Google Fonts **`Rajdhani:wght@500;600;700`** (primary UI & in-game typography) and **`Chakra Petch:wght@500;600;700`** in `index.html`.
    - Injected a hidden DOM font pre-warmer into `index.html` to force browser font glyph rasterization before Phaser initializes WebGL canvas textures, eliminating font fallback snapping.
-2. **Top HUD Headbar Upgrades (`style.css` & `src/style.css`)**:
+2. **Top HUD Headbar Upgrades (`src/style.css`)**:
    - `#hud-zone` / `.hud-row`: `font-family: 'Rajdhani', sans-serif`, `1.15rem`, `font-weight: 700`, uppercase with `1.2px` letter-spacing and golden atmospheric text glow (`text-shadow: 0 0 10px rgba(247, 203, 69, 0.35)`).
    - `#hud-time` / `.hud-subrow`: `font-family: 'Rajdhani', 'Plus Jakarta Sans', sans-serif`, `0.88rem`, `font-weight: 600`, `letter-spacing: 0.6px`.
    - `#hud-level` / `.stat-top`: `font-family: 'Rajdhani', sans-serif`, `0.98rem`, `font-weight: 700`, uppercase.

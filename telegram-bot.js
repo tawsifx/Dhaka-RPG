@@ -281,8 +281,8 @@ async function handleMediaDownload(msg) {
 
   if (!fileId) return null;
 
-  // Ensure assets destination directory exists
-  const targetDir = path.join(__dirname, 'assets', targetSubdir);
+  // Ensure public/assets destination directory exists
+  const targetDir = path.join(__dirname, 'public', 'assets', targetSubdir);
   fs.mkdirSync(targetDir, { recursive: true });
 
   // Download via Telegram Bot API
