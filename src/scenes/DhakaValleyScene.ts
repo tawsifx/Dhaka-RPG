@@ -127,8 +127,8 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     this.anims.create({
       key: 'anim-doicart',
-      frames: [{ key: 'prop-doicart-0' }, { key: 'prop-doicart-1' }],
-      frameRate: 2.5,
+      frames: [{ key: 'prop-doicart-0' }, { key: 'prop-doicart-1' }, { key: 'prop-doicart-2' }, { key: 'prop-doicart-3' }],
+      frameRate: 3,
       repeat: -1
     });
 

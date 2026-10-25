@@ -1752,13 +1752,13 @@ export class LandmarkGenerator {
      * @grid-footprint 6x3 tiles (192x96px solid collision base)
      * @visual-size 224x160px (or 112x80px native pixel art upscaled 2x)
      * @origin 0.5, 0.88
-     * @frames 2 horizontal frames (earthen pots display & awning)
+     * @frames 4 horizontal frames (earthen pots display, rising vapor & gentle awning flutter)
      */
-    makeTex('prop-doicart', 216, 152, ctx => {
+    const drawDoiCartTexture = (ctx: CanvasRenderingContext2D, frame = 0) => {
       const W = 216, H = 152;
       let seed = 778899;
       const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
-      const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+      const R = (x: number, y: number, w: number, h: number, c: string) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
 
       // 1. Ambient Ground Shadow
       ctx.fillStyle = 'rgba(12, 8, 20, 0.32)';
@@ -1773,7 +1773,7 @@ export class LandmarkGenerator {
       R(38, 124, 5, 16, '#5c3822');
       R(156, 124, 5, 16, '#5c3822');
 
-      const drawCartWheel = (wx, wy, r) => {
+      const drawCartWheel = (wx: number, wy: number, r: number) => {
         ctx.fillStyle = 'rgba(0,0,0,0.35)';
         ctx.beginPath(); ctx.ellipse(wx, wy + r, r * 0.9, 3.5, 0, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#6e472b'; ctx.lineWidth = 2;
@@ -1825,6 +1825,7 @@ export class LandmarkGenerator {
       R(20, 83, 160, 2, '#ffffff');
       R(20, 88, 160, 1.5, '#495057');
 
+      // 4 Sturdy Support Pillars (Never removed or flickering across animation!)
       [26, 78, 128, 170].forEach(px => {
         R(px, 32, 4, 52, '#ced4da');
         R(px, 32, 1.5, 52, '#ffffff');
@@ -1833,26 +1834,41 @@ export class LandmarkGenerator {
         }
       });
 
-      // 5. Left Station: Stacked Earthen Pots (Matir Paan) of Bogurar Mishti Doi
-      const drawDoiPot = (px, py) => {
+      // 5. Left Station: Stacked Earthen Pots (Matir Paan / Matir Haari) of Bogurar Mishti Doi
+      const drawDoiPot = (px: number, py: number, isTop = false) => {
         ctx.fillStyle = '#b5542c';
         ctx.beginPath(); ctx.ellipse(px, py, 6.5, 5.2, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#d97757';
         ctx.beginPath(); ctx.ellipse(px, py - 1, 5.5, 4.2, 0, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#fff3d1'; // Caramelized golden yogurt skin on top
         ctx.beginPath(); ctx.ellipse(px, py - 1, 4.5, 2, 0, 0, Math.PI * 2); ctx.fill();
+        if (isTop) {
+          // Subtle appetizing golden glint on the top yogurt pot
+          const glintShift = (frame % 2 === 0) ? 0 : 0.5;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+          ctx.fillRect(px - 2 + glintShift, py - 2, 1.5, 1);
+        }
       };
       // Pyramid of mishti doi pots
       [36, 44, 52].forEach(px => drawDoiPot(px, 78));
       [40, 48].forEach(px => drawDoiPot(px, 69));
-      drawDoiPot(44, 60);
+      drawDoiPot(44, 60, true);
+
+      // Cool gentle condensation mist rising from chilled clay pots
+      const mistShiftDoi = (frame % 4) * 1.5;
+      ctx.strokeStyle = (frame % 2 === 0) ? 'rgba(230, 245, 255, 0.40)' : 'rgba(230, 245, 255, 0.20)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(42, 57 - mistShiftDoi);
+      ctx.bezierCurveTo(40, 52 - mistShiftDoi, 46, 48 - mistShiftDoi, 43, 42 - mistShiftDoi);
+      ctx.stroke();
 
       // 6. Center Station: Glass Showcase with Rosogolla, Sandesh & Chomchom
       R(66, 48, 56, 35, 'rgba(210, 245, 255, 0.30)');
       R(65, 46, 58, 3, '#c28b38');
       R(65, 83, 58, 2.5, '#c28b38');
 
-      // Colorful Sweetmeats inside glass showcase
+      // Colorful Sweetmeats inside glass showcase (deterministic coordinates!)
       const sweetCols = ['#fff5de', '#f7cb45', '#d97757', '#b5542c', '#e63946'];
       for (let sy = 78; sy >= 56; sy -= 5) {
         for (let sx = 72; sx <= 114; sx += 6) {
@@ -1866,6 +1882,15 @@ export class LandmarkGenerator {
         }
       }
 
+      // Smooth diagonal glass showcase reflection gleam
+      const glassGleamX = 70 + ((frame * 12) % 48);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(glassGleamX, 50);
+      ctx.lineTo(glassGleamX - 8, 80);
+      ctx.stroke();
+
       // 7. Right Station: Big Stainless Steel Pot of Chilled Rose-Water Lassi & Wooden Churner
       ctx.fillStyle = '#ced4da';
       ctx.beginPath(); ctx.ellipse(152, 75, 11, 9, 0, 0, Math.PI * 2); ctx.fill();
@@ -1873,14 +1898,30 @@ export class LandmarkGenerator {
       ctx.beginPath(); ctx.ellipse(150, 74, 9, 7.5, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fceade'; // Chilled pinkish-white rose lassi surface
       ctx.beginPath(); ctx.ellipse(150, 68, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
-      // Wooden lassi churner (mathani) resting in the pot
+
+      // Wooden lassi churner (mathani) resting in the pot with subtle realistic hand-churn rocking
+      const churnAngle = Math.sin((frame * Math.PI) / 2) * 1.8;
       ctx.strokeStyle = '#8c583a'; ctx.lineWidth = 2.2;
-      ctx.beginPath(); ctx.moveTo(150, 68); ctx.lineTo(154, 54); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(150, 68);
+      ctx.lineTo(154 + churnAngle, 54);
+      ctx.stroke();
       ctx.fillStyle = '#6e3f23';
-      ctx.fillRect(151, 52, 6, 3);
+      ctx.fillRect(151 + churnAngle, 52, 6, 3);
+
+      // Refreshing cool chilled lassi vapor wisps rising smoothly
+      const lassiVaporShift = (frame % 4) * 2;
+      ctx.strokeStyle = (frame % 2 === 0) ? 'rgba(224, 242, 254, 0.55)' : 'rgba(224, 242, 254, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(148, 65 - lassiVaporShift);
+      ctx.bezierCurveTo(145, 57 - lassiVaporShift, 151, 52 - lassiVaporShift, 147, 44 - lassiVaporShift);
+      ctx.moveTo(154, 63 - lassiVaporShift);
+      ctx.bezierCurveTo(158, 55 - lassiVaporShift, 152, 50 - lassiVaporShift, 156, 42 - lassiVaporShift);
+      ctx.stroke();
 
       // Two Ready-to-Serve Tall Glass Tumblers of Lassi with Pistachio Garnish
-      [174, 184].forEach((gx, i) => {
+      [174, 184].forEach((gx) => {
         R(gx, 68, 5, 13, 'rgba(255, 240, 245, 0.65)');
         R(gx, 77, 5, 4, '#fceade'); // Lassi liquid
         R(gx + 1, 67, 3, 1, '#2d6a4f'); // Crushed pistachios on top
@@ -1892,12 +1933,14 @@ export class LandmarkGenerator {
       for (let i = 0; i < stripes; i++) {
         const ax = 18 + i * sw;
         const isYellow = i % 2 === 0;
+        // Subtle breeze flutter on alternate awning scallops
+        const flutter = (i % 2 === 0 && frame % 2 === 1) ? 0.8 : 0;
         ctx.fillStyle = isYellow ? '#f7cb45' : '#c28b38';
         ctx.beginPath();
         ctx.moveTo(ax + 2, 17);
         ctx.lineTo(ax + sw + 2, 17);
-        ctx.lineTo(ax + sw, 33);
-        ctx.lineTo(ax, 33);
+        ctx.lineTo(ax + sw, 33 + flutter);
+        ctx.lineTo(ax, 33 + flutter);
         ctx.closePath(); ctx.fill();
 
         ctx.fillStyle = isYellow ? '#ffe680' : '#d99e48';
@@ -1905,7 +1948,7 @@ export class LandmarkGenerator {
 
         ctx.fillStyle = isYellow ? '#a67220' : '#8c583a';
         ctx.beginPath();
-        ctx.arc(ax + sw / 2, 33, sw / 2, 0, Math.PI);
+        ctx.arc(ax + sw / 2, 33 + flutter, sw / 2, 0, Math.PI);
         ctx.fill();
       }
       R(18, 32, 164, 1.5, '#78351f');
@@ -1919,6 +1962,11 @@ export class LandmarkGenerator {
       ctx.font = 'bold 7.5px "Press Start 2P", monospace';
       ctx.textAlign = 'center';
       ctx.fillText('MISHTI DOI & LASSI', 100, 12.5);
+    };
+
+    makeTex('prop-doicart', 216, 152, ctx => drawDoiCartTexture(ctx, 0));
+    [0, 1, 2, 3].forEach(frame => {
+      makeTex(`prop-doicart-${frame}`, 216, 152, ctx => drawDoiCartTexture(ctx, frame));
     });
 
     /**

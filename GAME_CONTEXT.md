@@ -851,6 +851,26 @@ To eliminate repetitive opening interactions when reloading the game, a dynamic 
    - `__openingDialogue.next(context)`: Evaluates and selects the next scenario.
    - `__openingDialogue.reset()`: Clears session history.
 
+### 10.19 Pabna Mishti Doi & Lassi Cart Animation & Architectural Refactor
+To resolve visual glitching, screen-tearing, and missing structural pillars on the Mishti Doi Cart (`prop-doicart`):
+1. **Root-Cause Analysis**:
+   - `CharacterSpriteGenerator.ts` contained an outdated, partial 2-frame renderer (`prop-doicart-0`, `prop-doicart-1`) that registered before `LandmarkGenerator.ts`.
+   - The partial renderer omitted the 4 stainless steel/brass support pillars (`[26, 78, 128, 170]`), causing the roof canopy to disconnect and float in empty air as soon as `anim-doicart` started.
+   - The animation relied on horizontal pixel-shifting of sweetmeat dots (`sx + frame`) and the lassi ellipse (`150 + frame`), which caused severe 1px flickering/jitter that appeared as graphical glitches.
+   - `LandmarkGenerator.ts` held the complete high-fidelity static texture for `prop-doicart` but lacked animated frames.
+2. **Unified 4-Frame Atmospheric Animation (`LandmarkGenerator.ts`)**:
+   - Removed the broken duplicate from `CharacterSpriteGenerator.ts`.
+   - Unified all generations under `drawDoiCartTexture(ctx, frame = 0..3)` in `LandmarkGenerator.ts`, creating `prop-doicart`, `prop-doicart-0`, `prop-doicart-1`, `prop-doicart-2`, and `prop-doicart-3`.
+   - **4 Solid Support Pillars**: Permanently anchored in all frames.
+   - **Old Dhaka Folk Swirl Panels**: Ornate terracotta and gold sweetmeat motifs intact.
+   - **Cool Condensation Wisps**: Delicate chilled vapor (`rgba(224, 242, 254, 0.55)`) smoothly wafting upward from the iced Lassi vat and earthen Mishti Doi pots using bezier curves.
+   - **Lassi Churner (*Mathani*) Motion**: Subtle hand-churn rocking motion (`Math.sin(frame * PI / 2) * 1.8px`) on the wooden churner handle.
+   - **Glass Showcase Shimmer & Creamy Glint**: Smooth diagonal specular glint traversing the sweet showcase, plus appetizing golden sheen on the top Bogurar Mishti Doi pot.
+   - **Awning Scallop Breeze**: Subtle 0.8px Dhaka breeze flutter across alternating awning scallops.
+3. **Phaser Animation Update (`DhakaValleyScene.ts`)**:
+   - Updated `anim-doicart` to cycle across 4 frames (`prop-doicart-0` through `prop-doicart-3`) at 3 fps (`repeat: -1`), delivering smooth, flicker-free rendering.
+
+
 ---
 
 ## 11. Audio Pipeline & SoundEngine Architecture

@@ -1742,51 +1742,8 @@ export class CharacterSpriteGenerator {
       makeTex(`prop-bookstall-${frame}`, 216, 152, ctx => drawBookstallTexture(ctx, frame));
     });
 
-    // --- Animated Mishti Doi Cart (2 Frames: -0, -1 with Glancing Lassi Surface) ---
-    [0, 1].forEach(frame => {
-      makeTex(`prop-doicart-${frame}`, 216, 152, (ctx, cw, ch) => {
-        const W = 216, H = 152;
-        const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+    // Note: Mishti Doi Cart textures (prop-doicart, prop-doicart-0..3) are generated with complete 4-frame animation in LandmarkGenerator.ts
 
-        ctx.fillStyle = 'rgba(12, 8, 20, 0.32)';
-        ctx.beginPath(); ctx.ellipse(W / 2, 142, 98, 11, 0, 0, Math.PI * 2); ctx.fill();
-        R(8, 96, 22, 4, '#5c3822'); R(32, 124, 136, 4, '#3b2010');
-
-        const drawCartWheel = (wx, wy, r) => {
-          ctx.strokeStyle = '#6e472b'; ctx.lineWidth = 2;
-          for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
-            ctx.beginPath(); ctx.moveTo(wx, wy); ctx.lineTo(wx + Math.cos(a) * (r - 2), wy + Math.sin(a) * (r - 2)); ctx.stroke();
-          }
-          ctx.strokeStyle = '#1f191a'; ctx.lineWidth = 3.5; ctx.beginPath(); ctx.arc(wx, wy, r, 0, Math.PI * 2); ctx.stroke();
-          ctx.fillStyle = '#f7cb45'; ctx.beginPath(); ctx.arc(wx, wy, 3.5, 0, Math.PI * 2); ctx.fill();
-        };
-        drawCartWheel(56, 128, 13); drawCartWheel(144, 128, 13);
-
-        R(24, 88, 152, 38, '#78351f'); R(27, 90, 146, 33, '#9c4221'); R(24, 102, 152, 4, '#f7cb45');
-        R(20, 83, 160, 6, '#adb5bd'); R(20, 83, 160, 2, '#ffffff');
-
-        const drawDoiPot = (px, py) => {
-          ctx.fillStyle = '#b5542c'; ctx.beginPath(); ctx.ellipse(px, py, 6.5, 5.2, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.fillStyle = '#fff3d1'; ctx.beginPath(); ctx.ellipse(px, py - 1, 4.5, 2, 0, 0, Math.PI * 2); ctx.fill();
-        };
-        [36, 44, 52].forEach(px => drawDoiPot(px, 78)); [40, 48].forEach(px => drawDoiPot(px, 69)); drawDoiPot(44, 60);
-
-        R(66, 48, 56, 35, 'rgba(210, 245, 255, 0.30)'); R(65, 46, 58, 3, '#c28b38');
-        ctx.fillStyle = '#f7cb45'; for (let sx = 72; sx <= 114; sx += 6) { ctx.fillRect(sx + frame, 65, 3, 3); }
-
-        ctx.fillStyle = '#ced4da'; ctx.beginPath(); ctx.ellipse(152, 75, 11, 9, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#fceade'; ctx.beginPath(); ctx.ellipse(150 + (frame ? 1 : 0), 68, 8, 3, 0, 0, Math.PI * 2); ctx.fill();
-
-        for (let i = 0; i < 10; i++) {
-          const ax = 18 + i * 16.4;
-          ctx.fillStyle = i % 2 === 0 ? '#f7cb45' : '#c28b38';
-          ctx.beginPath(); ctx.moveTo(ax, 17); ctx.lineTo(ax + 16.4, 17); ctx.lineTo(ax + 15, 33); ctx.lineTo(ax - 1.4, 33); ctx.closePath(); ctx.fill();
-        }
-        R(26, 2, 148, 15, '#5c2814'); R(28, 3.5, 144, 12, '#f7cb45'); R(29, 4.5, 142, 10, '#b5542c');
-        ctx.fillStyle = '#fff8eb'; ctx.font = 'bold 7.5px "Press Start 2P", monospace'; ctx.textAlign = 'center';
-        ctx.fillText('MISHTI DOI & LASSI', 100, 12.5);
-      });
-    });
 
     // --- Animated TSC Guitar Adda Spot (2 Frames: -0, -1 with Plucking Strings) ---
     [0, 1].forEach(frame => {
