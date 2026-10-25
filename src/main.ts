@@ -3,7 +3,10 @@ import Phaser from 'phaser';
 import { DhakaValleyScene } from './scenes/DhakaValleyScene';
 import { GameDB } from './config/databaseIndex';
 import { SaveManager } from './state/SaveManager';
+import { initTitleSlideshow } from './ui/TitleSlideshow';
 import './style.css';
+
+initTitleSlideshow();
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
