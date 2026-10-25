@@ -6,7 +6,7 @@ import {
   OPENING_SCENARIOS_DB,
   COMPANION_RELOAD_DIALOGUES,
   OpeningScenarioDef,
-  DialogueNode
+  OpeningDialogueNode
 } from '../config/openingDialogues.db';
 import { DateState } from '../state/DateState';
 import { SoundEngine } from '../audio/SoundEngine';
@@ -160,7 +160,7 @@ export class OpeningDialogueEngine {
   /**
    * Returns a dynamic companion dialogue for subsequent interactions after Totoro has joined.
    */
-  public selectCompanionDialogue(context: SelectionContext = {}): DialogueNode[] {
+  public selectCompanionDialogue(context: SelectionContext = {}): OpeningDialogueNode[] {
     const isRain = Boolean(context.isRaining);
     const timeStr = context.timePhase || 'Afternoon';
 

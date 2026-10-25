@@ -1129,6 +1129,37 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 7. Verify browser rendering via `http://localhost:3000/` or Chrome DevTools.
 8. Deploy to Cloudflare Pages: `npm run deploy:cf`.
 
+### 10.20 Modular Filesystem Architecture & Subsystem Decomposition (v4.0.0 Overhaul)
+To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.ts`), the filesystem architecture was restructured into dedicated, single-responsibility engine subsystems with idiomatic barrel exports:
+
+```
+src/
+├── index.ts                     # Root library barrel export (re-exports types, config, state, audio, graphics, systems, ui, scenes)
+├── main.ts                      # Slim application bootloader (58 lines)
+├── types/                       # Core TypeScript definitions (rpg, npc, stardew + index.ts)
+├── config/                      # Configuration, manifest, & databases + index.ts
+├── state/                       # Reactive state machines (DateState, RPGStats, SaveManager + index.ts)
+├── audio/                       # SFX & Procedural audio (SoundEngine + index.ts)
+├── graphics/                    # Procedural & External asset adapters + index.ts
+├── systems/                     # Core simulation engines (Combat, Atmosphere, Weather, Farming, Dialogue, NPC + index.ts)
+│   ├── npc/                     # A* Navigator, Mover, Resolver, Behaviors + index.ts
+│   └── player/                  # Player combo & locomotion state machines + index.ts
+├── ui/                          # HUD, MobileSupport, TitleSlideshow + index.ts
+└── scenes/                      # Scene orchestration & subsystems + index.ts
+    ├── DhakaValleyScene.ts      # Decomposed scene coordinator (~4,690 lines)
+    ├── minigames/               # Specialized minigame simulation engines + index.ts
+    │   ├── RickshawTourEngine.ts # Grand Dhaka Rickshaw Tour "Tring-Tring Rush"
+    │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
+    │   └── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
+    ├── world/                   # Architectural & world builders + index.ts
+    │   ├── InteriorBuilder.ts   # Curzon Hall & Green Meadows Farmhouse interiors
+    │   └── MinimapRenderer.ts   # Real-time multi-world radar minimap canvas renderer
+    └── quests/                  # Narrative romance quest saga orchestrators + index.ts
+        └── CampusRomanceQuests.ts # Ahona & Rakin, Salat & Enan, Apshora & Anamika sagas
+```
+
+All subsystems are independently testable and maintain 100% backward compatibility with Vite Rolldown code-splitting and asset pipelines.
+
 ---
 
 ## 15. Protocol for Future AI Modifications
@@ -1142,4 +1173,4 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
    - Update `src/config/assetSpecs.manifest.ts`.
    - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 25, 2026 — Mobile Browser Engine, Title Slideshow & Sprite Defringing v3.6.0*
+*Last Updated: October 25, 2026 — Modular Subsystem Architecture & Barrel Exports v4.0.0*

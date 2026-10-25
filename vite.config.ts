@@ -40,7 +40,7 @@ export default defineConfig({
             },
             {
               name: 'scene-dhaka',
-              test: /src[\\/]scenes[\\/]DhakaValleyScene/
+              test: /src[\\/]scenes[\\/]/
             }
           ]
         }

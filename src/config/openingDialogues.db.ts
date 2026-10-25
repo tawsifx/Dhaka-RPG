@@ -12,7 +12,7 @@ export interface DialogueChoiceNode {
   }>;
 }
 
-export interface DialogueNode {
+export interface OpeningDialogueNode {
   speaker: string;
   portrait: string;
   text: string;
@@ -29,7 +29,7 @@ export interface OpeningScenarioDef {
   timeAffinity?: 'morning' | 'afternoon' | 'sunset' | 'night' | 'any';
   rewardItemId: string;
   rewardDescription: string;
-  dialogueNodes: DialogueNode[];
+  dialogueNodes: OpeningDialogueNode[];
 }
 
 export const OPENING_SCENARIOS_DB: Record<string, OpeningScenarioDef> = {
@@ -448,7 +448,7 @@ export const OPENING_SCENARIOS_DB: Record<string, OpeningScenarioDef> = {
 export const COMPANION_RELOAD_DIALOGUES: Array<{
   id: string;
   condition?: (time: string, weather: boolean) => boolean;
-  nodes: DialogueNode[];
+  nodes: OpeningDialogueNode[];
 }> = [
   {
     id: 'companion_dhaka_spring',
