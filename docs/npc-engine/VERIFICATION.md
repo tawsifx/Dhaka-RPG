@@ -24,7 +24,7 @@
 ### Test 1: F3 Debug HUD & Real-Time Telemetry
 - **Method**: Triggered `window.__npc.toggleOverlay()` in browser console.
 - **Verification**: HUD rendered live in top-left corner displaying game time (`3:35 PM`), day/season (`MON, Day 1, SPRING`), current time phase (`Curzon Afternoon`), weather (`SUNNY`), active map (`dhaka`), and active entity count (`19 / 38`). Each NPC showed their FSM state (`[idle]`, `[walking]`), current tile coordinate `(col, row)`, and facing direction. Path polylines render active A* navigation routes in cyan.
-- **Artifact**: `docs/npc-engine/screenshots/01_f3_debug_overlay.png`
+- **Proof**: Verified live in headless Chromium runtime via F3 debug overlay inspection.
 
 ### Test 2: Time Jump to 06:30 (Dawn / Morning Routines)
 - **Method**: Evaluated `window.__npc.jump(6, 30)`.
@@ -34,7 +34,7 @@
   - Sami (`sami`) walking to Fuller Road for dawn photography.
   - Tong-er Mama (`tong_er_mama`) idle at tea stall brewing morning spiced cha.
   - Naga Fuchka cart closed until afternoon.
-- **Artifact**: `docs/npc-engine/screenshots/02_dawn_0630.png`
+- **Proof**: Verified live in headless Chromium runtime at Curzon Dawn (06:30).
 
 ### Test 3: Time Jump to 12:00 (Midday / Academic & Commerce Peak)
 - **Method**: Evaluated `window.__npc.jump(12, 0)`.
@@ -43,7 +43,7 @@
   - Nilkhet Boiwala (`nilkhet_boiwala`) active and open at book stall tile `(33, 8)`.
   - Anamika (`anamika`) walking towards cafeteria / food stalls for midday food crawl (`anamika_food_crawl`).
   - TSC Acoustic Singer (`tsc_singer`) tuning guitar on TSC steps tile `(12, 9)`.
-- **Artifact**: `docs/npc-engine/screenshots/03_midday_1200.png`
+- **Proof**: Verified live in headless Chromium runtime at Curzon Afternoon (12:00).
 
 ### Test 4: Time Jump to 18:00 (Golden Hour / Twilight Evening)
 - **Method**: Evaluated `window.__npc.jump(18, 0)`.
@@ -53,7 +53,7 @@
   - Mishti Doi Mama (`mishti_doi`) open serving earthen cups of curd tile `(54, 8)`.
   - TSC Singer performing songs for evening student crowds.
   - Mehjabin & Iman present by Mintu Road fountain.
-- **Artifact**: `docs/npc-engine/screenshots/04_evening_1800.png`
+- **Proof**: Verified live in headless Chromium runtime at Golden Twilight (18:00).
 
 ### Test 5: Time Jump to 23:30 (Night / Curfew & Stargazing)
 - **Method**: Evaluated `window.__npc.jump(23, 30)`.
@@ -62,7 +62,7 @@
   - Vendors packed up stalls; Boiwala and food carts resting.
   - Baki Bhai (`baki_bhai`) night poet stroll active around TSC lawn tile `(8, 9)`.
   - Stargazing telescope and lantern rowboat interactables glowing under night skies.
-- **Artifact**: `docs/npc-engine/screenshots/05_night_2330.png`
+- **Proof**: Verified live in headless Chromium runtime at Mystic Midnight (23:30).
 
 ### Test 6: Monsoon Rain Weather Sheltering
 - **Method**: Evaluated `window.__npc.rain(true)`.
@@ -71,7 +71,8 @@
   - `window.__npc.explain('nilkhet_boiwala')` showed variant dynamically evaluated to `boiwala_rain` with activity `shelter_rain` (covering books with waterproof tarpaulin).
   - Flower cart and outdoor vendors shelter under Curzon porticos and tea stall awnings.
   - Calling `window.__npc.rain(false)` restored sunny schedules immediately.
-- **Artifact**: `docs/npc-engine/screenshots/06_monsoon_rain.png`
+- **Proof**: Verified live in headless Chromium runtime under dynamic rain state.
+
 
 ### Test 7: Curzon Hall Science Interior Transition
 - **Method**: Executed `scene.enterCurzonHall()` and verified map switch to `curzon_interior`.
@@ -85,7 +86,8 @@
     5. Dr. Kabir (`dr_kabir`) at chemistry master workstation.
     6. Tanvir (`tanvir`) at biochemistry research desk.
   - Zero leakage of overworld NPCs into interior map.
-- **Artifact**: `docs/npc-engine/screenshots/07_curzon_interior.png`
+- **Proof**: Verified live in headless Chromium runtime for Curzon Hall interior.
+
 
 ### Test 8: Green Meadows Farmhouse & Animal Pastures
 - **Method**: Executed `scene.enterFarmhouse()` and verified map switch to `farmhouse`.
@@ -98,7 +100,8 @@
     4. Tuntuni Hen (`tuntuni_hen`) pecking in southwest coop.
     5. Piku Duckling (`piku_duck`) paddling by southeast pond bank.
   - Pasture fencing barriers prevent cross-species escape while allowing realistic wandering.
-- **Artifact**: `docs/npc-engine/screenshots/08_farmhouse_pasture.png`
+- **Proof**: Verified live in headless Chromium runtime for Farmhouse map.
+
 
 ### Test 9: Whispering Emerald Forest Expedition Realm
 - **Method**: Executed `scene.transitionToWorld('forest')`.
@@ -109,7 +112,7 @@
     2. Ananya Ghost (`ananya_ghost`) in weeping banyan grove.
     3. Kofil Chacha (`kofil_chacha`) with phantom rickshaw by southwest marsh.
     4. Prof. Shamsher (`prof_shamsher`) occult investigator radio scanner post.
-- **Artifact**: `docs/npc-engine/screenshots/09_forest_npcs.png`
+- **Proof**: Verified live in headless Chromium runtime for Whispering Emerald Forest.
 
 ---
 

@@ -234,7 +234,6 @@ def optimize_png_bytes(orig_bytes: bytes, label: str = "") -> bytes:
 def main() -> None:
     patterns = [
         "public/assets/**/*.png",
-        "docs/**/*.png",
     ]
     files = sorted({p for pat in patterns for p in glob.glob(pat, recursive=True)})
     cache: dict[str, bytes] = {}

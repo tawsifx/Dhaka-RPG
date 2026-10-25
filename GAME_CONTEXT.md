@@ -67,8 +67,7 @@ dhaka-date-rpg/
 │       ├── PROGRESS.md              # Master progress & milestone checklist (M1–M10)
 │       ├── mcp-inventory.md         # MCP tooling map
 │       ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
-│       ├── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
-│       └── screenshots/             # 9 headless browser proof captures
+│       └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
 ├── public/                          # Static public assets
 │   ├── assets/
 │   │   ├── audio/                   # Compressed BGM tracks & 16-channel SFX
