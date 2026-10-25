@@ -387,6 +387,14 @@ export function initTitleSlideshow(): void {
   caption.className = 'title-slideshow-caption';
   backdrop.appendChild(caption);
 
+  // "View scene" toggle: fades the menu panel away so the full artwork is visible
+  const peekBtn = document.getElementById('btn-title-peek');
+  peekBtn?.addEventListener("click", () => {
+    const on = overlay.classList.toggle('peek-scene');
+    peekBtn.setAttribute('aria-pressed', String(on));
+    peekBtn.textContent = on ? '👁 SHOW MENU' : '👁 VIEW SCENE';
+  });
+
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   ctx.imageSmoothingEnabled = false;
