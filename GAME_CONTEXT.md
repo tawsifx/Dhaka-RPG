@@ -41,11 +41,13 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
 | **Game Engine** | [Phaser 3.87.0](https://phaser.io/) | Canvas/WebGL 2D renderer, Arcade Physics, Custom Y-sorting, Multi-camera system |
-| **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, ES module bundling, tree-shaking |
-| **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, and asset specs |
-| **Testing** | [Vitest](https://vitest.dev/) | Unit & regression testing for state, combat calculations, and farming systems |
-| **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, Web Audio synth fallback |
-| **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling + procedural canvas fallback |
+| **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 7 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`) |
+| **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
+| **Testing** | [Vitest](https://vitest.dev/) | 86 unit & regression tests across 13 test suites (combat, farming, NPC engine, database index, behaviors) |
+| **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
+| **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio synth fallback |
+| **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
+| **Mobile & PWA Engine** | Web App Manifest + MobileSupport | PWA manifest, screen wake lock API, rotate-device guidance modal, touch gesture suppression, floating fullscreen toggle |
 | **Hosting & CI/CD** | [Cloudflare Pages](https://pages.cloudflare.com/) + [Vercel](https://vercel.com/) | Live Cloudflare Pages production deployment: `https://moon-walkers-day.pages.dev` (Project: `moon-walkers-day`). Vercel mirror: `https://moonwalkersday.vercel.app`. |
 
 ### Source Code Directory Layout
@@ -249,6 +251,7 @@ The romance progression is measured through **Affection Hearts (0–100%)**, tra
 | **Stargazing Telescope** | Lake Pier (`x: 1776, y: 1328`) | Peer through the brass telescope at dusk to chart 4 custom celestial constellations: The Starry Rickshaw, The Crescent Moon, The Krishnachura, and The Guardian Spirit. | +22 Affection, charts constellations in skybox. |
 | **Lantern Rowboat Finale** | Dhanmondi Lake (`x: 1904, y: 1328`) | The romantic climax of the date. Row across calm waters illuminated by floating paper lanterns and vertical water reflections. | +30 Affection, unlocks Date Completion Confession Cutscene. |
 | **Bose Quantum Quiz** | Curzon Lab (`x: 330, y: 322`) | Answer Prof. Satyendra's physics quiz regarding Bose-Einstein Condensation. | +60 XP, grants `keepsake_quantum_slate`. |
+| **Rakin's Lakeside Concert** | Dhanmondi Lake Shore (`x: 1820, y: 1340`) | Rakin plays an acoustic guitar concert singing the romantic ballad 'Ohona' for Ahona under the weeping willow. Triggers vocal audio cutscene (`playRakinConcertForAhonaCutscene()`). | +35 Affection, unlocks Ahona's Keepsake Ribbon, plays `ohona_song.mp3`. |
 
 ---
 
@@ -852,6 +855,14 @@ Player A (Active Track)       Player B (Incoming Track)
      (Fades out in 400ms)          (Fades in in 400ms)
 ```
 
+### Vocal Romance & Acoustic Concert Track (`ohona_song.mp3`)
+In addition to background instrumental themes, the game integrates an authentic high-fidelity acoustic vocal arrangement:
+- **`ohona_song.mp3`**: Heartfelt romantic ballad celebrating love and companionship across Dhaka.
+- **Dynamic Playback Control (`SoundEngine`)**:
+  - `playOhonaSong(startTimeSec = 20)`: Smoothly ducks active BGM and initiates vocal playback from 20s during high-affection dialogues with Ahona, or from 15s during Rakin's acoustic guitar concert at Dhanmondi Lake (`playRakinConcertForAhonaCutscene`).
+  - `stopOhonaSong(fadeMs = 800)`: Fades out the vocal track smoothly and restores the ambient overworld BGM.
+  - `getOhonaSongDuration()`: Returns track duration for cutscene synchronization.
+
 ### 16-Channel SFX Pool (`sfxAudioPool`)
 SFX instances are pre-buffered into audio pools of up to 6 simultaneous voices to eliminate browser audio latency:
 `slash.wav`, `thrust.wav`, `spin.wav`, `dash.wav`, `enemy_hit.wav`, `player_hurt.wav`, `level_up.wav`, `totoro_roar.wav`, `totoro_slam.wav`, `tea_clink.wav`, `crunch_fuchka.wav`, `rickshaw_bell.wav`, `water_splash.wav`, `portal_warp.wav`, `select.wav`, `item_get.wav`.
@@ -895,6 +906,45 @@ Every visual entity is registered with standardized specifications:
 > - **Row 2: Right** (character facing toward the right side of screen)
 > - **Row 3: Up** (character facing toward top of screen / back to camera)
 > When moving horizontally, `walk-left` selects Row 1 and `walk-right` selects Row 2. `setFlipX(false)` is enforced on all 4-directional sheets so characters walk facing forward in their direction of travel with zero backwards walking. Directional idle retention ensures characters stay facing the direction of their last step when stopping.
+
+### 12.1 Title Screen Cinematic Slideshow Engine (`src/ui/TitleSlideshow.ts`)
+The title menu background is powered by an interactive multi-scene cinematic engine showcasing painterly Studio Ghibli *My Neighbor Totoro* artwork:
+1. **5 Hand-Crafted Widescreen Scenes (`public/assets/backgrounds/totoro_scene_1.jpg` to `totoro_scene_5.jpg`)**:
+   - Native 1376×768 px 16:9 widescreen format.
+   - *Scene 1: The Rainy Bus Stop*: Totoro holding a giant lotus/colocasia leaf umbrella beside Moon Walker at twilight.
+   - *Scene 2: Moonlit Dance of the Grove*: Totoro and Moon Walker under a luminous full moon with glowing fireflies.
+   - *Scene 3: The Great Camphor Tree*: Massive mossy roots with golden sunbeams filtering through dense foliage.
+   - *Scene 4: Windy Sunset Meadow*: Golden hour pastoral countryside with rolling hills and blooming wildflowers.
+   - *Scene 5: Flight Above the Night Clouds*: Moonlit cloudscape soaring high above slumbering towns on a wooden spinning top.
+2. **Ken Burns Zoom & Crossfade Dynamics**:
+   - Smooth 7-second slide cycles with 1400ms CSS crossfades.
+   - Gentle continuous zoom (`scale: 1.0 -> 1.08`) and subtle directional panning to evoke hand-animated feature film cinematography.
+3. **Procedural Fallback Generator**:
+   - If image assets fail to load or are slow on network edge, an automated procedural canvas fallback renders animated starry skies, camphor canopies, and rising spore particles.
+4. **Frosted Glass UI & Fullscreen Scene View Toggle**:
+   - Reduced title menu container opacity to semi-translucent glassmorphism (`background: rgba(15, 23, 42, 0.40)`, `backdrop-filter: blur(10px)`) with text drop shadows for maximum scene visibility.
+   - Added interactive `👁 VIEW SCENE` / `👁 SHOW MENU` toggle button (`.title-peek-btn`), allowing players to completely hide the menu overlay to admire the artwork unobstructed.
+
+### 12.2 Runtime Two-Pass Border Defringing Filter (`ExternalAssetAdapter.defringeSpriteSheetCanvas`)
+To eliminate white halo outlines and fuzzy matte edges caused by background removal tools on external spritesheets (Totoro `totoro_clean.png`, Moon Walker `moon_walker.png`):
+1. **Pass 1 (Near-White Border Fringe Elimination)**:
+   - Evaluates all pixels adjacent to fully transparent pixels ($\alpha = 0$).
+   - If a border pixel exhibits high brightness ($R, G, B > 232$) and low saturation distance ($\text{dist} < 38$), its alpha is zeroed ($\alpha = 0$), removing artificial white fringe.
+2. **Pass 2 (Color Bleed & Alpha Edge Smoothing)**:
+   - Evaluates remaining semi-transparent edge pixels and blends color channels with their nearest opaque interior neighbors, preventing fringing against dark and dynamic backgrounds.
+
+### 12.3 Satsuki Kusakabe (Moon Walker) Walk Cycle Frame Alignment
+- Calibrated `public/assets/sprites/characters/moon_walker.png` (4×4 grid, 128×256 px).
+- Row 2 (Right walk cycle) was realigned with forward-facing horizontal step momentum, resolving reverse-walking (moonwalking) artifacts during horizontal keyboard movement while preserving authentic Ghibli color palette and proportions.
+
+### 12.4 Briar Bogling Slime Standardized 4×4 Repack (`public/assets/sprites/enemies/briar_bogling.png`)
+- Resolved the "double slime" visual artifact caused by the original 4×5 non-standard sprite grid.
+- Repacked into a clean 256×256 px PNG with 4 columns × 4 rows of 64×64 px frames:
+  - Row 0: Idle breathing squash (frames 0–3)
+  - Row 1: Forward hop stride (frames 4–7)
+  - Row 2: Leap strike / spore burst (frames 8–11)
+  - Row 3: Dazed squash stagger (frames 12–15)
+- Standardized vertical baselines across all frames, ensuring clean single-entity animation loops.
 
 ### Standardized `@asset-spec` JSDoc Annotation Format
 Whenever defining textures or sprites in source code, embed this machine-readable block:
@@ -948,6 +998,50 @@ export const DateState = {
 };
 ```
 
+### High-Performance IndexedDB Storage & Secondary In-Memory Index Engine (`src/config/databaseIndex.ts`)
+1. **Dual-Tier Persistence**:
+   - `SaveManager` leverages fast synchronous `localStorage` mirrored with asynchronous `IndexedDB` (`idb-keyval` / custom schema) for resilient persistence of character stats, inventories, farming states, and relationship milestones.
+2. **$O(1)$ Secondary In-Memory Index Engine**:
+   - Maintains continuous in-memory hash maps indexing items, crops, recipes, schedules, and active quests by category, season, and tier, eliminating costly linear scans.
+3. **Paginated UI List Rendering (`src/ui/UIController.ts`)**:
+   - Player bag inventories, cooking/crafting recipes, and chronicle entries render in virtualized/paginated batches, ensuring 60 FPS rendering on mobile devices and low-power hardware.
+
+### Organic Pathways & Multi-Basin Water Bodies Engine
+- **6 Stone Pathway Variants**: Dynamic Wang/Blob autotiling featuring organic rounded arch end-caps, stepping-stone trails, and Chini-Tikri mosaic plaza medallions.
+- **Organic Multi-Basin Water Bodies**:
+  - Ramna Lotus Pond & Serpentine Canal spanned by an authentic Arched Stone Bridge.
+  - Curzon Hall Botanical Pond with floating lotus pads.
+  - Farmhouse Duck Pond with paddling water fowls and HGSS vertical water reflections.
+
+---
+
+## 13.5 Mobile Phone & Browser Playability Engine (`src/ui/MobileSupport.ts`)
+
+To ensure smooth, responsive gameplay across smartphones, tablets, and mobile web browsers (Safari, Chrome Mobile, Firefox Mobile):
+
+1. **PWA Web App Manifest & Installation Assets**:
+   - `public/manifest.webmanifest`: Configured with `display: "standalone"`, `orientation: "landscape"`, and theme color (`#1a1024`).
+   - High-resolution adaptive icons (`icon-192.png`, `icon-512.png`, `apple-touch-icon.png`) for seamless "Add to Home Screen" installation on iOS and Android.
+2. **Screen Wake Lock API**:
+   - Automatically requests `navigator.wakeLock.request('screen')` during active play sessions, preventing mobile displays from dimming or sleeping during dialogue and exploration.
+   - Automatically re-acquires the lock upon document visibility changes (`visibilitychange`).
+3. **Dynamic Viewport & CSS Mobile Reset**:
+   - Uses `100dvh` (Dynamic Viewport Height) to eliminate address-bar pushdown and notch clipping on modern mobile browsers.
+   - `overscroll-behavior: none` and `touch-action: manipulation` prevent browser pull-to-refresh, rubber-band bouncing, and gesture conflicts.
+   - `user-select: none` and `-webkit-touch-callout: none` suppress accidental text selection callouts and magnifier bubbles.
+4. **Touch Gesture Suppression**:
+   - Intercepts and suppresses double-tap-to-zoom (`touchstart` tracking with 300ms threshold) and multi-touch pinch-to-zoom.
+   - Disables context menu on long-press (`contextmenu` preventDefault).
+5. **Floating Fullscreen Toggle (`⛶`)**:
+   - Floating fullscreen toggle button (`.mobile-fullscreen-btn`) in the HUD.
+   - Supports standard Fullscreen API (`requestFullscreen()`) with WebKit fallbacks (`webkitRequestFullscreen()`) for iOS Safari.
+6. **Portrait Device Orientation Guidance Modal**:
+   - Real-time orientation tracking (`window.matchMedia('(orientation: portrait)')` and `orientationchange` event).
+   - Displays an animated modal ("ROTATE YOUR PHONE" with rotating phone icon and landscape diagram) when held in portrait mode.
+   - Includes a "PLAY ANYWAY" bypass button for players who prefer to continue in portrait mode.
+7. **iOS Safari Add-to-Home-Screen Instructions**:
+   - Detects standalone display mode (`window.navigator.standalone`); if running in mobile Safari browser, provides a non-intrusive prompt explaining how to install via the Share button (`Share -> Add to Home Screen`) for full immersion.
+
 ---
 
 ## 14. Deployment, Build Commands & Verification Protocol
@@ -955,7 +1049,7 @@ export const DateState = {
 ### Essential Scripts (`package.json`)
 - `npm run dev`: Launch local Vite development server on `http://localhost:3000/`.
 - `npm run build`: Execute production Vite build to `dist/`.
-- `npm run test`: Run the full Vitest test suite (`tests/` directory, 80/80 tests across 12 suites).
+- `npm run test`: Run the full Vitest test suite (`tests/` directory, 86/86 tests across 13 suites).
 - `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
 - `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
@@ -970,7 +1064,7 @@ export const DateState = {
 ### Verification Checklist Before Commits
 1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
 2. Run `npm run typecheck` — zero TypeScript errors.
-3. Run `npm run test` — all Vitest suites pass (80/80 tests across 12 suites).
+3. Run `npm run test` — all Vitest suites pass (86/86 tests across 13 suites).
 4. Run `npm run assets:validate` & `npm run assets:report` — all combat asset specifications validated.
 5. Run `node scripts/test_combat_overhaul.js` — Playwright end-to-end combat test suite verifies player combos, parasol parry, perfect dodge, Totoro abilities, and boss poise breaks.
 6. Run `npm run build` — bundle compiles cleanly with no missing assets.
@@ -990,4 +1084,4 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
    - Update `src/config/assetSpecs.manifest.ts`.
    - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 19, 2026 — Zero-404 Fast Asset Preload & Instant Title Transition v3.5.1*
+*Last Updated: October 25, 2026 — Mobile Browser Engine, Title Slideshow & Sprite Defringing v3.6.0*

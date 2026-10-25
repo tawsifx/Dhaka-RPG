@@ -385,11 +385,11 @@ export const UIController: any = (() => {
     if (!DateState.memories.length) {
       grid.innerHTML = `<p>Explore Dhaka Valley and the Six Realms with Totoro to fill your chronicle scrapbook!</p>`;
     } else {
-      const pg = paginateList(DateState.memories, pageState.scrapbook, 6);
+      const pg = paginateList<{ emoji?: string; title?: string; note?: string }>(DateState.memories, pageState.scrapbook, 6);
       pageState.scrapbook = pg.page;
       grid.innerHTML = `
         ${pg.items.map(m =>
-          `<div class="scrapbook-entry"><span>${m.emoji}</span><div><b>${m.title}</b><small>${m.note}</small></div></div>`
+          `<div class="scrapbook-entry"><span>${m.emoji || '📸'}</span><div><b>${m.title || 'Dhaka Memory'}</b><small>${m.note || ''}</small></div></div>`
         ).join('')}
         <div style="grid-column: 1 / -1;">
           ${renderPaginationBar('scrapbook', pg.page, pg.totalPages, pg.totalItems, pg.startIndex, pg.endIndex)}

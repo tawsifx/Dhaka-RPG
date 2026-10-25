@@ -43,15 +43,42 @@
 - **File**: `public/assets/sprites/enemies/briar_bogling.png`
 - **Animation Timing**: `public/assets/sprites/enemies/briar_bogling.anim.json`
 - **Dimensions**: 256×256 px (64×64 px per frame, 4×4 grid)
-- **Author**: Calciumtrice / cyberkrishna (OpenGameArt)
+- **Author**: Calciumtrice / cyberkrishna (OpenGameArt) (repacked & aligned by AI pair)
 - **Source URL**: https://opengameart.org/content/pixel-art-animated-slime (cyberkrishna pets mirror)
 - **License**: CC0 1.0 Universal (Public Domain Dedication)
-- **Date**: October 19, 2026
+- **Date**: October 19, 2026 (Repacked to 4x4 on October 25, 2026)
 - **Layout & Timing**:
   - Row 0 (frames 0-3): Idle breathing
   - Row 1 (frames 4-7): Hop / Walk stride
   - Row 2 (frames 8-11): Leap strike / Spore burst (hitbox frames 9-11)
   - Row 3 (frames 12-15): Squish stagger / dizzy recoil
+
+---
+
+## 🎨 Title Screen Background Artwork
+
+### Studio Ghibli 'My Neighbor Totoro' Scenic Slideshow
+- **Files**: `public/assets/backgrounds/totoro_scene_1.jpg` through `totoro_scene_5.jpg`
+- **Native Dimensions**: 1376×768 px (16:9 widescreen)
+- **Scenes**:
+  1. *The Rainy Bus Stop*: Totoro holding a leaf umbrella beside Moon Walker at twilight.
+  2. *Moonlit Dance of the Grove*: Totoro and Moon Walker under a full moon with glowing fireflies.
+  3. *The Great Camphor Tree*: Massive mossy roots with sunbeams filtering through the forest canopy.
+  4. *Windy Sunset Meadow*: Golden hour hillside overlooking scenic countryside valley.
+  5. *Flight Above the Night Clouds*: Moonlit cloudscape ride atop a spinning wooden top.
+- **License**: Non-commercial artistic asset generated for private fan project.
+- **Date**: October 25, 2026
+
+---
+
+## 🎵 Special Audio & Vocal Tracks
+
+### 1. 'Ohona' (Ahona's Theme & Concert Song)
+- **File**: `public/assets/audio/ohona_song.mp3`
+- **Usage**: Plays from 20s during high-affection interactions with Ahona, and from 15s during Rakin's acoustic guitar lakeside concert cutscene.
+- **Date**: October 24, 2026
+
+---
 
 ### 5. Sylvan Briar Stag (Forest Guardian Boss)
 - **Slot ID**: `boss-stag`
