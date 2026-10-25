@@ -1,10 +1,21 @@
-// src/scenes/minigames/race/index.ts - Barrel export for 3D Rickshaw Race Spike
+// src/scenes/minigames/race/index.ts - Barrel export for 3D Rickshaw Race ("Tring-Tring Grand Prix")
 export { RickshawRaceEngine } from './RickshawRaceEngine';
 export { KartController } from './core/KartController';
 export { FixedStepLoop } from './core/FixedStepLoop';
+export { DriftSystem } from './core/DriftSystem';
+export { BoostSystem } from './core/BoostSystem';
+export { AnalyticSurfaceModel, SURFACE_DEFINITIONS } from './core/SurfaceModel';
+export { AirModel } from './core/AirModel';
+export { AnalyticCollisionWorld } from './core/CollisionWorld';
+export { StartCountdown } from './core/StartCountdown';
 export { RaceRenderer } from './render/RaceRenderer';
 export { ChaseCamera } from './render/ChaseCamera';
 export { PlaceholderKart } from './render/PlaceholderKart';
+export { ArenaBuilder } from './render/ArenaBuilder';
+export { RaceEffects } from './render/Effects';
+export { RaceAudio } from './audio/RaceAudio';
 export { RaceInput } from './input/RaceInput';
 export { RaceHud } from './ui/RaceHud';
 export { RaceDebugOverlay } from './debug/RaceDebugOverlay';
+export { RaceTuningPanel } from './debug/RaceTuningPanel';
+export { ReplayRecorder } from './debug/ReplayRecorder';

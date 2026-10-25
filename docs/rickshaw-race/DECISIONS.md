@@ -2,7 +2,7 @@
 ## Three.js Integration Spike — "Tring-Tring Grand Prix"
 
 **Project:** Totoro & Moon Walker: Chronicles of the Six Realms  
-**Milestone:** M1 Architecture & Integration Spike  
+**Milestones:** M1 Architecture Spike & M2 Kart Feel  
 **Status:** Approved & Implemented
 
 ---
@@ -80,17 +80,119 @@
   Adopt the following decomposed structure in `src/scenes/minigames/race/`:
   - `types/race.types.ts`: Pure TypeScript types (`RaceResult`, `KartState`, `KartInput`, `KartConfig`, `RaceTelemetry`).
   - `config/race.config.ts`: Pure numerical configuration constants (top speeds, acceleration rates, friction coefficients, camera offsets).
-  - `core/KartController.ts`: 100% pure physics/kinematics math. Operates on pure 2D/3D vectors without importing `three` or `phaser`. Can be instantiated and simulated at arbitrary frequencies in Vitest tests.
-  - `core/FixedStepLoop.ts`: Fixed-timestep physics accumulator (default 60 Hz = 16.66ms) with interpolation alpha calculation, spiral-of-death clamp (max 5 substeps), and delta clamping. Zero engine imports.
-  - `render/RaceRenderer.ts`: Encapsulates Three.js `WebGLRenderer`, `Scene`, directional & ambient lights, ground plane, fog, window resize handling, and `dispose()`.
-  - `render/ChaseCamera.ts`: Spring-arm camera mathematics and FOV kick based on normalized kart speed.
-  - `render/PlaceholderKart.ts`: Visual kart model (labeled placeholder box with wheel indicators and orientation marker, with extension hook for external GLTF/GLB loading).
-  - `input/RaceInput.ts`: Handles keyboard (WASD/Arrows/Space/Esc) and touch buttons with clean listener detachment.
-  - `ui/RaceHud.ts`: DOM HUD overlay displaying speed, bell prompt, exit button, and touch controls for mobile.
+  - `core/KartController.ts`: 100% pure physics/kinematics math. Operates on pure 2D/3D vectors without importing `three` or `phaser`.
+  - `core/FixedStepLoop.ts`: Fixed-timestep physics accumulator (default 60 Hz = 16.66ms) with interpolation alpha calculation.
+  - `render/RaceRenderer.ts`: Encapsulates Three.js `WebGLRenderer`, `Scene`, lights, ground, fog, and resize handling.
+  - `render/ChaseCamera.ts`: Spring-arm camera mathematics and FOV kick.
+  - `render/PlaceholderKart.ts`: Visual kart model conforming to adapter fallback convention.
+  - `input/RaceInput.ts`: Handles keyboard, gamepad, and touch buttons.
+  - `ui/RaceHud.ts`: DOM HUD overlay.
   - `debug/RaceDebugOverlay.ts`: F4 real-time telemetry HUD overlay and `window.__race` console developer API.
-  - `RickshawRaceEngine.ts`: Lifecycle coordinator orchestrating enter, loop, exit, and complete disposal.
-  - `index.ts`: Clean barrel export.
+  - `RickshawRaceEngine.ts`: Lifecycle coordinator.
 
+---
+
+### ADR 005: Kinematic Drift & Slip-Angle Model vs. Rigid-Body Simulation
+
+- **Context:**  
+  In M2, the kart must achieve authentic Mario Kart arcade feel (snappy, responsive, readable). Full rigid-body physics engines (e.g. Rapier or Cannon.js) introduce floaty suspension oscillation, roll-overs, wheel-ground contact jitter, and nondeterministic behavior.
+- **Decision:**  
+  Implement a pure analytical kinematic drift model in `DriftSystem.ts`:
+  1. **Hop Phase:** On pressing drift above threshold speed with steering input, a vertical hop is initiated (`driftHopHeight = 0.22m, driftHopDuration = 0.16s`).
+  2. **Direction Lock:** The drift direction sign (`-1` or `+1`) is locked for the entire duration of the drift.
+  3. **Visual Slip Angle:** The visual chassis yaw offset $\beta$ is computed via exponential lerp toward $\pm \theta_{\text{slip}}$ ($18^\circ = 0.314\text{ rad}$), while the velocity vector follows the arc.
+  4. **Arc Tightening / Counter-Steering:** Player steer input tightens the arc ($\times 1.6$) or widens/counter-steers ($\times 0.6$).
+  5. **Cancel Conditions:** Applied braking, dropping below 5 m/s, or becoming airborne immediately cancels drift with zero boost.
 - **Consequences:**  
-  - 100% of core physics, simulation loop, and result structures are verifiable via Vitest in milliseconds without mocking WebGL or browser canvases.
-  - Clean boundary for Milestone 2+ enhancements (drifting, track colliders, AI competitors, item pickups).
+  Snappy, instant, 100% deterministic arcade kart feel without WASM rigid-body overhead.
+
+---
+
+### ADR 006: 3-Tier Mini-Turbo Charge & Priority Boost State Machine
+
+- **Context:**  
+  Mario Kart 8 Deluxe features 3 tiers of mini-turbo (Blue, Orange, Purple) that reward sustaining a drift through corners. Multiple boost sources (mini-turbo, boost pads, start rocket boost, air trick landing) can trigger concurrently.
+- **Decision:**  
+  1. Implement `DriftSystem` 3-tier accumulation:
+     - Tier 1: Blue sparks at charge $\ge 35$ (Boost: $+30\%$ speed for 0.8s)
+     - Tier 2: Orange sparks at charge $\ge 75$ (Boost: $+50\%$ speed for 1.4s)
+     - Tier 3: Purple sparks at charge $\ge 120$ (Boost: $+75\%$ speed for 2.2s)
+  2. Implement unified priority state machine in `BoostSystem.ts`:
+     - A stronger boost preempts an active weaker boost.
+     - An equal-strength boost extends the active duration up to a hard cap of 3.5 seconds.
+     - A weaker boost never downgrades an active stronger boost.
+- **Consequences:**  
+  Predictable, rewarding boost pacing with clear visual and audio feedback.
+
+---
+
+### ADR 007: Analytic Surface Zone Query Interface (`ISurfaceQuery`)
+
+- **Context:**  
+  The test arena features varying surfaces (Asphalt, Grass, Mud, Puddles, Boost Pads, Jump Ramps). In M3, tracks will use 3D meshes with BVH queries. In M2, we need pure unit-testable surfaces without mesh dependencies.
+- **Decision:**  
+  Create pure `ISurfaceQuery` interface:
+  ```ts
+  export interface ISurfaceQuery {
+    query(x: number, z: number): SurfaceQueryResult;
+  }
+  ```
+  Implement `AnalyticSurfaceModel` using 2D axis-aligned bounding boxes (AABBs) and circles with zone priorities and cooldown timers for boost pads. Active boost shields the kart against grass and mud slowdowns.
+- **Consequences:**  
+  M3 track mesh queries can drop in seamlessly by implementing `ISurfaceQuery` without modifying a single line of `KartController` code.
+
+---
+
+### ADR 008: Analytic Collision Resolution & Normal/Tangential Decomposition
+
+- **Context:**  
+  Karts must collide against arena perimeter barriers and slalom cones. Collisions must differentiate between glancing slides (grazing a wall) and head-on crashes (bouncing back with speed penalty and drift cancellation).
+- **Decision:**  
+  Create `ICollisionWorld` and `AnalyticCollisionWorld`:
+  - Kart represented as circle of radius $R = 0.75\text{ m}$.
+  - Collision penetration pushes kart along collision normal $\mathbf{n}$.
+  - Velocity decomposed into normal $\mathbf{v}_n = (\mathbf{v} \cdot \mathbf{n})\mathbf{n}$ and tangential $\mathbf{v}_t = \mathbf{v} - \mathbf{v}_n$.
+  - Glancing scrape (impact angle $< 40^\circ$): retains $\ge 92\%$ tangential speed without canceling drift.
+  - Head-on crash (impact angle $\ge 40^\circ$): reflects with restitution $e = 0.25$, cuts forward speed by $40\%$, cancels active drift, and triggers camera shake.
+- **Consequences:**  
+  Satisfying wall response without tunneling or getting stuck on corners.
+
+---
+
+### ADR 009: Pooled Particle Systems using `THREE.InstancedMesh`
+
+- **Context:**  
+  Particle effects (drift sparks, tire smoke, boost flame exhaust, water puddle splashes, skid marks) are vital for juice. Creating individual `THREE.Mesh` or `THREE.Sprite` objects causes garbage collection stalls and excessive draw calls.
+- **Decision:**  
+  Implement `RaceEffects` with a single `THREE.InstancedMesh` for particles (budget 180 on desktop, 80 on mobile) and a second `THREE.InstancedMesh` for skid marks (64 quads).
+  - All matrices updated via `setMatrixAt` and `instanceMatrix.needsUpdate = true`.
+  - Particle colors updated per instance via `setColorAt`.
+  - Zero dynamic allocations inside the render loop.
+- **Consequences:**  
+  Renders up to 240 particles and skid marks in just 2 draw calls at constant 60 FPS.
+
+---
+
+### ADR 010: Consolidated Action-Map Input Layer (`RaceActionInput`)
+
+- **Context:**  
+  The player controls the kart via keyboard, physical gamepads (Xbox, PlayStation), or mobile touch screens.
+- **Decision:**  
+  Consolidate all inputs into `RaceActionInput`:
+  - Keyboard: WASD / Arrows, Shift / K (drift/trick), Space (bell), C (look-behind), R (reset), Esc (exit).
+  - Gamepad API: Left stick with deadzone (0.15) and cubic response curve ($\text{norm}^{2.5}$), RT/A accelerate, LT/X brake, RB/LB drift, B bell, Y look-behind, Start exit. Hot-plug event listeners.
+  - Mobile Touch: Steering zones, dedicated Drift button, Auto-Accelerate toggle, Bell button, Brake button, Throttle button with `touch-action: none`.
+- **Consequences:**  
+  Clean input abstraction; player can seamlessly switch between keyboard, gamepad, and touch controls.
+
+---
+
+### ADR 011: Live Tuning Drawer (F5 / `?race-tune`) & Deterministic Golden Replay
+
+- **Context:**  
+  Gameplay feel design requires rapid iteration on 15+ kinematic constants without recompiling.
+- **Decision:**  
+  1. Build `RaceTuningPanel` toggled via `F5` key or `?race-tune` URL query. Features live sliders for speed, acceleration, braking, friction, handling, drift rates, boost strengths, and gravity with instant updates to `KartController`. Includes "Copy config as JSON", "Reset to defaults", and 3 presets ("Arcade Snappy", "Floaty", "Heavy").
+  2. Build `ReplayRecorder` which logs frame `{ dt, input }` and replays them headlessly to assert bit-for-bit determinism in automated CI test runs.
+- **Consequences:**  
+  Instant runtime feel tuning for designers and guaranteed regression safety via deterministic replay.

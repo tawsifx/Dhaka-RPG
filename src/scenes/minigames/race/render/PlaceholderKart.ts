@@ -1,9 +1,10 @@
-// src/scenes/minigames/race/render/PlaceholderKart.ts - Labeled placeholder 3-wheel rickshaw kart conforming to adapter fallback convention
+// src/scenes/minigames/race/render/PlaceholderKart.ts - Labeled placeholder 3-wheel rickshaw kart with M2 visual juice (slip, lean, pitch, hop & trick spin)
 import * as THREE from 'three';
 import { KartState } from '../../../../types/race.types';
 
 export class PlaceholderKart {
   readonly group: THREE.Group;
+  private bodyGroup: THREE.Group;
   private frontWheelPivot: THREE.Group;
   private wheels: THREE.Mesh[] = [];
   private geometries: THREE.BufferGeometry[] = [];
@@ -11,6 +12,8 @@ export class PlaceholderKart {
 
   constructor() {
     this.group = new THREE.Group();
+    this.bodyGroup = new THREE.Group();
+    this.group.add(this.bodyGroup);
 
     // Materials - Dhaka rickshaw color theme: Emerald Green body, Golden Yellow canopy, Crimson accents, Dark Rubber wheels
     const bodyMat = new THREE.MeshStandardMaterial({
@@ -36,13 +39,8 @@ export class PlaceholderKart {
       color: 0x18181b, // Rubber tire
       roughness: 0.9
     });
-    const rimMat = new THREE.MeshStandardMaterial({
-      color: 0xe2e8f0, // Chrome rim / spokes
-      metalness: 0.85,
-      roughness: 0.2
-    });
 
-    this.materials.push(bodyMat, canopyMat, seatMat, frameMat, wheelMat, rimMat);
+    this.materials.push(bodyMat, canopyMat, seatMat, frameMat, wheelMat);
 
     // 1. Passenger Carriage Box (Back chassis)
     const chassisGeo = new THREE.BoxGeometry(1.2, 0.45, 1.1);
@@ -50,7 +48,7 @@ export class PlaceholderKart {
     chassisMesh.position.set(0, 0.45, 0.35);
     chassisMesh.castShadow = true;
     chassisMesh.receiveShadow = true;
-    this.group.add(chassisMesh);
+    this.bodyGroup.add(chassisMesh);
     this.geometries.push(chassisGeo);
 
     // 2. Rickshaw Hood Canopy (Arch on top of back carriage)
@@ -58,14 +56,14 @@ export class PlaceholderKart {
     const hoodMesh = new THREE.Mesh(hoodGeo, canopyMat);
     hoodMesh.position.set(0, 0.95, 0.4);
     hoodMesh.castShadow = true;
-    this.group.add(hoodMesh);
+    this.bodyGroup.add(hoodMesh);
     this.geometries.push(hoodGeo);
 
     // 3. Passenger Seat Bench
     const seatGeo = new THREE.BoxGeometry(1.0, 0.2, 0.4);
     const seatMesh = new THREE.Mesh(seatGeo, seatMat);
     seatMesh.position.set(0, 0.65, 0.35);
-    this.group.add(seatMesh);
+    this.bodyGroup.add(seatMesh);
     this.geometries.push(seatGeo);
 
     // 4. Front Cycle Frame Bar connecting to front wheel
@@ -74,7 +72,7 @@ export class PlaceholderKart {
     frameMesh.rotation.x = Math.PI / 3;
     frameMesh.position.set(0, 0.45, -0.45);
     frameMesh.castShadow = true;
-    this.group.add(frameMesh);
+    this.bodyGroup.add(frameMesh);
     this.geometries.push(frameGeo);
 
     // 5. Handlebar & Bell
@@ -82,14 +80,14 @@ export class PlaceholderKart {
     const handlebarMesh = new THREE.Mesh(handlebarGeo, frameMat);
     handlebarMesh.rotation.z = Math.PI / 2;
     handlebarMesh.position.set(0, 0.85, -0.75);
-    this.group.add(handlebarMesh);
+    this.bodyGroup.add(handlebarMesh);
     this.geometries.push(handlebarGeo);
 
     const bellGeo = new THREE.SphereGeometry(0.06, 8, 8);
     const bellMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.9, roughness: 0.1 });
     const bellMesh = new THREE.Mesh(bellGeo, bellMat);
     bellMesh.position.set(0.25, 0.9, -0.75);
-    this.group.add(bellMesh);
+    this.bodyGroup.add(bellMesh);
     this.geometries.push(bellGeo);
     this.materials.push(bellMat);
 
@@ -129,8 +127,23 @@ export class PlaceholderKart {
    * Synchronizes visual transform with interpolated kart physics state.
    */
   update(kart: KartState): void {
-    this.group.position.set(kart.x, kart.y, kart.z);
-    this.group.rotation.y = kart.rotation;
+    const hop = kart.drift ? kart.drift.hopHeight : 0;
+    this.group.position.set(kart.x, kart.y + hop, kart.z);
+
+    // Facing rotation + visual slip angle
+    const slip = kart.drift ? kart.drift.slipAngle : 0;
+    this.group.rotation.y = kart.rotation + slip;
+
+    // Chassis body roll & pitch
+    this.bodyGroup.rotation.z = kart.bodyRoll;
+    this.bodyGroup.rotation.x = kart.bodyPitch;
+
+    // Air Trick Spin (360° flip / spin in air)
+    if (kart.air && kart.air.trickActive) {
+      this.bodyGroup.rotation.y = kart.air.trickRotation;
+    } else {
+      this.bodyGroup.rotation.y = 0;
+    }
 
     // Steer the front wheel pivot
     this.frontWheelPivot.rotation.y = kart.steerAngle;

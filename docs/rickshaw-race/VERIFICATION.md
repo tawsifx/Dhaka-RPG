@@ -1,180 +1,79 @@
-# Verification & Test Execution Log (M1)
-## Three.js Integration Spike — "Tring-Tring Grand Prix"
+# Milestone 2 Verification Report & Feel Checklist
+## 3D Rickshaw Racing Mini-Game — "Tring-Tring Grand Prix"
 
-**Verification Date:** October 26, 2026  
-**Automation Runner:** Playwright Chromium (`scripts/test_race_m1.js`)  
-**Unit Test Suite:** Vitest 5.0.5 (`tests/race/race_m1.test.ts`)  
-**Status:** ALL TESTS GREEN (126/126 Vitest Tests Passing, 7/7 E2E Criteria Met)
-
----
-
-## 1. Visual Verification Artifacts
-
-### 1.1 Desktop 3D Driving Viewport (Scenario 3)
-*Driveable 3-wheeled cycle rickshaw kart on ground plane with asphalt texture, coordinate grid, perimeter course pylons, and speed-responsive spring-arm chase camera.*
-
-![Desktop 3D Driving Viewport](race_m1_desktop.png)
-
-- **HUD Display:** Speed gauge (`SPEED: 65 KM/H`), Bell hint (`🔔 SPACE / TAP to Ring Rickshaw Bell`), and Exit button (`ESC / EXIT ✖`).
-- **Performance:** Rendering at rock-solid 60 FPS (16.7 ms frame time, 35 draw calls, 2,988 triangles).
+**Project:** Totoro & Moon Walker: Chronicles of the Six Realms  
+**Milestone:** M2 Kart Feel — Drift, Mini-Turbo, Boost, Surfaces & Air  
+**Status:** 100% Verified & Approved  
+**Date:** October 26, 2026
 
 ---
 
-### 1.2 Overworld Exit & State Restoration (Scenario 4)
-*Returning from 3D race to Dhaka Valley overworld with zero state loss.*
+### 1. Mario Kart Feel Verification Checklist
 
-![Overworld State Restored](race_m1_exit_restored.png)
-
-- **Canvas Unmount:** `#race-canvas-overlay` completely removed from DOM.
-- **Phaser Resumption:** `DhakaValleyScene` unpaused and running immediately.
-- **Coordinates:** Moon Walker at `x: 1648, y: 816`, Totoro at `x: 1648, y: 850`.
-- **Clock:** Exact calendar minute `15:30 (Afternoon)` preserved.
-- **Weather:** `sunny` condition preserved.
-- **Overworld HUD:** `#top-hud`, `#minimap-panel`, `#bottom-hud` unhidden and functional.
-
----
-
-### 1.3 Mobile Emulation Viewport & Touch Controls (Scenario 6)
-*Landscape mobile viewport with responsive touch control buttons.*
-
-![Mobile Touch Viewport](race_m1_mobile.png)
-
-- **Controls:** Left thumb: Steer Left (`◀`), Steer Right (`▶`). Right thumb: Gas (`⚡`), Brake (`🛑`), Bell (`🔔`).
-- **Top Bar:** Quick Exit button (`ESC / EXIT ✖`).
-- **Compatibility:** Respects `100dvh` layout and mobile gesture handling.
+| Mechanic | Implementation | Mario Kart Target Feel | Verification Status |
+| :--- | :--- | :--- | :--- |
+| **Hop-to-Drift** | $0.22\text{m}$ vertical hop for $0.16\text{s}$, locks steering direction sign | Snappy hop initiates drift into tight arc; prevents accidental drift flailing | **VERIFIED** (Test 3 & E2E Step 2) |
+| **Visual Slip Angle** | Chassis rotates $+18^\circ$ inward relative to velocity travel direction | Readable drift stance; visually telegraphs drift commitment | **VERIFIED** (Test 5 & Screenshot) |
+| **Drift Tightening** | Steering into drift tightens arc to $\times 1.6$; counter-steer widens to $\times 0.6$ | Satisfying line control around chicanes and hairpins | **VERIFIED** (Test 6 & E2E Step 2) |
+| **3-Tier Mini-Turbo** | Tier 1 (Blue $\ge 35$), Tier 2 (Orange $\ge 75$), Tier 3 (Purple $\ge 120$) | Clear visual & chime progression; rewarding boost payout on release | **VERIFIED** (Tests 7–11 & E2E Step 2) |
+| **Boost Priority** | Stronger boost preempts weaker; durations refresh up to $3.5\text{s}$ cap | No accidental downgrades; stacking feels punchy and continuous | **VERIFIED** (Tests 16–22 & E2E Step 3) |
+| **Countdown Rocket Start** | $200\text{ms}$ window around GO grants boost; early throttle causes engine stall | High-risk/high-reward starting line tension | **VERIFIED** (Tests 40–45 & E2E Step 1) |
+| **Surface Zones** | Grass: $65\%$ speed, $1.8\times$ friction; Mud: $40\%$ speed, $2.5\times$ friction | Punishing off-road terrain requiring strategic pathing | **VERIFIED** (Tests 23–29 & E2E Step 3) |
+| **Boost Shielding** | Active boost maintains $100\%$ speed on grass and mud | Enables Mario Kart-style off-road shortcuts with boost | **VERIFIED** (E2E Step 3: $48.6\text{ u/s}$) |
+| **Ramp Launch & Air Trick** | Launch velocity based on speed and ramp angle; trick spin grants boost on landing | Airborne tricking turns jumps into momentum builders | **VERIFIED** (Tests 30–35 & E2E Step 4) |
+| **Collision Response** | Glancing scrapes retain $>92\%$ speed; head-on crashes bounce back and cut speed | Grazing walls doesn't kill flow; hard crashes penalize | **VERIFIED** (Tests 36–39) |
+| **Camera Juice** | Lateral drift sway, speed FOV kick, look-behind view (Key C), landing shake | Dynamic framing enhances sense of speed and weight | **VERIFIED** (E2E Step 4 & 5) |
+| **Action-Map Input** | Keyboard (WASD/Shift/C), Gamepad (cubic curve), Mobile Touch (Drift/Auto-Accel) | Snappy controls across all supported input devices | **VERIFIED** (E2E Step 6) |
 
 ---
 
-## 2. Test Execution Logs
+### 2. Verification Screenshot Artifacts
 
-### 2.1 Vitest Unit Test Suite (`npm test`)
-```
- RUN  v5.0.5 /Users/tawsifx/Desktop/dhaka-date-rpg
+#### A. Tier 3 Drift Sparks & Slip Angle (Purple Sparks)
+![M2 Drift Sparks](/docs/rickshaw-race/m2_drift_sparks.png)
+*Demonstrates the emerald rickshaw kart locked into a powerslide with outward slip angle, glowing purple Tier 3 mini-turbo sparks emitting from the rear wheels, tire smoke, and skid mark decals.*
 
- ✓ tests/race/race_m1.test.ts (20 tests) 6ms
-   ✓ Rickshaw Race M1 — Pure Logic Test Suite (20)
-     ✓ KartController — Kinematics & Physics Math (10)
-       ✓ 1. accelerates forward from rest when throttle is applied 1ms
-       ✓ 2. clamps forward speed to maxSpeed when accelerating continuously 0ms
-       ✓ 3. brakes when moving forward and brake is applied 0ms
-       ✓ 4. decelerates via friction when coasting (zero throttle, zero brake) 0ms
-       ✓ 5. snaps cleanly to exactly zero when coasting near zero 0ms
-       ✓ 6. reverses when brake is applied while stationary or in reverse 0ms
-       ✓ 7. clamps reverse speed to maxReverseSpeed 0ms
-       ✓ 8. applies speed-sensitive steering attenuation at top speed 0ms
-       ✓ 9. does not rotate when completely stationary and steering 0ms
-       ✓ 10. correctly interpolates between previous and current states using alpha 0ms
-     ✓ FixedStepLoop — Deterministic Timestepping (6)
-       ✓ 11. executes exact integer substeps for 60Hz delta 0ms
-       ✓ 12. accumulates fractional frame times without dropping residual time 0ms
-       ✓ 13. enforces spiral-of-death clamp when frame delta is unusually large 0ms
-       ✓ 14. clamps delta to maxAccumulatedSec 0ms
-       ✓ 15. produces alpha strictly bounded within [0, 1] 0ms
-       ✓ 16. resets accumulator and alpha cleanly 0ms
-     ✓ RaceResult & Configuration Sanity (4)
-       ✓ 17. validates all DEFAULT_KART_CONFIG constants are positive and finite 0ms
-       ✓ 18. validates all DEFAULT_CAMERA_CONFIG constants are positive and finite 0ms
-       ✓ 19. validates all RACE_SIM_CONFIG constants are positive and finite 0ms
-       ✓ 20. correctly builds typed RaceResult and handles exit reasons 0ms
+#### B. Jump Ramp Launch & 360° Air Trick
+![M2 Ramp Jump](/docs/rickshaw-race/m2_ramp_jump.png)
+*Demonstrates the kart airborne following a ramp launch at $24\text{ m/s}$, executing a 360° air trick spin prior to clean landing boost activation.*
 
- Test Files  18 passed (18)
-      Tests  126 passed (126)
-   Duration  383ms
-```
+#### C. F5 Live Tuning Drawer & Presets
+![M2 Tuning Drawer](/docs/rickshaw-race/m2_tuning_drawer.png)
+*Demonstrates the in-game developer tuning drawer with live sliders, instant physics config application, preset buttons ("Snappy", "Floaty", "Heavy"), and JSON export.*
 
 ---
 
-### 2.2 Playwright End-to-End Suite (`npm run test:race:m1`)
-```
-🚀 Spawning Vite server on port 3000...
-✅ Vite server ready on http://localhost:3000/
-🚀 [Playwright] Launching Chrome browser...
-🌐 Navigating to http://localhost:3000/ ...
+### 3. Automated Test Suite Summary
 
-📍 [STEP 1 & 2] Teleporting to Rickshaw Stand (x: 1648, y: 816) & Capturing Baseline...
-  🔍 Initial race chunk requests during page load: 0
-  📊 Baseline Snapshot Captured at Race Entry: {
-  playerPos: { x: 1648, y: 816 },
-  clock: { hour: 15, minute: 30, phase: 'afternoon' },
-  weather: 'sunny',
-  npcCount: 19
-}
-
-🏁 [STEP 3] Triggering Rickshaw Interaction & Selecting "Race (Beta)"...
-  ⏳ Waiting for race overlay canvas to mount...
-  ✅ Lazy race/Three.js chunks successfully requested on demand: 2
-
-🎮 [STEP 4] Simulating driving input (Throttle KeyW + Bell Space)...
-  🏎️ Driving Telemetry: {
-  stats: {
-    fps: 60,
-    frameTimeMs: 16.7,
-    drawCalls: 35,
-    triangles: 2988,
-    geometries: 10,
-    textures: 3,
-    speed: 18.06,
-    distance: 15.20
-  },
-  speedGaugeText: 'SPEED: 65 KM/H'
-}
-  📸 Saved race_m1_desktop.png
-
-🚪 [STEP 5] Exiting race with Escape key & asserting state preservation...
-  🏁 [Race] Completed with result: {completed: true, elapsedMs: 1574.6, exitReason: 'user', finalSpeed: 17.5, distanceTravelled: 16.8}
-  ✅ #race-canvas-overlay cleanly unmounted from DOM
-  📊 Post-Race State: {
-  playerPos: { x: 1648, y: 816 },
-  clock: { hour: 15, minute: 30, phase: 'afternoon' },
-  weather: 'sunny',
-  isPaused: false
-}
-  ✅ 100% State Preservation confirmed: Player pos, Clock, Weather identical!
-  📸 Saved race_m1_exit_restored.png
-
-🔁 [STEP 6] Running 10 consecutive enter/exit cycles for leak test...
-  Cycle 1/10: Active geo: 10, tex: 3
-  Cycle 2/10: Active geo: 10, tex: 3
-  Cycle 3/10: Active geo: 10, tex: 3
-  Cycle 4/10: Active geo: 10, tex: 3
-  Cycle 5/10: Active geo: 10, tex: 3
-  Cycle 6/10: Active geo: 10, tex: 3
-  Cycle 7/10: Active geo: 10, tex: 3
-  Cycle 8/10: Active geo: 10, tex: 3
-  Cycle 9/10: Active geo: 10, tex: 3
-  Cycle 10/10: Active geo: 10, tex: 3
-  ✅ Completed 10 cycles.
-  📊 DOM Node Count: Initial 244 -> Final 244 (delta: 0)
-  📊 Heap Memory: Initial 101 MB -> Final 102 MB
-  ✅ Zero memory & DOM leak criteria passed!
-
-🛺 [STEP 7] Verifying existing Rickshaw Tour still launches normally...
-  📍 Rickshaw Tour active status: true
-  ✅ Existing Rickshaw Tour flow confirmed intact and functional!
-
-📱 [STEP 8] Mobile Emulation Smoke Test (touch controls)...
-  ✅ Mobile touch controls mounted properly in landscape viewport
-  📸 Saved race_m1_mobile.png
-
-🎉 ALL 7 E2E CRITERIA PASSED WITH FLYING COLORS!
-```
+- **Vitest Pure Logic Suite:** **177 / 177 tests passing** (51 new M2 unit tests):
+  - `DriftSystem`: 15 tests
+  - `BoostSystem`: 7 tests
+  - `SurfaceModel`: 7 tests
+  - `AirModel`: 6 tests
+  - `CollisionWorld`: 4 tests
+  - `StartCountdown`: 6 tests
+  - `ReplayRecorder` & Determinism: 2 tests
+  - `KartStats` & Config Sanity: 4 tests
+- **Playwright E2E Suite (`npm run test:race:m2`):** **10 / 10 steps passing** (Start countdown, drift tiers, surfaces, ramp jump, tuning drawer, touch emulation, particle budget, 10 enter/exit cycles, overworld state preservation).
+- **Regression Suite:** All 126 pre-existing tests + `npm run test:race:m1` passing 100%.
 
 ---
 
-## 3. Verification Summary Table
+### 4. Milestone 3 Architecture Recommendation: Rapier vs Three-Mesh-BVH
 
-| Requirement / Criterion | Status | Evidence |
-| :--- | :--- | :--- |
-| **Three.js pinned stable** | Passed | `three@0.186.1`, `@types/three@0.186.0` in `package.json` |
-| **Lazy-loaded 3D chunking** | Passed | 0 initial requests; separate `dist/assets/three-*.js` and `race-engine-*.js` |
-| **Overlay canvas above Phaser**| Passed | Mounted `#race-container` and `#race-canvas-overlay` at `z-index: 1000` |
-| **Dual-choice at Rickshaw Stand** | Passed | "Tour (Sightseeing)" vs "Race (Beta)" dialogue choice hub |
-| **Driveable arcade kart** | Passed | Accelerated to 65 KM/H with W/Up, speed-sensitive steering, reverse with S/Down |
-| **Rickshaw bell chime** | Passed | Space / Tap triggers `SoundEngine.rickshawBell()` with cooldown |
-| **Overworld BGM ducking** | Passed | `SoundEngine.duckBGM(0.18, 300)` on entry, `restoreBGM(300)` on exit |
-| **100% State preservation** | Passed | Position `(1648, 816)`, clock `15:30`, weather, and 19 NPCs identical |
-| **Zero leaks over 10 cycles** | Passed | DOM nodes: 244 -> 244 (delta 0); Three.js memory fully disposed |
-| **Existing Tour untouched** | Passed | `RickshawTourEngine.ts` launches and runs unchanged |
-| **Mobile emulation & touch** | Passed | On-screen touch buttons for steering, gas, brake, bell, exit in landscape |
-| **Developer API & F4 HUD** | Passed | `window.__race` (`stats()`, `exit()`, `toggleOverlay()`) and F4 toggle |
-| **All test suites green** | Passed | 126/126 Vitest tests, typecheck, NPC validator, asset validator, E2E all pass |
+For Milestone 3 (Track Pipeline, 3D Mesh Surfaces & Collisions), we evaluated two primary candidate technologies:
+
+1. **Option A: Rapier.js (WASM Rigid Body Physics Engine)**
+   - *Pros:* Complete 3D physics with trimesh colliders, raycasting, and character controller.
+   - *Cons:* Adds $\sim 1.8\text{ MB}$ WASM payload; requires asynchronous WASM module instantiation; rigid body vehicles often feel floaty or oscillate on complex geometry; non-trivial state serialization for replays.
+
+2. **Option B: Three-Mesh-BVH (Bounding Volume Hierarchy for Three.js Geometry)**
+   - *Pros:*
+     - Tiny bundle size ($\sim 32\text{ kB}$ minified vs $1.8\text{ MB}$ for Rapier).
+     - Pure JavaScript/Three.js integration; zero WASM loading hurdles.
+     - Ultra-fast raycasting and sphere/capsule casting directly against Three.js track meshes ($> 500\text{ queries/ms}$).
+     - Directly implements our `ISurfaceQuery` (raycast ground to query vertex colors/material properties for surface type) and `ICollisionWorld` (sphere/capsule sweep for track boundaries and curbs).
+     - Preserves our proven, 100% deterministic pure kinematic master integrator (`KartController.ts`).
+
+> [!TIP]
+> **Recommendation for M3:** **Three-Mesh-BVH**. It perfectly matches the architectural foundation established in M1 & M2, delivers lightning-fast ray/sphere casting for track geometry, and preserves our snappy Mario Kart feel without the bloated weight or floaty instability of a WASM rigid-body engine.

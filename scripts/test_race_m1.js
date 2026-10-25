@@ -146,6 +146,9 @@ async function run() {
     // ================= STEP 4: SIMULATE INPUT & VERIFY SPEED & BELL =================
     console.log('\n🎮 [STEP 4] Simulating driving input (Throttle KeyW + Bell Space)...');
     
+    // Wait for 3-2-1-GO countdown to conclude
+    await page.waitForTimeout(3500);
+
     // Hold KeyW for 1.2 seconds to accelerate
     await page.keyboard.down('KeyW');
     await page.waitForTimeout(1200);

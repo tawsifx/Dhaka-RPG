@@ -41,12 +41,12 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
 | **Game Engine** | [Phaser 3.87.0](https://phaser.io/) | Canvas/WebGL 2D renderer, Arcade Physics, Custom Y-sorting, Multi-camera system |
-| **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Lazy-loaded dedicated `<canvas>` overlay for "Tring-Tring Grand Prix" 3D rickshaw racing, PBR materials, shadow maps, spring-arm camera |
+| **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Lazy-loaded dedicated `<canvas>` overlay for "Tring-Tring Grand Prix" 3D rickshaw racing, PBR materials, shadow maps, spring-arm camera, instanced VFX |
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
-| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 126 unit & regression tests across 18 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics & fixed-timestep loop) + automated Playwright E2E suites |
+| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 177 unit & regression tests across 19 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics, drift, turbo, surfaces, air, and countdown) + automated Playwright E2E suites (`test:race:m1`, `test:race:m2`) |
 | **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
-| **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio synth fallback |
+| **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio real-time engine & drift screech synthesizers |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
 | **Mobile & PWA Engine** | Web App Manifest + MobileSupport | PWA manifest, screen wake lock API, rotate-device guidance modal, touch gesture suppression, floating fullscreen toggle |
 | **Hosting & CI/CD** | [Cloudflare Pages](https://pages.cloudflare.com/) + [Vercel](https://vercel.com/) | Live Cloudflare Pages production deployment: `https://moon-walkers-day.pages.dev` (Project: `moon-walkers-day`). Vercel mirror: `https://moonwalkersday.vercel.app`. |
@@ -69,12 +69,15 @@ dhaka-date-rpg/
 │   │   ├── mcp-inventory.md         # MCP tooling map
 │   │   ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
 │   │   └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
-│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1)
+│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1 & M2)
 │       ├── 00-audit.md              # Codebase integration points, lifecycle & bundle impact audit
-│       ├── DECISIONS.md             # Architectural Decision Records (ADR 001–004)
-│       ├── PROGRESS.md              # Master M1-M8 roadmap and milestone tracking
-│       ├── PERF.md                  # Benchmark report (FPS, bundle delta, 10-cycle leak tests)
-│       └── VERIFICATION.md          # Visual proofs & test execution logs
+│       ├── 01-research.md           # Mario Kart & SuperTuxKart kinematics equations & formulas
+│       ├── 02-design.md             # System architecture & pure subsystem decomposition specs
+│       ├── DECISIONS.md             # Architectural Decision Records (ADR 001–011)
+│       ├── PROGRESS.md              # Master M1-M8 roadmap and milestone tracking (M1 & M2 Complete)
+│       ├── PERF.md                  # Benchmark report (FPS, bundle delta, 10-cycle leak tests, instanced pools)
+│       ├── ASSET_CREDITS.md         # Technical asset provenance & synthesis credits
+│       └── VERIFICATION.md          # Visual proofs, feel checklist & test execution logs
 ├── public/                          # Static public assets
 │   ├── assets/
 │   │   ├── audio/                   # Compressed BGM tracks & 16-channel SFX
@@ -279,34 +282,58 @@ The romance progression is measured through **Affection Hearts (0–100%)**, tra
 | **Bose Quantum Quiz** | Curzon Lab (`x: 330, y: 322`) | Answer Prof. Satyendra's physics quiz regarding Bose-Einstein Condensation. | +60 XP, grants `keepsake_quantum_slate`. |
 | **Rakin's Lakeside Concert** | Dhanmondi Lake Shore (`x: 1820, y: 1340`) | Rakin plays an acoustic guitar concert singing the romantic ballad 'Ohona' for Ahona under the weeping willow. Triggers vocal audio cutscene (`playRakinConcertForAhonaCutscene()`). | +35 Affection, unlocks Ahona's Keepsake Ribbon, plays `ohona_song.mp3`. |
 
-### 6.1 3D Rickshaw Racing Mini-Game — "Tring-Tring Grand Prix" (Milestone 1 Architecture Spike)
+### 6.1 3D Rickshaw Racing Mini-Game — "Tring-Tring Grand Prix" (Milestones 1 & 2: Architecture & Mario Kart Feel)
 
 At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with the painted cycle rickshaw now offers a choice hub:
 1. **"🛺 Grand Rickshaw Tour (Sightseeing)"**: Preserves the original 2D automated scenic tour across Dhaka Valley verbatim.
-2. **"🏁 Race (Beta) — Tring-Tring Grand Prix"**: Seamlessly launches Milestone 1 of the Mario Kart–style 3D rickshaw racing mini-game spike.
+2. **"🏁 Race (Beta) — Tring-Tring Grand Prix"**: Seamlessly launches the Mario Kart–style 3D rickshaw racing mini-game with full arcade kart feel.
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│               Tring-Tring Grand Prix (3D Spike)           │
+│               Tring-Tring Grand Prix (M1 & M2)            │
 ├───────────────────────────────────────────────────────────┤
 │ • Renderer: Dedicated <canvas> Three.js overlay (z: 1000) │
 │ • Chunking: Rolldown async chunks (three & race-engine)   │
 │ • Simulation: 60Hz Fixed-Timestep Loop with Alpha Lerp    │
-│ • Kart Controller: Pure Arcade Kinematics (0 Three/Phaser)│
-│ • Camera: Spring-Arm Chase Camera + Dynamic Speed FOV Kick│
-│ • Sound: Overworld BGM ducking (18%) + rickshaw bell sfx  │
+│ • Drift System: Hop-to-Drift, Slip Angle & 3-Tier Sparks  │
+│ • Mini-Turbo: Blue (T1), Orange (T2), Purple (T3) Boosts  │
+│ • Boost System: Priority State Machine + Off-road Shield  │
+│ • Countdown: 3-2-1-GO Rocket Start & Early Stall Penalty  │
+│ • Surfaces: Asphalt, Grass, Mud, Puddle, Petal Boost Pads │
+│ • Air & Ramps: Gravity Arc, 360° Air Trick, Landing Boost │
+│ • Collisions: Glancing Slide (<40°) vs Head-on Bounce     │
+│ • Archetypes: Light (Swift), Balanced (Curzon), Heavy     │
+│ • Tuning: Live F5 Drawer with Sliders, Presets & JSON Copy│
+│ • VFX: Pooled THREE.InstancedMesh (Sparks, Smoke, Skids)  │
+│ • Audio: Web Audio Engine RPM Synth & Drift Screech Loop  │
 │ • State: 100% Frozen Clock, Weather, NPCs & Player Pos    │
 │ • Cleanup: Full WebGL/DOM disposal (0 leaks in 10 cycles) │
 └───────────────────────────────────────────────────────────┘
 ```
 
-#### Architecture & Key Principles
+#### Architecture & Milestone 2 Gameplay Feel Systems
 - **Dedicated `<canvas>` Overlay Architecture (ADR 001):** Three.js 0.186.1 renders onto a dedicated canvas (`#race-canvas-overlay`) mounted inside `#race-container` directly on top of the Phaser canvas. This isolates WebGL2 contexts and prevents conflicts with Phaser's 2D batching pipeline.
-- **Lazy-Loaded Chunks (ADR 003):** Configured via Vite Rolldown code-splitting groups (`three` and `race-engine`). Dynamic `import('./minigames/race/RickshawRaceEngine')` ensures **zero initial bundle growth**.
+- **Lazy-Loaded Chunks (ADR 003):** Configured via Vite Rolldown code-splitting groups (`three` and `race-engine`). Dynamic `import('./minigames/race/RickshawRaceEngine')` ensures **zero initial bundle growth** (`index.js` remains 1.58 kB).
 - **Overworld State Freezing (ADR 002):** Upon entry, `DhakaValleyScene.scene.pause()` and `TimeCalendarSystem.setPaused(true)` are engaged. Moon Walker's coordinates, Totoro's follower trail, in-game calendar time, weather conditions, and living-world NPC schedules remain 100% frozen. Upon pressing Esc or tapping Exit, the 3D overlay is removed, resources are disposed, overworld BGM restores smoothly, and Phaser resumes execution with zero temporal drift.
-- **Pure Arcade Kart Math (`KartController.ts`):** Implements acceleration (16 u/s²), braking (24 u/s²), reverse (-8 u/s max), rolling friction (6 u/s²), and speed-sensitive steering without importing Three.js or Phaser, allowing 100% pure unit testing in Vitest.
-- **Fixed-Timestep Simulation (`FixedStepLoop.ts`):** Decouples 60Hz physics ticks from display refresh rate using a time accumulator, spiral-of-death clamp (max 5 substeps), and render interpolation alpha.
-- **Developer Telemetry API & F4 HUD:** Pressing `F4` toggles real-time telemetry (FPS, frame time, draw calls, triangles, geometry/texture memory). Accessible in developer console via `window.__race.stats()`, `window.__race.exit()`, and `window.__race.toggleOverlay()`.
+- **Drift System & Mini-Turbo (ADR 005 & 006):**
+  - *Hop-to-Drift:* Pressing drift (`Shift`, `K`, gamepad shoulder, or touch drift button) while steering initiates a 0.22m vertical hop (`0.16s`) and locks the steering direction sign.
+  - *Slip Angle:* Visual chassis yaw smoothly lerps $+18^\circ$ inward relative to velocity travel arc. Steering tightens the arc ($\times 1.6$) or widens/counter-steers ($\times 0.6$).
+  - *3-Tier Sparks:* Drift charge accumulates while steering. Transitions through Tier 1 (Blue sparks, $+30\%$ boost for 0.8s), Tier 2 (Orange sparks, $+50\%$ boost for 1.4s), and Tier 3 (Purple sparks, $+75\%$ boost for 2.2s). Releasing drift unleashes the boost.
+- **Boost Priority State Machine (ADR 006):** Stronger boosts preempt weaker boosts, equal-strength boosts refresh durations up to a 3.5s cap, and active boosts shield the kart against off-road grass and mud slowdowns.
+- **3-2-1-GO Start Countdown:** Accurately times rocket starts. Hitting throttle in the $200\text{ms}$ window around GO grants a rocket start boost; hitting throttle too early triggers an engine stall spin-out penalty.
+- **Analytic Surfaces (`ISurfaceQuery`, ADR 007):** Supports Asphalt ($100\%$ grip), Grass ($65\%$ speed, $1.8\times$ friction), Mud ($40\%$ speed, $2.5\times$ friction), Puddles ($82\%$ speed, slick steering, splash VFX), Petal Boost Pads (instant boost), and Launch Ramps.
+- **Air Mechanics & Ramps:** Launching off ramps puts the kart in airborne gravity arc with reduced steering authority ($25\%$). Pressing trick/drift in air executes a 360° flip animation, awarding an air-trick landing boost upon clean touchdown.
+- **Collision Response (`ICollisionWorld`, ADR 008):** Glancing collisions ($<40^\circ$) slide along wall normals retaining $>92\%$ speed; head-on crashes bounce with restitution ($e = 0.25$), cut speed by $40\%$, and cancel active drift.
+- **Visual Juice & Instanced Particle Pools (ADR 009):** Chassis roll into corners, pitch on acceleration/braking, camera drift sway and FOV kick. Particle effects (drift sparks, tire smoke, boost flame exhaust, water splash, and skid marks) render via `THREE.InstancedMesh` with zero dynamic allocations inside the render loop (constant 2 draw calls).
+- **Web Audio Sound Design:** Speed-scaled sawtooth engine RPM loop (55 Hz to 240 Hz), high-Q white noise drift screech loop, tier-up chimes (E5, G#5, C6), whooshes, landing thumps, and countdown beeps.
+- **Action-Map Controls (ADR 010):**
+  - *Keyboard:* W/Up (Accel), S/Down (Brake/Rev), A/D/Left/Right (Steer), Shift/K (Drift/Trick), Space (Bell), C (Look-Behind), R (Reset), Esc (Exit).
+  - *Gamepad API:* Left stick with 0.15 deadzone and cubic response curve, RT/A (Accel), LT/X (Brake), RB/LB (Drift), B (Bell), Y (Look-Behind), Start (Exit). Hot-plug safe.
+  - *Mobile Touch:* Virtual steering buttons, Drift button, Auto-Accelerate toggle, Bell button, Brake button, Throttle button.
+- **Developer Telemetry API, F4 HUD & F5 Tuning Drawer (ADR 011):**
+  - `F4`: Real-time telemetry (FPS, frame time, draw calls, triangles, memory, surface, drift tier, boost state).
+  - `F5` / `?race-tune`: Interactive tuning drawer with 13 sliders, "Copy JSON", "Reset", and 3 presets ("Snappy", "Floaty", "Heavy").
+  - `window.__race`: Developer console API (`stats()`, `exit()`, `getKartState()`, `setKartState()`, `tune()`, `giveBoost()`, `setStats()`, `setSurfaceOverride()`, `replay`).
 
 ---
 
@@ -1188,12 +1215,13 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Verification Checklist Before Commits
 1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
 2. Run `npm run typecheck` — zero TypeScript errors.
-3. Run `npm run test` — all Vitest suites pass (126/126 tests across 18 suites).
+3. Run `npm run test` — all Vitest suites pass (177/177 tests across 19 suites).
 4. Run `npm run test:race:m1` — Playwright end-to-end 3D race spike verified with zero leaks and 100% state preservation.
-5. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
-6. Run `npm run build` — bundle compiles cleanly with no missing assets.
-7. Verify browser rendering via `http://localhost:3000/` or Chrome DevTools.
-8. Deploy to Cloudflare Pages: `npm run deploy:cf`.
+5. Run `npm run test:race:m2` — Playwright end-to-end 3D race M2 feel test verified (drift sparks, mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
+6. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
+7. Run `npm run build` — bundle compiles cleanly with no missing assets.
+8. Verify browser rendering via `http://localhost:3000/` or Chrome DevTools.
+9. Deploy to Cloudflare Pages: `npm run deploy:cf`.
 
 ### 10.20 Modular Filesystem Architecture & Subsystem Decomposition (v4.0.0 Overhaul)
 To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.ts`), the filesystem architecture was restructured into dedicated, single-responsibility engine subsystems with idiomatic barrel exports:
@@ -1202,7 +1230,7 @@ To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.
 src/
 ├── index.ts                     # Root library barrel export (re-exports types, config, state, audio, graphics, systems, ui, scenes)
 ├── main.ts                      # Slim application bootloader (58 lines)
-├── types/                       # Core TypeScript definitions (rpg, npc, stardew + index.ts)
+├── types/                       # Core TypeScript definitions (rpg, npc, stardew, race + index.ts)
 ├── config/                      # Configuration, manifest, & databases + index.ts
 ├── state/                       # Reactive state machines (DateState, RPGStats, SaveManager + index.ts)
 ├── audio/                       # SFX & Procedural audio (SoundEngine + index.ts)
@@ -1216,7 +1244,16 @@ src/
     ├── minigames/               # Specialized minigame simulation engines + index.ts
     │   ├── RickshawTourEngine.ts # Grand Dhaka Rickshaw Tour "Tring-Tring Rush"
     │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
-    │   └── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
+    │   ├── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
+    │   └── race/                # Three.js 3D Rickshaw Race ("Tring-Tring Grand Prix")
+    │       ├── core/            # Pure physics, drift, boost, surfaces, air, collisions, countdown
+    │       ├── render/          # Three.js renderer, chase camera, arena builder, kart visuals, effects
+    │       ├── audio/           # Real-time Web Audio RPM & drift screech synthesizers
+    │       ├── input/           # Action-map inputs (keyboard, gamepad API, touch)
+    │       ├── ui/              # DOM HUD, speedometer & touch controls
+    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, replay recorder
+    │       ├── RickshawRaceEngine.ts # Lifecycle coordinator (enter, loop, exit, dispose)
+    │       └── index.ts         # Clean barrel export
     ├── world/                   # Architectural & world builders + index.ts
     │   ├── InteriorBuilder.ts   # Curzon Hall & Green Meadows Farmhouse interiors
     │   └── MinimapRenderer.ts   # Real-time multi-world radar minimap canvas renderer

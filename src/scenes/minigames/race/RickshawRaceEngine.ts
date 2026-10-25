@@ -1,4 +1,4 @@
-// src/scenes/minigames/race/RickshawRaceEngine.ts - Lifecycle orchestrator for 3D Rickshaw Race Spike
+// src/scenes/minigames/race/RickshawRaceEngine.ts - Lifecycle orchestrator for 3D Rickshaw Race Spike & M2 Feel
 import * as THREE from 'three';
 import { RaceResult, RaceExitReason, KartState } from '../../../types/race.types';
 import { KartController } from './core/KartController';
@@ -6,9 +6,12 @@ import { FixedStepLoop } from './core/FixedStepLoop';
 import { RaceRenderer } from './render/RaceRenderer';
 import { PlaceholderKart } from './render/PlaceholderKart';
 import { ChaseCamera } from './render/ChaseCamera';
+import { RaceEffects } from './render/Effects';
+import { RaceAudio } from './audio/RaceAudio';
 import { RaceInput } from './input/RaceInput';
 import { RaceHud } from './ui/RaceHud';
 import { RaceDebugOverlay } from './debug/RaceDebugOverlay';
+import { RaceTuningPanel } from './debug/RaceTuningPanel';
 import { SoundEngine } from '../../../audio/SoundEngine';
 import { DEFAULT_KART_CONFIG } from '../../../config/race.config';
 
@@ -19,11 +22,14 @@ export class RickshawRaceEngine {
   private renderer: RaceRenderer | null = null;
   private kartMesh: PlaceholderKart | null = null;
   private camera: ChaseCamera | null = null;
+  private effects: RaceEffects | null = null;
+  private audio: RaceAudio | null = null;
   private controller: KartController | null = null;
   private loop: FixedStepLoop | null = null;
   private input: RaceInput | null = null;
   private hud: RaceHud | null = null;
   private debugOverlay: RaceDebugOverlay | null = null;
+  private tuningPanel: RaceTuningPanel | null = null;
 
   private animFrameId: number | null = null;
   private isRunning = false;
@@ -99,6 +105,7 @@ export class RickshawRaceEngine {
       z-index: 1000;
       background: #000;
       overflow: hidden;
+      touch-action: none;
     `;
 
     this.canvas = document.createElement('canvas');
@@ -116,6 +123,9 @@ export class RickshawRaceEngine {
     this.kartMesh = new PlaceholderKart();
     this.renderer.scene.add(this.kartMesh.group);
 
+    this.effects = new RaceEffects(this.renderer.scene);
+    this.audio = new RaceAudio();
+
     const aspect = window.innerWidth / window.innerHeight;
     const threeCam = new THREE.PerspectiveCamera(60, aspect, 0.1, 1000);
 
@@ -126,13 +136,22 @@ export class RickshawRaceEngine {
 
     const onExitTrigger = () => this.exit('user');
     this.hud = new RaceHud(this.container, this.input, onExitTrigger);
-    this.debugOverlay = new RaceDebugOverlay(this.container, this.renderer, onExitTrigger);
+    this.debugOverlay = new RaceDebugOverlay(
+      this.container,
+      this.renderer,
+      onExitTrigger,
+      this.controller
+    );
+    this.tuningPanel = new RaceTuningPanel(this.container, this.controller);
 
     // Snap camera to starting kart position
     const startState = this.controller.getState();
     this.previousKartState = { ...startState };
     this.kartMesh.update(startState);
     this.camera.snapTo(startState);
+
+    // Start 3-2-1-GO race countdown
+    this.controller.countdown.start();
 
     // Initial audio bell chime
     SoundEngine.rickshawBell();
@@ -167,6 +186,12 @@ export class RickshawRaceEngine {
       return;
     }
 
+    // Check reset request
+    if (inputState.reset) {
+      this.controller.reset();
+      this.camera.snapTo(this.controller.getState());
+    }
+
     // Check bell request
     if (inputState.bell) {
       const now = performance.now();
@@ -182,6 +207,7 @@ export class RickshawRaceEngine {
       this.controller!.update(dt, inputState);
     });
     const currState = this.controller.getState();
+    const countdownState = this.controller.countdown.getState();
 
     // 3. Render interpolation between previous tick and current tick
     const renderState = KartController.interpolate(prevState, currState, alpha);
@@ -190,15 +216,25 @@ export class RickshawRaceEngine {
     this.kartMesh.update(renderState);
     this.camera.update(frameDeltaSec, renderState);
 
-    // 5. Update HUD and telemetry
+    // 5. Update Particle Effects
+    if (this.effects) {
+      this.effects.update(frameDeltaSec, renderState);
+    }
+
+    // 6. Update Audio System
+    if (this.audio) {
+      this.audio.update(renderState, countdownState);
+    }
+
+    // 7. Update HUD and telemetry
     if (this.hud) {
-      this.hud.update(renderState.speed, renderState.distanceTravelled);
+      this.hud.update(renderState, countdownState);
     }
     if (this.debugOverlay) {
       this.debugOverlay.update(renderState);
     }
 
-    // 6. Render frame
+    // 8. Render frame
     this.renderer.render(this.camera.camera);
 
     this.animFrameId = requestAnimationFrame(this.renderLoop.bind(this));
@@ -271,6 +307,11 @@ export class RickshawRaceEngine {
       this.animFrameId = null;
     }
 
+    if (this.tuningPanel) {
+      this.tuningPanel.dispose();
+      this.tuningPanel = null;
+    }
+
     if (this.debugOverlay) {
       this.debugOverlay.dispose();
       this.debugOverlay = null;
@@ -284,6 +325,16 @@ export class RickshawRaceEngine {
     if (this.input) {
       this.input.dispose();
       this.input = null;
+    }
+
+    if (this.audio) {
+      this.audio.dispose();
+      this.audio = null;
+    }
+
+    if (this.effects) {
+      this.effects.dispose();
+      this.effects = null;
     }
 
     if (this.kartMesh) {
