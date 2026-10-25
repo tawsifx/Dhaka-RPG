@@ -47,30 +47,30 @@ export class CampusRomanceQuests {
               scene.tweens.add({ targets: scene.totoro, scaleX: 1, scaleY: 1, duration: 250 });
               scene.tweens.add({
                 targets: scene.ahona,
-                x: 1290,
-                y: 480,
+                x: 1452,
+                y: 468,
                 duration: 950,
                 ease: 'Cubic.easeOut'
               });
               scene.tweens.add({
                 targets: scene.apshora,
-                x: 1335,
-                y: 480,
+                x: 1496,
+                y: 468,
                 duration: 950,
                 ease: 'Cubic.easeOut'
               });
               scene.tweens.add({
                 targets: scene.rivalBadge,
-                x: 1312,
-                y: 412,
+                x: 1472,
+                y: 400,
                 duration: 950,
                 ease: 'Cubic.easeOut',
                 onComplete: () => {
-                  scene.ahona.setPosition(1290, 480).setDepth(480);
-                  scene.apshora.setPosition(1335, 480).setDepth(480);
-                  scene.rivalBadge.setPosition(1312, 412).setText('😢 Ahona (Crying on Bench)');
-                  scene.rivalInteract.x = 1312;
-                  scene.rivalInteract.y = 480;
+                  scene.ahona.setPosition(1452, 468).setDepth(468);
+                  scene.apshora.setPosition(1496, 468).setDepth(468);
+                  scene.rivalBadge.setPosition(1472, 400).setText('😢 Ahona (Crying on Bench)');
+                  scene.rivalInteract.x = 1472;
+                  scene.rivalInteract.y = 468;
                   scene.rivalInteract.name = 'Check on Crying Ahona';
                   DateState.bulliesDefeated = true;
                   DateState.ahonaQuestStage = 1;
@@ -270,7 +270,7 @@ export class CampusRomanceQuests {
       return;
     }
     scene.cutsceneLocked = true;
-    scene.cameras.main.pan(1290, 470, 700, 'Sine.easeInOut');
+    scene.cameras.main.pan(1472, 470, 700, 'Sine.easeInOut');
 
     scene.time.delayedCall(750, () => {
       SoundEngine.heartUp();
@@ -1443,14 +1443,14 @@ export class CampusRomanceQuests {
         UI.updateQuestText();
         UI.showToast('🧣', 'Apshora’s Silk Stole Acquired!', 'Royal Heritage Silk Stole added to bag! (+8 ATK, +8 DEF, +90 XP)');
 
-        scene.apshora.setPosition(1345, 480).setDepth(480);
+        scene.apshora.setPosition(1512, 468).setDepth(468);
         if (scene.apshoraBadge) {
-          scene.apshoraBadge.setPosition(1345, 412).setText('👑 Apshora (Celebrated Fashion Mogul)');
+          scene.apshoraBadge.setPosition(1512, 400).setText('👑 Apshora (Celebrated Fashion Mogul)');
           scene.apshoraBadge.setVisible(true);
         }
         if (scene.apshoraInteract) {
-          scene.apshoraInteract.x = 1345;
-          scene.apshoraInteract.y = 480;
+          scene.apshoraInteract.x = 1512;
+          scene.apshoraInteract.y = 468;
           scene.apshoraInteract.name = 'Talk to Fashion Mogul Apshora';
           scene.apshoraInteract.onInteract = () => this.interactApshoraSolo(scene);
         }

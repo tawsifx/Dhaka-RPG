@@ -491,8 +491,8 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
     npcId: 'phulwali',
     displayName: 'Phulwali (Beli Gajra)',
     tier: 'A',
-    home: { map: 'dhaka', tile: { col: 39, row: 16 } }, // 1264, 528
-    sleep: { map: 'dhaka', tile: { col: 39, row: 16 } },
+    home: { map: 'dhaka', tile: { col: 38, row: 17 } }, // 1216, 544 (Phulwali Flower Cart on West Ramna Promenade)
+    sleep: { map: 'dhaka', tile: { col: 38, row: 17 } },
     movement: {
       speedTilesPerSec: 1.5,
       stepStyle: 'tile-step',
@@ -510,11 +510,11 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
         priority: 10,
         when: {},
         stops: [
-          { at: '07:30', map: 'dhaka', tile: { col: 39, row: 16 }, facing: 'down', activity: 'weave_garland' }, // Sets up cart
+          { at: '07:30', map: 'dhaka', tile: { col: 38, row: 17 }, facing: 'down', activity: 'weave_garland' }, // Sets up cart
           { at: '12:00', map: 'dhaka', tile: { col: 8, row: 9 }, facing: 'left', activity: 'sip_tea', dwellMin: 40 },
           { at: '16:30', map: 'dhaka', tile: { col: 30, row: 25 }, facing: 'right', activity: 'weave_garland', dwellMin: 90 }, // Wanders near fountain
           { at: '18:30', map: 'dhaka', tile: { col: 55, row: 41 }, facing: 'down', activity: 'weave_garland', dwellMin: 60 }, // Pier couples
-          { at: '20:30', map: 'dhaka', tile: { col: 39, row: 16 }, facing: 'up', activity: 'sleep' }
+          { at: '20:30', map: 'dhaka', tile: { col: 38, row: 17 }, facing: 'up', activity: 'sleep' }
         ]
       }
     ],
@@ -669,7 +669,7 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
         priority: 50,
         when: { quest: [{ flag: 'ahonaQuestStage', min: 4 }] },
         stops: [
-          { at: '09:00', map: 'dhaka', tile: { col: 40, row: 15 }, facing: 'right', activity: 'sip_tea', dwellMin: 120 }, // Sitting with Rakin
+          { at: '09:00', map: 'dhaka', tile: { col: 46, row: 15 }, facing: 'right', activity: 'sip_tea', dwellMin: 120 }, // Sitting with Rakin at Ramna Bench
           { at: '16:00', map: 'dhaka', tile: { col: 55, row: 41 }, facing: 'left', activity: 'none', dwellMin: 180 }, // Lake promenade
           { at: '21:00', map: 'dhaka', tile: { col: 15, row: 33 }, facing: 'up', activity: 'sleep' }
         ]
@@ -679,8 +679,8 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
         priority: 30,
         when: { quest: [{ flag: 'bulliesDefeated', equals: true }] },
         stops: [
-          { at: '08:00', map: 'dhaka', tile: { col: 40, row: 15 }, facing: 'down', dwellMin: 480 },
-          { at: '20:00', map: 'dhaka', tile: { col: 40, row: 15 }, facing: 'up', activity: 'sleep' }
+          { at: '08:00', map: 'dhaka', tile: { col: 46, row: 15 }, facing: 'down', dwellMin: 480 },
+          { at: '20:00', map: 'dhaka', tile: { col: 46, row: 15 }, facing: 'up', activity: 'sleep' }
         ]
       },
       {
@@ -721,7 +721,7 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
         priority: 50,
         when: { quest: [{ flag: 'ahonaQuestStage', min: 4 }] },
         stops: [
-          { at: '09:00', map: 'dhaka', tile: { col: 39, row: 15 }, facing: 'left', activity: 'sip_tea', dwellMin: 120 }, // Sitting with Ahona
+          { at: '09:00', map: 'dhaka', tile: { col: 45, row: 15 }, facing: 'left', activity: 'sip_tea', dwellMin: 120 }, // Sitting with Ahona at Ramna Bench
           { at: '16:00', map: 'dhaka', tile: { col: 54, row: 41 }, facing: 'right', activity: 'none', dwellMin: 180 },
           { at: '21:00', map: 'dhaka', tile: { col: 25, row: 10 }, facing: 'up', activity: 'sleep' }
         ]
@@ -775,7 +775,7 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
         priority: 30,
         when: { quest: [{ flag: 'bulliesDefeated', equals: true }] },
         stops: [
-          { at: '08:00', map: 'dhaka', tile: { col: 41, row: 15 }, facing: 'left', dwellMin: 480 },
+          { at: '08:00', map: 'dhaka', tile: { col: 47, row: 15 }, facing: 'left', dwellMin: 480 },
           { at: '20:00', map: 'dhaka', tile: { col: 41, row: 15 }, facing: 'up', activity: 'sleep' }
         ]
       },

@@ -135,9 +135,11 @@ export class MinimapRenderer {
       ctx.fillRect(1540 * sx, 220 * sy, 60 * sx, 35 * sy);
       ctx.fillRect(1720 * sx, 220 * sy, 60 * sx, 35 * sy);
 
-      // Phulwali Flower Cart & Ramna Park Garden
-      ctx.fillStyle = '#ec4899';
-      ctx.fillRect(1240 * sx, 460 * sy, 40 * sx, 30 * sy);
+      // Phulwali Flower Cart & Ramna Park Garden Bench
+      ctx.fillStyle = '#ec4899'; // Flower Cart (festive pink)
+      ctx.fillRect(1196 * sx, 490 * sy, 40 * sx, 30 * sy);
+      ctx.fillStyle = '#ca8a04'; // Ramna Bench (warm teak)
+      ctx.fillRect(1452 * sx, 450 * sy, 36 * sx, 18 * sy);
 
       // Mintu Road Fountain Plaza Ring
       ctx.strokeStyle = '#0284c7';

@@ -519,7 +519,8 @@ export class DhakaValleyScene extends Phaser.Scene {
       { x: 208, y: 752, r: 135 },                       // Charukola Fine Arts
       { x: 1072, y: 240, r: 130 },                      // Nilkhet Book Lane
       { x: 1072, y: 816, r: 120 },                      // Mintu Road Fountain Plaza
-      { x: 1264, y: 496, r: 110, isFlowerCart: true },  // Flower Cart (beside Ramna Bench)
+      { x: 1216, y: 512, r: 110, isFlowerCart: true },  // Phulwali Flower Cart (West Ramna Promenade)
+      { x: 1472, y: 464, r: 95, isRamnaBench: true },   // Shaded Ramna Park Bench Clearing
       { x: 1584, y: 240, r: 110 },                      // Mama's Fuchka Cart (Food Bazaar)
       { x: 1744, y: 240, r: 110 },                      // Pabna Mishti Doi (Food Bazaar)
       { x: 1648, y: 816, r: 105 },                      // Rickshaw Stand
@@ -1146,9 +1147,9 @@ export class DhakaValleyScene extends Phaser.Scene {
       addLandmark(1072, 240, 'prop-bookstall', 188, 56);
       addLandmark(1072, 816, 'prop-fountain', 88, 42);
 
-      // Ramna Promenade
-      this.flowerCartSprite = addLandmark(1264, 496, 'prop-flowercart-0', 180, 52);
-      this.ramnaBench = this.add.sprite(1328, 464, 'prop-bench').setOrigin(0.5, 1).setDepth(464);
+      // Ramna Promenade — Well-Separated Flower Cart & Park Bench Garden Sanctuaries
+      this.flowerCartSprite = addLandmark(1216, 512, 'prop-flowercart-0', 180, 52);
+      this.ramnaBench = this.add.sprite(1472, 464, 'prop-bench').setOrigin(0.5, 1).setDepth(464);
 
       // Fuller Road Food Bazaar
       addLandmark(1584, 240, 'prop-fuchkacart', 180, 52);
@@ -1168,7 +1169,7 @@ export class DhakaValleyScene extends Phaser.Scene {
       // Streetlamps & Halos (32x32 Snapped)
       [
         [400, 752], [624, 752], [944, 752], [1168, 752], [1456, 752],
-        [400, 1360], [1264, 464], [1552, 1264], [1872, 1296]
+        [400, 1360], [1216, 464], [1472, 432], [1552, 1264], [1872, 1296]
       ].forEach(([lx, ly]) => {
         this.add.sprite(lx, ly, 'prop-lamp').setOrigin(0.5, 1).setDepth(ly);
         const glow = this.add.circle(lx, ly - 68, 68, 0xfde68a, 0).setDepth(ly + 1);
@@ -1183,7 +1184,8 @@ export class DhakaValleyScene extends Phaser.Scene {
 
         this.atmosphere.registerLight(272, 260, 68, 0xfde68a, 0.7); // Tea stall
         this.atmosphere.registerLight(1072, 240, 68, 0xfde68a, 0.65); // Book stall
-        this.atmosphere.registerLight(1264, 480, 64, 0xfbcfe8, 0.65); // Flower cart
+        this.atmosphere.registerLight(1216, 496, 64, 0xfbcfe8, 0.65); // Flower cart
+        this.atmosphere.registerLight(1472, 436, 64, 0xfde68a, 0.65); // Ramna bench
         this.atmosphere.registerLight(1584, 240, 68, 0xfde68a, 0.7); // Fuchka cart
         this.atmosphere.registerLight(1744, 240, 68, 0xfde68a, 0.7); // Mishti doi
         this.atmosphere.registerLight(2032, 1352, 60, 0xfef08a, 0.85); // Lake rowboat lantern
@@ -1192,7 +1194,7 @@ export class DhakaValleyScene extends Phaser.Scene {
 
         [
           [400, 752], [624, 752], [944, 752], [1168, 752], [1456, 752],
-          [400, 1360], [1264, 464], [1552, 1264], [1872, 1296]
+          [400, 1360], [1216, 464], [1472, 432], [1552, 1264], [1872, 1296]
         ].forEach(([lx, ly]) => {
           this.atmosphere.registerLight(lx, ly - 50, 64, 0xfde68a, 0.6);
         });
@@ -1215,8 +1217,8 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.add.text(208, 528, 'CHARUKOLA FINE ARTS 🎨', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1072, 80, 'NILKHET BOOK LANE 📚', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1072, 720, 'MINTU ROAD FOUNTAIN PLAZA ⛲', shopSignStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1328, 396, 'RAMNA PARK BENCH 🌸', shopSignStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1264, 396, 'PHULWALI FLOWER CART 🌼', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1472, 396, 'RAMNA PARK BENCH 🌸', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1216, 412, 'PHULWALI FLOWER CART 🌼', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1664, 80, "FULLER ROAD FOOD BAZAAR 🥙🍮", shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1648, 752, 'DHAKA RICKSHAW STAND 🛺', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1776, 1200, 'DHANMONDI LAKE PIER & TELESCOPE 🔭', shopSignStyle).setOrigin(0.5).setDepth(2000);
@@ -1278,7 +1280,7 @@ export class DhakaValleyScene extends Phaser.Scene {
         registerInteract(400, 304, 'npc-guitar-0', 'TSC Acoustic Singer', 90, () => this.interactGuitarist());
         registerInteract(240, 752, 'npc-artist-0', 'Charukola Clay Art', 85, () => this.interactCharukola());
         registerInteract(1072, 272, 'npc-books-0', 'Nilkhet Boiwala', 105, () => this.interactBookStall());
-        registerInteract(1264, 528, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
+        registerInteract(1216, 544, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
         registerInteract(1584, 272, 'npc-fuchka-0', "Mama's Naga Fuchka", 105, () => this.interactFuchkaCart());
         registerInteract(1744, 272, 'npc-doi-0', 'Pabnar Mishti Doi', 105, () => this.interactDoiCart());
       }
@@ -1302,13 +1304,13 @@ export class DhakaValleyScene extends Phaser.Scene {
         this.scheduleSystem.initWorldNpcs('dhaka');
       } else {
         // Ahona, Apshora & Rakin Setup
-        // Placed intelligently at Krishnachura Avenue Gateway (x: 480, y: 1056) with cinematic breathing room
-        const ahonaPos = DateState.bulliesDefeated ? { x: 1290, y: 480 } : { x: 480, y: 1056 };
-        let apshoraPos = DateState.bulliesDefeated ? { x: 1335, y: 480 } : { x: 516, y: 1056 };
+        // Placed at Krishnachura Avenue Gateway (x: 480, y: 1056) or Shaded Ramna Park Bench (x: 1472, y: 464)
+        const ahonaPos = DateState.bulliesDefeated ? { x: 1452, y: 468 } : { x: 480, y: 1056 };
+        let apshoraPos = DateState.bulliesDefeated ? { x: 1496, y: 468 } : { x: 516, y: 1056 };
         if (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4) {
           apshoraPos = { x: 320, y: 785 };
         } else if (DateState.apshoraQuestStage >= 4) {
-          apshoraPos = { x: 1345, y: 480 };
+          apshoraPos = { x: 1512, y: 468 };
         }
         this.ahona = this.add.sprite(ahonaPos.x, ahonaPos.y, 'npc-ahona-0').setOrigin(0.5, 1).setDepth(ahonaPos.y);
         this.apshora = this.add.sprite(apshoraPos.x, apshoraPos.y, 'npc-apshora-0').setOrigin(0.5, 1).setDepth(apshoraPos.y);
@@ -1358,7 +1360,7 @@ export class DhakaValleyScene extends Phaser.Scene {
           this.interactables.push(this.apshoraInteract);
         }
 
-        const rakinPos = DateState.ahonaQuestStage >= 3 ? { x: 1255, y: 480 } : { x: 830, y: 325 };
+        const rakinPos = DateState.ahonaQuestStage >= 3 ? { x: 1412, y: 468 } : { x: 830, y: 325 };
         this.rakin = this.add.sprite(rakinPos.x, rakinPos.y, 'npc-rakin-0').setOrigin(0.5, 1).setDepth(rakinPos.y);
         this.rakinBadge = this.add.text(rakinPos.x, rakinPos.y - 65, '💌 Rakin', {
           fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
@@ -4562,7 +4564,7 @@ export class DhakaValleyScene extends Phaser.Scene {
       else if (px >= 560 && px < 880 && py < 450) UI.setZone('Aparajeyo Bangla');
       else if (px < 420 && py >= 450 && py <= 1050) UI.setZone('Charukola Fine Arts');
       else if (px >= 880 && px < 1350 && py < 420) UI.setZone('Nilkhet Book Lane');
-      else if (px >= 1180 && px < 1480 && py >= 420 && py < 740) UI.setZone('Ramna Park & Flower Cart');
+      else if (px >= 1150 && px < 1550 && py >= 400 && py < 740) UI.setZone('Ramna Park & Flower Promenade');
       else if (px >= 1450 && py < 420) UI.setZone("Mama's Fuchka Corner");
       else if (px >= 1680 && py >= 420 && py < 960) UI.setZone('Old Dhaka Sweet Cart');
       else if (px >= 1520 && py >= 1020) UI.setZone('Dhanmondi Lake Pier');
