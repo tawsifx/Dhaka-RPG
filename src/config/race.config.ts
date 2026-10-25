@@ -19,11 +19,11 @@ export const DEFAULT_KART_CONFIG: Readonly<KartConfig> = Object.freeze({
   driftBaseTurnRate: 1.85, // Base yaw rate along drift arc (rad/s)
   driftControlSteerRate: 1.40, // Steer tightening/widening authority (rad/s)
   driftSlipAngle: 0.45, // Outward visual slip angle (~26 degrees)
-  driftBaseChargeRate: 90.0, // Base charge per second
+  driftBaseChargeRate: 100.0, // Base charge per second
   driftSteerChargeBonus: 0.85, // Extra charge multiplier when steering hard into drift
-  tier1Threshold: 100.0, // Blue sparks threshold (~0.8s)
-  tier2Threshold: 220.0, // Orange sparks threshold (~1.6s)
-  tier3Threshold: 360.0, // Purple sparks threshold (~2.4s)
+  tier1Threshold: 85.0, // Blue sparks threshold (~0.55s - 0.85s)
+  tier2Threshold: 195.0, // Orange sparks threshold (~1.25s - 1.95s)
+  tier3Threshold: 380.0, // Purple sparks threshold (~2.05s - 2.45s on reference corner)
   tier1BoostStrength: 0.30, // +30% top speed
   tier1BoostDuration: 0.85, // 0.85s boost duration
   tier2BoostStrength: 0.50, // +50% top speed

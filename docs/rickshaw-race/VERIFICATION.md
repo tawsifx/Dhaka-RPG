@@ -15,13 +15,16 @@
 | **Hop-to-Drift** | $0.22\text{m}$ vertical hop for $0.16\text{s}$, locks steering direction sign | Snappy hop initiates drift into tight arc; prevents accidental drift flailing | **VERIFIED** (Test 3 & E2E Step 2) |
 | **Visual Slip Angle** | Chassis rotates $+18^\circ$ inward relative to velocity travel direction | Readable drift stance; visually telegraphs drift commitment | **VERIFIED** (Test 5 & Screenshot) |
 | **Drift Tightening** | Steering into drift tightens arc to $\times 1.6$; counter-steer widens to $\times 0.6$ | Satisfying line control around chicanes and hairpins | **VERIFIED** (Test 6 & E2E Step 2) |
-| **3-Tier Mini-Turbo** | Tier 1 (Blue $\ge 35$), Tier 2 (Orange $\ge 75$), Tier 3 (Purple $\ge 120$) | Clear visual & chime progression; rewarding boost payout on release | **VERIFIED** (Tests 7–11 & E2E Step 2) |
+| **3-Tier Mini-Turbo** | Tier 1 (Blue $\ge 85$), Tier 2 (Orange $\ge 195$), Tier 3 (Purple $\ge 340$) | Reached at $2.0$–$2.4\text{s}$ on reference corner; rewarding boost payout | **VERIFIED** (Tests 7–11 & E2E Step 2) |
 | **Boost Priority** | Stronger boost preempts weaker; durations refresh up to $3.5\text{s}$ cap | No accidental downgrades; stacking feels punchy and continuous | **VERIFIED** (Tests 16–22 & E2E Step 3) |
 | **Countdown Rocket Start** | $200\text{ms}$ window around GO grants boost; early throttle causes engine stall | High-risk/high-reward starting line tension | **VERIFIED** (Tests 40–45 & E2E Step 1) |
 | **Surface Zones** | Grass: $65\%$ speed, $1.8\times$ friction; Mud: $40\%$ speed, $2.5\times$ friction | Punishing off-road terrain requiring strategic pathing | **VERIFIED** (Tests 23–29 & E2E Step 3) |
 | **Boost Shielding** | Active boost maintains $100\%$ speed on grass and mud | Enables Mario Kart-style off-road shortcuts with boost | **VERIFIED** (E2E Step 3: $48.6\text{ u/s}$) |
 | **Ramp Launch & Air Trick** | Launch velocity based on speed and ramp angle; trick spin grants boost on landing | Airborne tricking turns jumps into momentum builders | **VERIFIED** (Tests 30–35 & E2E Step 4) |
 | **Collision Response** | Glancing scrapes retain $>92\%$ speed; head-on crashes bounce back and cut speed | Grazing walls doesn't kill flow; hard crashes penalize | **VERIFIED** (Tests 36–39) |
+| **Wall Scrapes Slide (f)** | Glancing wall impacts ($< 40^\circ$) slide along tangent without canceling drift | Brushing walls sustains momentum smoothly around corners | **VERIFIED** (Test 38 & 39) |
+| **Camera Stability (g)** | Spring-arm exponential lerp smoothing (`posLag: 8.5`, `rotLag: 6.5`) with look-ahead | Camera never jitters or clips through track geometry | **VERIFIED** (E2E Step 5) |
+| **Reduced Motion (h)** | Accessibility mode `reducedMotion: true` disables screen shake trauma | Honors accessibility user preferences without affecting gameplay | **VERIFIED** (ChaseCamera unit test) |
 | **Camera Juice** | Lateral drift sway, speed FOV kick, look-behind view (Key C), landing shake | Dynamic framing enhances sense of speed and weight | **VERIFIED** (E2E Step 4 & 5) |
 | **Action-Map Input** | Keyboard (WASD/Shift/C), Gamepad (cubic curve), Mobile Touch (Drift/Auto-Accel) | Snappy controls across all supported input devices | **VERIFIED** (E2E Step 6) |
 
