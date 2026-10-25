@@ -52,7 +52,7 @@
   - Naga Fuchka Mama (`naga_fuchka`) active at peak evening snack hour tile `(49, 8)`.
   - Mishti Doi Mama (`mishti_doi`) open serving earthen cups of curd tile `(54, 8)`.
   - TSC Singer performing songs for evening student crowds.
-  - Salat & Enan present by Mintu Road fountain.
+  - Mehjabin & Iman present by Mintu Road fountain.
 - **Artifact**: `docs/npc-engine/screenshots/04_evening_1800.png`
 
 ### Test 5: Time Jump to 23:30 (Night / Curfew & Stargazing)
@@ -116,7 +116,7 @@
 ## 3. Regression & Compatibility Audit
 
 1. **Date State Quest Flags**:
-   - `DateState.apshoraQuestStage`, `DateState.ahonaQuestStage`, `DateState.enanQuestStage` checked.
+   - `DateState.apshoraQuestStage`, `DateState.ahonaQuestStage`, `DateState.imanQuestStage` checked.
    - When quest stages advance, `ScheduleResolver` automatically activates corresponding variant (`ahona_reconciled_with_rakin`, `apshora_atelier`, `salat_happy_couple`, `enan_attentive_couple`).
 2. **Save Migration**:
    - `SaveManager.loadGame()` seamlessly initializes `npcOverrides: {}` and `savedCalendar` defaults if absent in older save blobs.

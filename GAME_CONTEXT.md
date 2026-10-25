@@ -192,8 +192,8 @@ Every NPC features full 4-directional walk/idle frames, unique portrait icons, l
 2. **Ahona** (`npc_ahona.png`, Portrait: 😒 / 😢 / 💑): DU student caught in romantic heartbreak and rival tension with Rakin and Apshora. Can be consoled with Beli Gajra flower garlands, leading to heartfelt reconciliation.
 3. **Apshora** (`npc_apshora.png`, Portrait: ✨ / 👗 / 👑): Aspiring textile artisan and fashion designer. With Moon Walker's encouragement and Anamika's marketing, launches the "Nodi O Jamdani" handloom studio at Charukola, eventually achieving international runway acclaim in Paris, London, and Dubai.
 4. **Rakin** (`npc_rakin.png`, Portrait: 💌): Sincere DU student deeply in love with Ahona. Needs Moon Walker and Totoro's advice to overcome social anxiety and express his genuine feelings.
-5. **Salat** (`npc_salat.png`, Portrait: 💬 / 😢 / 💑): Young woman waiting by the Mintu Road Fountain Plaza, feeling emotionally neglected by her workaholic software-engineer boyfriend Enan.
-6. **Enan** (`npc_enan.png`, Portrait: 💼 / 📱 / 💑): Ambitious tech engineer glued to his smartphone screen. Totoro intervenes by confiscating or silencing his notifications, teaching him to look up and cherish the present moment with Salat.
+5. **Mehjabin** (`npc_mehjabin.png`, Portrait: 💬 / 😢 / 💑): Young woman waiting by the Mintu Road Fountain Plaza, feeling emotionally neglected by her workaholic software-engineer boyfriend Iman.
+6. **Iman** (`npc_iman.png`, Portrait: 💼 / 📱 / 💑): Ambitious tech engineer glued to his smartphone screen. Totoro intervenes by confiscating or silencing his notifications, teaching him to look up and cherish the present moment with Mehjabin.
 7. **Arif (DU Physics Senior)** (`npc_walker1.png`, Portrait: 🎓): Senior physics scholar wandering Fuller Road, quoting wave equations while drinking tea.
 8. **Nadia (Charukola Sketcher)** (`npc_walker2.png`, Portrait: 🖌️): Fine arts student sketching open-air terracotta murals, Krishnachura trees, and Totoro.
 9. **Mimi (Campus Ginger Cat)** (`npc-cat`, Portrait: 🐱): Beloved stray campus cat that figure-eights around Moon Walker's ankles and curls up against Totoro's warm belly.
@@ -477,8 +477,8 @@ NPC movement speeds and stride animations are calibrated to authentic character 
 - `vendor_porter` (50 px/s): Purposeful utility stride (Tong-er Mama, Boiwala).
 - `anxious_lover` (48 px/s): Nervous pacing and lingering (Rakin).
 - `fashion_artisan` (46 px/s): Stylish energetic strides (Apshora).
-- `phone_glued` (38 px/s): Slow distracted walking while typing (Enan).
-- `distracted_beloved` (42 px/s): Gentle wistful fountain pacing (Salat).
+- `phone_glued` (38 px/s): Slow distracted walking while typing (Iman).
+- `distracted_beloved` (42 px/s): Gentle wistful fountain pacing (Mehjabin).
 - `academic_chair` (44 px/s): Dignified lecture-hall traversal (Prof. Motahar, Prof. Satyendra).
 - `farm_master` (50 px/s): Grounded rural chore stride (Chacha Rafiq).
 - `pasture_grazer` (24–36 px/s): Randomized bounding paddock roaming (Shuravi, Kalu, Tuntuni, Piku).
@@ -498,7 +498,7 @@ $$\text{progress} = \frac{t}{\text{stop.travelMinutes}}$$
 The NPC is spawned directly at their interpolated waypoint coordinates, eliminating temporal teleportation artifacts.
 
 ### 10.6 The 4 NPC Tiers (All 38 Registered Entities)
-1. **Tier A: Dhaka Valley Overworld (19)**: Tong-er Mama, Tania, Sami, Arif, Nadia, Mimi the Cat, Baki Bhai, TSC Singer, Charukola Clay Artist, Nilkhet Boiwala, Phulwali, Naga Fuchka Mama, Mishti Doi Mama, Anamika, Ahona, Rakin, Apshora, Salat, Enan.
+1. **Tier A: Dhaka Valley Overworld (19)**: Tong-er Mama, Tania, Sami, Arif, Nadia, Mimi the Cat, Baki Bhai, TSC Singer, Charukola Clay Artist, Nilkhet Boiwala, Phulwali, Naga Fuchka Mama, Mishti Doi Mama, Anamika, Ahona, Rakin, Apshora, Mehjabin, Iman.
 2. **Tier B: Curzon Hall Science Interior (6)**: Prof. Motahar Hossain, Prof. Satyendra, Faiza, Prof. Sultana, Dr. Kabir, Tanvir.
 3. **Tier C: Green Meadows Farmhouse & Animals (5)**: Chacha Rafiq, Shuravi Cow, Kalu Goat, Tuntuni Hen, Piku Duckling.
 4. **Tier D: Expedition Realms & Night Spirits (8)**: Elder Banyan Sage, Ananya Ghost, Kofil Chacha, Prof. Shamsher, Tidekeeper Marina, Master Blacksmith Kael, Astronomer Lyra, Celestial Chronicler.
@@ -714,7 +714,7 @@ Nadia (`npc-walker2`), the enthusiastic Charukola fine arts student sketching ca
 To resolve NPC over-clustering along Row 25 (`y ≈ 810–820`) and eliminate statue-like freezing during long schedule dwell windows, the NPC simulation engine was enhanced with a high-fidelity dynamic ambient roaming loop and narrative-aware spatial repositioning:
 
 1. **Root Cause Analysis & Spatial Congestion Resolution**:
-   - **Row 25 Bottleneck**: 7 different NPCs (Nadia, Ahona, Apshora, Salat, Enan, Tania, Phulwali) previously shared destination anchors along Row 25, creating a traffic jam across the carriage road.
+   - **Row 25 Bottleneck**: 7 different NPCs (Nadia, Ahona, Apshora, Mehjabin, Iman, Tania, Phulwali) previously shared destination anchors along Row 25, creating a traffic jam across the carriage road.
    - **Static Dwell Freezing**: Schedules utilized multi-hour dwell durations (`dwellMin: 480`) without intermediate micro-wander cycles. Once an NPC arrived at their target tile, `hasActivePath()` returned `false`, leaving them frozen in place until the next macro schedule transition.
    - **Crossroad Cutscene Overlaps**: Ahona & Apshora's Act I Bully Ambush was situated at `(670, 810)` directly in the crossroads between Charukola Art Corridor and the Central Fountain.
 
@@ -735,14 +735,14 @@ To resolve NPC over-clustering along Row 25 (`y ≈ 810–820`) and eliminate st
      - *High-Cardio Jogger* (`tania`): `roamRadius: 8`, `pauseDurationSec: 0.8`, `isVendor: false` (continuous running laps around park loops with momentary pauses).
      - *Street Photographer* (`sami`): `roamRadius: 5`, `pauseDurationSec: 2.0`, `isVendor: false` (strolls between plaza angles, snapping photos).
      - *Beli Garland Weaver* (`phulwali`): `roamRadius: 3`, `pauseDurationSec: 2.0`, `isVendor: false` (strolls along promenade).
-     - *Citizens, Artists & Lovers* (`nadia`, `arif`, `baki_bhai`, `mimi`, `anamika`, `ahona`, `apshora`, `rakin`, `salat`, `enan`, `tsc_singer`): `roamRadius: 4`, `pauseDurationSec: 2.2`, `isVendor: false` (stroll 3–5 tiles, pause briefly to sketch/read/sip tea, then resume walking).
+     - *Citizens, Artists & Lovers* (`nadia`, `arif`, `baki_bhai`, `mimi`, `anamika`, `ahona`, `apshora`, `rakin`, `mehjabin`, `iman`, `tsc_singer`): `roamRadius: 4`, `pauseDurationSec: 2.2`, `isVendor: false` (stroll 3–5 tiles, pause briefly to sketch/read/sip tea, then resume walking).
    - **High Walking Duty Cycle (50%–80%)**: When an NPC reaches their roam node, they pause for 1–3s, display their activity emote, and automatically compute a new walkable path using `NpcNavigator.findPath()`.
    - **Dynamic Headbar Badge State**: Badges switch to `🚶 ` or `👟 ` when walking, and dynamically present contextual activity emojis (`🎨 Nadia`, `☕ Tong-er Mama`, `📸 Sami`, `📚 Nilkhet Boiwala`, `🐱 Mimi`) when pausing.
    - **Dialogue Memory & Recovery**: Dialogue close events automatically trigger `mover.endInteraction()`, restoring original facing and resuming ambient patrol without getting permanently stuck.
 
 3. **Intelligent Cutscene & NPC Repositioning (`src/config/npcSchedules.db.ts`, `src/scenes/DhakaValleyScene.ts`)**:
    - **Ahona & Apshora Act I Bully Ambush**: Relocated to the wide, grand **Krishnachura Avenue Gateway** (`col: 15, row: 33`, `x: 480, y: 1056`) directly outside Curzon Hall. Flanked by blooming Krishnachura shade trees, giving players a spacious cinematic confrontation before fleeing east to Ramna Park Bench (`col: 40, row: 15`).
-   - **Salat & Enan Digital Detox Quest**: Relocated from the Row 25 carriage road to the scenic **Mintu Road Fountain West Garden Terrace** (`col: 30, row: 23`, `x: 960, y: 736`) and **East Promenade** (`col: 36, row: 23`, `x: 1152, y: 736`), with clear sightlines across the pulsing water fountain.
+   - **Mehjabin & Iman Digital Detox Quest**: Relocated from the Row 25 carriage road to the scenic **Mintu Road Fountain West Garden Terrace** (`col: 30, row: 23`, `x: 960, y: 736`) and **East Promenade** (`col: 36, row: 23`, `x: 1152, y: 736`), with clear sightlines across the pulsing water fountain.
    - **Double Date Celebration**: Reconciled couple positions moved to `{ col: 32, row: 23 }` and `{ col: 34, row: 23 }` (`y: 736`), side-by-side beside Moon Walker and Totoro.
 
 4. **Multi-Tier Automated Test & Visual Proof**:
@@ -752,9 +752,9 @@ To resolve NPC over-clustering along Row 25 (`y ≈ 810–820`) and eliminate st
    - **Playwright Automated E2E (`scripts/test_npc_roaming_playwright.js`)**: Verified in headless Chrome that **19 out of 19 active NPCs** on Dhaka Valley actively walk and roam dynamically over time.
    - **In-Game Visual Screenshots**:
      - `npc_scatter_krishnachura_gateway.png`: Ahona & Apshora spacious confrontation scene under Krishnachura trees.
-     - `npc_scatter_fountain_terrace.png`: Mintu Road Fountain Terrace with Salat, Enan, Tania jogging, and Nadia walking.
+     - `npc_scatter_fountain_terrace.png`: Mintu Road Fountain Terrace with Mehjabin, Iman, Tania jogging, and Nadia walking.
      - `npc_scatter_charukola_roaming.png`: Charukola Art Corridor with Clay Artist at stall, Nadia sketching, and strolls along brick avenue.
-     - `npc_scatter_dhanmondi_lake.png`: Lakeside promenade with Enan, Tania, and Rickshaw Tour stand.
+     - `npc_scatter_dhanmondi_lake.png`: Lakeside promenade with Iman, Tania, and Rickshaw Tour stand.
 
 ### 10.17 Curzon Hall & Green Meadows Farmhouse Interior Transition & Doorway Fixes
 
@@ -1027,7 +1027,7 @@ export const DateState = {
   // Quest Flags & Progression Stages
   ahonaQuestStage: 0,               // Ahona & Rakin romance questline (0-4)
   apshoraQuestStage: 0,             // Apshora & Anamika fashion atelier (0-4)
-  enanQuestStage: 0,                // Salat & Enan digital detox quest (0-5)
+  imanQuestStage: 0,                // Mehjabin & Iman digital detox quest (0-5)
   forestSeanceComplete: false,      // Spirit seance for Ananya, Kofil & Shamsher
   boseQuizDone: false,              // Bose-Einstein quantum quiz solved
   bulliesDefeated: false,           // Fuller Road park security event
@@ -1155,7 +1155,7 @@ src/
     │   ├── InteriorBuilder.ts   # Curzon Hall & Green Meadows Farmhouse interiors
     │   └── MinimapRenderer.ts   # Real-time multi-world radar minimap canvas renderer
     └── quests/                  # Narrative romance quest saga orchestrators + index.ts
-        └── CampusRomanceQuests.ts # Ahona & Rakin, Salat & Enan, Apshora & Anamika sagas
+        └── CampusRomanceQuests.ts # Ahona & Rakin, Mehjabin & Iman, Apshora & Anamika sagas
 ```
 
 All subsystems are independently testable and maintain 100% backward compatibility with Vite Rolldown code-splitting and asset pipelines.

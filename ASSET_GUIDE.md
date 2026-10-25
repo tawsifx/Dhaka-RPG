@@ -240,8 +240,8 @@ When external pixel art is placed into `public/assets/`, `ExternalAssetAdapter` 
 | `npc-guitar` | `assets/sprites/characters/npc_guitarist.png` | 32×64 px | 1×1 tiles | `npc-guitar` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Cooltrainer Male) |
 | `npc-artist` | `assets/sprites/characters/npc_clay_artist.png` | 32×64 px | 1×1 tiles | `npc-artist` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Artist) |
 | `npc-doi` | `assets/sprites/characters/npc_doi_vendor.png` | 32×64 px | 1×1 tiles | `npc-doi` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Woman 1 / Waitress) |
-| `npc-salat` | `assets/sprites/characters/npc_salat.png` | 32×64 px | 1×1 tiles | `npc-salat` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Girl 1) |
-| `npc-enan` | `assets/sprites/characters/npc_enan.png` | 32×64 px | 1×1 tiles | `npc-enan` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Boy 1) |
+| `npc-mehjabin` | `assets/sprites/characters/npc_mehjabin.png` | 32×64 px | 1×1 tiles | `npc-mehjabin` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Girl 1) |
+| `npc-iman` | `assets/sprites/characters/npc_iman.png` | 32×64 px | 1×1 tiles | `npc-iman` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Boy 1) |
 | `npc-farmer-rafiq` | `assets/sprites/characters/npc_farmer_rafiq.png` | 32×64 px | 1×1 tiles | `npc-farmer-rafiq-0` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Old Man 1 / Agrarian Elder) |
 | `npc-sage` | `assets/sprites/characters/npc_sage.png` | 32×64 px | 1×1 tiles | `npc-sage` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Expert Male / Forest Sage) |
 | `npc-marina` | `assets/sprites/characters/npc_marina.png` | 32×64 px | 1×1 tiles | `npc-marina` | 4 cols x 4 rows: Row 0=Down, 1=Left, 2=Right, 3=Up | Pokémon Overworld (Swimmer Female / Ocean Guardian) |

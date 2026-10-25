@@ -29,7 +29,7 @@ Currently, NPCs exist in two completely disconnected architectural paradigms:
 2. **Stationary Overworld & Interior NPCs (31 Entities)**:
    - Handled via `registerInteract(x, y, tex, name, radius, onInteract)` inside `DhakaValleyScene.ts` (`buildWorld`, `buildCurzonInterior`, `buildFarmhouse`).
    - Entities:
-     - Dhaka Overworld Vendors & Citizens (12): `Tong-er Mama`, `TSC Acoustic Singer`, `Charukola Clay Artist`, `Nilkhet Boiwala`, `Phulwali`, `Mama's Naga Fuchka`, `Pabnar Mishti Doi`, `Ahona`, `Apshora`, `Rakin`, `Salat`, `Enan`.
+     - Dhaka Overworld Vendors & Citizens (12): `Tong-er Mama`, `TSC Acoustic Singer`, `Charukola Clay Artist`, `Nilkhet Boiwala`, `Phulwali`, `Mama's Naga Fuchka`, `Pabnar Mishti Doi`, `Ahona`, `Apshora`, `Rakin`, `Mehjabin`, `Iman`.
      - Curzon Hall Interior (6): `Prof. Motahar Hossain`, `Prof. Satyendra (S.N. Bose)`, `Faiza`, `Prof. Sultana`, `Dr. Kabir`, `Tanvir`.
      - Green Meadows Farmhouse & Pastoral Animals (5): `Chacha Rafiq`, `Shuravi (Cow)`, `Kalu (Goat)`, `Tuntuni (Hen)`, `Piku (Duckling)`.
      - Expedition Realms Sages & Spirits (8): `Elder Banyan Sage`, `Ananya the Weeping Petni`, `Kofil Chacha`, `Prof. Shamsher`, `Tidekeeper Marina`, `Master Blacksmith Kael`, `Astronomer Lyra`, `Celestial Chronicler`.
@@ -122,7 +122,7 @@ Running naive A* pathfinding for 20+ active NPCs on an 80×60 grid (4,800 nodes)
   1. **Dhaka Valley Overworld Citizens & Vendors**: 19 NPCs
      - 7 Wanderers: Anamika, Arif, Nadia, Mimi the Cat, Baki Bhai, Sami, Tania.
      - 7 Vendors & Artists: Tong-er Mama, TSC Singer, Charukola Clay Artist, Nilkhet Boiwala, Phulwali, Mama's Naga Fuchka, Pabnar Mishti Doi.
-     - 5 Relationship NPCs: Ahona, Apshora, Rakin, Salat, Enan.
+     - 5 Relationship NPCs: Ahona, Apshora, Rakin, Mehjabin, Iman.
   2. **Curzon Hall Science Interior**: 6 NPCs
      - Prof. Motahar Hossain, Prof. Satyendra (Bose), Faiza, Prof. Sultana, Dr. Kabir, Tanvir.
   3. **Green Meadows Farmhouse Pastoral NPCs & Animals**: 5 Entities

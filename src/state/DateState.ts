@@ -13,7 +13,13 @@ export const DateState: any = {
   kabirBuffGiven: false,
   motaharChessDone: false,
   ahonaQuestStage: 0,
-  enanQuestStage: 0,
+  imanQuestStage: 0,
+  get enanQuestStage(): number {
+    return this.imanQuestStage;
+  },
+  set enanQuestStage(v: number) {
+    this.imanQuestStage = v;
+  },
   apshoraQuestStage: 0,
   fuchkaDone: false,
   doiDone: false,

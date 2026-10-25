@@ -1371,57 +1371,63 @@ export class DhakaValleyScene extends Phaser.Scene {
         };
         this.interactables.push(this.rakinInteract);
 
-        // Enan & Salat Couple Setup (Mintu Road Fountain Plaza terraces, x: 960–1152, y: 736)
-        let salatPos = { x: 960, y: 736 };
-        let enanPos = { x: 1152, y: 736 };
-        let salatText = '💬 Salat (Wants to talk!)';
-        let enanText = '💼 Enan (Typing on phone...)';
+        // Iman & Mehjabin Couple Setup (Mintu Road Fountain Plaza terraces, x: 960–1152, y: 736)
+        let mehjabinPos = { x: 960, y: 736 };
+        let imanPos = { x: 1152, y: 736 };
+        let mehjabinText = '💬 Mehjabin (Wants to talk!)';
+        let imanText = '💼 Iman (Typing on phone...)';
 
-        if (DateState.enanQuestStage >= 5) {
-          salatPos = { x: 1024, y: 736 };
-          enanPos = { x: 1088, y: 736 };
-          salatText = '💑 Enan & Salat (Happy Couple)';
-          enanText = '💑 Enan & Salat (Happy Couple)';
-        } else if (DateState.enanQuestStage === 2) {
-          salatPos = { x: 960, y: 736 };
-          salatText = '😢 Salat (Crying by Fountain)';
-          enanText = '📱 Enan (Glued to Screen)';
-        } else if (DateState.enanQuestStage === 3) {
-          salatPos = { x: 960, y: 736 };
-          salatText = '🥺 Salat (Hoping Totoro Can Help)';
-          enanText = '📱 Enan (Glued to Screen)';
-        } else if (DateState.enanQuestStage === 4) {
-          salatPos = { x: 960, y: 736 };
-          salatText = '🥺 Salat (Waiting for Totoro)';
-          enanText = '❗ Enan (Totoro will talk to him!)';
+        if (DateState.imanQuestStage >= 5) {
+          mehjabinPos = { x: 1024, y: 736 };
+          imanPos = { x: 1088, y: 736 };
+          mehjabinText = '💑 Iman & Mehjabin (Happy Couple)';
+          imanText = '💑 Iman & Mehjabin (Happy Couple)';
+        } else if (DateState.imanQuestStage === 2) {
+          mehjabinPos = { x: 960, y: 736 };
+          mehjabinText = '😢 Mehjabin (Crying by Fountain)';
+          imanText = '📱 Iman (Glued to Screen)';
+        } else if (DateState.imanQuestStage === 3) {
+          mehjabinPos = { x: 960, y: 736 };
+          mehjabinText = '🥺 Mehjabin (Hoping Totoro Can Help)';
+          imanText = '📱 Iman (Glued to Screen)';
+        } else if (DateState.imanQuestStage === 4) {
+          mehjabinPos = { x: 960, y: 736 };
+          mehjabinText = '🥺 Mehjabin (Waiting for Totoro)';
+          imanText = '❗ Iman (Totoro will talk to him!)';
         }
 
-        this.salat = this.add.sprite(salatPos.x, salatPos.y, 'npc-salat-0').setOrigin(0.5, 1).setDepth(salatPos.y);
-        this.salatBadge = this.add.text(salatPos.x, salatPos.y - 65, salatText, {
+        this.mehjabin = this.add.sprite(mehjabinPos.x, mehjabinPos.y, 'npc-mehjabin-0').setOrigin(0.5, 1).setDepth(mehjabinPos.y);
+        this.salat = this.mehjabin;
+        this.mehjabinBadge = this.add.text(mehjabinPos.x, mehjabinPos.y - 65, mehjabinText, {
           fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
           backgroundColor: '#831843', color: '#fce7f3', padding: { x: 7, y: 3 }
         }).setOrigin(0.5, 1).setDepth(2100);
+        this.salatBadge = this.mehjabinBadge;
 
-        this.salatInteract = {
-          x: salatPos.x, y: salatPos.y, radius: 85, sprite: this.salat, badge: this.salatBadge,
-          name: 'Talk to Salat',
-          onInteract: () => this.interactSalat()
+        this.mehjabinInteract = {
+          x: mehjabinPos.x, y: mehjabinPos.y, radius: 85, sprite: this.mehjabin, badge: this.mehjabinBadge,
+          name: 'Talk to Mehjabin',
+          onInteract: () => this.interactMehjabin()
         };
-        this.interactables.push(this.salatInteract);
+        this.salatInteract = this.mehjabinInteract;
+        this.interactables.push(this.mehjabinInteract);
 
-      this.enan = this.add.sprite(enanPos.x, enanPos.y, 'npc-enan-0').setOrigin(0.5, 1).setDepth(enanPos.y);
+      this.iman = this.add.sprite(imanPos.x, imanPos.y, 'npc-iman-0').setOrigin(0.5, 1).setDepth(imanPos.y);
+      this.enan = this.iman;
 
-      this.enanBadge = this.add.text(enanPos.x, enanPos.y - 70, enanText, {
+      this.imanBadge = this.add.text(imanPos.x, imanPos.y - 70, imanText, {
         fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
         backgroundColor: '#164e63', color: '#cffafe', padding: { x: 7, y: 3 }
-      }).setOrigin(0.5, 1).setDepth(2100).setVisible(DateState.enanQuestStage < 5);
+      }).setOrigin(0.5, 1).setDepth(2100).setVisible(DateState.imanQuestStage < 5);
+      this.enanBadge = this.imanBadge;
 
-      this.enanInteract = {
-        x: enanPos.x, y: enanPos.y, radius: 85, sprite: this.enan, badge: this.enanBadge,
-        name: 'Talk to Enan',
-        onInteract: () => this.interactEnan()
+      this.imanInteract = {
+        x: imanPos.x, y: imanPos.y, radius: 85, sprite: this.iman, badge: this.imanBadge,
+        name: 'Talk to Iman',
+        onInteract: () => this.interactIman()
       };
-      this.interactables.push(this.enanInteract);
+      this.enanInteract = this.imanInteract;
+      this.interactables.push(this.imanInteract);
 
         this.createWanderingCitizens();
       }
@@ -2546,17 +2552,17 @@ export class DhakaValleyScene extends Phaser.Scene {
         const wCfg = WORLDS_DB[DateState.currentWorld];
         return `We need to defeat the realm boss to the East (${wCfg?.bossSpec?.name}) and gather ${ITEMS_DB[wCfg?.matItem]?.name || 'materials'} to forge powerful equipment in our Bag & Craft menu (I)!`;
       }
-      if (DateState.enanQuestStage === 0) {
-        return 'Salat is waving near Mintu Road Fountain Plaza (Center)! She looks like she wants to propose something exciting to us.';
+      if (DateState.imanQuestStage === 0) {
+        return 'Mehjabin is waving near Mintu Road Fountain Plaza (Center)! She looks like she wants to propose something exciting to us.';
       }
-      if (DateState.enanQuestStage === 2) {
-        return 'Salat is crying by the fountain at Mintu Road after Enan brushed her off with work excuses. We should go comfort her!';
+      if (DateState.imanQuestStage === 2) {
+        return 'Mehjabin is crying by the fountain at Mintu Road after Iman brushed her off with work excuses. We should go comfort her!';
       }
-      if (DateState.enanQuestStage === 3) {
-        return 'Salat is counting on us! Tell me what happened with Enan so I can help make him understand.';
+      if (DateState.imanQuestStage === 3) {
+        return 'Mehjabin is counting on us! Tell me what happened with Iman so I can help make him understand.';
       }
-      if (DateState.enanQuestStage === 4) {
-        return 'Enan is standing near Mintu Road with his phone. Let us go speak with him and remind his soul what truly matters!';
+      if (DateState.imanQuestStage === 4) {
+        return 'Iman is standing near Mintu Road with his phone. Let us go speak with him and remind his soul what truly matters!';
       }
       if (DateState.apshoraQuestStage === 1) {
         return 'Apshora has a fiery entrepreneurial ambition! Let us introduce her to Anamika near Charukola / campus to ignite their fashion collective!';
@@ -2641,21 +2647,21 @@ export class DhakaValleyScene extends Phaser.Scene {
         portrait: '🐾',
         text: greeting,
         choices: [
-          ...(DateState.enanQuestStage === 3 ? [{
-            label: '💔 "Totoro, Salat is heartbroken... Enan is ignoring her for work."',
+          ...(DateState.imanQuestStage === 3 ? [{
+            label: '💔 "Totoro, Mehjabin is heartbroken... Iman is ignoring her for work."',
             nextNodes: [
-              { speaker: 'Moon Walker', portrait: '🌙', text: 'Totoro, Salat asked Enan to go on a Double Couple Date with us tonight, but Enan coldly brushed her off with work excuses. He even called you an "oversized forest spirit" and told her he has no time for her!' },
+              { speaker: 'Moon Walker', portrait: '🌙', text: 'Totoro, Mehjabin asked Iman to go on a Double Couple Date with us tonight, but Iman coldly brushed her off with work excuses. He even called you an "oversized forest spirit" and told her he has no time for her!' },
               { speaker: 'Totoro', portrait: '🐾', text: '*Ears twitch with deep sorrow and righteous spirit energy* ...Grrr-oooh. The mortal curse of endless hurry. Humans run so fast towards tomorrow that they forget the warm hand they are holding today.' },
-              { speaker: 'Moon Walker', portrait: '🌙', text: 'Salat cried so hard... she remembered how in university Enan used to wait forty minutes in the Kalbaishakhi rain at TSC just to share a cup of tea. She asked if you could make him understand.' },
-              { speaker: 'Totoro', portrait: '🐾', text: 'The boy who waited in the rain is not gone, Moon Walker. He is merely trapped beneath fear, spreadsheets, and the noise of the city. We are going to bring him back to her. Let us go confront Enan right now!' },
+              { speaker: 'Moon Walker', portrait: '🌙', text: 'Mehjabin cried so hard... she remembered how in university Iman used to wait forty minutes in the Kalbaishakhi rain at TSC just to share a cup of tea. She asked if you could make him understand.' },
+              { speaker: 'Totoro', portrait: '🐾', text: 'The boy who waited in the rain is not gone, Moon Walker. He is merely trapped beneath fear, spreadsheets, and the noise of the city. We are going to bring him back to her. Let us go confront Iman right now!' },
               { speaker: 'Moon Walker', portrait: '🌙', text: 'With you beside me, Totoro, nothing is impossible!' }
             ],
             onPick: () => {
-              DateState.enanQuestStage = 4;
-              if (this.salatBadge) this.salatBadge.setText('🥺 Salat (Waiting for Totoro)');
-              if (this.enanBadge) this.enanBadge.setText('❗ Enan (Totoro will talk to him!)');
+              DateState.imanQuestStage = 4;
+              if (this.mehjabinBadge) this.mehjabinBadge.setText('🥺 Mehjabin (Waiting for Totoro)');
+              if (this.imanBadge) this.imanBadge.setText('❗ Iman (Totoro will talk to him!)');
               UI.updateQuestText();
-              UI.showToast('🐾', 'Totoro is Ready!', 'Approach Enan at Mintu Road Fountain Plaza with Totoro!');
+              UI.showToast('🐾', 'Totoro is Ready!', 'Approach Iman at Mintu Road Fountain Plaza with Totoro!');
             }
           }] : []),
           ...(DateState.apshoraQuestStage === 1 ? [{
@@ -3055,16 +3061,32 @@ export class DhakaValleyScene extends Phaser.Scene {
     CampusRomanceQuests.playRakinConcertForAhonaCutscene(this);
   }
 
+  interactMehjabin() {
+    CampusRomanceQuests.interactMehjabin(this);
+  }
+
   interactSalat() {
     CampusRomanceQuests.interactSalat(this);
+  }
+
+  playImanExcusesCutscene() {
+    CampusRomanceQuests.playImanExcusesCutscene(this);
   }
 
   playEnanExcusesCutscene() {
     CampusRomanceQuests.playEnanExcusesCutscene(this);
   }
 
+  interactIman() {
+    CampusRomanceQuests.interactIman(this);
+  }
+
   interactEnan() {
     CampusRomanceQuests.interactEnan(this);
+  }
+
+  playTotoroSwaysImanCutscene() {
+    CampusRomanceQuests.playTotoroSwaysImanCutscene(this);
   }
 
   playTotoroSwaysEnanCutscene() {

@@ -70,7 +70,7 @@ This document tracks progress across all phases of the living-world NPC behavior
 - [x] **M5: Relationship NPCs & Dynamic Group Behaviors**
   - Anamika (food crawl schedule, atelier transition with Apshora)
   - Ahona & Rakin (sulking/lingering -> reconciled pair walking)
-  - Salat & Enan (fountain waiting -> attentive couple)
+  - Mehjabin & Iman (fountain waiting -> attentive couple)
 - [x] **M6: Interior Rhythms (Tier B) & Farmstead Living (Tier C)**
   - Curzon Hall: Prof. Motahar, Prof. Satyendra, Faiza, Prof. Sultana, Dr. Kabir, Tanvir (academic period rhythms)
   - Farmhouse: Chacha Rafiq daily schedule (feeding -> fields -> rest -> milking)

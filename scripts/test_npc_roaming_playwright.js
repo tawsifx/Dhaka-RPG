@@ -72,19 +72,19 @@ async function run() {
     }
   }
 
-  // Verify Salat & Enan are placed at the spacious Fountain Garden Terrace (y ≈ 736)
-  const salat = initialNpcData['salat'];
-  const enan = initialNpcData['enan'];
-  if (salat) {
-    console.log(`⛲ Salat placement: (${salat.x}, ${salat.y})`);
-    if (salat.y >= 790 && salat.y <= 830) {
-      throw new Error(`Salat is still congested on Row 25 carriage road at y=${salat.y}!`);
+  // Verify Mehjabin & Iman are placed at the spacious Fountain Garden Terrace (y ≈ 736)
+  const mehjabin = initialNpcData['mehjabin'] || initialNpcData['salat'];
+  const iman = initialNpcData['iman'] || initialNpcData['enan'];
+  if (mehjabin) {
+    console.log(`⛲ Mehjabin placement: (${mehjabin.x}, ${mehjabin.y})`);
+    if (mehjabin.y >= 790 && mehjabin.y <= 830) {
+      throw new Error(`Mehjabin is still congested on Row 25 carriage road at y=${mehjabin.y}!`);
     }
   }
-  if (enan) {
-    console.log(`💼 Enan placement: (${enan.x}, ${enan.y})`);
-    if (enan.y >= 790 && enan.y <= 830) {
-      throw new Error(`Enan is still congested on Row 25 carriage road at y=${enan.y}!`);
+  if (iman) {
+    console.log(`💼 Iman placement: (${iman.x}, ${iman.y})`);
+    if (iman.y >= 790 && iman.y <= 830) {
+      throw new Error(`Iman is still congested on Row 25 carriage road at y=${iman.y}!`);
     }
   }
 
@@ -138,8 +138,8 @@ async function run() {
   await page.screenshot({ path: ahonaScreenshotPath });
   console.log(`✅ Saved: ${ahonaScreenshotPath}`);
 
-  // Area B: Center camera on Mintu Road Fountain Terrace (Salat & Enan garden terrace placement)
-  console.log('📸 [Playwright] Capturing Mintu Road Fountain Terrace (Salat & Enan)...');
+  // Area B: Center camera on Mintu Road Fountain Terrace (Mehjabin & Iman garden terrace placement)
+  console.log('📸 [Playwright] Capturing Mintu Road Fountain Terrace (Mehjabin & Iman)...');
   await page.evaluate(() => {
     const scene = window.__activeScene;
     scene.cameras.main.centerOn(1060, 736);

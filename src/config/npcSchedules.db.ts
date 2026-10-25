@@ -795,10 +795,10 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
     ]
   },
 
-  // 18. Salat (Mintu Road Fountain)
-  salat: {
-    npcId: 'salat',
-    displayName: 'Salat',
+  // 18. Mehjabin (Mintu Road Fountain)
+  mehjabin: {
+    npcId: 'mehjabin',
+    displayName: 'Mehjabin',
     tier: 'A',
     home: { map: 'dhaka', tile: { col: 30, row: 23 } }, // 960, 736 - Mintu Road fountain west terrace
     sleep: { map: 'dhaka', tile: { col: 30, row: 23 } },
@@ -813,9 +813,9 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
     },
     variants: [
       {
-        id: 'salat_happy_couple',
+        id: 'mehjabin_happy_couple',
         priority: 50,
-        when: { quest: [{ flag: 'enanQuestStage', min: 5 }] },
+        when: { quest: [{ flag: 'imanQuestStage', min: 5 }] },
         stops: [
           { at: '09:00', map: 'dhaka', tile: { col: 32, row: 23 }, facing: 'right', activity: 'sip_tea', dwellMin: 180 }, // Seated together
           { at: '15:00', map: 'dhaka', tile: { col: 55, row: 41 }, facing: 'down', activity: 'none', dwellMin: 180 },
@@ -823,7 +823,7 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
         ]
       },
       {
-        id: 'salat_waiting',
+        id: 'mehjabin_waiting',
         priority: 10,
         when: {},
         stops: [
@@ -838,10 +838,10 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
     ]
   },
 
-  // 19. Enan (Software Engineer)
-  enan: {
-    npcId: 'enan',
-    displayName: 'Enan',
+  // 19. Iman (Software Engineer)
+  iman: {
+    npcId: 'iman',
+    displayName: 'Iman',
     tier: 'A',
     home: { map: 'dhaka', tile: { col: 36, row: 23 } }, // 1152, 736 - Mintu Road fountain east terrace
     sleep: { map: 'dhaka', tile: { col: 36, row: 23 } },
@@ -856,17 +856,17 @@ export const NPC_SCHEDULES_DB: Record<string, NpcScheduleDef> = {
     },
     variants: [
       {
-        id: 'enan_attentive_couple',
+        id: 'iman_attentive_couple',
         priority: 50,
-        when: { quest: [{ flag: 'enanQuestStage', min: 5 }] },
+        when: { quest: [{ flag: 'imanQuestStage', min: 5 }] },
         stops: [
-          { at: '09:00', map: 'dhaka', tile: { col: 34, row: 23 }, facing: 'left', activity: 'sip_tea', dwellMin: 180 }, // Beside Salat
+          { at: '09:00', map: 'dhaka', tile: { col: 34, row: 23 }, facing: 'left', activity: 'sip_tea', dwellMin: 180 }, // Beside Mehjabin
           { at: '15:00', map: 'dhaka', tile: { col: 56, row: 41 }, facing: 'down', activity: 'none', dwellMin: 180 },
           { at: '21:00', map: 'dhaka', tile: { col: 36, row: 23 }, facing: 'up', activity: 'sleep' }
         ]
       },
       {
-        id: 'enan_phone_glued',
+        id: 'iman_phone_glued',
         priority: 10,
         when: {},
         stops: [

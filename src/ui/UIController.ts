@@ -216,14 +216,14 @@ export const UIController: any = (() => {
       q = "7. [Sub-Story] Find Ahona's boyfriend Rakin near Nilkhet / TSC (North-Center) and help him apologize.";
     } else if (DateState.ahonaQuestStage === 3) {
       q = '8. [Sub-Story] Return to Ahona at the Ramna Park Bench to witness their reunion!';
-    } else if (DateState.enanQuestStage === 1) {
-      q = '💬 [Double Date] Witness Enan and Salat’s conversation at Mintu Road Fountain Plaza (Center).';
-    } else if (DateState.enanQuestStage === 2) {
-      q = '😢 [Double Date] Comfort crying Salat near Mintu Road Fountain Plaza (Center).';
-    } else if (DateState.enanQuestStage === 3) {
-      q = '🐾 [Double Date] Talk to Totoro (Partner button or stand near him) about Enan’s workaholic excuses.';
-    } else if (DateState.enanQuestStage === 4) {
-      q = '❗ [Double Date] Approach busy Enan with Totoro at Mintu Road to remind his soul what truly matters!';
+    } else if (DateState.imanQuestStage === 1) {
+      q = '💬 [Double Date] Witness Iman and Mehjabin’s conversation at Mintu Road Fountain Plaza (Center).';
+    } else if (DateState.imanQuestStage === 2) {
+      q = '😢 [Double Date] Comfort crying Mehjabin near Mintu Road Fountain Plaza (Center).';
+    } else if (DateState.imanQuestStage === 3) {
+      q = '🐾 [Double Date] Talk to Totoro (Partner button or stand near him) about Iman’s workaholic excuses.';
+    } else if (DateState.imanQuestStage === 4) {
+      q = '❗ [Double Date] Approach busy Iman with Totoro at Mintu Road to remind his soul what truly matters!';
     } else if (DateState.apshoraQuestStage === 1) {
       q = '👗 [Apshora’s Ambition] Introduce ambitious Apshora to your bestie Anamika near Charukola / campus (x:640 y:780)!';
     } else if (DateState.apshoraQuestStage === 2) {
@@ -433,7 +433,7 @@ export const UIController: any = (() => {
         { done: DateState.bulliesDefeated, title: 'Ch 5: Fuller Road Stand with Totoro', desc: 'Stand tall with Totoro when Ahona & Apshora confront you at the fountain.' },
         { done: DateState.ahonaQuestStage === 4, title: 'Ch 6: Healing Hearts at Ramna Park', desc: 'Reunite Ahona and Rakin with heartfelt understanding.' },
         { done: DateState.apshoraQuestStage >= 3, title: 'Ch 7: Apshora’s Heritage Haute Couture', desc: 'Introduce Apshora to Anamika and debut their runway collection.' },
-        { done: DateState.enanQuestStage >= 5, title: 'Ch 8: Double Date with Enan & Salat', desc: 'Sway workaholic Enan with Totoro and share a 4-hearts double date!' },
+        { done: DateState.imanQuestStage >= 5, title: 'Ch 8: Double Date with Iman & Mehjabin', desc: 'Sway workaholic Iman with Totoro and share a 4-hearts double date!' },
         { done: DateState.farmhouseExplored, title: 'Ch 9: Green Meadows Pastoral Farmhouse', desc: 'Visit Chacha Rafiq’s farm, milk Shuravi the cow, and pet the animals!' },
         { done: DateState.gajraDone && DateState.fuchkaDone && DateState.doiDone, title: 'Ch 10: Garland, Naga Fuchka & Mishti Doi', desc: 'Wear the Beli wrist gajra, brave fiery fuchka, and enjoy chilled sweet curd.' },
         { done: DateState.rickshawTourDone && DateState.stargazingDone && DateState.confessionDone, title: 'Ch 11: Rickshaw Tour & Dhanmondi Lake Finale', desc: 'Tour Dhaka on a painted rickshaw, connect the stars, and row into the moonlit waters.' },

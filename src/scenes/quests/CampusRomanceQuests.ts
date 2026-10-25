@@ -1,4 +1,4 @@
-// src/scenes/quests/CampusRomanceQuests.ts - Narrative Campus Romance Quests Engine (Ahona, Rakin, Salat, Enan, Apshora, Anamika)
+// src/scenes/quests/CampusRomanceQuests.ts - Narrative Campus Romance Quests Engine (Ahona, Rakin, Mehjabin, Iman, Apshora, Anamika)
 import { DateState } from '../../state/DateState';
 import { RPGStats } from '../../state/RPGStats';
 import { SoundEngine } from '../../audio/SoundEngine';
@@ -520,56 +520,61 @@ export class CampusRomanceQuests {
   }
 
   /* =========================================================================
-   *  ENAN & SALAT COUPLE DATE QUESTLINE & CUTSCENES
+   *  IMAN & MEHJABIN COUPLE DATE QUESTLINE & CUTSCENES
    * ========================================================================= */
-  static interactSalat(scene: any): void {
+    static interactSalat(scene: any): void { this.interactMehjabin(scene); }
+  static playEnanExcusesCutscene(scene: any): void { this.playImanExcusesCutscene(scene); }
+  static interactEnan(scene: any): void { this.interactIman(scene); }
+  static playTotoroSwaysEnanCutscene(scene: any): void { this.playTotoroSwaysImanCutscene(scene); }
+
+  static interactMehjabin(scene: any): void {
     if (!DateState.totoroJoined) {
       UI.startDialogue([
-        { speaker: 'Salat', portrait: '🌸', text: 'Oh hello! Are you looking for your partner? I saw a huge, cuddly forest spirit waiting by the Krishnachura tree at Curzon Hall!' }
+        { speaker: 'Mehjabin', portrait: '🌸', text: 'Oh hello! Are you looking for your partner? I saw a huge, cuddly forest spirit waiting by the Krishnachura tree at Curzon Hall!' }
       ]);
       return;
     }
 
-    if (DateState.enanQuestStage === 0) {
+    if (DateState.imanQuestStage === 0) {
       SoundEngine.heartUp();
       UI.startDialogue([
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '🌸',
           text: 'Moon Walker! Oh, it really is you! And is that... Totoro?! You two are literally the most enchanting couple in all of Dhaka!'
         },
         {
           speaker: 'Moon Walker',
           portrait: '🌙',
-          text: 'Thank you, Salat! We have been exploring the valley together today.'
+          text: 'Thank you, Mehjabin! We have been exploring the valley together today.'
         },
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '🌸',
-          text: 'I have been watching you two from across the fountain... you look so genuinely happy and in love. You see that handsome guy over there in the navy silk Panjabi? That is Enan, my boyfriend.'
+          text: 'I have been watching you two from across the fountain... you look so genuinely happy and in love. You see that handsome guy over there in the navy silk Panjabi? That is Iman, my boyfriend.'
         },
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '🌸',
           text: 'We have been together for two years since our first year at DU... but lately, he is so consumed by his job and client spreadsheets that we haven’t had a real date in months.'
         },
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '✨',
-          text: 'I just had the most wonderful idea: what if we go on a Double Couple Date together?! Enan and me, and Moon Walker and Totoro! We could walk under the Ramna trees, drink hot clay-cup Malai Cha, and take photos under the lanterns!',
+          text: 'I just had the most wonderful idea: what if we go on a Double Couple Date together?! Iman and me, and Moon Walker and Totoro! We could walk under the Ramna trees, drink hot clay-cup Malai Cha, and take photos under the lanterns!',
           choices: [
             {
-              label: '🌸 "That sounds like an amazing idea, Salat! Double date of the century!"',
+              label: '🌸 "That sounds like an amazing idea, Mehjabin! Double date of the century!"',
               nextNodes: [
                 {
-                  speaker: 'Salat',
+                  speaker: 'Mehjabin',
                   portrait: '🌸',
-                  text: 'Really?! Oh, thank you! Moon Walker, please propose this scenario to Totoro so he is ready! And I will run over to Enan right now and tell him to put his laptop away!'
+                  text: 'Really?! Oh, thank you! Moon Walker, please propose this scenario to Totoro so he is ready! And I will run over to Iman right now and tell him to put his laptop away!'
                 },
                 {
                   speaker: 'Moon Walker',
                   portrait: '🌙',
-                  text: 'Go get him, Salat! We will watch from right here.'
+                  text: 'Go get him, Mehjabin! We will watch from right here.'
                 }
               ]
             },
@@ -577,136 +582,136 @@ export class CampusRomanceQuests {
               label: '🍵 "Count us in! Totoro loves hot tea and sweet treats."',
               nextNodes: [
                 {
-                  speaker: 'Salat',
+                  speaker: 'Mehjabin',
                   portrait: '✨',
-                  text: 'Hooray! Moon Walker, let Totoro know our plan! I am going to tell Enan the great news right now!'
+                  text: 'Hooray! Moon Walker, let Totoro know our plan! I am going to tell Iman the great news right now!'
                 }
               ]
             }
           ]
         }
       ], () => {
-        DateState.enanQuestStage = 1;
+        DateState.imanQuestStage = 1;
         this.playEnanExcusesCutscene(scene);
       });
       return;
     }
 
-    if (DateState.enanQuestStage === 1) {
+    if (DateState.imanQuestStage === 1) {
       this.playEnanExcusesCutscene(scene);
       return;
     }
 
-    if (DateState.enanQuestStage === 2) {
+    if (DateState.imanQuestStage === 2) {
       SoundEngine.blip(340, 'sine');
       UI.startDialogue([
         {
-          speaker: 'Salat (Crying)',
+          speaker: 'Mehjabin (Crying)',
           portrait: '😭',
           text: '*Sniffles and wipes her tears* Did you see that, Moon Walker? He didn’t even look up from his phone. Not even for five seconds...'
         },
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '💔',
           text: 'He called Totoro an "oversized forest spirit"... and said taking two hours for a date is "lost productivity". Am I just an interruption to his schedule now?'
         },
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '🥺',
-          text: 'When we first started dating on Curzon lawn, Enan wasn’t like this at all. He used to write silly rhymes on the back of exam papers. Once, during a Kalbaishakhi storm, he waited forty minutes in the soaking rain at TSC just to bring me hot tea because he knew I had a migraine.'
+          text: 'When we first started dating on Curzon lawn, Iman wasn’t like this at all. He used to write silly rhymes on the back of exam papers. Once, during a Kalbaishakhi storm, he waited forty minutes in the soaking rain at TSC just to bring me hot tea because he knew I had a migraine.'
         },
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '😭',
           text: 'Now all he sees are deadlines, quarterly targets, and billable hours. Does he even remember the boy he used to be? If work is all that matters to him, why are we even together?!',
           choices: [
             {
-              label: '🌸 "Don’t give up on him yet, Salat. Let me tell Totoro—his ancient spirit wisdom can melt any stubborn heart!"',
+              label: '🌸 "Don’t give up on him yet, Mehjabin. Let me tell Totoro—his ancient spirit wisdom can melt any stubborn heart!"',
               nextNodes: [
                 {
-                  speaker: 'Salat',
+                  speaker: 'Mehjabin',
                   portrait: '🥺',
-                  text: 'You think Totoro can reach him? Enan was so dismissive... but maybe an ancient forest avatar can shake him awake.'
+                  text: 'You think Totoro can reach him? Iman was so dismissive... but maybe an ancient forest avatar can shake him awake.'
                 },
                 {
-                  speaker: 'Salat',
+                  speaker: 'Mehjabin',
                   portrait: '🥺',
-                  text: 'Please, Moon Walker... tell Totoro what happened. I just want my sweet, caring Enan back.'
+                  text: 'Please, Moon Walker... tell Totoro what happened. I just want my sweet, caring Iman back.'
                 }
               ]
             },
             {
-              label: '🫂 "You deserve to be loved and prioritized, Salat. We are going to give Enan a serious wake-up call."',
+              label: '🫂 "You deserve to be loved and prioritized, Mehjabin. We are going to give Iman a serious wake-up call."',
               nextNodes: [
                 {
-                  speaker: 'Salat',
+                  speaker: 'Mehjabin',
                   portrait: '🥺',
-                  text: 'Thank you... hearing you say that means the world. Please talk to Totoro, Moon Walker. Maybe he can make Enan realize what he is throwing away.'
+                  text: 'Thank you... hearing you say that means the world. Please talk to Totoro, Moon Walker. Maybe he can make Iman realize what he is throwing away.'
                 }
               ]
             }
           ]
         }
       ], () => {
-        DateState.enanQuestStage = 3;
-        if (scene.salatBadge) scene.salatBadge.setText('🥺 Salat (Hoping Totoro Can Help)');
+        DateState.imanQuestStage = 3;
+        if ((scene.mehjabinBadge || scene.salatBadge)) (scene.mehjabinBadge || scene.salatBadge).setText('🥺 Mehjabin (Hoping Totoro Can Help)');
         UI.updateQuestText();
-        UI.showToast('💬', 'Talk to Totoro!', 'Tell Totoro about Enan’s excuses (Click Partner button or press E near Totoro)!');
+        UI.showToast('💬', 'Talk to Totoro!', 'Tell Totoro about Iman’s excuses (Click Partner button or press E near Totoro)!');
       });
       return;
     }
 
-    if (DateState.enanQuestStage === 3) {
+    if (DateState.imanQuestStage === 3) {
       UI.startDialogue([
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '🥺',
-          text: 'Moon Walker, please talk to Totoro right beside you! Tell him how Enan is hiding behind his work excuses. I am praying Totoro can make him understand.'
+          text: 'Moon Walker, please talk to Totoro right beside you! Tell him how Iman is hiding behind his work excuses. I am praying Totoro can make him understand.'
         }
       ]);
       return;
     }
 
-    if (DateState.enanQuestStage === 4) {
+    if (DateState.imanQuestStage === 4) {
       UI.startDialogue([
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '🥺',
-          text: 'Totoro agreed to talk to Enan?! Oh, Moon Walker... I hope Enan listens. Please go confront him at Mintu Road!'
+          text: 'Totoro agreed to talk to Iman?! Oh, Moon Walker... I hope Iman listens. Please go confront him at Mintu Road!'
         }
       ]);
       return;
     }
 
-    if (DateState.enanQuestStage >= 5) {
+    if (DateState.imanQuestStage >= 5) {
       SoundEngine.heartUp();
       UI.startDialogue([
         {
-          speaker: 'Salat',
+          speaker: 'Mehjabin',
           portrait: '🌸',
-          text: 'Moon Walker! Look at him—Enan hasn’t touched his phone once since our double date! He even tied fresh Beli flowers around my wrist.'
+          text: 'Moon Walker! Look at him—Iman hasn’t touched his phone once since our double date! He even tied fresh Beli flowers around my wrist.'
         },
         {
-          speaker: 'Enan',
+          speaker: 'Iman',
           portrait: '👔',
           text: 'And I am taking her to dinner at Dhanmondi Lake every Friday from now on. Totoro’s words will stay in my heart forever.'
         },
         {
           speaker: 'Totoro',
           portrait: '🐾',
-          text: 'That is the spirit, Enan! The true wealth of Dhaka is the love we share under the night sky.'
+          text: 'That is the spirit, Iman! The true wealth of Dhaka is the love we share under the night sky.'
         }
       ]);
     }
   }
 
-  static playEnanExcusesCutscene(scene: any): void {
+  static playImanExcusesCutscene(scene: any): void {
     scene.cutsceneLocked = true;
     scene.cameras.main.pan(1060, 750, 600, 'Sine.easeInOut');
 
     scene.time.delayedCall(650, () => {
       scene.tweens.add({
-        targets: [scene.salat, scene.salatBadge],
+        targets: [(scene.mehjabin || scene.salat), (scene.mehjabinBadge || scene.salatBadge)],
         x: 1105,
         y: 736,
         duration: 750,
@@ -715,50 +720,50 @@ export class CampusRomanceQuests {
           SoundEngine.blip(480, 'sine');
           UI.startDialogue([
             {
-              speaker: 'Salat',
+              speaker: 'Mehjabin',
               portrait: '🌸',
-              text: 'Enan, jaan! Look who is here—Moon Walker and Totoro! They agreed to go on a Double Couple Date with us tonight!'
+              text: 'Iman, jaan! Look who is here—Moon Walker and Totoro! They agreed to go on a Double Couple Date with us tonight!'
             },
             {
-              speaker: 'Enan (Glued to Phone)',
+              speaker: 'Iman (Glued to Phone)',
               portrait: '💼',
-              text: '*Tapping furiously on his phone, without even looking up* ...Salat, please. I told you three times today, my quarterly project deliverables are due tomorrow morning at 9 AM, and I have thirty-four unread client emails.'
+              text: '*Tapping furiously on his phone, without even looking up* ...Mehjabin, please. I told you three times today, my quarterly project deliverables are due tomorrow morning at 9 AM, and I have thirty-four unread client emails.'
             },
             {
-              speaker: 'Salat',
+              speaker: 'Mehjabin',
               portrait: '🥺',
-              text: 'Enan, you promised me last week! It’s just two hours... we can have tea at TSC, walk by the lake, and double date with them!'
+              text: 'Iman, you promised me last week! It’s just two hours... we can have tea at TSC, walk by the lake, and double date with them!'
             },
             {
-              speaker: 'Enan',
+              speaker: 'Iman',
               portrait: '💼',
-              text: 'Two hours?! Salat, do you know how much productivity that is? I don’t have time to go on a picnic date with an oversized forest spirit and an umbrella girl right now. Be reasonable! Maybe next month.'
+              text: 'Two hours?! Mehjabin, do you know how much productivity that is? I don’t have time to go on a picnic date with an oversized forest spirit and an umbrella girl right now. Be reasonable! Maybe next month.'
             },
             {
-              speaker: 'Salat',
+              speaker: 'Mehjabin',
               portrait: '💔',
-              text: '...Next month? Enan, that’s what you said last month. And the month before that.'
+              text: '...Next month? Iman, that’s what you said last month. And the month before that.'
             },
             {
-              speaker: 'Enan',
+              speaker: 'Iman',
               portrait: '💼',
-              text: 'I am working for our future, Salat! Why can’t you understand that?! *turns his back coldly, continuing to type*'
+              text: 'I am working for our future, Mehjabin! Why can’t you understand that?! *turns his back coldly, continuing to type*'
             }
           ], () => {
             SoundEngine.blip(260, 'sine');
             scene.tweens.add({
-              targets: [scene.salat, scene.salatBadge],
+              targets: [(scene.mehjabin || scene.salat), (scene.mehjabinBadge || scene.salatBadge)],
               x: 965,
               duration: 800,
               ease: 'Sine.easeInOut',
               onComplete: () => {
-                DateState.enanQuestStage = 2;
-                if (scene.salatBadge) scene.salatBadge.setText('😢 Salat (Crying by Fountain)');
-                if (scene.enanBadge) scene.enanBadge.setText('📱 Enan (Glued to Screen)');
+                DateState.imanQuestStage = 2;
+                if ((scene.mehjabinBadge || scene.salatBadge)) (scene.mehjabinBadge || scene.salatBadge).setText('😢 Mehjabin (Crying by Fountain)');
+                if ((scene.imanBadge || scene.enanBadge)) (scene.imanBadge || scene.enanBadge).setText('📱 Iman (Glued to Screen)');
                 scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
                 scene.cutsceneLocked = false;
                 UI.updateQuestText();
-                UI.showToast('😢', 'Salat is Heartbroken', 'Enan gave excuses and brushed her off. Go comfort Salat!');
+                UI.showToast('😢', 'Mehjabin is Heartbroken', 'Iman gave excuses and brushed her off. Go comfort Mehjabin!');
               }
             });
           });
@@ -767,42 +772,42 @@ export class CampusRomanceQuests {
     });
   }
 
-  static interactEnan(scene: any): void {
+  static interactIman(scene: any): void {
     if (!DateState.totoroJoined) {
       UI.startDialogue([
-        { speaker: 'Enan', portrait: '💼', text: '*Typing on phone* Not right now, please. I am swamped with urgent project emails.' }
+        { speaker: 'Iman', portrait: '💼', text: '*Typing on phone* Not right now, please. I am swamped with urgent project emails.' }
       ]);
       return;
     }
 
-    if (DateState.enanQuestStage < 4) {
+    if (DateState.imanQuestStage < 4) {
       SoundEngine.blip(300, 'square');
       UI.startDialogue([
         {
-          speaker: 'Enan (Buried in Work)',
+          speaker: 'Iman (Buried in Work)',
           portrait: '💼',
           text: 'Look, if you’re here to ask for directions or sell something, I don’t have time. I have thirty-four client emails to draft before my morning presentation.'
         },
         {
           speaker: 'Moon Walker',
           portrait: '🌙',
-          text: '(Enan is completely trapped in his phone screen... Salat was right. We need Totoro’s wisdom to snap him out of this.)'
+          text: '(Iman is completely trapped in his phone screen... Mehjabin was right. We need Totoro’s wisdom to snap him out of this.)'
         }
       ]);
       return;
     }
 
-    if (DateState.enanQuestStage === 4) {
+    if (DateState.imanQuestStage === 4) {
       this.playTotoroSwaysEnanCutscene(scene);
       return;
     }
 
-    if (DateState.enanQuestStage >= 5) {
+    if (DateState.imanQuestStage >= 5) {
       this.interactSalat(scene);
     }
   }
 
-  static playTotoroSwaysEnanCutscene(scene: any): void {
+  static playTotoroSwaysImanCutscene(scene: any): void {
     scene.cutsceneLocked = true;
     scene.cameras.main.pan(1110, 750, 700, 'Sine.easeInOut');
 
@@ -829,53 +834,53 @@ export class CampusRomanceQuests {
 
           UI.startDialogue([
             {
-              speaker: 'Enan',
+              speaker: 'Iman',
               portrait: '💼',
-              text: 'Listen, I already told Salat, I don’t have time to chit-chat with—'
+              text: 'Listen, I already told Mehjabin, I don’t have time to chit-chat with—'
             },
             {
               speaker: 'Totoro',
               portrait: '🐾',
-              text: 'Enan. Put down that glowing rectangle in your hands.'
+              text: 'Iman. Put down that glowing rectangle in your hands.'
             },
             {
-              speaker: 'Enan',
+              speaker: 'Iman',
               portrait: '😳',
               text: '*Startled by Totoro’s deep, resonant spirit voice* ...W-what? Look, I am on the clock!'
             },
             {
               speaker: 'Totoro',
               portrait: '🐾',
-              text: 'Tell me, Enan... when your brief mortal days beneath this Dhaka sky draw to an end, which memory will keep your spirit warm? The thirty-four emails you replied to at midnight? Or the sound of Salat’s laughter when the evening breeze carried the scent of Beli flowers through her hair?'
+              text: 'Tell me, Iman... when your brief mortal days beneath this Dhaka sky draw to an end, which memory will keep your spirit warm? The thirty-four emails you replied to at midnight? Or the sound of Mehjabin’s laughter when the evening breeze carried the scent of Beli flowers through her hair?'
             },
             {
-              speaker: 'Enan',
+              speaker: 'Iman',
               portrait: '😳',
               text: '*His hand trembles, lowering his phone* ...I... I...'
             },
             {
               speaker: 'Totoro',
               portrait: '🐾',
-              text: 'She stood by that fountain in tears. She was remembering a young man in an embroidered Panjabi who once stood forty minutes in the freezing Kalbaishakhi rain at TSC just to bring her ten-taka tea. Where did that boy go, Enan? Did you trade his soul for a promotion?'
+              text: 'She stood by that fountain in tears. She was remembering a young man in an embroidered Panjabi who once stood forty minutes in the freezing Kalbaishakhi rain at TSC just to bring her ten-taka tea. Where did that boy go, Iman? Did you trade his soul for a promotion?'
             },
             {
               speaker: 'Moon Walker',
               portrait: '🌙',
-              text: 'She isn’t asking for the world, Enan. She is asking for you. Work will never hold your hand when you are lonely, and a spreadsheet will never love you back.'
+              text: 'She isn’t asking for the world, Iman. She is asking for you. Work will never hold your hand when you are lonely, and a spreadsheet will never love you back.'
             },
             {
-              speaker: 'Enan',
+              speaker: 'Iman',
               portrait: '🥺',
-              text: '*Tears well up in Enan’s eyes* What... what on earth have I been doing? She was standing right in front of me, hurting, and I was treating her love like a nuisance.'
+              text: '*Tears well up in Iman’s eyes* What... what on earth have I been doing? She was standing right in front of me, hurting, and I was treating her love like a nuisance.'
             },
             {
-              speaker: 'Enan',
+              speaker: 'Iman',
               portrait: '🥺',
               text: 'I was so terrified of falling behind in life that I forgot why I wanted to succeed in the first place—to give her a happy life. But I was losing her in the process.'
             }
           ], () => {
             scene.tweens.add({
-              targets: [scene.enan, scene.enanBadge],
+              targets: [(scene.iman || scene.enan), (scene.imanBadge || scene.enanBadge)],
               x: 865,
               duration: 600,
               ease: 'Power2',
@@ -883,27 +888,27 @@ export class CampusRomanceQuests {
                 SoundEngine.heartUp();
                 UI.startDialogue([
                   {
-                    speaker: 'Enan',
+                    speaker: 'Iman',
                     portrait: '🥺',
-                    text: 'Salat! Salat, look at me. I was an arrogant, blind fool. I am so deeply sorry. Work means nothing if I lose you. Please forgive me.'
+                    text: 'Mehjabin! Mehjabin, look at me. I was an arrogant, blind fool. I am so deeply sorry. Work means nothing if I lose you. Please forgive me.'
                   },
                   {
-                    speaker: 'Salat',
+                    speaker: 'Mehjabin',
                     portrait: '😭',
-                    text: 'Enan... you really put your phone away? You came back to me?'
+                    text: 'Iman... you really put your phone away? You came back to me?'
                   },
                   {
-                    speaker: 'Enan',
+                    speaker: 'Iman',
                     portrait: '🥺',
                     text: 'I came back, and I am never letting work get between us again. Tonight is completely for us.'
                   },
                   {
-                    speaker: 'Salat',
+                    speaker: 'Mehjabin',
                     portrait: '🌸',
-                    text: '*Embraces Enan with joyful tears* Oh, Enan! I love you so much!'
+                    text: '*Embraces Iman with joyful tears* Oh, Iman! I love you so much!'
                   },
                   {
-                    speaker: 'Enan',
+                    speaker: 'Iman',
                     portrait: '👔',
                     text: 'Moon Walker, Totoro... you saved my relationship tonight. Will you please do us the greatest honor and join our Double Couple Date right this moment?!'
                   },
@@ -913,7 +918,7 @@ export class CampusRomanceQuests {
                     text: 'Grrr-oooh! That is what we came here for! Let the Double Couple Date begin!'
                   }
                 ], () => {
-                  DateState.enanQuestStage = 5;
+                  DateState.imanQuestStage = 5;
                   this.playDoubleDateCutscene(scene);
                 });
               }
@@ -928,10 +933,10 @@ export class CampusRomanceQuests {
     scene.cutsceneLocked = true;
     scene.cameras.main.pan(1060, 750, 600, 'Sine.easeInOut');
 
-    scene.salat.setPosition(1045, 750).setDepth(750);
-    scene.enan.setPosition(1080, 750).setDepth(750);
-    scene.salatBadge.setPosition(1062, 685).setText('💑 Enan & Salat (Happy Couple)');
-    if (scene.enanBadge) scene.enanBadge.setVisible(false);
+    (scene.mehjabin || scene.salat).setPosition(1045, 750).setDepth(750);
+    (scene.iman || scene.enan).setPosition(1080, 750).setDepth(750);
+    (scene.mehjabinBadge || scene.salatBadge).setPosition(1062, 685).setText('💑 Iman & Mehjabin (Happy Couple)');
+    if ((scene.imanBadge || scene.enanBadge)) (scene.imanBadge || scene.enanBadge).setVisible(false);
 
     scene.player.setPosition(1010, 750);
     scene.totoro.setPosition(975, 750);
@@ -956,12 +961,12 @@ export class CampusRomanceQuests {
     SoundEngine.itemFanfare();
     UI.startDialogue([
       {
-        speaker: 'Enan',
+        speaker: 'Iman',
         portrait: '👔',
-        text: 'Tong-er Mama just delivered four fresh clay cups of steaming Malai Cha, and I bought a full pot of Bogurar Mishti Doi! Salat, have the first spoonful.'
+        text: 'Tong-er Mama just delivered four fresh clay cups of steaming Malai Cha, and I bought a full pot of Bogurar Mishti Doi! Mehjabin, have the first spoonful.'
       },
       {
-        speaker: 'Salat',
+        speaker: 'Mehjabin',
         portrait: '🌸',
         text: 'Mmm! Sweet, chilled, and ten times better because we are all here together. Look at us—the greatest double date in Dhaka history!'
       },
@@ -976,12 +981,12 @@ export class CampusRomanceQuests {
         text: 'A toast to love that never gives up! Say cheese for the camera!'
       },
       {
-        speaker: 'Enan & Salat',
+        speaker: 'Iman & Mehjabin',
         portrait: '💑',
         text: '*Smiling together hand-in-hand* CHEESE! 📸'
       }
     ], () => {
-      UI.giveItem('double_date_polaroid', 'Went on a memorable Double Couple Date with Enan, Salat, and Totoro.');
+      UI.giveItem('double_date_polaroid', 'Went on a memorable Double Couple Date with Iman, Mehjabin, and Totoro.');
       RPGStats.gainXP(80);
       DateState.hearts = Math.min(5, DateState.hearts + 1);
       DateState.hp = DateState.maxHp;
@@ -989,7 +994,7 @@ export class CampusRomanceQuests {
       DateState.memories.push({
         emoji: '📸',
         title: 'Four-Hearts Double Couple Date',
-        note: 'Totoro swayed Enan to put down his phone. Celebrated love with cha and mishti doi.'
+        note: 'Totoro swayed Iman to put down his phone. Celebrated love with cha and mishti doi.'
       });
 
       SoundEngine.levelUp();
@@ -1381,7 +1386,7 @@ export class CampusRomanceQuests {
           text: 'Apshora!! Look at her, Rakin! Look at my best friend! She isn’t standing on any sideline anymore—she owns the entire world tonight!'
         },
         {
-          speaker: 'Rakin & Enan',
+          speaker: 'Rakin & Iman',
           portrait: '👏',
           text: 'Bravo! Absolutely sensational work!'
         },
