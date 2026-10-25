@@ -43,12 +43,18 @@
   - [x] **Deterministic Replay Recorder:** `ReplayRecorder.ts` headless deterministic runner for bit-for-bit test reproducibility.
   - [x] **Verification & Tests:** 51 new pure Vitest unit tests (177 total tests across project passing) + 10-step Playwright E2E automation (`scripts/test_race_m2.js`).
 
-- [ ] **M3: Track Pipeline & 3D Collisions** *(Next Milestone)*
-  - [ ] Track mesh extrusion / Catmull-Rom spline road generator.
-  - [ ] Surface query integration via `three-mesh-bvh` (implementing `ISurfaceQuery`).
-  - [ ] Boundary wall & curb collision response (implementing `ICollisionWorld`).
-  - [ ] Checkpoint gating, lap tracking, wrong-way detection.
-  - [ ] Minimap HUD integration with 2D track radar and player dot.
+- [x] **M3: Track Pipeline & 3D Collisions ("Fuller Road Sprint")**
+  - [x] **Asset Provenance & Audio Audit:** Completed `ASSETS.md` audit, CC0 sample-based audio pipeline in `RaceAudio.ts` with procedural fallbacks (ADR 012), 3D kart asset evaluation in `ASSET_SHOPPING_LIST.md` (ADR 013).
+  - [x] **Mini-Turbo & Benchmarks:** Reference corner mini-turbo retuned to 2.24s (2.05–2.45s target window), verified feel checklist (f/g/h), 4× CPU throttled 60s sustained drift heap delta $+0.4$ MB with zero leaks.
+  - [x] **three-mesh-bvh Integration:** Pinned `0.9.16`, validated sub-microsecond query performance (10.14 ms build, 3.46 µs / step query, 1.4% budget limit, ADR 014), refined headless math purity rule (ADR 015).
+  - [x] **Multi-Elevation 3D Ground Query:** `BvhGroundQuery.ts` downward raycasting with multi-level thresholding (`y + upOffset - 0.1`) supporting flyover bridge climbing (4.5m – 6.0m elevation), surface material parsing (`road_asphalt`, `road_brick`, `offroad_grass`, `offroad_mud`, `wall`, `boost_pad`, `jump_ramp`), and face normal extraction.
+  - [x] **3D Wall Collision World:** `BvhCollisionWorld.ts` sphere sweep queries, glancing slide ($<40^\circ$) vs head-on bounce ($\ge 40^\circ$) with restitution, speed cut, and drift cancel.
+  - [x] **Spline Mathematics & Progress:** `TrackSpline.ts` 3D Catmull-Rom spline, arc-length parameterization, local window search, progress calculation, wrong-way detection, width and banking interpolation.
+  - [x] **Lap Tracker & Anti-Cheat:** `LapTracker.ts` continuous segment-plane gate intersections, ordered checkpoints, shortcut group branching (`groupId`), wrong-way reversing rejection.
+  - [x] **Paper-Lantern Rescue System:** `RescueSystem.ts` fall plane detection ($y < -10\text{m}$) and stuck detection ($\ge 3.5\text{s}$), immediate respawn at last verified checkpoint with safe heading and 1.5s invulnerability.
+  - [x] **Track Asset Pipeline & "Fuller Road Sprint":** `scripts/race/build-track.mjs` generates `track.json`, `visual.glb` (200.4 kB), and `collision.glb` (258.2 kB, 2,524 collision triangles) for the 1,120m Dhaka University circuit featuring Curzon Hall, Shaheed Minar, and TSC.
+  - [x] **UI & Runtime Integration:** `TrackLoader.ts`, `RaceMinimap.ts` 2D canvas radar map with live track ribbon and player blip, `RaceLoadingScreen.ts` progress indicator, `RaceResults.ts` finish modal with lap split readouts, and `TrackDebugOverlay.ts` (F6).
+  - [x] **Validation & Testing:** `npm run race:validate` (3 full laps, 63.99s avg lap, 100% checkpoints passed in order), 46 new pure Vitest unit tests (223/223 total project tests green), and comprehensive Playwright E2E automation (`scripts/test_race_m3.js`).
 
 - [ ] **M4: AI Opponents & Race Director** *(Pending)*
 - [ ] **M5: Dhaka Street Items & Hazards** *(Pending)*

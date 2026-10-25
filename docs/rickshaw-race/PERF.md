@@ -86,3 +86,49 @@ Automated via Playwright E2E (`scripts/test_race_m2.js`, Step 8):
 - **Three.js WebGL Geometries/Textures:** Full disposal of buffer geometries, materials, instanced meshes, and WebGL rendering context on each exit.
 - **Audio Node Retention:** All `AudioBufferSourceNode`, `GainNode`, and `OscillatorNode` sources disconnected and stopped on dispose.
 - **Overworld Integrity:** Overworld coordinates (`x: 1648, y: 816`), Totoro trail, in-game calendar, and NPC schedules resumed with 0 temporal drift.
+
+---
+
+### 5. Milestone 3: Track Pipeline & BVH Spatial Query Benchmarks
+
+Automated via `scripts/race/benchmark-bvh.mjs`, `scripts/race/validate-track.mjs`, and Playwright E2E (`scripts/test_race_m3.js`):
+
+#### A. `three-mesh-bvh` Micro-Benchmarks (`benchmark-bvh.mjs`)
+- **BVH Construction (15,000 Triangles):** $10.14\text{ ms}$ desktop (estimated $\sim 40.5\text{ ms}$ under 4× CPU throttling), well inside the $\le 150\text{ ms}$ desktop / $\le 600\text{ ms}$ throttled budget.
+- **Downward Ground Raycast Throughput (`raycastFirst`):** $2.04\text{ }\mu\text{s}$ per query ($491\text{ queries/ms}$).
+- **Sphere Sweep Throughput (`shapecast`):** $1.42\text{ }\mu\text{s}$ per query ($703\text{ queries/ms}$).
+- **Combined Spatial Query Cost per 60 Hz Physics Step:** $3.46\text{ }\mu\text{s}$ ($0.0035\text{ ms}$), consuming only **$1.4\%$** of the $0.25\text{ ms}$ budget limit.
+
+#### B. "Fuller Road Sprint" Track Download & Geometry Footprint
+- **Visual GLB (`visual.glb`):** $200.4\text{ kB}$ (Budget: $\le 8,000\text{ kB}$).
+- **Collision GLB (`collision.glb`):** $258.2\text{ kB}$ (Budget: $\le 1,000\text{ kB}$).
+- **Track Definition JSON (`track.json`):** $9.7\text{ kB}$.
+- **Total Track Payload:** **$468.3\text{ kB}$** (Target: $\le 8\text{ MB}$), keeping first track launch near-instantaneous.
+- **Collision Geometry:** 2,524 triangles (Budget: $\le 40,000$ triangles).
+- **Surface Types Partitioned:** Asphalt (`surf_asphalt`), Brick (`surf_brick`), Grass (`surf_grass`), Mud (`surf_mud`), Puddle (`surf_puddle`), Boost Pad (`surf_boostpad`), Jump Ramp (`surf_ramp`), Barrier Wall (`wall_barrier`), Kill Plane (`surf_offtrack_kill`).
+
+#### C. Headless Autopilot Completability & Lap Times (`validate-track.mjs`)
+- **Total Race Time (3 Laps):** $190.22\text{ s}$.
+- **Average Lap Time:** $63.41\text{ s}$ (Target: 45–60 s range on technical circuit).
+- **Best Lap Time:** $62.35\text{ s}$.
+- **Checkpoint Accuracy:** 100% of 15 checkpoint gates cleared sequentially with anti-cheat validation active.
+
+#### D. M3 Zero-Leak Audit Across 10 Consecutive Enter/Exit Cycles (`test_race_m3.js`, Step 9)
+```
+📍 [STEP 9] Executing 10 Consecutive Enter/Exit Cycles (Zero-Leak Audit)...
+  Cycle 1/10: enter -> exit... DONE
+  Cycle 2/10: enter -> exit... DONE
+  Cycle 3/10: enter -> exit... DONE
+  Cycle 4/10: enter -> exit... DONE
+  Cycle 5/10: enter -> exit... DONE
+  Cycle 6/10: enter -> exit... DONE
+  Cycle 7/10: enter -> exit... DONE
+  Cycle 8/10: enter -> exit... DONE
+  Cycle 9/10: enter -> exit... DONE
+  Cycle 10/10: enter -> exit... DONE
+  🔍 Lingering race DOM elements: 0
+  ✅ Zero-leak audit: 10 cycles clean with 0 DOM / GPU leaks
+```
+- **Retained DOM elements:** 0 (`#race-container, #race-hud, #race-minimap-container, #race-loading-screen, #race-results-screen`).
+- **Overworld State:** `playerX: 480, playerY: 1380`, `cutsceneLocked: false`, `isPaused: false`, 100% restored.
+

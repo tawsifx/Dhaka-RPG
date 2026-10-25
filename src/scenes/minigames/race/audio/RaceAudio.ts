@@ -358,6 +358,11 @@ export class RaceAudio {
     this.playThump();
   }
 
+  playCheckpointBeep(): void {
+    if (!this.ctx || this.isDisposed) return;
+    this.playBeep(880, 0.1);
+  }
+
   playBell(): void {
     SoundEngine.rickshawBell();
   }

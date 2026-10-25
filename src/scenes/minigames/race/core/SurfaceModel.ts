@@ -62,6 +62,23 @@ export const SURFACE_DEFINITIONS: Record<SurfaceType, Readonly<Omit<SurfaceQuery
     frictionMultiplier: 1.00,
     isBoostPad: false,
     isRamp: false
+  },
+  ramp: {
+    speedMultiplier: 1.00,
+    accelerationMultiplier: 1.00,
+    steerMultiplier: 0.90,
+    frictionMultiplier: 1.00,
+    isBoostPad: false,
+    isRamp: true,
+    rampAngleRad: 0.28
+  },
+  offtrack_kill: {
+    speedMultiplier: 0.00,
+    accelerationMultiplier: 0.00,
+    steerMultiplier: 0.00,
+    frictionMultiplier: 5.00,
+    isBoostPad: false,
+    isRamp: false
   }
 };
 

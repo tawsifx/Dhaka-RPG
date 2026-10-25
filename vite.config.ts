@@ -16,7 +16,7 @@ export default defineConfig({
           groups: [
             {
               name: 'three',
-              test: /node_modules[\\/]three/
+              test: /node_modules[\\/](three|three-mesh-bvh)/
             },
             {
               name: 'race-engine',

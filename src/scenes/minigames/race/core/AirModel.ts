@@ -47,10 +47,11 @@ export class AirModel {
   /**
    * Launches kart into the air from a ramp or dropoff.
    */
-  launch(forwardSpeed: number, rampAngleRad = 0.28): void {
+  launch(forwardSpeed: number, rampAngleRad = 0.28, baseElevation = 0): void {
     this.state.isAirborne = true;
     const launchSpeed = Math.max(8.0, Math.abs(forwardSpeed));
     this.state.verticalVelocity = launchSpeed * Math.tan(rampAngleRad);
+    this.state.height = baseElevation;
     this.state.trickActive = false;
     this.state.trickRotation = 0;
   }
@@ -64,7 +65,7 @@ export class AirModel {
     return true;
   }
 
-  update(dt: number, trickInput: boolean): LandingResult {
+  update(dt: number, trickInput: boolean, groundHeight = 0): LandingResult {
     const noLanding: LandingResult = {
       landed: false,
       trickSuccess: false,
@@ -72,7 +73,7 @@ export class AirModel {
     };
 
     if (!this.state.isAirborne) {
-      this.state.height = 0;
+      this.state.height = groundHeight;
       this.state.verticalVelocity = 0;
       this.state.trickActive = false;
       this.state.trickRotation = 0;
@@ -95,8 +96,8 @@ export class AirModel {
     this.state.height += this.state.verticalVelocity * dt;
 
     // Landing detection
-    if (this.state.height <= 0) {
-      this.state.height = 0;
+    if (this.state.height <= groundHeight) {
+      this.state.height = groundHeight;
       this.state.verticalVelocity = 0;
       this.state.isAirborne = false;
 

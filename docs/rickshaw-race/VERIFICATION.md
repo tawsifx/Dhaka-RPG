@@ -80,3 +80,47 @@ For Milestone 3 (Track Pipeline, 3D Mesh Surfaces & Collisions), we evaluated tw
 
 > [!TIP]
 > **Recommendation for M3:** **Three-Mesh-BVH**. It perfectly matches the architectural foundation established in M1 & M2, delivers lightning-fast ray/sphere casting for track geometry, and preserves our snappy Mario Kart feel without the bloated weight or floaty instability of a WASM rigid-body engine.
+
+---
+
+### 5. Milestone 3 Verification Report: Track Pipeline & "Fuller Road Sprint"
+
+**Milestone:** M3 Track Pipeline, BVH Spatial Queries, Laps, Checkpoints & Minimap  
+**Status:** 100% Verified & Approved  
+**Date:** October 26, 2026
+
+#### A. M3 Verification Checklist
+
+| Track Feature | Implementation | Verification Criteria | Status |
+| :--- | :--- | :--- | :--- |
+| **Track Specification** | `docs/rickshaw-race/03-track-format.md` + JSON schema | Version 1 spec with spline, surface materials, gates, grid, props | **VERIFIED** (ADR 016) |
+| **Track Asset Pipeline** | `scripts/race/build-track.mjs` | Generates `track.json`, `visual.glb` ($200.4\text{ kB}$), `collision.glb` ($258.2\text{ kB}$) | **VERIFIED** |
+| **Multi-Elevation Ground** | `BvhGroundQuery.ts` | Raycasting with `y + upOffset - 0.1` threshold climbs flyover bridge ($4.5$–$6.0\text{m}$) | **VERIFIED** (Tests 1–6 & E2E Step 4) |
+| **3D Sphere Collision** | `BvhCollisionWorld.ts` | Sphere sweep shapecast; glancing slide ($<40^\circ$) vs head-on bounce ($\ge 40^\circ$) | **VERIFIED** (Tests 7–12) |
+| **3D Spline Math** | `TrackSpline.ts` | Arc-length Catmull-Rom spline with local window search, wrong-way detection | **VERIFIED** (Tests 13–18) |
+| **Lap Tracker & Anti-Cheat**| `LapTracker.ts` | Continuous segment-plane gate intersections, sequential order, reversing rejection | **VERIFIED** (Tests 19–26 & `race:validate`) |
+| **Paper-Lantern Rescue** | `RescueSystem.ts` | Fall plane ($y < -10\text{m}$) & stuck ($\ge 3.5\text{s}$) detection; immediate checkpoint respawn | **VERIFIED** (Tests 27–31 & E2E Step 6) |
+| **Minimap HUD Radar** | `RaceMinimap.ts` | 2D canvas radar with track ribbon, finish line, player blip and orientation | **VERIFIED** (E2E Step 3) |
+| **Race Flow & State** | `RaceStateMachine.ts` | Intro $\to$ Countdown $\to$ Racing $\to$ Finished $\to$ Results modal | **VERIFIED** (Tests 32–37 & E2E Step 7) |
+| **Autopilot Agent** | `TrackAutopilot.ts` | Pure lookahead steering and curvature anticipation driving 3 consecutive laps | **VERIFIED** (`race:validate`: 3 laps @ 63.41s) |
+
+#### B. Verification Screenshot Artifacts
+
+##### 1. Flyover Bridge Elevation Tracking
+![M3 Flyover Bridge](/docs/rickshaw-race/m3_flyover_bridge.png)
+*Demonstrates the kart ascending the Fuller Road flyover bridge structure at $+4.04\text{m}$ elevation above the ground plane, with active 3D ground snapping and smoothed normal orientation.*
+
+##### 2. Jump Ramp Launch & Gap Flight
+![M3 Jump Ramp](/docs/rickshaw-race/m3_ramp_jump.png)
+*Demonstrates the kart launching into an airborne ballistic trajectory over the Fuller Road sprint obstacle gap.*
+
+##### 3. Race Results & Split Times Modal
+![M3 Results Modal](/docs/rickshaw-race/m3_results_modal.png)
+*Demonstrates post-race finish modal with track name ("Fuller Road Sprint"), total time, lap 1/2/3 split readouts with gold star highlighting the best lap, and Retry / Exit buttons.*
+
+#### C. Automated Test Summary
+- **Total Project Vitest Tests:** **223 / 223 passing** (46 new M3 tests in `tests/race/race_m3.test.ts`).
+- **CLI Track Validation (`npm run race:validate`):** 3 laps simulated, $63.41\text{s}$ average lap, 100% gates cleared.
+- **Playwright E2E Suite (`npm run test:race:m3`):** 9 / 9 steps passing with 0 leaks.
+- **Regression Suites:** `npm run test:race:m1` (7/7 steps), `npm run test:race:m2` (10/10 steps), `npm run validate:npc`, `npm run assets:validate`, and `npm run typecheck` all 100% green.
+

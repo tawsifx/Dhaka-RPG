@@ -53,15 +53,17 @@ export function validateAssets(): AssetValidationReport {
       if (isCombat) combatExternal++;
 
       // Check if .anim.json exists beside animated sheets
-      const animPath = fullPath.replace(/\.png$/i, '.anim.json');
-      if (fs.existsSync(animPath)) {
-        try {
-          const animData = JSON.parse(fs.readFileSync(animPath, 'utf8'));
-          if (!Array.isArray(animData.frames) && !animData.animations) {
-            errors.push(`Invalid anim.json at ${animPath}: missing frames or animations.`);
+      if (/\.png$/i.test(fullPath)) {
+        const animPath = fullPath.replace(/\.png$/i, '.anim.json');
+        if (fs.existsSync(animPath)) {
+          try {
+            const animData = JSON.parse(fs.readFileSync(animPath, 'utf8'));
+            if (!Array.isArray(animData.frames) && !animData.animations) {
+              errors.push(`Invalid anim.json at ${animPath}: missing frames or animations.`);
+            }
+          } catch (e: any) {
+            errors.push(`Malformed JSON in ${animPath}: ${e.message}`);
           }
-        } catch (e: any) {
-          errors.push(`Malformed JSON in ${animPath}: ${e.message}`);
         }
       }
     } else {

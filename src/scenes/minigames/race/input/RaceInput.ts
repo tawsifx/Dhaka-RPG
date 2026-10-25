@@ -6,6 +6,7 @@ export class RaceInput {
   private bellRequested = false;
   private exitRequested = false;
   private resetRequested = false;
+  private f6JustPressed = false;
 
   // Touch & Virtual Action state
   private virtualThrottle = 0;
@@ -48,6 +49,9 @@ export class RaceInput {
       e.preventDefault();
     } else if (e.code === 'KeyR') {
       this.resetRequested = true;
+      e.preventDefault();
+    } else if (e.code === 'F6') {
+      this.f6JustPressed = true;
       e.preventDefault();
     } else if (
       e.code === 'ArrowUp' ||
@@ -123,6 +127,12 @@ export class RaceInput {
 
   triggerReset(): void {
     this.resetRequested = true;
+  }
+
+  isF6JustPressed(): boolean {
+    const val = this.f6JustPressed;
+    this.f6JustPressed = false;
+    return val;
   }
 
   /**

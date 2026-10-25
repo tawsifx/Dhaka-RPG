@@ -25,7 +25,8 @@ export class ExternalAssetAdapter {
     for (const [id, spec] of Object.entries(ASSET_SPECS_MANIFEST)) {
       // Only request files from the network if marked as available external files.
       // Unintegrated / shopping list slots instantly bypass network requests and bind fallbacks.
-      if (!spec.externalPath || !spec.hasExternalFile) continue;
+      // 3D GLB models are lazy-loaded exclusively by Three.js race engine; bypass 2D Phaser image loader.
+      if (!spec.externalPath || !spec.hasExternalFile || spec.externalPath.endsWith('.glb')) continue;
 
       // Do not duplicate load if already loaded in this scene
       if (!scene.textures.exists(`ext-${id}`)) {

@@ -225,3 +225,58 @@
   - Zero asset loading delay and zero bundle footprint impact.
 - **Consequences:**  
   Full kinematic and visual feedback remains intact; artists or future milestones can drop an external `rickshaw_kart.glb` into `public/assets/models/` without code changes.
+
+---
+
+### ADR 014: `three-mesh-bvh` Geometry Ray & Sphere Collision Acceleration (Benchmark & Approval)
+
+- **Context:**  
+  Milestone 3 requires moving from flat 2D analytic surface models to true 3D mesh-based tracks with multi-level elevation (such as flyovers, banked turns, and ramps), as well as complex wall boundaries. The query system must support fast downward ground raycasting (for ground height snapping, surface material detection, and normal orientation) and sphere/capsule sweeps for wall collisions.
+  Candidate technologies: Rapier.js (WASM physics engine) vs `three-mesh-bvh`.
+- **Decision:**  
+  We officially approve and pin **`three-mesh-bvh@0.9.16`** (compatible with `three@0.186.1`, peer `>= 0.159.0`).
+  Before committing to integration, empirical micro-benchmarks were executed (`scripts/race/benchmark-bvh.mjs`) on representative track meshes ($15,000$ triangles) and high-density stress meshes ($39,760$ triangles):
+  1. **BVH Construction:** $10.14\text{ ms}$ on desktop, estimated $\sim 40.5\text{ ms}$ under 4× CPU throttling. (Budget was $\le 150\text{ ms}$ desktop / $\le 600\text{ ms}$ throttled).
+  2. **Ground Raycast Throughput (`raycastFirst`):** $2.04\text{ }\mu\text{s}$ per query ($491\text{ queries/ms}$).
+  3. **Sphere Sweep Throughput (`shapecast`):** $1.42\text{ }\mu\text{s}$ per query ($703\text{ queries/ms}$).
+  4. **Combined Query Cost per 60 Hz Step:** $3.46\text{ }\mu\text{s}$ ($0.0035\text{ ms}$), consuming only **$1.4\%$** of the $0.25\text{ ms}$ budget limit.
+- **Consequences:**  
+  Avoids the $1.8\text{ MB}$ WASM overhead of Rapier, eliminates asynchronous WASM compilation, runs headlessly in Vitest/Node, and natively executes directly against Three.js geometry buffers with sub-microsecond query performance.
+
+---
+
+### ADR 015: Purity Refinement — Headless Math & Geometry Allowance in Pure Subsystems
+
+- **Context:**  
+  In M1 and M2, pure subsystems (`KartController`, `FixedStepLoop`, `DriftSystem`) strictly avoided any `three` imports. In M3, spatial queries (`BvhGroundQuery`, `BvhCollisionWorld`, `TrackSpline`) require 3D vectors, matrices, rays, spheres, boxes, and BVH acceleration trees.
+- **Decision:**  
+  Refine the architectural Purity Invariant (Rule 4):
+  - Pure gameplay modules (`track/`, `core/`, `spline`, `laps`, `rescue`, `autopilot`, `bvh queries`) must remain **100% DOM-free and WebGL-free**, running headlessly in Node/Vitest without a browser or headless canvas mock.
+  - They **MAY import Three.js math and geometry classes** (`THREE.Vector3`, `THREE.Ray`, `THREE.Sphere`, `THREE.Box3`, `THREE.BufferGeometry`) and `three-mesh-bvh`.
+  - Rendering and DOM components (`TrackRenderer`, `ChaseCamera`, `RaceHud`, `RaceMinimap`) consume state produced by the pure modules and never own simulation state.
+- **Consequences:**  
+  Allows rich 3D vector and spline operations across headless tests and simulation without introducing any WebGL or DOM dependencies into the core engine.
+
+---
+
+### ADR 016: Data-Driven Track Pipeline, Checkpoints, and Rescue Protocol
+
+- **Context:**  
+  Milestone 3 evolves the racing mini-game from a flat analytic test arena into full 3D multi-surface circuits with elevation, flyover bridges, jump ramps, shortcuts, and wall collisions. We require a standardized track format, strict lap validation preventing cheat reversing or corner cutting, and a graceful rescue system when karts fall off ledges or get stuck.
+- **Decision:**  
+  1. **Dual-GLB Track Architecture:**  
+     Each track defines `track.json` along with two GLB meshes:
+     - `visual.glb`: Visual road ribbons, curbs, sidewalks, Dhaka landmark facades (Curzon Hall, Shaheed Minar, TSC), trees, and paper lanterns.
+     - `collision.glb`: Optimized collision geometry partitioned by surface types (`road_asphalt`, `road_brick`, `offroad_grass`, `offroad_mud`, `wall`, `boost_pad`, `jump_ramp`).
+     Tracks are compiled offline via `scripts/race/build-track.mjs` which extrudes spline profiles and places external prop instances.
+  2. **Track Validation and Lap Tracking:**  
+     - Continuous segment-plane gate intersections with directional normal alignment ($\vec{d} \cdot \vec{n} > 0$).
+     - Ordered sequential checkpoint gates with optional `groupId` support for branching shortcut routes.
+     - Anti-cheat logic: backward gate crossings are rejected; lap increment requires passing all mandatory gates in sequence.
+  3. **Paper-Lantern Rescue System:**  
+     - Fall detection via kill plane threshold ($y < -10\text{ m}$).
+     - Stuck detection via throttle persistence with near-zero displacement ($\ge 3.5\text{ s}$).
+     - Immediate respawn to the last verified checkpoint center with safe heading, zeroed velocity, and $1.5\text{ s}$ invulnerability.
+- **Consequences:**  
+  Deterministic lap tracking, robust multi-elevation driving, and full crash/fall recovery with zero game freezes or soft locks.
+

@@ -6,6 +6,7 @@ import {
   KartState,
   KartStats,
   SurfaceType,
+  SurfaceQueryResult,
   ISurfaceQuery,
   ICollisionWorld,
   CollisionResult,
@@ -203,13 +204,30 @@ export class KartController {
     const effectiveThrottle = canDrive ? throttle : 0;
     const effectiveBrake = canDrive ? brake : 0;
 
-    // 2. Query Surface Model
-    const surfaceQuery = this.surfaceModel.query(this.state.x, this.state.z);
-    this.state.surface = surfaceQuery.type;
+    // 2. Query Ground & Surface Model
+    let groundHeight = 0;
+    let groundNormalX = 0;
+    let groundNormalY = 1;
+    let groundNormalZ = 0;
+    let onGround = true;
 
-    if (this.surfaceModel instanceof AnalyticSurfaceModel) {
-      this.surfaceModel.updateCooldowns(dt);
+    let surfaceQuery: SurfaceQueryResult;
+    if ('queryGround' in (this.surfaceModel as any)) {
+      const gRes = (this.surfaceModel as any).queryGround(this.state.x, this.state.y, this.state.z);
+      surfaceQuery = gRes;
+      groundHeight = gRes.height;
+      groundNormalX = gRes.normalX;
+      groundNormalY = gRes.normalY;
+      groundNormalZ = gRes.normalZ;
+      onGround = gRes.onGround;
+    } else {
+      surfaceQuery = this.surfaceModel.query(this.state.x, this.state.z);
+      if (this.surfaceModel instanceof AnalyticSurfaceModel) {
+        this.surfaceModel.updateCooldowns(dt);
+      }
     }
+
+    this.state.surface = surfaceQuery.type;
 
     // Boost Pad Trigger
     if (surfaceQuery.isBoostPad) {
@@ -218,13 +236,16 @@ export class KartController {
 
     // Launch Ramp Trigger
     if (surfaceQuery.isRamp && !this.airModel.isAirborne() && this.state.speed > 5.0) {
-      this.airModel.launch(this.state.speed, surfaceQuery.rampAngleRad || 0.28);
+      this.airModel.launch(this.state.speed, surfaceQuery.rampAngleRad || 0.28, this.state.y);
+    } else if (!this.airModel.isAirborne() && !onGround && this.state.y - groundHeight > 0.8) {
+      // Drove off a ledge / dropoff -> become airborne with downward velocity
+      this.airModel.launch(this.state.speed, 0, this.state.y);
     }
 
     // 3. Air Model Update
-    const landingRes = this.airModel.update(dt, trickInput);
+    const landingRes = this.airModel.update(dt, trickInput, groundHeight);
     const isAirborne = this.airModel.isAirborne();
-    this.state.y = this.airModel.getHeight();
+    this.state.y = isAirborne ? this.airModel.getHeight() : groundHeight;
 
     if (landingRes.landed && landingRes.trickSuccess) {
       // Clean landing after executing air-trick gives a boost!
@@ -337,17 +358,23 @@ export class KartController {
     const targetSteerAngle = -steer * 0.45;
     this.state.steerAngle += (targetSteerAngle - this.state.steerAngle) * Math.min(1, 14 * dt);
 
-    // Visual body roll & pitch
-    const targetRoll = -this.state.angularVelocity * 0.08;
-    this.state.bodyRoll += (targetRoll - this.state.bodyRoll) * Math.min(1, 10 * dt);
-
-    const targetPitch = isAirborne ? -0.15 : (effectiveThrottle > 0 ? 0.04 : effectiveBrake > 0 ? -0.06 : 0);
-    this.state.bodyPitch += (targetPitch - this.state.bodyPitch) * Math.min(1, 8 * dt);
-
     // 8. Velocity & Position Update
     // Direction vector points along -Z at rotation 0
     const forwardX = -Math.sin(this.state.rotation);
     const forwardZ = -Math.cos(this.state.rotation);
+    const rightX = -Math.cos(this.state.rotation);
+    const rightZ = Math.sin(this.state.rotation);
+
+    // Visual body roll & pitch (including terrain slope & banking)
+    const terrainPitch = isAirborne ? 0 : -(forwardX * groundNormalX + forwardZ * groundNormalZ);
+    const terrainRoll = isAirborne ? 0 : (rightX * groundNormalX + rightZ * groundNormalZ);
+
+    const accelPitch = effectiveThrottle > 0 ? 0.04 : effectiveBrake > 0 ? -0.06 : 0;
+    const targetPitch = isAirborne ? -0.15 : (terrainPitch + accelPitch);
+    this.state.bodyPitch += (targetPitch - this.state.bodyPitch) * Math.min(1, 8 * dt);
+
+    const targetRoll = -this.state.angularVelocity * 0.08 + terrainRoll;
+    this.state.bodyRoll += (targetRoll - this.state.bodyRoll) * Math.min(1, 10 * dt);
 
     let velX = forwardX * speed;
     let velZ = forwardZ * speed;
@@ -356,10 +383,12 @@ export class KartController {
     let posZ = this.state.z + velZ * dt;
 
     // 9. Collision World Response
-    const collision = this.collisionWorld.checkCollision(posX, posZ, this.config.kartRadius);
+    const collision = ('checkCollision3D' in (this.collisionWorld as any))
+      ? (this.collisionWorld as any).checkCollision3D(posX, this.state.y + 0.5, posZ, this.config.kartRadius)
+      : this.collisionWorld.checkCollision(posX, posZ, this.config.kartRadius);
     this.lastCollision = collision;
     if (collision) {
-      const resolved = (this.collisionWorld as AnalyticCollisionWorld).resolveResponse(
+      const resolved = (this.collisionWorld as any).resolveResponse(
         posX,
         posZ,
         velX,

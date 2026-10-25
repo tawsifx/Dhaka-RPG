@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 const PORT = 3000;
-const URL = `http://localhost:${PORT}/`;
+const URL = `http://localhost:${PORT}/?race-arena`;
 const SCREENSHOT_DIR = path.resolve(__dirname, '../docs/rickshaw-race');
 
 function checkServer() {

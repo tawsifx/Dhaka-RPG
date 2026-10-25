@@ -1,6 +1,12 @@
 // src/types/race.types.ts - Core types for 3D Rickshaw Race ("Tring-Tring Grand Prix")
 
-export type RaceExitReason = 'user' | 'error' | 'finish';
+export type RaceExitReason = 'user' | 'error' | 'finish' | 'completed';
+
+export interface LapSplit {
+  lapNumber: number;
+  lapTimeMs: number;
+  splitTimeMs: number;
+}
 
 export interface RaceResult {
   completed: boolean;
@@ -8,9 +14,13 @@ export interface RaceResult {
   exitReason: RaceExitReason;
   finalSpeed: number;
   distanceTravelled: number;
+  trackId?: string;
+  laps?: LapSplit[];
+  bestLapMs?: number;
+  finishPlace?: number;
 }
 
-export type SurfaceType = 'asphalt' | 'grass' | 'mud' | 'puddle' | 'boost_pad';
+export type SurfaceType = 'asphalt' | 'grass' | 'mud' | 'puddle' | 'boost_pad' | 'ramp' | 'offtrack_kill';
 
 export interface SurfaceQueryResult {
   type: SurfaceType;
@@ -23,8 +33,22 @@ export interface SurfaceQueryResult {
   rampAngleRad?: number;
 }
 
+export interface GroundQueryResult extends SurfaceQueryResult {
+  onGround: boolean;
+  height: number;
+  normalX: number;
+  normalY: number;
+  normalZ: number;
+  isKillPlane: boolean;
+  surfaceType?: SurfaceType;
+}
+
 export interface ISurfaceQuery {
   query(x: number, z: number): SurfaceQueryResult;
+}
+
+export interface IGroundQuery extends ISurfaceQuery {
+  queryGround(x: number, y: number, z: number): GroundQueryResult;
 }
 
 export type BoostSource =
@@ -219,3 +243,54 @@ export interface RaceStats {
   slipAngleDeg?: number;
   particleCount?: number;
 }
+
+export type RacePhase = 'loading' | 'intro' | 'countdown' | 'racing' | 'finished' | 'results';
+
+export interface CheckpointGate {
+  id: number;
+  groupId?: string; // for 'any-of' groups (e.g. shortcut alternative gates)
+  center: { x: number; y: number; z: number };
+  normal: { x: number; y: number; z: number }; // Direction of travel
+  width: number;
+  height: number;
+}
+
+export interface StartGridSlot {
+  slot: number; // 1 to 8
+  x: number;
+  y: number;
+  z: number;
+  rotation: number;
+}
+
+export interface SplinePoint {
+  x: number;
+  y: number;
+  z: number;
+  width?: number;
+  bankRad?: number;
+}
+
+export interface TrackDefinition {
+  id: string;
+  name: string;
+  version: number;
+  units: string;
+  lapCount: number;
+  centerline: SplinePoint[];
+  checkpoints: CheckpointGate[];
+  startGrid: StartGridSlot[];
+  finishLine: CheckpointGate;
+  boostPads?: Array<{ id: string; x: number; y: number; z: number; width: number; length: number; rotation: number }>;
+  ramps?: Array<{ id: string; x: number; y: number; z: number; width: number; length: number; height: number; rotation: number }>;
+  hazards?: Array<{ id: string; type: 'mud' | 'puddle'; x: number; y: number; z: number; radius: number }>;
+  itemBoxSpawns?: Array<{ id: string; x: number; y: number; z: number }>;
+  aiRacingLine?: SplinePoint[];
+  killPlanes?: Array<{ y: number }>;
+  killPlaneY?: number;
+  minimapBounds: { minX: number; maxX: number; minZ: number; maxZ: number };
+  lightingPreset: 'golden_hour' | 'noon' | 'night';
+  musicId: string;
+  skyPreset: string;
+}
+

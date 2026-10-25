@@ -14,6 +14,11 @@ export class RaceHud {
   private onExitCallback?: () => void;
   private input: RaceInput;
 
+  private titleText: HTMLSpanElement;
+  private lapText: HTMLDivElement;
+  private timerText: HTMLDivElement;
+  private wrongWayBanner: HTMLDivElement;
+
   constructor(parent: HTMLElement, input: RaceInput, onExit: () => void) {
     this.input = input;
     this.onExitCallback = onExit;
@@ -59,8 +64,45 @@ export class RaceHud {
       align-items: center;
       gap: 8px;
     `;
-    titleCard.innerHTML = `<span>🛺</span><span>TRING-TRING GRAND PRIX</span><span style="font-size: 10px; background: #2563eb; color: white; padding: 2px 6px; border-radius: 4px;">M2 KART FEEL</span>`;
+    this.titleText = document.createElement('span');
+    this.titleText.textContent = 'TRING-TRING GRAND PRIX';
+    titleCard.innerHTML = `<span>🛺</span>`;
+    titleCard.appendChild(this.titleText);
+    const badge = document.createElement('span');
+    badge.style.cssText = 'font-size: 10px; background: #2563eb; color: white; padding: 2px 6px; border-radius: 4px;';
+    badge.textContent = 'M3 RACE';
+    titleCard.appendChild(badge);
     topBar.appendChild(titleCard);
+
+    // Lap & Timer Card
+    const raceProgressCard = document.createElement('div');
+    raceProgressCard.style.cssText = `
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.88);
+      border: 2px solid #334155;
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    `;
+
+    this.lapText = document.createElement('div');
+    this.lapText.id = 'race-lap-counter';
+    this.lapText.textContent = 'LAP 1/3';
+    this.lapText.style.color = '#facc15';
+
+    this.timerText = document.createElement('div');
+    this.timerText.id = 'race-lap-timer';
+    this.timerText.textContent = '00:00.00';
+    this.timerText.style.color = '#38bdf8';
+
+    raceProgressCard.appendChild(this.lapText);
+    raceProgressCard.appendChild(this.timerText);
+    topBar.appendChild(raceProgressCard);
 
     // Status Badge (Surface & Boost info)
     this.statusBadge = document.createElement('div');
@@ -123,6 +165,27 @@ export class RaceHud {
     `;
     this.countdownOverlay.textContent = '3';
     this.container.appendChild(this.countdownOverlay);
+
+    // Wrong Way Banner
+    this.wrongWayBanner = document.createElement('div');
+    this.wrongWayBanner.id = 'race-wrong-way-banner';
+    this.wrongWayBanner.style.cssText = `
+      align-self: center;
+      background: rgba(220, 38, 38, 0.9);
+      color: #ffffff;
+      padding: 10px 24px;
+      border-radius: 8px;
+      border: 2px solid #fca5a5;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      display: none;
+      animation: pulse 0.5s infinite alternate;
+      pointer-events: none;
+    `;
+    this.wrongWayBanner.textContent = '⚠️ WRONG WAY! ⚠️';
+    this.container.appendChild(this.wrongWayBanner);
 
     // 3. Bottom Dashboard (Speedometer + Mobile Controls)
     const bottomBar = document.createElement('div');
@@ -323,6 +386,37 @@ export class RaceHud {
     } else {
       this.countdownOverlay.style.opacity = '0';
       this.countdownOverlay.style.transform = 'scale(0.8)';
+    }
+  }
+
+  setTrackTitle(name: string): void {
+    if (this.titleText) {
+      this.titleText.textContent = name.toUpperCase();
+    }
+  }
+
+  setLapProgress(currentLap: number, totalLaps: number, elapsedLapMs = 0, finalLap = false): void {
+    if (this.lapText) {
+      if (finalLap) {
+        this.lapText.textContent = `FINAL LAP!`;
+        this.lapText.style.color = '#ef4444';
+      } else {
+        this.lapText.textContent = `LAP ${currentLap}/${totalLaps}`;
+        this.lapText.style.color = '#facc15';
+      }
+    }
+    if (this.timerText) {
+      const totalSec = elapsedLapMs / 1000;
+      const minutes = Math.floor(totalSec / 60);
+      const seconds = Math.floor(totalSec % 60);
+      const millis = Math.floor((elapsedLapMs % 1000) / 10);
+      this.timerText.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${millis.toString().padStart(2, '0')}`;
+    }
+  }
+
+  setWrongWay(wrongWay: boolean): void {
+    if (this.wrongWayBanner) {
+      this.wrongWayBanner.style.display = wrongWay ? 'block' : 'none';
     }
   }
 

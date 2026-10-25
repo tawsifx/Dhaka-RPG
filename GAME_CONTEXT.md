@@ -44,7 +44,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Lazy-loaded dedicated `<canvas>` overlay for "Tring-Tring Grand Prix" 3D rickshaw racing, PBR materials, shadow maps, spring-arm camera, instanced VFX |
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
-| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 177 unit & regression tests across 19 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics, drift, turbo, surfaces, air, and countdown) + automated Playwright E2E suites (`test:race:m1`, `test:race:m2`) |
+| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 223 unit & regression tests across 20 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics, drift, turbo, surfaces, air, BVH collision, track spline, lap tracking, rescue, and countdown) + automated Playwright E2E suites (`test:race:m1`, `test:race:m2`, `test:race:m3`) + CLI track validation (`race:validate`) |
 | **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio real-time engine & drift screech synthesizers |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
@@ -89,9 +89,10 @@ dhaka-date-rpg/
 ├── tests/
 │   ├── stats.test.ts                # RPG combat & stats formulas
 │   ├── farming.test.ts              # Stardew farming simulation & seasons
-│   ├── race/                        # 3D Rickshaw Race pure math & loop tests
+│   ├── race/                        # 3D Rickshaw Race pure math, loop & track tests
 │   │   ├── race_m1.test.ts          # KartController, FixedStepLoop, RaceResult tests (20 tests)
-│   │   └── race_m2.test.ts          # Drift, 3-tier mini-turbo, boost priority, surfaces, air & countdown (51 tests)
+│   │   ├── race_m2.test.ts          # Drift, 3-tier mini-turbo, boost priority, surfaces, air & countdown (51 tests)
+│   │   └── race_m3.test.ts          # BVH ground query, 3D collision, spline, laps, rescue, autopilot (46 tests)
 │   └── npc/                         # Living-World NPC Engine unit & integration tests
 │       ├── resolver.test.ts         # Pure deterministic schedule resolver (20 tests)
 │       ├── navigator.test.ts        # In-house A* terrain cost & door pathfinding (8 tests)
@@ -1204,8 +1205,12 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Essential Scripts (`package.json`)
 - `npm run dev`: Launch local Vite development server on `http://localhost:3000/`.
 - `npm run build`: Execute production Vite build to `dist/`.
-- `npm run test`: Run the full Vitest test suite (`tests/` directory, 126/126 tests across 18 suites).
+- `npm run test`: Run the full Vitest test suite (`tests/` directory, 223/223 tests across 20 suites).
 - `npm run test:race:m1`: Run Playwright E2E verification test suite for Three.js 3D race spike (state preservation, driving telemetry, memory leak cycles, mobile touch).
+- `npm run test:race:m2`: Run Playwright E2E verification test suite for M2 kart feel (drift sparks, 3-tier mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
+- `npm run test:race:m3`: Run Playwright E2E verification test suite for M3 track pipeline (lazy loading, countdown, minimap, flyover bridge elevation, ramp jump, lantern rescue, 3 full laps, finish modal splits, 10-cycle zero-leak audit).
+- `npm run race:validate`: Run CLI track data, geometry, and headless autopilot 3-lap simulation validator.
+- `npm run race:build`: Offline track builder compiling spline, prop instances, collision geometry, and `track.json`.
 - `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
 - `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
@@ -1220,13 +1225,14 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Verification Checklist Before Commits
 1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
 2. Run `npm run typecheck` — zero TypeScript errors.
-3. Run `npm run test` — all Vitest suites pass (177/177 tests across 19 suites).
+3. Run `npm run test` — all Vitest suites pass (223/223 tests across 20 suites).
 4. Run `npm run test:race:m1` — Playwright end-to-end 3D race spike verified with zero leaks and 100% state preservation.
 5. Run `npm run test:race:m2` — Playwright end-to-end 3D race M2 feel test verified (drift sparks, mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
-6. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
-7. Run `npm run build` — bundle compiles cleanly with no missing assets.
-8. Verify browser rendering via `http://localhost:3000/` or Chrome DevTools.
-9. Deploy to Cloudflare Pages: `npm run deploy:cf`.
+6. Run `npm run test:race:m3` — Playwright end-to-end 3D race M3 track pipeline verified (flyover bridge, ramp, rescue, 3 laps, results modal, 10-cycle zero-leak audit).
+7. Run `npm run race:validate` — 3 full laps simulated with 100% checkpoint passing.
+8. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
+9. Run `npm run build` — bundle compiles cleanly with no missing assets.
+10. Deploy to Cloudflare Pages (`npm run deploy:cf`) and Vercel (`npx vercel --prod --yes`).
 
 ### 10.20 Modular Filesystem Architecture & Subsystem Decomposition (v4.0.0 Overhaul)
 To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.ts`), the filesystem architecture was restructured into dedicated, single-responsibility engine subsystems with idiomatic barrel exports:
@@ -1251,13 +1257,14 @@ src/
     │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
     │   ├── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
     │   └── race/                # Three.js 3D Rickshaw Race ("Tring-Tring Grand Prix")
-    │       ├── core/            # Pure physics, drift, boost, surfaces, air, collisions, countdown
+    │       ├── core/            # Pure physics, kinematics, drift, boost, surfaces, air, BvhGroundQuery, BvhCollisionWorld
+    │       ├── track/           # TrackSpline, LapTracker, RaceStateMachine, RescueSystem, TrackLoader, TrackValidator, TrackAutopilot
     │       ├── render/          # Three.js renderer, chase camera, arena builder, kart visuals, effects
-    │       ├── audio/           # Real-time Web Audio RPM & drift screech synthesizers
+    │       ├── audio/           # Sample-based CC0 engine/skid audio loop & procedural fallbacks
     │       ├── input/           # Action-map inputs (keyboard, gamepad API, touch)
-    │       ├── ui/              # DOM HUD, speedometer & touch controls
-    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, replay recorder
-    │       ├── RickshawRaceEngine.ts # Lifecycle coordinator (enter, loop, exit, dispose)
+    │       ├── ui/              # DOM HUD, speedometer, minimap radar canvas, loading screen, results modal
+    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, F6 track debug overlay, replay recorder
+    │       ├── RickshawRaceEngine.ts # Master lifecycle coordinator (enter, loop, exit, dispose)
     │       └── index.ts         # Clean barrel export
     ├── world/                   # Architectural & world builders + index.ts
     │   ├── InteriorBuilder.ts   # Curzon Hall & Green Meadows Farmhouse interiors

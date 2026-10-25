@@ -1671,5 +1671,26 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       origin: { x: 0.5, y: 0.5 },
       styleSearchTags: ['low poly rickshaw 3d', 'arcade kart 3d model', 'dhaka cycle rickshaw glb']
     }
+  },
+  'track-fuller-road-sprint': {
+    id: 'track-fuller-road-sprint',
+    name: 'Fuller Road Sprint 3D Race Track',
+    category: 'landmark',
+    description: '3D race circuit for Tring-Tring Grand Prix featuring Curzon Hall straight, S-chicane, TSC rotunda hairpin, flyover elevation bridge, jump gap ramp, and courtyard grass shortcut.',
+    externalPath: 'assets/race/tracks/fuller_road_sprint/visual.glb',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'track-arena-flat',
+    logicalGridFootprint: {
+      cols: 10,
+      rows: 10,
+      collision: { widthTiles: 8, heightTiles: 8 }
+    },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 256, height: 256 },
+      acceptedNativeSizes: ['3D GLB Model + Collision GLB', 'Procedural Road Ribbon'],
+      sheetLayout: '3D GLTF Track Assembly',
+      origin: { x: 0.5, y: 0.5 },
+      styleSearchTags: ['3d race track glb', 'curzon hall dhaka 3d', 'low poly racetrack']
+    }
   }
 };
