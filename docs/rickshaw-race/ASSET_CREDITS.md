@@ -30,7 +30,15 @@
 ---
 
 ### 3. Audio & SFX
-- **Rickshaw Bell:** `public/assets/audio/sfx/rickshaw_bell.wav` (CC0 public domain field recording of classic Dhaka cycle-rickshaw bell, integrated via `SoundEngine`).
-- **Engine Synthesizer:** Real-time Web Audio API procedural synthesis in `RaceAudio.ts` using a sawtooth oscillator routed through a low-pass biquad filter with speed-proportional frequency scaling (55 Hz to 240 Hz).
-- **Drift Screech:** Procedural white-noise audio buffer source routed through a high-Q bandpass filter (1200 Hz).
-- **Chimes & Whooshes:** Procedural sine and triangle wave envelopes synthesized at runtime via Web Audio API. Zero external audio file payload.
+- **Rickshaw Bell & GO Cue:** `public/assets/audio/sfx/rickshaw_bell.wav` (CC0 public domain field recording of classic Dhaka cycle-rickshaw bell, integrated via `SoundEngine`).
+- **Engine Loop:** `public/assets/race/audio/engine_loop.ogg` — Kenney Racing Starter Kit (`engine.ogg`, CC0 1.0 Universal). Pitch and playbackRate modulated dynamically by speed ($0.7\times$ to $2.0\times$).
+- **Drift Tire Screech:** `public/assets/race/audio/drift_screech.ogg` — Kenney Racing Starter Kit (`skid.ogg`, CC0 1.0 Universal).
+- **Wall Bump & Obstacle Impact:** `public/assets/race/audio/wall_bump.ogg` — Kenney Racing Starter Kit (`impact.ogg`, CC0 1.0 Universal).
+- **Landing Thump:** `public/assets/race/audio/landing_thump.ogg` — Kenney 3D Platformer Starter Kit (`land.ogg`, CC0 1.0 Universal).
+- **Boost Whoosh:** `public/assets/race/audio/boost_whoosh.ogg` — Kenney 3D Platformer Starter Kit (`jump.ogg`, CC0 1.0 Universal).
+- **Countdown Beeps:** `public/assets/race/audio/countdown_beep.ogg` — Kenney Digital Audio Pack (`twoTone1.ogg`, CC0 1.0 Universal).
+- **Mini-Turbo Tier 1 Chime:** `public/assets/race/audio/turbo_chime_1.ogg` — Kenney Digital Audio Pack (`twoTone2.ogg`, CC0 1.0 Universal).
+- **Mini-Turbo Tier 2 Chime:** `public/assets/race/audio/turbo_chime_2.ogg` — Kenney Digital Audio Pack (`threeTone1.ogg`, CC0 1.0 Universal).
+- **Mini-Turbo Tier 3 Chime:** `public/assets/race/audio/turbo_chime_3.ogg` — Kenney Digital Audio Pack (`zapThreeToneUp.ogg`, CC0 1.0 Universal).
+- **Grass/Mud Off-Road Rumble:** `public/assets/race/audio/grass_rumble.ogg` — Kenney 3D Platformer Starter Kit (`walking.ogg`, CC0 1.0 Universal).
+- **Procedural Synthesizer Fallbacks:** Retained in `RaceAudio.ts` as automatic offline/network-failure fallbacks (sawtooth RPM oscillator, white-noise bandpass filter, and sine envelopes). Zero external dependencies required if samples fail to load.

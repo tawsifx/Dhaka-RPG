@@ -196,3 +196,18 @@
   2. Build `ReplayRecorder` which logs frame `{ dt, input }` and replays them headlessly to assert bit-for-bit determinism in automated CI test runs.
 - **Consequences:**  
   Instant runtime feel tuning for designers and guaranteed regression safety via deterministic replay.
+
+---
+
+### ADR 012: External Sample-Based Audio Pipeline with Procedural Fallbacks (Supersedes M2 Procedural-Only Audio)
+
+- **Context:**  
+  In M2, audio was synthesized via Web Audio oscillators and noise buffers to maintain zero external audio file payload. However, procedural sound lacks the warmth, grit, and punch of real vehicle foley (engine loops, tire skids, physical impacts, distinct chime timbres), and violates the external-audio policy (§0+).
+- **Decision:**  
+  Transition `RaceAudio` to a hybrid sample-first architecture:
+  1. Load external CC0 audio samples asynchronously from `public/assets/race/audio/` (Kenney Racing Starter Kit, Kenney 3D Platformer, Kenney Digital Audio, and authentic Dhaka `rickshaw_bell.wav`).
+  2. Implement continuous loop nodes (`AudioBufferSourceNode`) for engine RPM (with `playbackRate` scaled from $0.7\times$ to $2.0\times$ by velocity), drift screech, and grass/mud off-road rumble.
+  3. Implement one-shot triggers for countdown ticks, mini-turbo tier chimes (Tier 1/2/3), boost whoosh, landing thump, and wall collision impact.
+  4. Retain the procedural Web Audio synthesis network strictly as an automatic fallback: if any audio sample fails to load or decode (or before network requests resolve), the engine oscillator and noise generator run smoothly without dropping audio or throwing errors.
+- **Consequences:**  
+  Authentic arcade racing audio juice with rich foley, satisfying impact feedback, zero initial bundle growth (audio files are static assets fetched on race mount), and 100% offline resilience via procedural fallback.

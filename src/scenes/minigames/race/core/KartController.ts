@@ -8,6 +8,7 @@ import {
   SurfaceType,
   ISurfaceQuery,
   ICollisionWorld,
+  CollisionResult,
   BoostSource
 } from '../../../../types/race.types';
 import { DEFAULT_KART_CONFIG, KART_ARCHETYPES } from '../../../../config/race.config';
@@ -30,6 +31,7 @@ export class KartController {
   readonly airModel: AirModel;
   readonly collisionWorld: ICollisionWorld;
   readonly countdown: StartCountdown;
+  public lastCollision: CollisionResult | null = null;
 
   constructor(
     config: Partial<KartConfig> = {},
@@ -355,6 +357,7 @@ export class KartController {
 
     // 9. Collision World Response
     const collision = this.collisionWorld.checkCollision(posX, posZ, this.config.kartRadius);
+    this.lastCollision = collision;
     if (collision) {
       const resolved = (this.collisionWorld as AnalyticCollisionWorld).resolveResponse(
         posX,

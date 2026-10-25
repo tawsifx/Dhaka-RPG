@@ -214,6 +214,10 @@ export class RickshawRaceEngine {
 
     // 4. Update visual kart and chase camera
     this.kartMesh.update(renderState);
+    if (this.controller.lastCollision && this.controller.lastCollision.collided) {
+      if (this.audio) this.audio.playWallBump();
+      this.camera.addTrauma(0.35);
+    }
     this.camera.update(frameDeltaSec, renderState);
 
     // 5. Update Particle Effects
