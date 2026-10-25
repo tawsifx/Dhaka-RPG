@@ -211,3 +211,17 @@
   4. Retain the procedural Web Audio synthesis network strictly as an automatic fallback: if any audio sample fails to load or decode (or before network requests resolve), the engine oscillator and noise generator run smoothly without dropping audio or throwing errors.
 - **Consequences:**  
   Authentic arcade racing audio juice with rich foley, satisfying impact feedback, zero initial bundle growth (audio files are static assets fetched on race mount), and 100% offline resilience via procedural fallback.
+
+---
+
+### ADR 013: Retaining Procedural Placeholder Rickshaw Kart Pending Authentic 3D GLB Asset
+
+- **Context:**  
+  Milestone 3 evaluated replacing the primitive-built rickshaw kart (`PlaceholderKart.ts`) with an external 3D GLB model. Required constraints: authentic Dhaka 3-wheel cycle rickshaw silhouette (with passenger hood canopy and decorative tin-plate rear art), separately addressable nodes for front/rear wheels and steering handlebar fork, origin pivot at ground center $(0,0,0)$, $\le 8,000$ triangles, and $\le 1.0\text{ MB}$ file size.
+- **Decision:**  
+  A search of open-source repositories (Kenney, Quaternius, Poly Pizza) yielded standard 4-wheel cars, trucks, and 2-wheel motorcycles, but no authentic Dhaka 3-wheel cycle rickshaws with properly rigged, separately addressable wheel and handlebar nodes under the strict triangle budget.
+  We decide to retain the current procedural hierarchy in `PlaceholderKart.ts` conforming to the project's adapter fallback convention (`ExternalAssetAdapter`), and catalog the high-fidelity 3D rickshaw requirement in `docs/rickshaw-race/ASSET_SHOPPING_LIST.md`.
+  - The placeholder provides full dynamic functionality: front wheel steering yaw, independent 3-wheel rolling rotation, chassis roll into corners, pitch on acceleration/braking/air, 360° air trick flips, and authentic Dhaka color coding (emerald `#15803d`, amber `#f59e0b`, crimson `#b91c1c`).
+  - Zero asset loading delay and zero bundle footprint impact.
+- **Consequences:**  
+  Full kinematic and visual feedback remains intact; artists or future milestones can drop an external `rickshaw_kart.glb` into `public/assets/models/` without code changes.
