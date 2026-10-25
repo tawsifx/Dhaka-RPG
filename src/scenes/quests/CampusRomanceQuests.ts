@@ -132,7 +132,7 @@ export class CampusRomanceQuests {
       return;
     }
 
-    SoundEngine.playOhonaSong(20);
+    SoundEngine.guitarChord();
     if (scene.ahona) {
       const note = scene.add.text(scene.ahona.x, scene.ahona.y - 68, '♪ 💖 ♫', {
         fontFamily: 'Outfit, sans-serif',
@@ -170,7 +170,9 @@ export class CampusRomanceQuests {
                 { speaker: 'Ahona', portrait: '😊', text: 'Do you hear this song, Moon Walker? It is "Ohona" by Subconscious—every time I am happy with Rakin, this melody plays in my head!' },
                 { speaker: 'Ahona', portrait: '🥺', text: 'When I saw how gently Totoro treats you, it made me realize I was projecting all my insecurities onto you. You showed me that real love is about patience, trust, and lifting each other up.' },
                 { speaker: 'Moon Walker', portrait: '🌙', text: 'Seeing you smile and hearing your song makes the whole campus brighter, Ahona!' }
-              ]);
+              ], () => {
+                SoundEngine.stopOhonaSong();
+              });
             }
           },
           {
@@ -511,6 +513,8 @@ export class CampusRomanceQuests {
             onComplete: () => p.destroy()
           });
         });
+
+        SoundEngine.stopOhonaSong();
 
         scene.cameras.main.zoomTo(1.0, 600, 'Sine.easeInOut');
         scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);

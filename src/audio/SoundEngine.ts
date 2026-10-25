@@ -44,6 +44,10 @@ export const SoundEngine = (() => {
   let menuGainNode: GainNode | null = null;
   let menuFadeTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Track state before cutscene or special serenade tracks
+  let preSpecialTrackId: string | null = null;
+  let preSpecialBgmState: boolean | null = null;
+
   const CROSSFADE_SEC = 0.42;
 
   const BGM_TRACKS: Record<string, BGMTrack> = {
@@ -294,16 +298,38 @@ export const SoundEngine = (() => {
     const existing = existingId && typeof document !== 'undefined'
       ? (document.getElementById(existingId) as HTMLAudioElement | null)
       : null;
-    const el = existing || new Audio();
+    let el: HTMLAudioElement;
+    if (existing) {
+      el = existing;
+    } else if (typeof Audio !== 'undefined') {
+      el = new Audio();
+    } else {
+      let srcVal = defaultSrc || '';
+      el = {
+        preload: 'none',
+        loop: true,
+        src: srcVal,
+        paused: true,
+        volume: 1,
+        currentTime: 0,
+        readyState: 4,
+        play: () => Promise.resolve(),
+        pause: () => {},
+        getAttribute: (attr: string) => (attr === 'src' ? srcVal : null),
+        setAttribute: (attr: string, val: string) => { if (attr === 'src') srcVal = val; },
+        addEventListener: () => {},
+        removeEventListener: () => {}
+      } as unknown as HTMLAudioElement;
+    }
     el.preload = 'none';
     el.loop = true;
-    if (defaultSrc && !el.getAttribute('src')) {
+    if (defaultSrc && (!el.getAttribute || !el.getAttribute('src'))) {
       el.src = defaultSrc;
     }
     el.onerror = () => {
       if (!el.src.includes('game_bgm.mp3') && !el.src.includes('spirited_away_piano.mp3')) {
         el.src = 'assets/audio/spirited_away_piano.mp3';
-        if (bgmPlaying) el.play().catch(() => {});
+        if (bgmPlaying && el.play) el.play().catch(() => {});
       }
     };
     return el;
@@ -687,12 +713,35 @@ export const SoundEngine = (() => {
     },
 
     playOhonaSong: (startTimeSec = 20) => {
+      if (currentTrackId !== 'ohona_song') {
+        preSpecialTrackId = currentTrackId;
+        preSpecialBgmState = bgmPlaying;
+      }
       bgmPlaying = true;
       if (typeof document !== 'undefined') {
         const bgmBtn = document.getElementById('btn-bgm');
         if (bgmBtn) bgmBtn.textContent = '🎵 BGM: ON';
       }
       crossFadeToTrack('ohona_song', startTimeSec);
+    },
+
+    stopOhonaSong: (restoreTheme = true) => {
+      if (currentTrackId === 'ohona_song') {
+        if (restoreTheme && preSpecialBgmState !== false) {
+          const restoreTrack = preSpecialTrackId || THEME_TO_TRACK[activeTheme] || 'totoro_theme';
+          crossFadeToTrack(restoreTrack);
+        } else {
+          SoundEngine.stopBGM();
+          if (typeof document !== 'undefined') {
+            const bgmBtn = document.getElementById('btn-bgm');
+            if (bgmBtn) bgmBtn.textContent = '🔇 BGM: OFF';
+          }
+          currentTrackId = preSpecialTrackId || THEME_TO_TRACK[activeTheme] || 'totoro_theme';
+          updateJukeboxDisplay();
+        }
+      }
+      preSpecialTrackId = null;
+      preSpecialBgmState = null;
     },
 
     setAutoTheme: (auto: boolean) => {
