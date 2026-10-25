@@ -51,6 +51,15 @@ export function initMobileSupport(): void {
   if (typeof document === 'undefined') return;
   const touch = isTouchDevice();
 
+  // ---- Tag mobile device / small viewport on body for clean responsive styling
+  const updateMobileClass = (): void => {
+    const isMobile = isTouchDevice() || window.innerWidth <= 950 || window.innerHeight <= 550;
+    document.body.classList.toggle('is-mobile-device', isMobile);
+  };
+  updateMobileClass();
+  window.addEventListener('resize', updateMobileClass);
+  window.addEventListener('orientationchange', updateMobileClass);
+
   // ---- Suppress browser gestures that fight the game (pinch zoom, double-tap zoom, context menu)
   ['gesturestart', 'gesturechange', 'gestureend'].forEach(ev =>
     document.addEventListener(ev, e => e.preventDefault(), { passive: false } as any)

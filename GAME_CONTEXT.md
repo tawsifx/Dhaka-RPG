@@ -1041,6 +1041,13 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
    - Includes a "PLAY ANYWAY" bypass button for players who prefer to continue in portrait mode.
 7. **iOS Safari Add-to-Home-Screen Instructions**:
    - Detects standalone display mode (`window.navigator.standalone`); if running in mobile Safari browser, provides a non-intrusive prompt explaining how to install via the Share button (`Share -> Add to Home Screen`) for full immersion.
+8. **Minimized Mobile HUD Architecture (Stats-Only Viewport)**:
+   - On touch devices and mobile viewports (`hover: none and pointer: coarse`, `max-width: 950px`, `max-height: 550px`, or `body.is-mobile-device`), desktop HUD clutter is eliminated to provide maximum visibility of the game world.
+   - **Hidden on Mobile**: Zone Card (`.hud-zone-card`), Quest Objective Card (`.hud-quest-card`), Minimap Panel (`#minimap-panel`), and Bottom Hotbar (`#bottom-hud`).
+   - **Retained & Minimized**:
+     - `.hud-stats-card`: Minimized to a sleek compact box (~175px width, ~50px height) in the top-left with concise level, affection hearts, side-by-side HP/SP bars, slim XP track, and single-row Totoro bond pips.
+     - `#btn-menu-toggle`: Retained in the top-right corner as a 34×34px button, providing instant on-demand access to Partner, Quests, Bag & Craft, Realm Map, and Quick Save drawers.
+     - `#boss-hud`: Scaled to 82% and centered during boss encounters.
 
 ---
 
