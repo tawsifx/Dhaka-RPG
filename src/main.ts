@@ -4,9 +4,11 @@ import { DhakaValleyScene } from './scenes/DhakaValleyScene';
 import { GameDB } from './config/databaseIndex';
 import { SaveManager } from './state/SaveManager';
 import { initTitleSlideshow } from './ui/TitleSlideshow';
+import { initMobileSupport } from './ui/MobileSupport';
 import './style.css';
 
 initTitleSlideshow();
+initMobileSupport();
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
