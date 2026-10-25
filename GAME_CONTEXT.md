@@ -43,7 +43,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | **Game Engine** | [Phaser 3.87.0](https://phaser.io/) | Canvas/WebGL 2D renderer, Arcade Physics, Custom Y-sorting, Multi-camera system |
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 7 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
-| **Testing** | [Vitest](https://vitest.dev/) | 86 unit & regression tests across 13 test suites (combat, farming, NPC engine, database index, behaviors) |
+| **Testing** | [Vitest](https://vitest.dev/) | 95 unit & regression tests across 14 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors) |
 | **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio synth fallback |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
@@ -828,6 +828,29 @@ Following reports of players being unable to exit Curzon Hall (`curzon_interior`
      - `farmhouse_inside_verified.png`: Player inside Farmhouse paddock near dairy cow Shuravi and chickens.
      - `farmhouse_outside_road_verified.png`: Player returned to Farmhouse country road outside archway.
 
+### 10.18 Dynamic Opening Totoro & Moon Walker Dialogue Engine (`src/systems/OpeningDialogueSystem.ts`)
+To eliminate repetitive opening interactions when reloading the game, a dynamic selection engine was introduced for Totoro and Moon Walker's reunion:
+1. **8 Hand-Crafted Opening Scenarios (`src/config/openingDialogues.db.ts`)**:
+   - `krishnachura_blossom`: The Crimson Canopy Rehearsal (Nervous speech rehearsal under Curzon Krishnachura; rewards `flower`).
+   - `matir_bhaar_cha`: Cardamom Malai Cha Surprise (Running to Tong-er Mama for two steaming earthen cups; rewards `item_malai_cha`).
+   - `rainy_leaf_umbrella`: The Giant Taro Leaf Canopy (Sharing a colossal colocasia leaf in Kalbaishakhi rain; rewards `flower`).
+   - `nilkhet_poetry_anthology`: The Nilkhet Vintage Poetry Hunt (Vintage Jibanananda Das book with pressed petals; rewards `book_poetry`).
+   - `secret_rickshaw_map`: The Grand Dhaka Tour Blueprint (Crayon and tea-stained campus food map; rewards `flower`).
+   - `charukola_terracotta_paint`: The Charukola Fine Arts Clay Prank (Alpana swirls and clay smudges from Nadia's studio; rewards `keepsake_painted_mug`).
+   - `stargazing_brass_telescope`: The Celestial Rickshaw Constellation (Anticipating evening starlight at Dhanmondi Lake; rewards `flower`).
+   - `chibi_totoro_acorn_scramble`: Chibi-Totoro Acorn Scramble (Catching Chibi with a white Beli garland; rewards `flower_beli_garland`).
+2. **Anti-Repetition Session Shuffling**:
+   - Persists `totoro_opening_last_id` in `sessionStorage` to guarantee that reloading the game never serves the immediately preceding opening scenario.
+3. **Environmental Context Scoring**:
+   - Prioritizes monsoon rain shelters (`rainy_leaf_umbrella`) when raining, warm chai (`matir_bhaar_cha`) during morning hours, and stargazing (`stargazing_brass_telescope`) around sunset.
+4. **Dynamic Companion Dialogue Rotation**:
+   - Cycles through fresh companion dialogues (`COMPANION_RELOAD_DIALOGUES`) when talking to Totoro across subsequent reloads.
+5. **Developer Debug & QA Console API (`window.__openingDialogue`)**:
+   - `__openingDialogue.list()`: Prints all 8 registered scenarios in a formatted console table.
+   - `__openingDialogue.select(id)`: Forces the next reload to trigger a specific scenario.
+   - `__openingDialogue.next(context)`: Evaluates and selects the next scenario.
+   - `__openingDialogue.reset()`: Clears session history.
+
 ---
 
 ## 11. Audio Pipeline & SoundEngine Architecture
@@ -1064,7 +1087,7 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Essential Scripts (`package.json`)
 - `npm run dev`: Launch local Vite development server on `http://localhost:3000/`.
 - `npm run build`: Execute production Vite build to `dist/`.
-- `npm run test`: Run the full Vitest test suite (`tests/` directory, 86/86 tests across 13 suites).
+- `npm run test`: Run the full Vitest test suite (`tests/` directory, 95/95 tests across 14 suites).
 - `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
 - `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
@@ -1079,7 +1102,7 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Verification Checklist Before Commits
 1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
 2. Run `npm run typecheck` — zero TypeScript errors.
-3. Run `npm run test` — all Vitest suites pass (86/86 tests across 13 suites).
+3. Run `npm run test` — all Vitest suites pass (95/95 tests across 14 suites).
 4. Run `npm run assets:validate` & `npm run assets:report` — all combat asset specifications validated.
 5. Run `node scripts/test_combat_overhaul.js` — Playwright end-to-end combat test suite verifies player combos, parasol parry, perfect dodge, Totoro abilities, and boss poise breaks.
 6. Run `npm run build` — bundle compiles cleanly with no missing assets.

@@ -26,12 +26,14 @@ import { TimeCalendarSystem } from '../systems/TimeCalendarSystem';
 import { FarmingSystem } from '../systems/FarmingSystem';
 import { AtmosphereSystem } from '../systems/AtmosphereSystem';
 import { PlayerBehaviors } from '../systems/player/PlayerBehaviors';
+import { OpeningDialogueSystem } from '../systems/OpeningDialogueSystem';
 
 export class DhakaValleyScene extends Phaser.Scene {
   [key: string]: any;
 
   constructor() {
     super('DhakaValleyScene');
+    this.currentOpeningScenario = null;
     this.playerBehaviors = null;
     this.trail = [];
     this.stepCounter = 0;
@@ -1579,8 +1581,19 @@ export class DhakaValleyScene extends Phaser.Scene {
       ? { x: spawnPos.x - 42, y: spawnPos.y }
       : { x: 345, y: 1360 };
     this.totoro = this.add.sprite(totoroStart.x, totoroStart.y, 'totoro-0').setOrigin(0.5, 1).setDepth(totoroStart.y);
-    this.totoroBadge = this.add.text(totoroStart.x, totoroStart.y - 68,
-      DateState.totoroJoined ? '♥ Totoro' : '❗ Totoro (Waiting for you)', {
+
+    if (!DateState.totoroJoined) {
+      this.currentOpeningScenario = OpeningDialogueSystem.selectOpeningScenario({
+        isRaining: this.isRaining,
+        hour: this.inGameClock ? this.inGameClock.hour : 15
+      });
+    }
+
+    const badgeText = DateState.totoroJoined
+      ? '♥ Totoro'
+      : (this.currentOpeningScenario ? this.currentOpeningScenario.badgeText : '❗ Totoro (Waiting for you)');
+
+    this.totoroBadge = this.add.text(totoroStart.x, totoroStart.y - 68, badgeText, {
       fontFamily: "'Rajdhani', 'Outfit', sans-serif",
       fontSize: '13px',
       fontStyle: 'bold',
@@ -2481,44 +2494,13 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   /* ================= Original Dhaka Valley Story & Diversified Quest Interactions ================= */
   meetTotoroFirstTime() {
-    UI.startDialogue([
-      {
-        speaker: 'Totoro',
-        portrait: '🐾',
-        text: 'Moon Walker! You made it! I was standing under this Krishnachura tree rehearsing how to act cool, and I immediately forgot every line the second you smiled.'
-      },
-      {
-        speaker: 'Moon Walker',
-        portrait: '🌙',
-        text: 'You brought Chibi-Totoro on your head AND a crimson blossom? That is already cooler than any speech, Totoro.'
-      },
-      {
-        speaker: 'Totoro',
-        portrait: '🐾',
-        text: 'I saved the brightest Krishnachura flower for your hair. Ready to explore Dhaka University, Ramna, Dhanmondi Lake, and the shimmering portals beyond?',
-        choices: [
-          {
-            label: "Duh, 100% yes. Let's walk together!",
-            nextNodes: [
-              { speaker: 'Totoro', portrait: '🐾', text: "Best answer in Dhaka history. Lead the way, Moon Walker! I'm walking right behind you wherever you go." }
-            ]
-          },
-          {
-            label: 'Only if you hold my hand in Dhaka traffic and share your food.',
-            nextNodes: [
-              { speaker: 'Totoro', portrait: '🐾', text: "Hand-holding is mandatory, and you get first dibs on every plate—even when we meet Anamika for Star Kebab!" }
-            ]
-          }
-        ]
-      }
-    ], () => {
-      DateState.totoroJoined = true;
-      if (!DateState.unlockedWorlds.includes('forest')) DateState.unlockedWorlds.push('forest');
-      this.totoroBadge.setText('♥ Totoro');
-      this.trail = Array(16).fill({ x: this.player.x, y: this.player.y });
-      UI.giveItem('flower', 'Met under the crimson Krishnachura trees at Curzon Hall.');
-      this.advanceDateProgress();
-    });
+    if (!this.currentOpeningScenario) {
+      this.currentOpeningScenario = OpeningDialogueSystem.selectOpeningScenario({
+        isRaining: this.isRaining,
+        hour: this.inGameClock ? this.inGameClock.hour : 15
+      });
+    }
+    OpeningDialogueSystem.meetTotoro(this, this.currentOpeningScenario);
   }
 
   talkToTotoroCompanion() {
@@ -2531,7 +2513,7 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.tweens.add({ targets: this.totoro, y: this.totoro.y - 12, duration: 140, yoyo: true });
     SoundEngine.heartUp();
 
-    // Context-sensitive greeting based on location / atmosphere
+    // Context-sensitive greeting based on location / atmosphere / reload cycle
     let greeting = 'What is on your mind, Moon Walker? Every step with you is my favorite adventure.';
     if (DateState.currentWorld === 'curzon_interior') {
       greeting = 'Look at the towering red-brick arches and grand chandeliers of Curzon Hall, Moon Walker! S.N. Bose himself derived quantum statistics in this very building!';
@@ -2542,6 +2524,14 @@ export class DhakaValleyScene extends Phaser.Scene {
       greeting = `We are braving ${wName} together! My spirit claws are ready, and I will protect you with my life.`;
     } else if (UI.getCompletedCount() >= 10) {
       greeting = 'We have explored every legendary corner of Dhaka Valley together tonight! What shall we do next, my favorite person?';
+    } else {
+      const dynamicNodes = OpeningDialogueSystem.selectCompanionDialogue({
+        isRaining: this.isRaining,
+        timePhase: this.inGameClock?.phase
+      });
+      if (dynamicNodes && dynamicNodes.length) {
+        greeting = dynamicNodes[0].text;
+      }
     }
 
     // Dynamic date & quest advice
@@ -7427,7 +7417,7 @@ export class DhakaValleyScene extends Phaser.Scene {
     // 8. Floating Interaction Prompt
     let nearTarget = null, bestDist = Infinity;
     if (!DateState.totoroJoined && this.totoro && Phaser.Math.Distance.Between(px, py, this.totoro.x, this.totoro.y) < 92) {
-      nearTarget = 'SPACE: Meet Totoro 🐾';
+      nearTarget = this.currentOpeningScenario ? this.currentOpeningScenario.promptText : 'SPACE: Meet Totoro 🐾';
     } else {
       for (const item of this.interactables) {
         const d = Phaser.Math.Distance.Between(px, py, item.x, item.y);

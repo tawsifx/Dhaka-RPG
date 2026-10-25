@@ -364,14 +364,16 @@ export const UIController: any = (() => {
     activeNodes = nodes.slice();
     nodeIdx = 0;
     onFinishCallback = onDone || null;
-    $('dialogue-overlay').hidden = false;
+    const overlay = $('dialogue-overlay');
+    if (overlay) overlay.hidden = false;
     renderNode();
   }
 
   function closeDialogue() {
     clearInterval(typingTimer);
     isTyping = false;
-    $('dialogue-overlay').hidden = true;
+    const overlay = $('dialogue-overlay');
+    if (overlay) overlay.hidden = true;
     if (onFinishCallback) {
       const cb = onFinishCallback;
       onFinishCallback = null;
