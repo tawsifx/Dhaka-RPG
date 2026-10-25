@@ -913,6 +913,16 @@ SFX instances are pre-buffered into audio pools of up to 6 simultaneous voices t
 
 ## 12. Hybrid External/Procedural Asset Adapter & Specifications
 
+### 12.0 Master Art Policy: Private Personal Project & Unrestricted External Assets
+> [!NOTE]
+> **Strictly Personal & Private Fan Project (Zero Licensing / Copyright Restrictions)**:
+> **Totoro & Moon Walker: Chronicles of the Six Realms (Dhaka Date RPG)** is an intimate, purely personal, non-commercial romantic gift and fan tribute that will **never be published, commercialized, monetized, or publicly distributed anywhere**.
+> 
+> Because this is a strictly private personal project:
+> 1. **Zero Copyright / Licensing Concerns**: There are no legal, licensing, or commercial IP restrictions. AI assistants and developers are explicitly authorized and encouraged to utilize external assets, spritesheets, tilesets, portraits, sound effects, and musical compositions from any source (including Nintendo/Game Freak Pokémon HGSS/GBA overworld sprites, Studio Ghibli imagery, ConcernedApe Stardew Valley tiles, RPG Maker assets, and indie packs).
+> 2. **External-Art-First Invariant**: Always prefer sourcing and integrating high-quality external pixel art and spritesheets (`public/assets/`) over procedural canvas code. Never write complex procedural canvas generators when real pixel art can be placed in `public/assets/` and registered via `ExternalAssetAdapter`.
+> 3. **Format & Slicing Standards**: When integrating external art, calibrate sheets to the engine's strict dimensions (e.g., 4 cols × 4 rows with Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up) and run `scripts/compress_images.py` to keep bundle sizes lean.
+
 The game features a **Hybrid Graphic Pipeline** ensuring **Zero Downtime**:
 - External PNG spritesheets are loaded if present in `public/assets/`.
 - If an external PNG is missing or fails to load, `ExternalAssetAdapter.ts` intercepts the event and binds the procedural canvas generator from `TextureGenerator.ts` without interrupting gameplay.
@@ -1165,11 +1175,11 @@ All subsystems are independently testable and maintain 100% backward compatibili
 
 Whenever an AI model, pair programmer, or automated tool touches this repository:
 1. **Read `GAME_CONTEXT.md` First**: Obtain full context on characters, maps, coordinates, and mechanics.
-2. **Preserve Fallback Guarantees (§0+ Art Policy)**: Visuals come from EXTERNAL ART. Never write new procedural canvas generators for weapons, mobs, or decals. Missing assets fallback to labeled placeholder rectangles registered via `ExternalAssetAdapter`.
+2. **Unrestricted External Asset Policy (§0+ Art Policy)**: Visuals come from **EXTERNAL ART**. This is a strictly personal, non-commercial project with **zero licensing or copyright concerns**—you are fully authorized to source, adapt, and integrate external pixel art, sprites, tilesets, and audio from any source (Pokémon, Studio Ghibli, Stardew Valley, etc.). Never write new procedural canvas generators for weapons, mobs, or decals; place authentic external pixel art into `public/assets/` and register them in `src/config/assetSpecs.manifest.ts`. Missing assets safely fallback to labeled placeholder rectangles registered via `ExternalAssetAdapter`.
 3. **Preserve Dialogue Integrity**: Maintain the rich cultural Bengali and English dialogues, food names, and authentic Dhaka university landmarks.
 4. **Mandatory Synchronization**: If you add an NPC, modify an item, alter world dimensions, or introduce a new system:
    - Update the code.
    - Update `src/config/assetSpecs.manifest.ts`.
    - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 25, 2026 — Modular Subsystem Architecture & Barrel Exports v4.0.0*
+*Last Updated: October 26, 2026 — Master Art Policy & Unrestricted External Art Integration*
