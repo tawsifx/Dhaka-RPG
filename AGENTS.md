@@ -4,6 +4,7 @@
 - **Always Check Context7 Before Coding**: Before writing or modifying code that uses any library, framework, or API (e.g., Phaser, Vite, Vitest, TypeScript, Cloudflare Wrangler, Vercel), query the `context7` MCP server for up-to-date documentation and examples:
   1. Call `resolve-library-id` on the `context7` MCP server (`call_mcp_tool` with `ServerName: "context7"`, `ToolName: "resolve-library-id"`) to resolve the official Context7 library ID (unless already known in `/org/project` format).
   2. Call `query-docs` on the `context7` MCP server (`call_mcp_tool` with `ServerName: "context7"`, `ToolName: "query-docs"`) with the resolved `libraryId` and specific topic query before implementing changes.
+- **Synchronize `GAME_CONTEXT.md` After Major Design Edits**: Whenever implementing or modifying major game design elements (e.g., world coordinates, spatial layout/decongestion, NPC schedules and behaviors, cutscenes, audio/sound design, sprite sheet layouts, or gameplay mechanics), always update `GAME_CONTEXT.md` to keep world documentation strictly synchronized with the codebase.
 
 ## Deployment & Infrastructure
 - **Dual Deployment Targets**: This project deploys simultaneously to both **Vercel** and **Cloudflare Pages** (`moon-walkers-day`).
