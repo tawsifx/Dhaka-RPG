@@ -1246,8 +1246,26 @@ body, html {
 }
 
 .mob-btn .btn-icon {
-  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
   line-height: 1;
+  color: #fff;
+}
+
+.mob-btn .btn-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  fill: currentColor;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.75));
+}
+
+.mob-btn.atk .btn-icon {
+  width: 28px;
+  height: 28px;
 }
 
 .mob-btn .btn-label {

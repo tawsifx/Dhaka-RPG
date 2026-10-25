@@ -97,6 +97,21 @@
 
 ---
 
+## 🕹️ Mobile Touch Action Icons
+- **Files**: `public/assets/icons/atk.svg`, `act.svg`, `dash.svg`, `roar.svg`, `slam.svg`
+- **Authors**: Lorc and Skoll
+- **Source URL**: https://game-icons.net
+- **License**: CC-BY 3.0 (Creative Commons Attribution 3.0 Unported)
+- **Date**: October 25, 2026
+- **Mapping**:
+  - `atk.svg`: Crossed swords icon for basic attack & combo strikes
+  - `act.svg`: Conversation bubbles for NPC dialogues and object interaction
+  - `dash.svg`: Sprinting figure for evasion dash
+  - `roar.svg`: Acoustic sonic shockwaves for Totoro Spirit Roar
+  - `slam.svg`: Ground impact seismic shockwaves for Totoro Belly Slam
+
+---
+
 ## ⚔️ Remaining Combat Slots (In Shopping List Pipeline)
 The following slots are tracked in `ASSET_SHOPPING_LIST.md` and render labeled fallback placeholders through `ExternalAssetAdapter` until external CC0/CC-BY packs are ingested:
 - `enemy-crab` (Tidepool Crabler - World 3 Sunken)

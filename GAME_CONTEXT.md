@@ -1048,6 +1048,14 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
      - `.hud-stats-card`: Minimized to a sleek compact box (~175px width, ~50px height) in the top-left with concise level, affection hearts, side-by-side HP/SP bars, slim XP track, and single-row Totoro bond pips.
      - `#btn-menu-toggle`: Retained in the top-right corner as a 34×34px button, providing instant on-demand access to Partner, Quests, Bag & Craft, Realm Map, and Quick Save drawers.
      - `#boss-hud`: Scaled to 82% and centered during boss encounters.
+9. **Vector Action Arc Icons (`public/assets/icons/`)**:
+   - Replaced default OS emojis with clean external vector SVG action icons from game-icons.net (CC-BY 3.0 by Lorc & Skoll):
+     - `atk.svg` (Crossed swords for attack combo)
+     - `act.svg` (Dialogue conversation bubbles for interaction)
+     - `dash.svg` (Sprinting figure for swift evasion)
+     - `roar.svg` (Sonic roar acoustic shockwave for Totoro Spirit Roar)
+     - `slam.svg` (Seismic ground impact smash for Totoro Belly Slam)
+   - Scaled and centered with `currentColor` filling and drop-shadow depth, matching button theme colors and active touch feedback.
 
 ---
 
