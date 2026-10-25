@@ -200,6 +200,16 @@ export class DhakaValleyScene extends Phaser.Scene {
     (window as any).RPGStats = RPGStats;
     (window as any).CombatSystem = CombatSystem;
     (window as any).UI = UI;
+    (window as any).__startRace = () => this.startRickshawRace();
+    if (typeof window !== 'undefined' && !(window as any).__race) {
+      (window as any).__race = {
+        start: () => this.startRickshawRace(),
+        isActive: () => false,
+        exit: () => {},
+        toggleOverlay: () => {},
+        stats: () => null
+      };
+    }
     this.isTransitioning = false;
 
     // Normalize external assets & register animations/fallbacks
@@ -3584,9 +3594,46 @@ export class DhakaValleyScene extends Phaser.Scene {
     ]);
   }
 
-  /* ===== Grand Dhaka Rickshaw Tour Subsystem ===== */
+  /* ===== Grand Dhaka Rickshaw Tour & Race Subsystem ===== */
   interactRickshawTour() {
-    RickshawTourEngine.interact(this);
+    if (!DateState.totoroJoined) {
+      UI.startDialogue([{ speaker: 'Moon Walker', portrait: '🌙', text: 'I should get Totoro from Curzon Hall before taking the rickshaw!' }]);
+      return;
+    }
+    SoundEngine.rickshawBell();
+    UI.startDialogue([
+      {
+        speaker: 'Totoro',
+        portrait: '🐾',
+        text: 'Tring-Tring! Ready to hit the road? Choose your rickshaw adventure:',
+        choices: [
+          {
+            label: '🛺 Grand Rickshaw Tour (Sightseeing)',
+            onPick: () => {
+              RickshawTourEngine.interact(this);
+            }
+          },
+          {
+            label: '🏁 Race (Beta) — Tring-Tring Grand Prix',
+            onPick: () => {
+              this.startRickshawRace();
+            }
+          }
+        ]
+      }
+    ]);
+  }
+
+  async startRickshawRace() {
+    try {
+      const { RickshawRaceEngine } = await import('./minigames/race/RickshawRaceEngine');
+      const result = await RickshawRaceEngine.launch(this);
+      console.log('🏁 [Race] Completed with result:', result);
+      return result;
+    } catch (err) {
+      console.error('Failed to launch RickshawRaceEngine:', err);
+      return null;
+    }
   }
 
   startRickshawTour() {
@@ -4194,8 +4241,9 @@ export class DhakaValleyScene extends Phaser.Scene {
     if (!this.player) return;
 
     // Advance TimeCalendarSystem, AtmosphereSystem and Living-World NPC ScheduleSystem
-    if (this.timeCalendar) this.timeCalendar.update(delta);
-    if (this.atmosphere) this.atmosphere.update(time, delta);
+    const isWorldPaused = UI.isOpen() || this.cutsceneLocked;
+    if (this.timeCalendar && !isWorldPaused) this.timeCalendar.update(delta);
+    if (this.atmosphere && !isWorldPaused) this.atmosphere.update(time, delta);
     if (this.scheduleSystem) this.scheduleSystem.update(time, delta);
 
     // Render Monsoon Rain Drops & Slanted Streaks (Batched single draw call)

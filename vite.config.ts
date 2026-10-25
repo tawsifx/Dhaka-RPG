@@ -15,6 +15,14 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             {
+              name: 'three',
+              test: /node_modules[\\/]three/
+            },
+            {
+              name: 'race-engine',
+              test: /src[\\/]scenes[\\/]minigames[\\/]race/
+            },
+            {
               name: 'phaser',
               test: /node_modules[\\/]phaser/
             },

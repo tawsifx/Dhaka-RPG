@@ -1651,5 +1651,25 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       origin: { x: 0.5, y: 0.9 },
       styleSearchTags: ['chrono archon final boss', 'cosmic deity sprite', 'astral boss pixel art', 'reality fracture entity']
     }
+  },
+  'kart-rickshaw-3d': {
+    id: 'kart-rickshaw-3d',
+    name: 'Tring-Tring Grand Prix 3D Cycle Rickshaw Kart',
+    category: 'landmark',
+    description: '3D arcade cycle rickshaw kart with emerald body, gold canopy hood, red padded seat, and steering front wheel for Three.js racing.',
+    externalPath: 'assets/models/rickshaw_kart.glb',
+    fallbackProceduralKey: 'kart-placeholder-box',
+    logicalGridFootprint: {
+      cols: 2,
+      rows: 2,
+      collision: { widthTiles: 1.5, heightTiles: 1.5 }
+    },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 128, height: 128 },
+      acceptedNativeSizes: ['3D GLB Model', 'Procedural Three.js Box Mesh'],
+      sheetLayout: '3D GLTF / Box mesh fallback',
+      origin: { x: 0.5, y: 0.5 },
+      styleSearchTags: ['low poly rickshaw 3d', 'arcade kart 3d model', 'dhaka cycle rickshaw glb']
+    }
   }
 };

@@ -13,6 +13,7 @@
     "assets:validate": "vitest run tests/combat/assets_validation.test.ts",
     "assets:report": "vitest run tests/combat/assets_validation.test.ts",
     "assets:compress": "python3 scripts/compress_images.py",
+    "test:race:m1": "node scripts/test_race_m1.js",
     "deploy:cf": "npm run build && wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true",
     "start": "node telegram-bot.js",
     "bot": "caffeinate -s -i node telegram-bot.js"
@@ -20,10 +21,13 @@
   "dependencies": {
     "dotenv": "^16.6.1",
     "node-telegram-bot-api": "^0.66.0",
-    "phaser": "^3.87.0"
+    "phaser": "^3.87.0",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "@types/three": "^0.186.0",
+    "playwright": "^1.64.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5",

@@ -41,9 +41,10 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
 | **Game Engine** | [Phaser 3.87.0](https://phaser.io/) | Canvas/WebGL 2D renderer, Arcade Physics, Custom Y-sorting, Multi-camera system |
-| **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 7 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`) |
+| **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Lazy-loaded dedicated `<canvas>` overlay for "Tring-Tring Grand Prix" 3D rickshaw racing, PBR materials, shadow maps, spring-arm camera |
+| **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
-| **Testing** | [Vitest](https://vitest.dev/) | 95 unit & regression tests across 14 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors) |
+| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 126 unit & regression tests across 18 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics & fixed-timestep loop) + automated Playwright E2E suites |
 | **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio synth fallback |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
@@ -59,15 +60,21 @@ dhaka-date-rpg/
 ├── tsconfig.json                    # TypeScript compiler options
 ├── vite.config.ts                   # Vite bundler configuration
 ├── docs/
-│   └── npc-engine/                  # Living-World NPC Engine engineering dossier & visual proofs
-│       ├── 00-audit.md              # Current-state codebase audit & frame costs
-│       ├── 01-research.md           # Stardew Valley & Pokémon HGSS reverse-engineering dossier
-│       ├── 02-design.md             # Complete architectural design spec & FSM diagrams
-│       ├── DECISIONS.md             # Architectural Decision Records (ADR 001–007)
-│       ├── PROGRESS.md              # Master progress & milestone checklist (M1–M10)
-│       ├── mcp-inventory.md         # MCP tooling map
-│       ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
-│       └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
+│   ├── npc-engine/                  # Living-World NPC Engine engineering dossier & visual proofs
+│   │   ├── 00-audit.md              # Current-state codebase audit & frame costs
+│   │   ├── 01-research.md           # Stardew Valley & Pokémon HGSS reverse-engineering dossier
+│   │   ├── 02-design.md             # Complete architectural design spec & FSM diagrams
+│   │   ├── DECISIONS.md             # Architectural Decision Records (ADR 001–007)
+│   │   ├── PROGRESS.md              # Master progress & milestone checklist (M1–M10)
+│   │   ├── mcp-inventory.md         # MCP tooling map
+│   │   ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
+│   │   └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
+│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1)
+│       ├── 00-audit.md              # Codebase integration points, lifecycle & bundle impact audit
+│       ├── DECISIONS.md             # Architectural Decision Records (ADR 001–004)
+│       ├── PROGRESS.md              # Master M1-M8 roadmap and milestone tracking
+│       ├── PERF.md                  # Benchmark report (FPS, bundle delta, 10-cycle leak tests)
+│       └── VERIFICATION.md          # Visual proofs & test execution logs
 ├── public/                          # Static public assets
 │   ├── assets/
 │   │   ├── audio/                   # Compressed BGM tracks & 16-channel SFX
@@ -76,6 +83,8 @@ dhaka-date-rpg/
 ├── tests/
 │   ├── stats.test.ts                # RPG combat & stats formulas
 │   ├── farming.test.ts              # Stardew farming simulation & seasons
+│   ├── race/                        # 3D Rickshaw Race pure math & loop tests
+│   │   └── race_m1.test.ts          # KartController, FixedStepLoop, RaceResult tests (20 tests)
 │   └── npc/                         # Living-World NPC Engine unit & integration tests
 │       ├── resolver.test.ts         # Pure deterministic schedule resolver (20 tests)
 │       ├── navigator.test.ts        # In-house A* terrain cost & door pathfinding (8 tests)
@@ -84,13 +93,14 @@ dhaka-date-rpg/
 │       └── validator.test.ts        # CLI validator for all 38 NPC definitions (1 test)
 └── src/
     ├── audio/
-    │   └── SoundEngine.ts           # Web Audio synthesizer, BGM crossfader, and SFX pool
+    │   └── SoundEngine.ts           # Web Audio synthesizer, BGM crossfader, SFX pool & ducking
     ├── config/
     │   ├── assetSpecs.manifest.ts   # AI-readable asset requirements manifest
     │   ├── constants.ts             # World dimensions, coordinate anchors, tile constants
     │   ├── crops.db.ts              # Seasonal crops, growth stages, yields, sell values
     │   ├── items.db.ts              # Weapons, armor, keepsakes, food, materials database
     │   ├── npcSchedules.db.ts       # Declarative schedules & variants for all 38 NPCs
+    │   ├── race.config.ts           # 3D kart kinematics, chase camera & simulation tuning constants
     │   ├── recipes.db.ts            # Crafting recipes & material requirements
     │   └── worlds.db.ts             # 6 Realms + Curzon Interior + Farmhouse definitions
     ├── debug/
@@ -104,7 +114,22 @@ dhaka-date-rpg/
     │   └── TextureGenerator.ts         # Central procedural texture builder
     ├── main.ts                      # Phaser game bootstrap & window lifecycle
     ├── scenes/
-    │   └── DhakaValleyScene.ts      # Core scene coordinating rendering, dialogue, input & world state
+    │   ├── DhakaValleyScene.ts      # Core scene coordinating rendering, dialogue, input & world state
+    │   └── minigames/               # Minigame simulation engines
+    │       ├── RickshawTourEngine.ts # 2D Grand Dhaka Rickshaw Tour
+    │       ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
+    │       ├── LakeBoatEngine.ts     # Lantern Rowboat Simulation
+    │       └── race/                # Three.js 3D Rickshaw Race ("Tring-Tring Grand Prix")
+    │           ├── RickshawRaceEngine.ts  # Lifecycle orchestrator (enter/run/exit/dispose)
+    │           ├── core/KartController.ts # Pure arcade kart kinematics math
+    │           ├── core/FixedStepLoop.ts  # 60Hz fixed-timestep accumulator & interpolation
+    │           ├── render/RaceRenderer.ts # WebGL2 renderer, lighting, ground plane, fog & cleanup
+    │           ├── render/ChaseCamera.ts  # Spring-arm camera with speed-dependent dynamic FOV
+    │           ├── render/PlaceholderKart.ts # 3-wheel Dhaka painted cycle rickshaw kart mesh
+    │           ├── input/RaceInput.ts     # Keyboard, touch & gamepad input polling
+    │           ├── ui/RaceHud.ts          # DOM HUD (speedometer, bell hint, exit button, touch)
+    │           ├── debug/RaceDebugOverlay.ts # F4 telemetry overlay & window.__race API
+    │           └── index.ts               # Subsystem barrel export
     ├── state/
     │   ├── DateState.ts             # Romance affection, quest stages, inventory, world state
     │   ├── RPGStats.ts              # Combat stats (HP/SP/XP/Level/ATK/DEF), level curve
@@ -124,6 +149,7 @@ dhaka-date-rpg/
     │       └── ScheduleResolver.ts  # Pure deterministic schedule & variant evaluator
     ├── types/
     │   ├── npc.types.ts             # Strict living-world schedule & navigation interfaces
+    │   ├── race.types.ts            # 3D race, kart kinematics, camera & telemetry interfaces
     │   ├── rpg.types.ts             # Combat, stats, items, recipes, dialog interfaces
     │   └── stardew.types.ts         # 32x32 grid, farming, crops, calendar interfaces
     └── ui/
@@ -247,10 +273,40 @@ The romance progression is measured through **Affection Hearts (0–100%)**, tra
 | **Beli Gajra Garland** | Flower Cart (`x: 1216, y: 544`) | Purchase hand-strung fragrant white Beli flower garlands and tie them around the wrist or hair. | +14 Affection, grants `flower_beli_garland`. |
 | **Pabnar Mishti Doi** | Sweet Stall (`x: 1744, y: 272`) | Taste thick, creamy, caramelized sweet yogurt served in earthen pots. | +10 Affection, boosts stamina recovery. |
 | **Grand Rickshaw Tour** | Fuller Roadway (`x: 1648, y: 816`) | Board an intricately painted cycle rickshaw for an automated scenic tour across Fuller Road with rhythmic rickshaw bells (`rickshaw_bell.wav`). | +25 Affection, full stamina recovery, panorama view. |
+| **Tring-Tring Grand Prix (3D)** | Fuller Roadway (`x: 1648, y: 816`) | Enter the 3D rickshaw racing mini-game spike powered by Three.js on an overlay canvas with arcade kart physics and spring-arm chase camera. | Prototype M1 spike: driveable kart, 60 FPS, state preserved. |
 | **Stargazing Telescope** | Lake Pier (`x: 1776, y: 1328`) | Peer through the brass telescope at dusk to chart 4 custom celestial constellations: The Starry Rickshaw, The Crescent Moon, The Krishnachura, and The Guardian Spirit. | +22 Affection, charts constellations in skybox. |
 | **Lantern Rowboat Finale** | Dhanmondi Lake (`x: 1904, y: 1328`) | The romantic climax of the date. Row across calm waters illuminated by floating paper lanterns and vertical water reflections. | +30 Affection, unlocks Date Completion Confession Cutscene. |
 | **Bose Quantum Quiz** | Curzon Lab (`x: 330, y: 322`) | Answer Prof. Satyendra's physics quiz regarding Bose-Einstein Condensation. | +60 XP, grants `keepsake_quantum_slate`. |
 | **Rakin's Lakeside Concert** | Dhanmondi Lake Shore (`x: 1820, y: 1340`) | Rakin plays an acoustic guitar concert singing the romantic ballad 'Ohona' for Ahona under the weeping willow. Triggers vocal audio cutscene (`playRakinConcertForAhonaCutscene()`). | +35 Affection, unlocks Ahona's Keepsake Ribbon, plays `ohona_song.mp3`. |
+
+### 6.1 3D Rickshaw Racing Mini-Game — "Tring-Tring Grand Prix" (Milestone 1 Architecture Spike)
+
+At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with the painted cycle rickshaw now offers a choice hub:
+1. **"🛺 Grand Rickshaw Tour (Sightseeing)"**: Preserves the original 2D automated scenic tour across Dhaka Valley verbatim.
+2. **"🏁 Race (Beta) — Tring-Tring Grand Prix"**: Seamlessly launches Milestone 1 of the Mario Kart–style 3D rickshaw racing mini-game spike.
+
+```
+┌───────────────────────────────────────────────────────────┐
+│               Tring-Tring Grand Prix (3D Spike)           │
+├───────────────────────────────────────────────────────────┤
+│ • Renderer: Dedicated <canvas> Three.js overlay (z: 1000) │
+│ • Chunking: Rolldown async chunks (three & race-engine)   │
+│ • Simulation: 60Hz Fixed-Timestep Loop with Alpha Lerp    │
+│ • Kart Controller: Pure Arcade Kinematics (0 Three/Phaser)│
+│ • Camera: Spring-Arm Chase Camera + Dynamic Speed FOV Kick│
+│ • Sound: Overworld BGM ducking (18%) + rickshaw bell sfx  │
+│ • State: 100% Frozen Clock, Weather, NPCs & Player Pos    │
+│ • Cleanup: Full WebGL/DOM disposal (0 leaks in 10 cycles) │
+└───────────────────────────────────────────────────────────┘
+```
+
+#### Architecture & Key Principles
+- **Dedicated `<canvas>` Overlay Architecture (ADR 001):** Three.js 0.186.1 renders onto a dedicated canvas (`#race-canvas-overlay`) mounted inside `#race-container` directly on top of the Phaser canvas. This isolates WebGL2 contexts and prevents conflicts with Phaser's 2D batching pipeline.
+- **Lazy-Loaded Chunks (ADR 003):** Configured via Vite Rolldown code-splitting groups (`three` and `race-engine`). Dynamic `import('./minigames/race/RickshawRaceEngine')` ensures **zero initial bundle growth**.
+- **Overworld State Freezing (ADR 002):** Upon entry, `DhakaValleyScene.scene.pause()` and `TimeCalendarSystem.setPaused(true)` are engaged. Moon Walker's coordinates, Totoro's follower trail, in-game calendar time, weather conditions, and living-world NPC schedules remain 100% frozen. Upon pressing Esc or tapping Exit, the 3D overlay is removed, resources are disposed, overworld BGM restores smoothly, and Phaser resumes execution with zero temporal drift.
+- **Pure Arcade Kart Math (`KartController.ts`):** Implements acceleration (16 u/s²), braking (24 u/s²), reverse (-8 u/s max), rolling friction (6 u/s²), and speed-sensitive steering without importing Three.js or Phaser, allowing 100% pure unit testing in Vitest.
+- **Fixed-Timestep Simulation (`FixedStepLoop.ts`):** Decouples 60Hz physics ticks from display refresh rate using a time accumulator, spiral-of-death clamp (max 5 substeps), and render interpolation alpha.
+- **Developer Telemetry API & F4 HUD:** Pressing `F4` toggles real-time telemetry (FPS, frame time, draw calls, triangles, geometry/texture memory). Accessible in developer console via `window.__race.stats()`, `window.__race.exit()`, and `window.__race.toggleOverlay()`.
 
 ---
 
@@ -1116,7 +1172,8 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Essential Scripts (`package.json`)
 - `npm run dev`: Launch local Vite development server on `http://localhost:3000/`.
 - `npm run build`: Execute production Vite build to `dist/`.
-- `npm run test`: Run the full Vitest test suite (`tests/` directory, 95/95 tests across 14 suites).
+- `npm run test`: Run the full Vitest test suite (`tests/` directory, 126/126 tests across 18 suites).
+- `npm run test:race:m1`: Run Playwright E2E verification test suite for Three.js 3D race spike (state preservation, driving telemetry, memory leak cycles, mobile touch).
 - `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
 - `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
@@ -1131,9 +1188,9 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Verification Checklist Before Commits
 1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
 2. Run `npm run typecheck` — zero TypeScript errors.
-3. Run `npm run test` — all Vitest suites pass (95/95 tests across 14 suites).
-4. Run `npm run assets:validate` & `npm run assets:report` — all combat asset specifications validated.
-5. Run `node scripts/test_combat_overhaul.js` — Playwright end-to-end combat test suite verifies player combos, parasol parry, perfect dodge, Totoro abilities, and boss poise breaks.
+3. Run `npm run test` — all Vitest suites pass (126/126 tests across 18 suites).
+4. Run `npm run test:race:m1` — Playwright end-to-end 3D race spike verified with zero leaks and 100% state preservation.
+5. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
 6. Run `npm run build` — bundle compiles cleanly with no missing assets.
 7. Verify browser rendering via `http://localhost:3000/` or Chrome DevTools.
 8. Deploy to Cloudflare Pages: `npm run deploy:cf`.
@@ -1182,4 +1239,4 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
    - Update `src/config/assetSpecs.manifest.ts`.
    - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 26, 2026 — Master Art Policy & Unrestricted External Art Integration*
+*Last Updated: October 26, 2026 — Three.js Integration Spike M1 ("Tring-Tring Grand Prix") & Master Art Policy*

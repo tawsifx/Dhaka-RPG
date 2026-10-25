@@ -776,6 +776,37 @@ export const SoundEngine = (() => {
 
     getVolumes: () => ({ musicVol, sfxVol }),
 
+    duckBGM: (ratio = 0.2, fadeMs = 300): void => {
+      const c = getCtx();
+      const targetGain = Math.max(0, Math.min(1, musicVol * ratio));
+      if (c && musicBusGain) {
+        const now = c.currentTime;
+        musicBusGain.gain.cancelScheduledValues(now);
+        musicBusGain.gain.setValueAtTime(musicBusGain.gain.value, now);
+        musicBusGain.gain.linearRampToValueAtTime(targetGain, now + fadeMs / 1000);
+      } else {
+        const curr = activeDeck === 'A' ? deckA : deckB;
+        if (curr.audio && !curr.gainNode) {
+          try { curr.audio.volume = targetGain; } catch {}
+        }
+      }
+    },
+
+    restoreBGM: (fadeMs = 300): void => {
+      const c = getCtx();
+      if (c && musicBusGain) {
+        const now = c.currentTime;
+        musicBusGain.gain.cancelScheduledValues(now);
+        musicBusGain.gain.setValueAtTime(musicBusGain.gain.value, now);
+        musicBusGain.gain.linearRampToValueAtTime(musicVol, now + fadeMs / 1000);
+      } else {
+        const curr = activeDeck === 'A' ? deckA : deckB;
+        if (curr.audio && !curr.gainNode) {
+          try { curr.audio.volume = musicVol; } catch {}
+        }
+      }
+    },
+
     step: (surface = 'grass') => {
       if (surface === 'puddle') noiseBurst(0.06, 950, 0.08);
       else if (surface === 'pier') tone(110 + Math.random() * 15, 55, 'triangle', 0.06, 0.065 * sfxVol);
