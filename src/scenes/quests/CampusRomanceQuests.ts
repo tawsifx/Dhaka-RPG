@@ -522,11 +522,6 @@ export class CampusRomanceQuests {
   /* =========================================================================
    *  IMAN & MEHJABIN COUPLE DATE QUESTLINE & CUTSCENES
    * ========================================================================= */
-    static interactSalat(scene: any): void { this.interactMehjabin(scene); }
-  static playEnanExcusesCutscene(scene: any): void { this.playImanExcusesCutscene(scene); }
-  static interactEnan(scene: any): void { this.interactIman(scene); }
-  static playTotoroSwaysEnanCutscene(scene: any): void { this.playTotoroSwaysImanCutscene(scene); }
-
   static interactMehjabin(scene: any): void {
     if (!DateState.totoroJoined) {
       UI.startDialogue([
@@ -592,13 +587,13 @@ export class CampusRomanceQuests {
         }
       ], () => {
         DateState.imanQuestStage = 1;
-        this.playEnanExcusesCutscene(scene);
+        this.playImanExcusesCutscene(scene);
       });
       return;
     }
 
     if (DateState.imanQuestStage === 1) {
-      this.playEnanExcusesCutscene(scene);
+      this.playImanExcusesCutscene(scene);
       return;
     }
 
@@ -654,7 +649,7 @@ export class CampusRomanceQuests {
         }
       ], () => {
         DateState.imanQuestStage = 3;
-        if ((scene.mehjabinBadge || scene.salatBadge)) (scene.mehjabinBadge || scene.salatBadge).setText('🥺 Mehjabin (Hoping Totoro Can Help)');
+        if (scene.mehjabinBadge) scene.mehjabinBadge.setText('🥺 Mehjabin (Hoping Totoro Can Help)');
         UI.updateQuestText();
         UI.showToast('💬', 'Talk to Totoro!', 'Tell Totoro about Iman’s excuses (Click Partner button or press E near Totoro)!');
       });
@@ -711,7 +706,7 @@ export class CampusRomanceQuests {
 
     scene.time.delayedCall(650, () => {
       scene.tweens.add({
-        targets: [(scene.mehjabin || scene.salat), (scene.mehjabinBadge || scene.salatBadge)],
+        targets: [scene.mehjabin, scene.mehjabinBadge],
         x: 1105,
         y: 736,
         duration: 750,
@@ -752,14 +747,14 @@ export class CampusRomanceQuests {
           ], () => {
             SoundEngine.blip(260, 'sine');
             scene.tweens.add({
-              targets: [(scene.mehjabin || scene.salat), (scene.mehjabinBadge || scene.salatBadge)],
+              targets: [scene.mehjabin, scene.mehjabinBadge],
               x: 965,
               duration: 800,
               ease: 'Sine.easeInOut',
               onComplete: () => {
                 DateState.imanQuestStage = 2;
-                if ((scene.mehjabinBadge || scene.salatBadge)) (scene.mehjabinBadge || scene.salatBadge).setText('😢 Mehjabin (Crying by Fountain)');
-                if ((scene.imanBadge || scene.enanBadge)) (scene.imanBadge || scene.enanBadge).setText('📱 Iman (Glued to Screen)');
+                if (scene.mehjabinBadge) scene.mehjabinBadge.setText('😢 Mehjabin (Crying by Fountain)');
+                if (scene.imanBadge) scene.imanBadge.setText('📱 Iman (Glued to Screen)');
                 scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
                 scene.cutsceneLocked = false;
                 UI.updateQuestText();
@@ -798,12 +793,12 @@ export class CampusRomanceQuests {
     }
 
     if (DateState.imanQuestStage === 4) {
-      this.playTotoroSwaysEnanCutscene(scene);
+      this.playTotoroSwaysImanCutscene(scene);
       return;
     }
 
     if (DateState.imanQuestStage >= 5) {
-      this.interactSalat(scene);
+      this.interactMehjabin(scene);
     }
   }
 
@@ -880,7 +875,7 @@ export class CampusRomanceQuests {
             }
           ], () => {
             scene.tweens.add({
-              targets: [(scene.iman || scene.enan), (scene.imanBadge || scene.enanBadge)],
+              targets: [scene.iman, scene.imanBadge],
               x: 865,
               duration: 600,
               ease: 'Power2',
@@ -933,10 +928,10 @@ export class CampusRomanceQuests {
     scene.cutsceneLocked = true;
     scene.cameras.main.pan(1060, 750, 600, 'Sine.easeInOut');
 
-    (scene.mehjabin || scene.salat).setPosition(1045, 750).setDepth(750);
-    (scene.iman || scene.enan).setPosition(1080, 750).setDepth(750);
-    (scene.mehjabinBadge || scene.salatBadge).setPosition(1062, 685).setText('💑 Iman & Mehjabin (Happy Couple)');
-    if ((scene.imanBadge || scene.enanBadge)) (scene.imanBadge || scene.enanBadge).setVisible(false);
+    scene.mehjabin.setPosition(1045, 750).setDepth(750);
+    scene.iman.setPosition(1080, 750).setDepth(750);
+    scene.mehjabinBadge.setPosition(1062, 685).setText('💑 Iman & Mehjabin (Happy Couple)');
+    if (scene.imanBadge) scene.imanBadge.setVisible(false);
 
     scene.player.setPosition(1010, 750);
     scene.totoro.setPosition(975, 750);

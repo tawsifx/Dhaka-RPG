@@ -1397,36 +1397,30 @@ export class DhakaValleyScene extends Phaser.Scene {
         }
 
         this.mehjabin = this.add.sprite(mehjabinPos.x, mehjabinPos.y, 'npc-mehjabin-0').setOrigin(0.5, 1).setDepth(mehjabinPos.y);
-        this.salat = this.mehjabin;
         this.mehjabinBadge = this.add.text(mehjabinPos.x, mehjabinPos.y - 65, mehjabinText, {
           fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
           backgroundColor: '#831843', color: '#fce7f3', padding: { x: 7, y: 3 }
         }).setOrigin(0.5, 1).setDepth(2100);
-        this.salatBadge = this.mehjabinBadge;
 
         this.mehjabinInteract = {
           x: mehjabinPos.x, y: mehjabinPos.y, radius: 85, sprite: this.mehjabin, badge: this.mehjabinBadge,
           name: 'Talk to Mehjabin',
           onInteract: () => this.interactMehjabin()
         };
-        this.salatInteract = this.mehjabinInteract;
         this.interactables.push(this.mehjabinInteract);
 
       this.iman = this.add.sprite(imanPos.x, imanPos.y, 'npc-iman-0').setOrigin(0.5, 1).setDepth(imanPos.y);
-      this.enan = this.iman;
 
       this.imanBadge = this.add.text(imanPos.x, imanPos.y - 70, imanText, {
         fontFamily: 'Outfit', fontSize: '12px', fontStyle: 'bold',
         backgroundColor: '#164e63', color: '#cffafe', padding: { x: 7, y: 3 }
       }).setOrigin(0.5, 1).setDepth(2100).setVisible(DateState.imanQuestStage < 5);
-      this.enanBadge = this.imanBadge;
 
       this.imanInteract = {
         x: imanPos.x, y: imanPos.y, radius: 85, sprite: this.iman, badge: this.imanBadge,
         name: 'Talk to Iman',
         onInteract: () => this.interactIman()
       };
-      this.enanInteract = this.imanInteract;
       this.interactables.push(this.imanInteract);
 
         this.createWanderingCitizens();
@@ -3065,32 +3059,16 @@ export class DhakaValleyScene extends Phaser.Scene {
     CampusRomanceQuests.interactMehjabin(this);
   }
 
-  interactSalat() {
-    CampusRomanceQuests.interactSalat(this);
-  }
-
   playImanExcusesCutscene() {
     CampusRomanceQuests.playImanExcusesCutscene(this);
-  }
-
-  playEnanExcusesCutscene() {
-    CampusRomanceQuests.playEnanExcusesCutscene(this);
   }
 
   interactIman() {
     CampusRomanceQuests.interactIman(this);
   }
 
-  interactEnan() {
-    CampusRomanceQuests.interactEnan(this);
-  }
-
   playTotoroSwaysImanCutscene() {
     CampusRomanceQuests.playTotoroSwaysImanCutscene(this);
-  }
-
-  playTotoroSwaysEnanCutscene() {
-    CampusRomanceQuests.playTotoroSwaysEnanCutscene(this);
   }
 
   playDoubleDateCutscene() {

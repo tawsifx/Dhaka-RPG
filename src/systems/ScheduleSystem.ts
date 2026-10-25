@@ -327,7 +327,7 @@ export class ScheduleSystem {
     if (['ananya_ghost', 'kofil_chacha', 'prof_shamsher', 'elder_banyan_sage', 'tidekeeper_marina', 'blacksmith_kael', 'astronomer_lyra', 'celestial_chronicler'].includes(id)) {
       return { bg: 'rgba(76, 29, 149, 0.90)', color: '#f3e8ff', stroke: '#2e1065' };
     }
-    if (['ahona', 'rakin', 'salat', 'enan', 'mehjabin', 'iman'].includes(id)) {
+    if (['ahona', 'rakin', 'mehjabin', 'iman'].includes(id)) {
       return { bg: 'rgba(159, 18, 57, 0.90)', color: '#ffe4e6', stroke: '#4c0519' };
     }
     return { bg: 'rgba(24, 24, 27, 0.88)', color: '#f7efe2', stroke: '#09090b' };
@@ -351,7 +351,7 @@ export class ScheduleSystem {
       return { roamRadius: 3, pauseDurationSec: 2.0, isVendor: false };
     }
     // Active walking citizens, artists, seniors, students
-    if (['nadia', 'arif', 'baki_bhai', 'mimi', 'anamika', 'ahona', 'apshora', 'rakin', 'salat', 'enan', 'mehjabin', 'iman', 'tsc_singer'].includes(npcId)) {
+    if (['nadia', 'arif', 'baki_bhai', 'mimi', 'anamika', 'ahona', 'apshora', 'rakin', 'mehjabin', 'iman', 'tsc_singer'].includes(npcId)) {
       return { roamRadius: 4, pauseDurationSec: 2.2, isVendor: false };
     }
     // Academic scholars, professors, researchers in labs & Curzon gardens
@@ -428,15 +428,11 @@ export class ScheduleSystem {
       this.scene.rakin = sprite;
       this.scene.rakinBadge = badge;
     }
-    if (def.npcId === 'salat' || def.npcId === 'mehjabin') {
-      this.scene.salat = sprite;
-      this.scene.salatBadge = badge;
+    if (def.npcId === 'mehjabin') {
       this.scene.mehjabin = sprite;
       this.scene.mehjabinBadge = badge;
     }
-    if (def.npcId === 'enan' || def.npcId === 'iman') {
-      this.scene.enan = sprite;
-      this.scene.enanBadge = badge;
+    if (def.npcId === 'iman') {
       this.scene.iman = sprite;
       this.scene.imanBadge = badge;
     }
@@ -465,12 +461,10 @@ export class ScheduleSystem {
     if (def.npcId === 'ahona') this.scene.rivalInteract = interactObj;
     if (def.npcId === 'apshora') this.scene.apshoraInteract = interactObj;
     if (def.npcId === 'rakin') this.scene.rakinInteract = interactObj;
-    if (def.npcId === 'salat' || def.npcId === 'mehjabin') {
-      this.scene.salatInteract = interactObj;
+    if (def.npcId === 'mehjabin') {
       this.scene.mehjabinInteract = interactObj;
     }
-    if (def.npcId === 'enan' || def.npcId === 'iman') {
-      this.scene.enanInteract = interactObj;
+    if (def.npcId === 'iman') {
       this.scene.imanInteract = interactObj;
     }
 
@@ -498,9 +492,7 @@ export class ScheduleSystem {
       ahona: 'npc-ahona',
       rakin: 'npc-rakin',
       apshora: 'npc-apshora',
-      salat: 'npc-mehjabin',
       mehjabin: 'npc-mehjabin',
-      enan: 'npc-iman',
       iman: 'npc-iman',
       prof_motahar: 'npc-prof-motahar',
       prof_satyendra: 'npc-prof-satyendra',
@@ -836,22 +828,14 @@ export class ScheduleSystem {
         }
         break;
       case 'mehjabin':
-      case 'salat':
         if (typeof this.scene.interactMehjabin === 'function') {
           this.scene.interactMehjabin();
-          return;
-        } else if (typeof this.scene.interactSalat === 'function') {
-          this.scene.interactSalat();
           return;
         }
         break;
       case 'iman':
-      case 'enan':
         if (typeof this.scene.interactIman === 'function') {
           this.scene.interactIman();
-          return;
-        } else if (typeof this.scene.interactEnan === 'function') {
-          this.scene.interactEnan();
           return;
         }
         break;

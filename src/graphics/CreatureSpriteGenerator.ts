@@ -1529,7 +1529,7 @@ export class CreatureSpriteGenerator {
       });
     });
 
-    // 18. Iman (formerly Enan) — Tall, Handsome Bengali Man in Tailored Silk Panjabi (36x62)
+    // 18. Iman — Tall, Handsome Bengali Man in Tailored Silk Panjabi (36x62)
     [0, 1].forEach(frame => {
       const renderIman = (ctx: any, w: number, h: number) => {
         const bob = frame === 1 ? -1 : 0;
@@ -1632,10 +1632,9 @@ export class CreatureSpriteGenerator {
         ctx.fillRect(cx + 8.5, 29 + bob, 3, 6);
       };
       makeTex(`npc-iman-${frame}`, 36, 62, renderIman);
-      makeTex(`npc-enan-${frame}`, 36, 62, renderIman);
     });
 
-    // 19. Mehjabin (formerly Salat) — Graceful Bengali Girl in Embroidered Salwar Kameez & Dupatta (34x56)
+    // 19. Mehjabin — Graceful Bengali Girl in Embroidered Salwar Kameez & Dupatta (34x56)
     [0, 1].forEach(frame => {
       const renderMehjabin = (ctx: any, w: number, h: number) => {
         const bob = frame === 1 ? -1 : 0;
@@ -1760,7 +1759,6 @@ export class CreatureSpriteGenerator {
         ctx.fillRect(cx - 3, 31 + bob, 6, 3.5);
       };
       makeTex(`npc-mehjabin-${frame}`, 34, 56, renderMehjabin);
-      makeTex(`npc-salat-${frame}`, 34, 56, renderMehjabin);
     });
 
     // =========================================================================

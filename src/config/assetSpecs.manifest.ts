@@ -662,42 +662,8 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       styleSearchTags: ['townsperson girl', 'fountain plaza resident', 'student female RPG']
     }
   },
-  'npc-salat': {
-    id: 'npc-salat',
-    name: 'Mehjabin (Fountain Plaza Resident)',
-    category: 'character',
-    description: 'Thoughtful young woman waiting near the Mintu Road fountain plaza.',
-    externalPath: 'assets/sprites/characters/npc_mehjabin.png',
-    hasExternalFile: true,
-    fallbackProceduralKey: 'npc-mehjabin',
-    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
-    recommendedDownloadSpecs: {
-      preferredFrameSize: { width: 32, height: 48 },
-      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
-      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
-      origin: { x: 0.5, y: 0.88 },
-      styleSearchTags: ['townsperson girl', 'fountain plaza resident', 'student female RPG']
-    }
-  },
   'npc-iman': {
     id: 'npc-iman',
-    name: 'Iman (Tech Professional)',
-    category: 'character',
-    description: 'Busy young professional balancing smartphone notifications and campus strolls.',
-    externalPath: 'assets/sprites/characters/npc_iman.png',
-    hasExternalFile: true,
-    fallbackProceduralKey: 'npc-iman',
-    logicalGridFootprint: { cols: 1, rows: 1, collision: { widthTiles: 0.625, heightTiles: 0.44 } },
-    recommendedDownloadSpecs: {
-      preferredFrameSize: { width: 32, height: 48 },
-      acceptedNativeSizes: ['16x32 (auto-2x)', '32x48 (1:1)'],
-      sheetLayout: '4 cols x 4 rows: Row 0=Down, Row 1=Left, Row 2=Right, Row 3=Up',
-      origin: { x: 0.5, y: 0.88 },
-      styleSearchTags: ['young professional', 'smartphone tech boy', 'campus male RPG']
-    }
-  },
-  'npc-enan': {
-    id: 'npc-enan',
     name: 'Iman (Tech Professional)',
     category: 'character',
     description: 'Busy young professional balancing smartphone notifications and campus strolls.',

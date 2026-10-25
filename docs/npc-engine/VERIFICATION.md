@@ -117,7 +117,7 @@
 
 1. **Date State Quest Flags**:
    - `DateState.apshoraQuestStage`, `DateState.ahonaQuestStage`, `DateState.imanQuestStage` checked.
-   - When quest stages advance, `ScheduleResolver` automatically activates corresponding variant (`ahona_reconciled_with_rakin`, `apshora_atelier`, `salat_happy_couple`, `enan_attentive_couple`).
+   - When quest stages advance, `ScheduleResolver` automatically activates corresponding variant (`ahona_reconciled_with_rakin`, `apshora_atelier`, `mehjabin_happy_couple`, `iman_attentive_couple`).
 2. **Save Migration**:
    - `SaveManager.loadGame()` seamlessly initializes `npcOverrides: {}` and `savedCalendar` defaults if absent in older save blobs.
    - Preserves save key `totoro_moonwalker_rpg_save_v2`.

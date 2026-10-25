@@ -73,8 +73,8 @@ async function run() {
   }
 
   // Verify Mehjabin & Iman are placed at the spacious Fountain Garden Terrace (y ≈ 736)
-  const mehjabin = initialNpcData['mehjabin'] || initialNpcData['salat'];
-  const iman = initialNpcData['iman'] || initialNpcData['enan'];
+  const mehjabin = initialNpcData['mehjabin'];
+  const iman = initialNpcData['iman'];
   if (mehjabin) {
     console.log(`⛲ Mehjabin placement: (${mehjabin.x}, ${mehjabin.y})`);
     if (mehjabin.y >= 790 && mehjabin.y <= 830) {
