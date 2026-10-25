@@ -69,25 +69,29 @@ dhaka-date-rpg/
 │   │   ├── mcp-inventory.md         # MCP tooling map
 │   │   ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
 │   │   └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
-│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1 & M2)
+│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1–M3)
 │       ├── 00-audit.md              # Codebase integration points, lifecycle & bundle impact audit
 │       ├── 01-research.md           # Mario Kart & SuperTuxKart kinematics equations & formulas
 │       ├── 02-design.md             # System architecture & pure subsystem decomposition specs
-│       ├── DECISIONS.md             # Architectural Decision Records (ADR 001–011)
-│       ├── PROGRESS.md              # Master M1-M8 roadmap and milestone tracking (M1 & M2 Complete)
-│       ├── PERF.md                  # Benchmark report (FPS, bundle delta, 10-cycle leak tests, instanced pools)
-│       ├── ASSET_CREDITS.md         # Technical asset provenance & synthesis credits
-│       └── VERIFICATION.md          # Visual proofs, feel checklist & test execution logs
+│       ├── DECISIONS.md             # Canonical Architectural Decision Records (ADR 001–013)
+│       ├── PROGRESS.md              # Master M1-M8 roadmap and milestone tracking
+│       ├── PERF.md                  # Benchmark report (FPS, bundle delta, 10-cycle leak tests, instanced pools, 4x CPU throttle)
+│       ├── ASSETS.md                # Asset provenance & classification audit matrix
+│       ├── ASSET_CREDITS.md         # Technical asset provenance & CC0 sample credits
+│       ├── ASSET_SHOPPING_LIST.md   # 3D Art Acquisition Backlog & Specs
+│       └── VERIFICATION.md          # Visual proofs, feel checklist (a-h) & test execution logs
 ├── public/                          # Static public assets
 │   ├── assets/
 │   │   ├── audio/                   # Compressed BGM tracks & 16-channel SFX
+│   │   ├── race/audio/              # External CC0 vehicle & race audio samples (Kenney)
 │   │   ├── sprites/characters/      # Normalized external character & companion spritesheets
 │   │   └── tilesets/                # Normalized external tileset sheets (16x16 and 32x32)
 ├── tests/
 │   ├── stats.test.ts                # RPG combat & stats formulas
 │   ├── farming.test.ts              # Stardew farming simulation & seasons
 │   ├── race/                        # 3D Rickshaw Race pure math & loop tests
-│   │   └── race_m1.test.ts          # KartController, FixedStepLoop, RaceResult tests (20 tests)
+│   │   ├── race_m1.test.ts          # KartController, FixedStepLoop, RaceResult tests (20 tests)
+│   │   └── race_m2.test.ts          # Drift, 3-tier mini-turbo, boost priority, surfaces, air & countdown (51 tests)
 │   └── npc/                         # Living-World NPC Engine unit & integration tests
 │       ├── resolver.test.ts         # Pure deterministic schedule resolver (20 tests)
 │       ├── navigator.test.ts        # In-house A* terrain cost & door pathfinding (8 tests)
@@ -325,7 +329,8 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **Air Mechanics & Ramps:** Launching off ramps puts the kart in airborne gravity arc with reduced steering authority ($25\%$). Pressing trick/drift in air executes a 360° flip animation, awarding an air-trick landing boost upon clean touchdown.
 - **Collision Response (`ICollisionWorld`, ADR 008):** Glancing collisions ($<40^\circ$) slide along wall normals retaining $>92\%$ speed; head-on crashes bounce with restitution ($e = 0.25$), cut speed by $40\%$, and cancel active drift.
 - **Visual Juice & Instanced Particle Pools (ADR 009):** Chassis roll into corners, pitch on acceleration/braking, camera drift sway and FOV kick. Particle effects (drift sparks, tire smoke, boost flame exhaust, water splash, and skid marks) render via `THREE.InstancedMesh` with zero dynamic allocations inside the render loop (constant 2 draw calls).
-- **Web Audio Sound Design:** Speed-scaled sawtooth engine RPM loop (55 Hz to 240 Hz), high-Q white noise drift screech loop, tier-up chimes (E5, G#5, C6), whooshes, landing thumps, and countdown beeps.
+- **External Audio Pipeline & Fallbacks (ADR 012):** External CC0 vehicle audio samples (Kenney engine loop, tire skids, impacts, chimes, grass rumble) loaded asynchronously with procedural Web Audio synthesizer fallbacks.
+- **Cycle Rickshaw Kart Architecture (ADR 013):** Dhaka 3-wheel cycle rickshaw with functional wheel/fork articulation and authentic heritage styling (`PlaceholderKart.ts`).
 - **Action-Map Controls (ADR 010):**
   - *Keyboard:* W/Up (Accel), S/Down (Brake/Rev), A/D/Left/Right (Steer), Shift/K (Drift/Trick), Space (Bell), C (Look-Behind), R (Reset), Esc (Exit).
   - *Gamepad API:* Left stick with 0.15 deadzone and cubic response curve, RT/A (Accel), LT/X (Brake), RB/LB (Drift), B (Bell), Y (Look-Behind), Start (Exit). Hot-plug safe.
@@ -1276,4 +1281,4 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
    - Update `src/config/assetSpecs.manifest.ts`.
    - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 26, 2026 — Three.js Integration Spike M1 ("Tring-Tring Grand Prix") & Master Art Policy*
+*Last Updated: October 26, 2026 — Track Pipeline M3 ("Tring-Tring Grand Prix") & Master Art Policy*
