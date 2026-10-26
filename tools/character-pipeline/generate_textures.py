@@ -115,15 +115,27 @@ def create_satsuki_atlas(output_path):
     SHOE_DARK = (42, 36, 40, 255)
     SOCK_WHITE = (245, 245, 250, 255)
 
-    # 1. Skin & Full Head Wrap (Top-Left: [0, 0, 512, 512])
-    # Base skin
+    # 1. Skin & Full Head Wrap with Authentic Ghibli Cel Face (Top-Left: [0, 0, 512, 512])
     draw.rectangle([0, 0, 512, 512], fill=SKIN_LIGHT)
-    # Soft vertical warmth
-    for y in range(512):
-        t = y / 512.0
-        sh = int(12 * math.sin(t * math.pi))
-        c = (SKIN_LIGHT[0] - sh, SKIN_LIGHT[1] - sh, SKIN_LIGHT[2] - sh, 255)
-        draw.line([(0, y), (511, y)], fill=c)
+    
+    # Check if authentic generated Ghibli portrait exists
+    portrait_path = '/Users/tawsifx/.gemini/antigravity/brain/6c97bfac-da08-49e4-b7eb-834f1aca8c76/satsuki_portrait_1793023891591.jpg'
+    if os.path.exists(portrait_path):
+        portrait = Image.open(portrait_path).convert('RGBA')
+        # Center crop and fit to 512x512
+        pw, ph = portrait.size
+        # The face is centered in the upper-mid area of the portrait
+        crop_box = (int(pw * 0.15), int(ph * 0.10), int(pw * 0.85), int(ph * 0.80))
+        face_cropped = portrait.crop(crop_box).resize((512, 512), Image.Resampling.LANCZOS)
+        img.paste(face_cropped, (0, 0))
+        print("Pasted authentic Ghibli Satsuki portrait into texture atlas [0, 0, 512, 512]")
+    else:
+        # Fallback procedural face
+        for y in range(512):
+            t = y / 512.0
+            sh = int(12 * math.sin(t * math.pi))
+            c = (SKIN_LIGHT[0] - sh, SKIN_LIGHT[1] - sh, SKIN_LIGHT[2] - sh, 255)
+            draw.line([(0, y), (511, y)], fill=c)
 
     # Central Face Zone: [120, 100, 392, 420]
     # Satsuki's Expressive Anime Eyes (centered on face for cylindrical projection)

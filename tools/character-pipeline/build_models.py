@@ -387,56 +387,62 @@ def build_satsuki():
     assign_cylindrical_uvs(skirt.data, (0.02, 0.02, 0.48, 0.48))
     parts.append(skirt)
 
-    # 3. Head & Face (Single Cohesive Low-Poly Anime Head)
+    # 3. Head & Face (Single Cohesive Low-Poly Anime Head with Ghibli Face)
     # Neck
     bpy.ops.mesh.primitive_cylinder_add(vertices=10, radius=4.2, depth=9.0, location=(0, -5, 54))
     neck = bpy.context.active_object
     neck.name = "satsuki_neck"
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     assign_box_uvs(neck.data, (0.02, 0.52, 0.48, 0.98))
     parts.append(neck)
 
     # Anime Head Base (Oval skull tapering to cute rounded jaw & chin)
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=14, ring_count=10, radius=12.0, location=(0, -3, 67))
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=12, radius=11.5, location=(0, -3, 67))
     head = bpy.context.active_object
     head.name = "satsuki_head"
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
     # Shape head: slightly wider at cheekbones, tapered jaw
     bm = bmesh.new()
     bm.from_mesh(head.data)
     for v in bm.verts:
         # Tilt head slightly forward ~5 deg
         rad = math.radians(5)
-        cy = v.co.y * math.cos(rad) - v.co.z * math.sin(rad)
-        cz = v.co.y * math.sin(rad) + v.co.z * math.cos(rad)
+        cy = (v.co.y + 3) * math.cos(rad) - (v.co.z - 67) * math.sin(rad) - 3
+        cz = (v.co.y + 3) * math.sin(rad) + (v.co.z - 67) * math.cos(rad) + 67
         v.co.y, v.co.z = cy, cz
 
-        # Shape chin
+        # Shape cute anime chin
         if v.co.z < 65:
             t = (65 - v.co.z) / 10.0
-            v.co.x *= (1.0 - 0.3 * t)
-            v.co.y *= (1.0 - 0.2 * t)
+            v.co.x *= (1.0 - 0.28 * t)
+            v.co.y = (v.co.y + 3) * (1.0 - 0.22 * t) - 3
     bm.to_mesh(head.data)
     bm.free()
 
-    # UV Map Head:
-    # Front faces (facing +Y): map directly to face region [0.08, 0.58, 0.42, 0.92] (where eyes, nose, smile are!)
-    # Back & side faces: map to skin zone [0.02, 0.52, 0.48, 0.98]
+    # Front Projection UV Mapping for Face
+    # Map the front faces directly to the Ghibli Face Portrait: U in [0.05, 0.45], V in [0.55, 0.95]
     bm = bmesh.new()
     bm.from_mesh(head.data)
     uv_layer = bm.loops.layers.uv.verify()
+    verts = [v.co for v in bm.verts]
+    min_x = min(v.x for v in verts)
+    max_x = max(v.x for v in verts)
+    min_z = min(v.z for v in verts)
+    max_z = max(v.z for v in verts)
+    dx = max(0.001, max_x - min_x)
+    dz = max(0.001, max_z - min_z)
+
     for face in bm.faces:
-        norm = face.normal
-        # If face points generally forward (Y > 0.2):
-        if norm.y > 0.2:
-            # Face feature mapping: centered around X=0, Z=66..70
+        # Front-facing half of the head sphere
+        if face.normal.y > -0.05:
             for loop in face.loops:
                 co = loop.vert.co
-                # Normalized X from -8 to +8 -> U in [0.12, 0.38]
-                u = 0.25 + (co.x / 16.0) * 0.24
-                # Normalized Z from 60 to 74 -> V in [0.65, 0.92]
-                v = 0.65 + ((co.z - 60.0) / 14.0) * 0.27
-                loop[uv_layer].uv = Vector((max(0.10, min(0.40, u)), max(0.60, min(0.95, v))))
+                u = 0.05 + ((co.x - min_x) / dx) * 0.40
+                v = 0.55 + ((co.z - min_z) / dz) * 0.40
+                loop[uv_layer].uv = Vector((u, v))
         else:
-            # Side / back of head: plain skin
+            # Back half of head
             for loop in face.loops:
                 loop[uv_layer].uv = Vector((0.05, 0.55))
     bm.to_mesh(head.data)
@@ -444,40 +450,41 @@ def build_satsuki():
     parts.append(head)
 
     # 4. Ghibli Bob Hair with Bangs (Fitted solid helmet & bangs)
-    # Hair Top/Back Cap
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=14, ring_count=10, radius=13.2, location=(0, -4, 69))
+    # Hair Top/Back Cap (sits on top and rear of skull)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=14, ring_count=10, radius=12.4, location=(0, -5, 69))
     hair_cap = bpy.context.active_object
     hair_cap.name = "satsuki_hair_cap"
-    hair_cap.scale = (1.04, 1.08, 1.02)
-    bpy.ops.object.transform_apply(scale=True)
-    # Cut off bottom-front so face shows through cleanly
+    hair_cap.scale = (1.04, 1.05, 1.02)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    # Cut off front so face is completely exposed
     bm = bmesh.new()
     bm.from_mesh(hair_cap.data)
-    verts_to_remove = [v for v in bm.verts if v.co.y > -2 and v.co.z < 69]
+    verts_to_remove = [v for v in bm.verts if v.co.y > -3.0 and v.co.z < 73]
     bmesh.ops.delete(bm, geom=verts_to_remove, context='VERTS')
     bm.to_mesh(hair_cap.data)
     bm.free()
     assign_cylindrical_uvs(hair_cap.data, (0.52, 0.52, 0.98, 0.80))
     parts.append(hair_cap)
 
-    # Front Bangs (Choppy stylized locks framing the forehead above the eyes)
-    bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=12.8, depth=5.0, location=(0, -2, 73))
+    # Front Bangs Fringe (sits on upper forehead at Z ~ 73-76, above eyes)
+    bpy.ops.mesh.primitive_cone_add(vertices=12, radius1=12.2, radius2=2.0, depth=4.0, location=(0, -1, 74))
     bangs = bpy.context.active_object
     bangs.name = "satsuki_bangs"
-    bangs.rotation_euler = (math.radians(35), 0, 0)
-    bangs.scale = (1.02, 0.45, 1.0)
-    bpy.ops.object.transform_apply(rotation=True, scale=True)
+    bangs.rotation_euler = (math.radians(25), 0, 0)
+    bangs.scale = (1.02, 0.4, 0.8)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     assign_box_uvs(bangs.data, (0.52, 0.52, 0.98, 0.80))
     parts.append(bangs)
 
     # Side Locks (Hair framing cheeks and ears)
-    for side, sx in [(-1, -11.5), (1, 11.5)]:
-        bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=4.5, radius2=1.0, depth=14.0, location=(sx, -3, 64))
+    for side, sx in [(-1, -11.0), (1, 11.0)]:
+        bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=4.0, radius2=1.0, depth=13.0, location=(sx, -4, 64))
         lock = bpy.context.active_object
         lock.name = f"satsuki_sidelock_{side}"
-        lock.rotation_euler = (math.radians(-10), math.radians(side * -15), math.radians(side * 8))
-        bpy.ops.object.transform_apply(rotation=True)
+        lock.rotation_euler = (math.radians(-10), math.radians(side * -12), math.radians(side * 8))
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
         assign_box_uvs(lock.data, (0.52, 0.52, 0.98, 0.80))
+        parts.append(lock)
         parts.append(lock)
 
     # 5. Arms & Hands gripping the 24 cm steering wheel
