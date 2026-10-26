@@ -204,6 +204,16 @@ A dedicated step-by-step engineering specification for importing Studio Ghibli c
   * Model Folder: `public/wii/totoro/model.dae`
   * Seat Offset in `kart3d.js`: `[0.14, 0.04]`
 
+### Menu & Title Backgrounds:
+* **Authentic 1996 N64 CGI Title Background:**
+  * Title screen (`background_blue_sky.png`): Full 3D CGI scene featuring Totoro in a classic blue kart, Satsuki in her red kart, and Chibi-Totoro in a mini yellow kart, racing along the Grand Prix circuit with red-and-white curbs, green rolling hills, and bright blue skies.
+  * Multi-tier resolution support: 1× (`public/mk64/menu/`, 320×240), 2× (`public/mk64-hd/2x/menu/`, 640×480), and 4× (`public/mk64-hd/4x/menu/`, 1280×960).
+  * Color-tinted sub-menu variants:
+    - Main Menu (`background_main_menu.png`): Warm coral/salmon duotone (`rgb(247, 173, 173)`).
+    - Map Select (`background_course_select.png`): Cool periwinkle blue duotone (`rgb(173, 173, 247)`).
+    - Player Select (`background_player_select.png`): Sage green duotone (`rgb(173, 247, 173)`).
+    - Stills for 3D mode in `public/title3d/`.
+
 ---
 
 ## 11. Controls & Action-Map

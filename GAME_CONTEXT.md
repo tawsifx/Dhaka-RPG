@@ -41,7 +41,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
 | **Game Engine** | [Phaser 3.87.0](https://phaser.io/) | Canvas/WebGL 2D renderer, Arcade Physics, Custom Y-sorting, Multi-camera system |
-| **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Dedicated WebGL overlay and standalone harness for MarioKart64JS Grand Prix (all 16 N64 tracks, 4 battle arenas, 8 classic drivers, Wii 3D karts, synthesized Web Audio) |
+| **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Dedicated WebGL overlay and standalone harness for Totoro Kart (formerly MarioKart64JS; 16 GP circuits, 4 battle arenas, 8 drivers including Satsuki and Totoro, custom Ghibli 3D CGI menu backgrounds, Wii 3D karts, synthesized Web Audio) |
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 223 unit & regression tests across 20 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics, drift, turbo, surfaces, air, BVH collision, track spline, lap tracking, rescue, and countdown) + automated Playwright E2E suites (`test:race:m1`, `test:race:m2`, `test:race:m3`) + CLI track validation (`race:validate`) |
