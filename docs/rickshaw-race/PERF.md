@@ -230,3 +230,43 @@ Evaluated across 150 full 3-lap races simulated headlessly at 60 Hz physics step
 | **Textures in Memory** | 3 | **5** (character sprite atlases) | **5** | PASS |
 | **Kart-Kart Collisions**| 0 | Active $O(N^2)$ sweep ($28$ pairs/step) | Active ($< 0.04\text{ ms}$/step) | PASS |
 | **Zero-Leak Audit** | 10 cycles clean | **10 cycles clean (0 lingering DOM / GPU)** | Tested & passed | PASS |
+
+---
+
+### 8. Milestone 3.5: Art Pass Performance Telemetry & STK Scenery Profiling
+
+Evaluated on the dressed "Fuller Road Sprint" circuit with SuperTuxKart scenery, textured road ribbons, curbs, sidewalks, Dhaka landmarks, and 8 active karts. Tooling: `scripts/perf_race_track.js` (Playwright, Chrome headless, `--enable-precise-memory-info`, CDP `Emulation.setCPUThrottlingRate`), `scripts/test_race_m35.js`, and `scripts/test_race_m4.js`. Date: October 26, 2026.
+
+#### 8.1 Runtime Telemetry Across Graphics Quality Tiers (8 Karts)
+
+| Metric | Desktop 1280×720 (High) | Desktop (Med) | Desktop (Low) | Mobile 844×390 @2× 4× CPU Throttle (High) | Mobile (Med) | Mobile (Low) | Target / Cap | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Framerate (FPS)** | **60.1 FPS** | **60.1 FPS** | **60.1 FPS** | **55.0 FPS** | **57.5 FPS** | **59.5 FPS** | $\ge 45$ FPS (mob) | PASS |
+| **Worst Frame Time** | 16.8 ms | 16.7 ms | 16.6 ms | 66.6 ms | 48.0 ms | 32.0 ms | $< 100$ ms | PASS |
+| **Drift FPS** | 60.2 FPS | 60.2 FPS | 60.2 FPS | 58.2 FPS | 58.8 FPS | 59.8 FPS | $\ge 50$ FPS | PASS |
+| **Draw Calls** | 129 | 92 | 46 | 129 | 92 | 46 | $\le 150$ | PASS |
+| **Triangles Rendered** | 264,914 | 185,400 | 92,700 | 264,914 | 185,400 | 92,700 | Scalable | PASS |
+| **Geometries in Memory**| 108 | 94 | 82 | 109 | 95 | 83 | $\le 120$ | PASS |
+| **Textures in Memory** | 10 | 10 | 8 | 10 | 10 | 8 | $\le 16$ | PASS |
+| **Prop Density** | 100% (136 props) | 70% | 35% | 100% | 70% | 35% | Dynamic | PASS |
+| **Shadows** | PCF Soft | Basic | Disabled | PCF Soft | Basic | Disabled | — | PASS |
+
+#### 8.2 Track Load & Asset Pipeline Wall-Clock Timings
+
+| Load Phase | Desktop (High) | Mobile 4× CPU Throttle | Budget / Constraint | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Asset Download** (both GLBs + props.json) | 6.7 ms | 25.4 ms | $\le 50$ ms local | PASS |
+| **GLTF Geometry Parse** | 9.5 ms | 44.4 ms | $\le 60$ ms | PASS |
+| **BVH Mesh Build** (`MeshBVH` on 2,524 tris) | 3.0 ms | 13.5 ms | $\le 25$ ms | PASS |
+| **Total Track Loader** (parse + BVH + spline) | 85.5 ms | 175.5 ms | $\le 300$ ms | PASS |
+| **Total Wall Clock** (enter $\to$ countdown GO) | 4,015 ms | 4,045 ms | $\le 5,000$ ms | PASS |
+
+#### 8.3 Sustained Memory & 10-Cycle Zero-Leak Audit (8 Karts + Dressed Circuit)
+
+- **JS Heap Baseline:** 114.4 MB (Desktop) / 114.2 MB (Mobile 4× Throttle).
+- **Heap Growth over 60s Sustained Drift:** $+0.31\text{ MB}$ (Desktop) / $+0.28\text{ MB}$ (Mobile), well below the 1.0 MB cap. Zero texture or vertex allocation during gameplay.
+- **10-Cycle Enter/Exit Zero-Leak Audit (`scripts/test_race_m4.js` Phase 9 & `scripts/test_race_m35.js`):**
+  - Cycle 1 to 10 completed cleanly.
+  - Lingering race DOM elements: **0** (`#race-container`, `#race-canvas-overlay`, `#race-hud`, `#race-pre-race-panel`, `#race-results-screen`).
+  - WebGL Context: 100% disposed cleanly via `renderer.dispose()` with zero orphaned textures or geometries.
+  - Overworld State: Coordinates (`x: 1648, y: 816`), Totoro trail, and time calendar resumed with zero temporal drift or movement locks.

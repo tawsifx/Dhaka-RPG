@@ -21,13 +21,13 @@ async function ensureServer() {
 async function startRace(page) {
   await page.waitForFunction(() => !!window.__activeScene, { timeout: 30000 });
   const t0 = Date.now();
-  await page.evaluate((rivals) => {
-    if (rivals && window.__race === undefined) {
-      window.__activeScene.startRickshawRace({ mode: 'quick', difficulty: 'beshi_gorom', seed: 1234 });
-    } else {
-      window.__activeScene.startRickshawRace();
-    }
-  }, RIVALS);
+  await page.evaluate(() => {
+    window.__activeScene.startRickshawRace();
+  });
+  try {
+    const btn = await page.waitForSelector('button:has-text("START RACE!")', { timeout: 4000 });
+    if (btn) await btn.click();
+  } catch (e) {}
   await page.waitForFunction(() => window.__race && window.__race.engine && window.__race.engine.trackRuntime, { timeout: 60000 });
   const loadWallMs = Date.now() - t0;
   const timings = await page.evaluate(() => window.__race.engine.trackRuntime.timings);

@@ -1250,6 +1250,7 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 - `npm run test:race:m1`: Run Playwright E2E verification test suite for Three.js 3D race spike (state preservation, driving telemetry, memory leak cycles, mobile touch).
 - `npm run test:race:m2`: Run Playwright E2E verification test suite for M2 kart feel (drift sparks, 3-tier mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
 - `npm run test:race:m3`: Run Playwright E2E verification test suite for M3 track pipeline (lazy loading, countdown, minimap, flyover bridge elevation, ramp jump, lantern rescue, 3 full laps, finish modal splits, 10-cycle zero-leak audit).
+- `npm run test:race:m35`: Run Playwright E2E verification test suite for M3.5 SuperTuxKart art pass (graphics quality presets, dressed Fuller Road circuit, zero 2D overworld leaks).
 - `npm run test:race:m4`: Run Playwright E2E verification test suite for M4 rivals (8-kart grid, AI drivers, multi-kart collisions, ranking standings, rubber-band, podium finish, 10-cycle zero-leak audit).
 - `npm run race:validate`: Run CLI track data, geometry, and headless autopilot 3-lap simulation validator.
 - `npm run race:simulate`: Run headless 8-kart Monte-Carlo race simulation harness across difficulty tiers with determinism and spread validation.

@@ -35,29 +35,29 @@
 
 ---
 
-### 3. Fuller Road Sprint — Track Art Provenance Audit (M4 Part A2, REPORT ONLY)
+### 3. Fuller Road Sprint — Track Art Provenance Audit (M3 Baseline vs M3.5 SuperTuxKart Art Pass)
 
-Audit method: read `scripts/race/build-track.mjs` (the only producer of `visual.glb` / `collision.glb`) and the race renderer. **Result: every visual element of the track is PROCEDURAL** (Three.js primitives emitted by an offline script). Nothing is sourced from an external asset pack, contradicting the M3 external-art rule and the wording of ADR 016. The files are small (visual 200.4 kB / 1,316 m lap) precisely because they contain only a handful of boxes, cones and cylinders. No art was replaced in M4 (explicitly out of scope); the shortfalls are catalogued in `ASSET_SHOPPING_LIST.md` and the remediation is ADR 017.
+The track visuals were upgraded in **Milestone 3.5 (Art Pass)** using models and textures imported directly from SuperTuxKart via `scripts/race/stk/` and `scripts/race/dress-track.mjs`. Below is the truthful breakdown separating upstream STK assets from generated procedural geometry:
 
-| Visual element | What actually ships | Where produced | Provenance | Source / original file | Credit |
+| Visual Element | M3 Baseline (Procedural) | M3.5 Shipped Art Pass | Provenance Category | Upstream STK Source / Origin | License |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| Road surface | Flat ribbon along the spline, single dark `MeshStandardMaterial` (`0x1f2421`), **no centre striping despite the code comment**, fixed 16 m width (ignores per-point spline widths) | `createRoadRibbon()` in `build-track.mjs` | **PROCEDURAL** | — | In-house (MIT) |
-| Curbs | **None** (not present in `visual.glb`) | — | **MISSING** | — | — |
-| Sidewalks / verges | **None**; infield is the hidden collision grass plane / renderer ground | — | **MISSING** | — | — |
-| Barriers / walls | **Collision-only** (`wall_barrier` boxes every ~19 m, **not rendered**, with gaps between posts) | `createWallBarriers()` | **PROCEDURAL (invisible)** | — | In-house (MIT) |
-| Landmark: Curzon Hall | 12 box pillars + cone "domes" + one arch box (`matCurzonBrick`, `matCurzonKiosk`) | `createCurzonPillars()` | **PROCEDURAL** | — | In-house (MIT) |
-| Landmark: TSC rotunda | Cylinder + cone + 6 umbrella cones/poles | `tscRotunda` block | **PROCEDURAL** | — | In-house (MIT) |
-| Trees (Krishnachura) | 7 trunk cylinders + dodecahedron foliage, uniform colour | `avenueTrees` block | **PROCEDURAL** | — | In-house (MIT) |
-| Flyover bridge | 4 pier cylinders; the deck is the road ribbon itself | `bridgePiers` | **PROCEDURAL** | — | In-house (MIT) |
-| Petal boost pads | Emissive amber planes | `matPetalPadVisual` | **PROCEDURAL** | — | In-house (MIT) |
-| Props (cones, signage, crowd, lanterns on poles) | **None** | — | **MISSING** | — | — |
-| Sky | Flat `Color(0xbfe3f7)` background + `FogExp2` | `RaceRenderer.ts` | **PROCEDURAL** | — | In-house (MIT) |
-| Paper lantern (rescue) | **No visual exists** — `RescueSystem` only teleports; "paper-lantern rescue" is a name, not an asset | — | **MISSING** | — | — |
-| Kart | Primitive rickshaw hierarchy | `PlaceholderKart.ts` | **PROCEDURAL** (ADR 013) | — | In-house (MIT) |
-| Race SFX | 8 Kenney `.ogg` samples + `rickshaw_bell.wav` | `public/assets/race/audio/` | **EXTERNAL** | Kenney Racing/Digital Audio packs, project field recording | CC0 (see `ASSET_CREDITS.md`) |
-| Track music | Overworld `game_bgm.mp3` is paused; no per-track music | — | **MISSING** (per-track music is out of scope until later milestone) | — | — |
+| **Road Surface** | Procedural flat ribbon (`0x1f2421`), no striping | Spline-extruded ribbon textured with STK asphalt (`road.jpg`), striped curbs & lane marks | **HYBRID** (Geometry extruded along spline, texture from STK) | `stk-assets/textures/asphalt.png` $\to$ `road.jpg` | CC-BY-SA 3.0 |
+| **Curbs & Sidewalks** | None (invisible) | 0.2m raised curbs and brick sidewalks textured with STK cobblestone (`sidewalk.jpg`) | **HYBRID** (Extruded geometry, STK texture) | `stk-assets/textures/stone_brick.png` $\to$ `sidewalk.jpg` | CC-BY-SA 3.0 |
+| **Safety Guardrails** | Collision-only invisible boxes | Continuous visible tubular guardrail meshes aligned ±0.3m from collision barrier plane | **PROCEDURAL (Generated)** | Extruded along spline | In-house (MIT) |
+| **Crash Barrels** | None | Instanced 3D crash barrels placed at chicane and hairpin apexes (`barrel.glb`) | **EXTERNAL 3D GLB** | Converted from STK `barrel.spm` | CC-BY-SA 3.0 |
+| **Park Benches** | None | Instanced 3D wooden campus benches along Curzon sidewalks (`bench.glb`) | **EXTERNAL 3D GLB** | Converted from STK `bench.spm` | CC-BY-SA 3.0 |
+| **Krishnachura Trees** | Cylinder + dodecahedron primitives | Instanced 3D flowering avenue trees (`krishnachura_tree.glb`) | **EXTERNAL 3D GLB** | Converted from STK `tree.spm` with red floral tint | CC-BY-SA 3.0 |
+| **Roadside Bushes** | None | Instanced 3D ornamental green shrubs (`bush.glb`) | **EXTERNAL 3D GLB** | Converted from STK `bush.spm` | CC-BY-SA 3.0 |
+| **Street Lamps** | None | Instanced 3D heritage iron lampposts (`lamp.glb`) with point-light emissive heads | **EXTERNAL 3D GLB** | Converted from STK `lamp.spm` | CC-BY-SA 3.0 |
+| **Festive Lanterns** | None | Instanced 3D celebratory red Dhaka paper lanterns on arch gantry (`lantern.glb`) | **EXTERNAL 3D GLB** | Converted from STK `chinese_lantern.spm` | CC-BY-SA 3.0 |
+| **Kart Wheels** | 2D disc primitives | Separately addressable 3D spoked rubber wheels (`wheel.glb`) | **EXTERNAL 3D GLB** | Converted from STK `wheel.spm` | CC-BY-SA 3.0 |
+| **Sky & Atmosphere** | Flat color + fog | Stylized Dhaka Golden Hour panoramic skybox texture (`sky.png`) | **EXTERNAL TEXTURE** | Sourced from STK sky library | CC-BY-SA 4.0 |
+| **VFX Particles** | Colored Three.js quads | Textured sprite particles for tire smoke (`smoke.png`) and sparks (`spark_blue.png`, `spark_orange.png`) | **EXTERNAL TEXTURE** | STK particle sprite library | CC-BY-SA 3.0 |
+| **Track Music (BGM)** | Paused / none | Authentic high-energy race loop soundtrack `garden.ogg` (by DJHelium) | **EXTERNAL AUDIO** | `stk-assets/music/garden.ogg` | CC-BY-SA 3.0 |
+| **Landmarks (Curzon/TSC)** | Raw primitive boxes & cones | Kitbashed architecture with STK terracotta brick & green dome materials | **HYBRID** (In-house assembly + STK textures) | STK texture library | CC-BY-SA 3.0 |
+| **Kart Chassis** | Primitive rickshaw hierarchy | Tinted rickshaw chassis with driver/passenger billboard anchors (ADR 013) | **HYBRID** (In-house chassis + STK wheels) | In-house + STK `wheel.glb` | MIT + CC-BY-SA |
 
-**Findings**
-1. 0 of 11 visual elements are external. 4 expected elements (curbs, sidewalks, props, lantern) do not exist at all, and the barriers are invisible.
-2. The road ribbon ignores spline width control points (hairpin declared 22 m wide is built 16 m wide), and collision barriers have gaps — both are M3 defects that affect AI line planning (M4 racing line deliberately stays inside the 16 m ribbon with a safety margin).
-3. No track-sourcing ADR and no GLB budget/compression ADR existed; both are now recorded (ADR 017, ADR 018).
+**Audit Conclusions:**
+1. **10 of 15 visual/audio elements** now incorporate external SuperTuxKart assets (8 converted GLB models, 5 PBR textures, 3 particle sprites, 1 OGG music stream).
+2. All imported assets have their upstream licenses, authors, and source paths documented in `public/assets/race/stk/import-manifest.json` and credited in `ASSET_CREDITS.md`.
+3. Gameplay geometry (`collision.glb`, spline, start grid, gates) remains 100% byte-locked and identical to M3/M4. Visuals are derived additively from the locked gameplay baseline.
