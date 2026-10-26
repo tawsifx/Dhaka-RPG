@@ -116,9 +116,9 @@ def create_satsuki_atlas(output_path):
     SKIRT_ORANGE = (238, 92, 28, 255)
     SKIRT_DARK = (196, 68, 16, 255)
     STRAP_ORANGE = (226, 82, 22, 255)
-    HAIR_DARK = (36, 28, 30, 255)
-    HAIR_MID = (54, 42, 45, 255)
-    HAIR_HIGHLIGHT = (78, 62, 66, 255)
+    HAIR_DARK = (16, 14, 16, 255)
+    HAIR_MID = (32, 28, 34, 255)
+    HAIR_HIGHLIGHT = (55, 48, 58, 255)
     EYE_BROWN = (46, 28, 22, 255)
     EYE_PUPIL = (18, 12, 12, 255)
     EYE_WHITE = (254, 254, 255, 255)
@@ -137,6 +137,16 @@ def create_satsuki_atlas(output_path):
         # The face is centered in the upper-mid area of the portrait
         crop_box = (int(pw * 0.15), int(ph * 0.10), int(pw * 0.85), int(ph * 0.80))
         face_cropped = portrait.crop(crop_box).resize((512, 512), Image.Resampling.LANCZOS)
+        # Ensure hair in portrait is deep jet black
+        pw_c, ph_c = face_cropped.size
+        pix = face_cropped.load()
+        for py in range(ph_c):
+            for px in range(pw_c):
+                pr, pg, pb, pa = pix[px, py]
+                # Dark hair detection (dark tone, low green/blue, not skin tone)
+                if pr < 85 and pg < 75 and pb < 75 and (pr > pg * 0.9):
+                    pix[px, py] = (int(pr * 0.4), int(pg * 0.4), int(pb * 0.4), pa)
+
         img.paste(face_cropped, (0, 0))
         print("Pasted authentic Ghibli Satsuki portrait into texture atlas [0, 0, 512, 512]")
     else:
