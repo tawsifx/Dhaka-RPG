@@ -74,6 +74,19 @@
   - [x] **F7 AI Debug Overlay:** `AiDebugOverlay.ts` toggles real-time 8-driver telemetry table and 3D racing line visualizer.
   - [x] **Simulation & Testing:** Headless Monte-Carlo simulator `scripts/race/simulate-race.mjs` (`npm run race:simulate`), 36 new pure Vitest unit tests (259/259 total tests green), and comprehensive Playwright E2E automation `scripts/test_race_m4.js` (`npm run test:race:m4`) passing all 9 phases with zero errors.
 
+- [x] **M3.5: Art Pass — Dress "Fuller Road Sprint" with SuperTuxKart Assets**
+  - [x] **Part A Carry-Overs:** Aligned rival roster canonical truth in docs (§6.1), added player physics difficulty independence test and ADR 023, cleaned hidden arena mesh dead weight from track mode (saving 25 geometries and ~20 draw calls), ran 50-seed Monte Carlo balancing simulation in `PERF.md`.
+  - [x] **Gameplay Lock:** Recorded SHA-256 hashes of `collision.glb` and track data in `gameplay.lock.json`; verified 100% bit-for-bit invariance in CI (`tests/race/race_m35.test.ts`).
+  - [x] **STK Asset Sourcing & Survey:** Acquired candidate assets via `scripts/race/stk/fetch-stk.mjs` into `.cache/stk-assets/` and documented in `docs/rickshaw-race/STK_SURVEY.md`.
+  - [x] **Pure Node SPM Binary Converter:** Built `scripts/race/stk/spm-reader.mjs` and `convert-mesh.mjs` decoding header, float16 UVs, 10-10-10-2 normals, and handedness transforms without Blender (ADR 024); created test fixtures in `tests/race/fixtures/stk/`.
+  - [x] **Materials & Scene Parsers:** Built `parse-materials.mjs` and `parse-scene.mjs` for material flags, PBR tuning, and light anchors.
+  - [x] **Licensing & Credits Architecture:** Built `scripts/race/stk/build-credits.mjs` generating `public/assets/race/stk/import-manifest.json`, distributing license texts in `public/assets/race/stk/licenses/`, and documenting credits in `ASSET_CREDITS.md` (ADR 027).
+  - [x] **Declarative Track Dressing:** Built `scripts/race/dress-track.mjs` (`npm run race:dress`) compiling `visual.glb` (262 kB) with textured asphalt, raised curbs, brick sidewalks, safety barrier rails, flyover piers, petal boost pad overlays, start/finish arch with bilingual banner, and kitbashed Dhaka landmarks (Curzon Hall, TSC Rotunda, Shaheed Minar).
+  - [x] **Instanced Scenery Props & Quality Presets:** Built `PropInstancer.ts` rendering 136 props via `THREE.InstancedMesh` (ADR 026) and `GfxQuality.ts` (`?race-gfx=low|med|high`).
+  - [x] **Rickshaw Kart Model & Visual Enhancements:** Added character driver/passenger attachment anchors, articulated spinning wheels, 8 distinct rival color tints, and swinging rescue lantern.
+  - [x] **Race BGM Audio Loop:** Sourced `garden.ogg` (by DJHelium) from STK into `public/assets/race/audio/garden.ogg` with pause menu ducking.
+  - [x] **QA Tooling & Verification:** Created `RaceGallery.ts` (`?race-gallery`), 8-vantage-point screenshot tour (`scripts/race/screenshot-tour.mjs`), Playwright E2E automation (`scripts/test_race_m35.js`, `npm run test:race:m35`), and 31 new unit tests in `tests/race/race_m35.test.ts` (185/185 3D race tests green).
+
 - [ ] **M5: Dhaka Street Items & Hazards** *(Pending)*
 - [ ] **M6: Championship Cups & Save Data** *(Pending)*
 - [ ] **M6: Circuit Content & Environmental Themes** *(Pending)*

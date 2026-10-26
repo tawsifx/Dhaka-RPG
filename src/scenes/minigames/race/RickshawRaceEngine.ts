@@ -22,6 +22,8 @@ import { RaceStateMachine } from './track/RaceStateMachine';
 import { RaceSession } from './core/RaceSession';
 import { RivalKartRenderer } from './render/RivalKartRenderer';
 import { AiDebugOverlay } from './debug/AiDebugOverlay';
+import { PropInstancer } from './render/PropInstancer';
+import { RaceGallery } from './ui/RaceGallery';
 import { ALL_DRIVERS, RIVAL_DRIVERS } from '../../../config/drivers.race.db';
 import { DriverProfile } from '../../../types/race.types';
 import { SoundEngine } from '../../../audio/SoundEngine';
@@ -52,6 +54,8 @@ export class RickshawRaceEngine {
   private session: RaceSession | null = null;
   private rivalRenderer: RivalKartRenderer | null = null;
   private aiDebugOverlay: AiDebugOverlay | null = null;
+  private propInstancer: PropInstancer | null = null;
+  private gallery: RaceGallery | null = null;
   private driverProfilesMap: Map<string, DriverProfile> = new Map();
 
   private animFrameId: number | null = null;
@@ -227,6 +231,21 @@ export class RickshawRaceEngine {
 
         this.session.startRace();
 
+        // Load STK Scenery Props via PropInstancer
+        this.propInstancer = new PropInstancer();
+        fetch('/assets/race/tracks/fuller_road_sprint/props.json')
+          .then((res) => (res.ok ? res.json() : []))
+          .then((props) => {
+            if (this.propInstancer && this.renderer && props.length > 0) {
+              this.propInstancer.buildProps(props).then(() => {
+                if (this.propInstancer && this.renderer) {
+                  this.renderer.scene.add(this.propInstancer.group);
+                }
+              });
+            }
+          })
+          .catch(() => {});
+
         // Hide loading screen smoothly
         await this.loadingScreen.hide();
         this.loadingScreen = null;
@@ -264,8 +283,15 @@ export class RickshawRaceEngine {
     this.controller.countdown.start();
     this.stateMachine.startCountdown();
 
-    // Initial audio bell chime
+    // Initial audio bell chime & race BGM loop
     SoundEngine.rickshawBell();
+    this.audio?.playMusic('/assets/race/audio/garden.ogg');
+
+    // Launch Art Gallery if ?race-gallery param present
+    if (RaceGallery.shouldOpen() && this.container) {
+      this.gallery = new RaceGallery();
+      this.gallery.show(this.container);
+    }
 
     // Register testing hook on window
     this.setupWindowRaceHook();
@@ -761,6 +787,16 @@ export class RickshawRaceEngine {
     if (this.aiDebugOverlay) {
       this.aiDebugOverlay.dispose();
       this.aiDebugOverlay = null;
+    }
+
+    if (this.propInstancer) {
+      this.propInstancer.dispose();
+      this.propInstancer = null;
+    }
+
+    if (this.gallery) {
+      this.gallery.close();
+      this.gallery = null;
     }
 
     this.session = null;

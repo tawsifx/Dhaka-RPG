@@ -1692,5 +1692,39 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       origin: { x: 0.5, y: 0.5 },
       styleSearchTags: ['3d race track glb', 'curzon hall dhaka 3d', 'low poly racetrack']
     }
+  },
+  'race-audio-garden': {
+    id: 'race-audio-garden',
+    name: 'Garden Race BGM Loop',
+    category: 'landmark',
+    description: 'High-energy race loop soundtrack from SuperTuxKart (garden.ogg by DJHelium) for Fuller Road Sprint.',
+    externalPath: 'assets/race/audio/garden.ogg',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'bgm-audio-fallback',
+    logicalGridFootprint: { cols: 1, rows: 1 },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 1, height: 1 },
+      acceptedNativeSizes: ['OGG Vorbis Audio Stream'],
+      sheetLayout: 'Single Audio Stream',
+      origin: { x: 0, y: 0 },
+      styleSearchTags: ['race soundtrack', 'kart bgm loop ogg']
+    }
+  },
+  'track-fuller-road-props': {
+    id: 'track-fuller-road-props',
+    name: 'Fuller Road Sprint Scenery Props Manifest',
+    category: 'landmark',
+    description: 'Declarative prop instances placing STK street lamps, benches, Krishnachura trees, bushes, barrels, and lanterns along Fuller Road.',
+    externalPath: 'assets/race/tracks/fuller_road_sprint/props.json',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'track-arena-flat',
+    logicalGridFootprint: { cols: 1, rows: 1 },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 1, height: 1 },
+      acceptedNativeSizes: ['JSON Manifest + Instanced GLBs'],
+      sheetLayout: 'Declarative Prop Map',
+      origin: { x: 0.5, y: 0.5 },
+      styleSearchTags: ['race track props', 'instanced scenery gltf']
+    }
   }
 };

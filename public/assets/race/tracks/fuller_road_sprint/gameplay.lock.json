@@ -1,0 +1,8 @@
+{
+  "trackId": "fuller_road_sprint",
+  "timestamp": "2026-10-26T05:08:13.657Z",
+  "collisionGlbSha256": "5f6450cee98d67fe84a520c22cb1cb902a5db0d2a7bf10f9f3c310a77eff15be",
+  "collisionSizeBytes": 264424,
+  "gameplayDataSha256": "7da3a1e381ccbff99f62fb684cb6701659482510b328accae65035d3d2cabd45",
+  "notes": "Gameplay lock for M3.5 Art Pass. Collision geometry and track gameplay fields must remain 100% byte-identical."
+}

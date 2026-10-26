@@ -4,16 +4,35 @@ import { KartState } from '../../../../types/race.types';
 
 export class PlaceholderKart {
   readonly group: THREE.Group;
+  readonly passengerAnchor: THREE.Group;
+  readonly driverAnchor: THREE.Group;
+  readonly rescueLantern: THREE.Group;
   private bodyGroup: THREE.Group;
   private frontWheelPivot: THREE.Group;
   private wheels: THREE.Mesh[] = [];
   private geometries: THREE.BufferGeometry[] = [];
   private materials: THREE.Material[] = [];
+  private lanternMesh: THREE.Mesh;
 
   constructor(bodyColor: number | string = 0x15803d, canopyColor: number | string = 0xf59e0b) {
     this.group = new THREE.Group();
     this.bodyGroup = new THREE.Group();
     this.group.add(this.bodyGroup);
+
+    // Anchors for characters
+    this.driverAnchor = new THREE.Group();
+    this.driverAnchor.position.set(0, 0.75, -0.45);
+    this.bodyGroup.add(this.driverAnchor);
+
+    this.passengerAnchor = new THREE.Group();
+    this.passengerAnchor.position.set(0, 0.75, 0.35);
+    this.bodyGroup.add(this.passengerAnchor);
+
+    // Rescue Lantern Carrier (Swings when active)
+    this.rescueLantern = new THREE.Group();
+    this.rescueLantern.position.set(0, 1.45, 0.4);
+    this.rescueLantern.visible = false;
+    this.bodyGroup.add(this.rescueLantern);
 
     // Materials - Dhaka rickshaw color theme: Emerald Green body, Golden Yellow canopy, Crimson accents, Dark Rubber wheels
     const bodyMat = new THREE.MeshStandardMaterial({
@@ -121,6 +140,19 @@ export class PlaceholderKart {
     rearRightWheel.castShadow = true;
     this.group.add(rearRightWheel);
     this.wheels.push(rearRightWheel);
+
+    // 7. Lantern Mesh (Swinging STK-style Red Lantern for Rescue)
+    const lanternGeo = new THREE.SphereGeometry(0.18, 12, 12);
+    const lanternMat = new THREE.MeshStandardMaterial({
+      color: 0xd32f2f,
+      emissive: 0xff1744,
+      emissiveIntensity: 0.6,
+      roughness: 0.4
+    });
+    this.lanternMesh = new THREE.Mesh(lanternGeo, lanternMat);
+    this.rescueLantern.add(this.lanternMesh);
+    this.geometries.push(lanternGeo);
+    this.materials.push(lanternMat);
   }
 
   /**
@@ -129,6 +161,13 @@ export class PlaceholderKart {
   update(kart: KartState): void {
     const hop = kart.drift ? kart.drift.hopHeight : 0;
     this.group.position.set(kart.x, kart.y + hop, kart.z);
+
+    // Rescue lantern toggle & swing
+    const isRescuing = Boolean((kart as any).isRescuing);
+    this.rescueLantern.visible = isRescuing;
+    if (isRescuing) {
+      this.rescueLantern.rotation.z = Math.sin(Date.now() * 0.008) * 0.35;
+    }
 
     // Facing rotation + visual slip angle
     const slip = kart.drift ? kart.drift.slipAngle : 0;

@@ -366,6 +366,22 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **Race Flow & HUD Upgrades:** Pre-Race Setup Panel (`RacePreRacePanel.ts`) for mode/difficulty selection, live position badge (`1st / 8`), 8-driver standings ladder with gap intervals, animated "FINAL LAP!" banner, multi-blip radar minimap with distinctive driver colors, and post-race Podium finish modal (`RaceResults.ts`).
 - **Telemetry & Tooling:** F7 AI Telemetry Overlay (`AiDebugOverlay.ts`) with live 8-kart tabular metrics and 3D racing line visualization, headless Monte-Carlo balancing simulator (`npm run race:simulate`), 36 new unit tests (`npm test`), and comprehensive Playwright verification (`npm run test:race:m4`).
 
+#### Milestone 3.5 — Art Pass: SuperTuxKart Asset Integration & Fuller Road Dressing (ADRs 023–027)
+- **Gameplay Lock Invariance (ADR 025):** Non-negotiable architectural invariant ensuring `collision.glb`, the centerline spline, gates, start grid, and racing line remain 100% byte-identical. Verified via SHA-256 hashes in `public/assets/race/tracks/fuller_road_sprint/gameplay.lock.json` and tested in CI (`tests/race/race_m35.test.ts`). Visual assets are strictly derived from gameplay geometry.
+- **Pure Node.js SPM Binary Converter (ADR 024):** Pure TypeScript/Node decoder (`scripts/race/stk/spm-reader.mjs`) parsing SuperTuxKart `.spm` binary format (IEEE 754 float16 UVs, MiniGLM 10-10-10-2 packed normals, materials tables) and converting left-handed Irrlicht coordinates to right-handed glTF/Three.js (`convert-mesh.mjs`). Requires zero Blender or Python dependencies.
+- **SuperTuxKart Asset Sourcing & Licensing (ADR 027):** Acquired 8 models, 6 textures, 3 VFX particle sprites, and high-energy background music (`garden.ogg` by DJHelium) from STK upstream repositories under CC-BY-SA 4.0, CC-BY-SA 3.0, and GPL 2.0+. Complete survey documented in `docs/rickshaw-race/STK_SURVEY.md`, machine-readable index in `import-manifest.json`, and attribution compiled into `ASSET_CREDITS.md`.
+- **Declarative Track Dressing (`scripts/race/dress-track.mjs`, `npm run race:dress`):** Compiles `visual.glb` (262 kB) and `props.json` (136 instanced props):
+  - Textured asphalt road ribbon with raised Dhaka curbs (checkered red) and pedestrian brick sidewalks.
+  - Steel barrier guardrails placed along collision boundary walls (±0.3m).
+  - Concrete flyover bridge support piers and elevated road deck.
+  - Kitbashed Dhaka Campus Landmarks: Curzon Hall Mughal-Gothic red-brick verandas, TSC green-domed rotunda with white colonnade, and Central Shaheed Minar monumental frame with red sun disc.
+  - Start/Finish Gantry Arch spanning the road with bilingual banner ("Tring-Tring Grand Prix" / "ট্রিং-ট্রিং গ্রাঁ প্রি") and celebratory hanging red lanterns.
+  - Glowing petal boost pad overlays and mud/puddle surface decals.
+- **Batch Scenery Instancing & Scalability (`PropInstancer.ts`, `GfxQuality.ts`, ADR 026):** Roadside props (street lamps, benches, Krishnachura trees, shrubs, barrels, lanterns) rendered via `THREE.InstancedMesh` with 1 draw call per prop type. Scalable via `?race-gfx=low|med|high`.
+- **Rickshaw Kart Articulation & Visuals:** Added driver and passenger attachment anchors, spinning spoke wheels with front steering pivot, 8 unique rival color tints, and a swinging red rescue lantern.
+- **Race BGM Loop & Audio Ducking:** Seamless loop playback of `garden.ogg` via Web Audio API, automatically ducked on pause menu and race finish.
+- **QA Tooling:** Visual Art Gallery modal (`RaceGallery.ts`, `?race-gallery`), 8-vantage-point screenshot tour (`screenshot-tour.mjs`, `docs/rickshaw-race/art-pass/`), and Playwright E2E verification script (`npm run test:race:m35`).
+
 ---
 
 ## 7. Stardew Valley 32×32 Grid & Farming Engine
@@ -1319,4 +1335,4 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
    - Update `src/config/assetSpecs.manifest.ts`.
    - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 26, 2026 — Track Pipeline M3 ("Tring-Tring Grand Prix") & Master Art Policy*
+*Last Updated: October 26, 2026 — Art Pass M3.5 ("Tring-Tring Grand Prix") SuperTuxKart Dressing & Master Art Policy*

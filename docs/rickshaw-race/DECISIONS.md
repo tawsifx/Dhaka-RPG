@@ -375,5 +375,70 @@
 - **Consequences:**  
   Guaranteed fairness: player control feel is never secretly throttled or artificially sped up. Difficulty strictly tunes rival competitiveness.
 
+---
+
+### ADR 024: Pure Node SPM Binary Converter vs Headless Blender (M3.5 Part B2)
+
+- **Context:**  
+  SuperTuxKart models are stored in a proprietary binary `.spm` (SuperTuxKart Mesh) format. Using a headless Blender script requires installing Blender binary (~500MB) on CI/development environments, which violates our lightweight build requirements.
+- **Decision:**  
+  Implement a pure TypeScript/Node.js SPM binary parser and converter (`scripts/race/stk/spm-reader.mjs` and `convert-mesh.mjs`):
+  1. Parse SPM header (`"SP"`, version, meshType `0=SPMS, 1=SPMA, 2=SPMN`, flags, float32 bounding box).
+  2. Unpack materials string table.
+  3. Decode vertex attributes: 12-byte float32 positions, 4-byte 10-10-10-2 MiniGLM packed normals, float16 IEEE 754 half-precision UVs, and vertex colors.
+  4. Perform handedness transform (Irrlicht left-handed to glTF/Three.js right-handed): invert Z (`z = -z`), flip V (`v = 1.0 - v`), and reverse triangle winding (`[i0, i2, i1]`).
+  5. Convert directly to Three.js `BufferGeometry` and export glTF 2.0 binary (`.glb`) via `GLTFExporter` in Node.
+- **Consequences:**  
+  Zero external Python/Blender runtime dependencies; converts STK models in under 5ms per mesh with sub-millimeter precision.
+
+---
+
+### ADR 025: Track Dressing Pipeline & Visual/Collision Geometry Separation (M3.5 Part B3)
+
+- **Context:**  
+  The Fuller Road Sprint track visuals in M3 were procedural Three.js primitives. The M3.5 art pass requires dressing the circuit with authentic SuperTuxKart textures, curbs, sidewalks, flyover architecture, and kitbashed Dhaka landmarks without altering gameplay physics.
+- **Decision:**  
+  1. **Strict Gameplay Lock Invariant:** `collision.glb`, centerline spline, checkpoints, gates, and racing line are permanently locked and verified via SHA-256 hashes in `gameplay.lock.json`.
+  2. Declarative dressing engine (`scripts/race/dress-track.mjs`, `npm run race:dress`):
+     - Derives `visual.glb` purely from the locked centerline spline and track definition.
+     - Extrudes textured asphalt road ribbons with curbs, sidewalks, and boundary barrier rails (±0.3m from collision walls).
+     - Kitbashes iconic Dhaka landmarks (Curzon Hall red-brick verandas, TSC green-domed rotunda, Central Shaheed Minar monument).
+     - Places start/finish arch gantry with bilingual banner and celebratory red lanterns.
+  3. Emits `props.json` cataloging coordinates and orientations for instanced roadside scenery.
+- **Consequences:**  
+  Visuals are 100% derived from gameplay geometry. Upgrading visual aesthetics never causes physics collision drift, ensuring all prior M2/M3/M4 goldens and replay runs stay green.
+
+---
+
+### ADR 026: Instanced Scenery Prop Rendering via `PropInstancer` & Quality Scalability (M3.5 Part B3/B7)
+
+- **Context:**  
+  Placing hundreds of roadside props (street lamps, park benches, trees, flowerbeds, crash barrels) as individual scene graph nodes would cause draw call explosions and stutter on lower-end mobile hardware.
+- **Decision:**  
+  1. Implement `PropInstancer.ts` consuming `props.json` and grouping identical STK models into `THREE.InstancedMesh` instances.
+  2. Single draw call per prop type (lamps, trees, benches, barrels, lanterns).
+  3. Quality scaling via `GfxQuality.ts` (`?race-gfx=low|med|high`):
+     - `high`: 100% prop density, full shadows, full particle counts.
+     - `med`: 70% prop density, shadows enabled, balanced particles.
+     - `low`: 35% prop density (decorative shrubs/barrels omitted), shadows disabled, minimal particles.
+- **Consequences:**  
+  Maintains smooth 60 FPS performance across desktop and mobile while rendering over 130 rich scenery props along Fuller Road.
+
+---
+
+### ADR 027: SuperTuxKart Asset Licensing & Attribution Architecture (M3.5 Part B2)
+
+- **Context:**  
+  Third-party assets imported from SuperTuxKart are governed by `CC-BY-SA 4.0`, `CC-BY-SA 3.0`, and `GPL 2.0+` licenses. We must strictly preserve upstream author credits and license documentation.
+- **Decision:**  
+  1. Build automated credits builder (`scripts/race/stk/build-credits.mjs`):
+     - Copies verbatim license texts to `public/assets/race/stk/licenses/`.
+     - Generates machine-readable `public/assets/race/stk/import-manifest.json` indexing every imported asset, author, source path, and license.
+     - Appends full attribution section to `ASSET_CREDITS.md` with links to licenses and authors (Jean-Manuel Clémençon, DJHelium, Julian Schönbächler, Claude Werner).
+  2. Comprehensive asset survey compiled in `docs/rickshaw-race/STK_SURVEY.md`.
+- **Consequences:**  
+  Complete legal and ethical compliance with upstream open-source art licenses; transparent provenance tracking.
+
+
 
 

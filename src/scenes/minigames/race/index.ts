@@ -32,3 +32,6 @@ export { RaceDebugOverlay } from './debug/RaceDebugOverlay';
 export { RaceTuningPanel } from './debug/RaceTuningPanel';
 export { TrackDebugOverlay } from './debug/TrackDebugOverlay';
 export { ReplayRecorder } from './debug/ReplayRecorder';
+export { PropInstancer } from './render/PropInstancer';
+export { GfxQuality } from './render/GfxQuality';
+export { RaceGallery } from './ui/RaceGallery';

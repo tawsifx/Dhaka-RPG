@@ -40,6 +40,11 @@ export class RaceAudio {
   private grassSource: AudioBufferSourceNode | null = null;
   private grassGain: GainNode | null = null;
 
+  // Music playback (SuperTuxKart garden.ogg)
+  private musicSource: AudioBufferSourceNode | null = null;
+  private musicGain: GainNode | null = null;
+  private isMusicDucked = false;
+
   // Procedural synth fallbacks
   private synthEngineOsc: OscillatorNode | null = null;
   private synthEngineGain: GainNode | null = null;
@@ -455,9 +460,69 @@ export class RaceAudio {
     }
   }
 
+  /**
+   * Starts playing the race BGM loop (e.g. STK garden.ogg).
+   */
+  async playMusic(url = '/assets/race/audio/garden.ogg'): Promise<void> {
+    if (!this.ctx || this.isDisposed) return;
+    try {
+      if (this.ctx.state === 'suspended') {
+        await this.ctx.resume();
+      }
+
+      const res = await fetch(url);
+      if (!res.ok) return;
+      const arrayBuf = await res.arrayBuffer();
+      const audioBuf = await this.ctx.decodeAudioData(arrayBuf);
+
+      if (this.musicSource) {
+        this.musicSource.stop();
+        this.musicSource.disconnect();
+      }
+
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.setValueAtTime(this.isMusicDucked ? 0.08 : 0.30, this.ctx.currentTime);
+      this.musicGain.connect(this.ctx.destination);
+
+      this.musicSource = this.ctx.createBufferSource();
+      this.musicSource.buffer = audioBuf;
+      this.musicSource.loop = true;
+      this.musicSource.connect(this.musicGain);
+      this.musicSource.start();
+    } catch {
+      // Audio fallback
+    }
+  }
+
+  /**
+   * Ducks background music volume during pause menu or race finish.
+   */
+  duckMusic(ducked: boolean): void {
+    this.isMusicDucked = ducked;
+    if (!this.ctx || !this.musicGain) return;
+    const targetGain = ducked ? 0.08 : 0.30;
+    this.musicGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.15);
+  }
+
+  /**
+   * Stops the background music loop.
+   */
+  stopMusic(): void {
+    try {
+      if (this.musicSource) {
+        this.musicSource.stop();
+        this.musicSource.disconnect();
+        this.musicSource = null;
+      }
+    } catch {
+      // Ignore stop errors
+    }
+  }
+
   dispose(): void {
     this.isDisposed = true;
     try {
+      this.stopMusic();
       if (this.engineSource) {
         this.engineSource.stop();
         this.engineSource.disconnect();

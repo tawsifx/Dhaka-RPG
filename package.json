@@ -17,8 +17,11 @@
     "test:race:m2": "node scripts/test_race_m2.js",
     "test:race:m3": "node scripts/test_race_m3.js",
     "test:race:m4": "node scripts/test_race_m4.js",
+    "test:race:m35": "node scripts/test_race_m35.js",
     "race:validate": "tsx scripts/race/validate-track.mjs",
     "race:simulate": "tsx scripts/race/simulate-race.mjs",
+    "race:stk:fetch": "node scripts/race/stk/fetch-stk.mjs",
+    "race:dress": "tsx scripts/race/dress-track.mjs",
     "deploy:cf": "npm run build && wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true",
     "start": "node telegram-bot.js",
     "bot": "caffeinate -s -i node telegram-bot.js"
