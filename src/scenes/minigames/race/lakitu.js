@@ -1,0 +1,622 @@
+// Lakitu, the referee on his cloud (n64decomp/mk64 src/update_objects.c update_object_lakitu, placed by
+// func_8007A66C / func_8007A778, drawn by render_lakitu). One referee per screen player, seen only in that view:
+//   countdown  update_object_lakitu_countdown: flies in on spline D_800E67B8 and holds out the signal, red, red,
+//              blue -> GO (the race start waits for his blue light); once the blue light is out ('ready') the
+//              rocket start window opens (main.js revEngine)
+//   secondlap / finallap  update_object_lakitu_second_lap / _final_lap: the lap signs (spline D_800E694C)
+//   flag       update_object_lakitu_red_flag: waves the checkered flag (looping spline D_800E6834) once his
+//              player has finished, while the kart drives on
+//   fishing    update_object_lakitu_fishing: comes down on the kart that fell off the course and hooks it;
+//              on Sherbet Land (update_object_lakitu_fishing2) the kart comes out of the water frozen in an ice
+//              block that breaks once it's back on the road, and its frost thaws
+//   reverse    update_object_lakitu_reverse: holds up the reverse sign while his player drives the wrong way
+// Every kart that falls off (kart.js sets kart.fell) is fished out by the effects.c func_80090970 sequence: held,
+// lifted, faded out, put back over the last road point it drove on (gCopyNearestPathPointByPlayerId) and lowered
+// onto it. CPU karts are held at once, without a visible Lakitu (func_8002C4F8).
+// Sprites: tools/extract-lakitu.py atlases (HD tiers from MK64 Reloaded via tools/build-hd-textures.py).
+// Assumptions: the object logic ticks at 60 Hz, which puts the countdown's lights 56 ticks (0.93 s) apart like the
+// console; MK64 lengths around the kart use the kart scale of smoke.js (18-unit kart quad x 0.75 = our 4.5-unit
+// sprite), so Lakitu keeps his size and height relative to the kart. Our chase camera sits closer behind the kart than
+// the console's, so the camera-relative side / depth offsets use KXZ instead (the waving flag's z = 50 then stays in
+// front of the camera, 2 units off the lens, as large on screen as on the console).
+import * as THREE from 'three';
+import * as HD from './hd.js';
+import { NATIVE_SCALE } from './track.js';
+
+const TICK = 1 / 60, K = 4.5 / (18 * 0.75), KXZ = 0.15, COLS = 8, KART_MID = 1.5;
+// atlas frame width, height, count (extract-lakitu.py)
+const ANIMS = { countdown: [56, 72, 32], flag: [72, 56, 32], secondlap: [72, 56, 16], finallap: [72, 56, 16], reverse: [72, 56, 16], fishing: [56, 72, 4] };
+// quads as seen on screen: x0, x1, half height in vertex units, scaled by sizeScaling 0.15 (common_vtx_lakitu,
+// D_0D005F30 with the fishing line on its anchor, common_vtx_also_lakitu)
+const QUADS = { countdown: [-28, 27, 35], fishing: [-10, 45, 35], flag: [-36, 35, 27], secondlap: [-36, 35, 27], finallap: [-36, 35, 27], reverse: [-36, 35, 27] };
+const spline = (n, rows) => ({ n, pts: rows.map(([x, y, z, v]) => ({ p: [x, y, z], v })) });
+// src/data/some_data.c
+const COUNTDOWN_PATH = spline(13, [[150, 204, -500, 20], [100, 104, -300, 20], [50, 54, -100, 40], [4, 11, -14, 40],
+  [4, 16, -10, 30], [4, 14, -8, 30], [4, 16, -6, 30], [4, 14, -4, 50], [4, 16, -2, 50], [4, 14, 0, 50],
+  [-10, 16, 10, 40], [-50, 44, 100, 0], [-999, 1003, 500, 0]]);
+const FLAG_PATH = spline(20, [[20, 18, 30, 40], [0, 18, 20, 40], [-20, 18, 10, 40], [0, 18, 0, 40], [20, 11, 0, 40],
+  [0, 18, -30, 40], [-20, 11, 0, 40], [0, 18, -30, 40], [20, 11, 0, 40], [0, 18, 30, 40], [-20, 11, 50, 40],
+  [0, 18, 30, 40], [20, 11, 0, 40], [0, 18, -30, 40], [-20, 11, 0, 40], [0, 18, -30, 40], [20, 11, 0, 40],
+  [0, 18, -30, 40], [-20, 11, 0, 40], [0, 18, 30, 40]]);
+const LAP_PATH = spline(11, [[50, 20, 80, 10], [20, 19, 40, 10], [0, 18, 30, 10], [-8, 17, 20, 30], [-12, 16, 10, 30],
+  [0, 15, 0, 30], [12, 15, 10, 10], [8, 16, 20, 10], [0, 17, 30, 10], [-20, 18, 40, 10], [-60, 19, 100, 10]]);
+const REVERSE_IN = spline(7, [[30, 14, 50, 40], [10, 16, 20, 40], [5, 17, 10, 60], [2, 18, 0, 60], [0, 18, 0, 60],
+  [0, 18, 0, 0], [0, 18, 0, 0]]);   // D_800E69B0
+const REVERSE_OUT = spline(7, [[0, 18, -5, 20], [0, 18, -10, 20], [0, 18, 5, 16], [-10, 23, 10, 10], [-15, 23, 20, 10],
+  [-20, 28, 30, 0], [-30, 38, 200, 0]]);   // D_800E69F4
+// cpu_vehicles_camera_path.h: detect_wrong_player_direction's bands (degrees off the path) and frame count
+const WRONG_MIN = 136, CORRECT_MAX = 45, WRONG_FRAMES = 5;
+// render_courses.c D_8015F8E4 (fluid / out-of-bounds level, MK64 units); the others use gCourseMinY - 10.
+const FLUID = { choco: -80, bowser: -50, banshee: -80, frappe: -50, royal: -60, sherbet: -18, rainbow: 0, dk: -475 };
+const SNOW = 'SNOW', CAVE = 'CAVE';   // SURFACE_TYPE (mk64.h 0x05 / 0x0F), by name as in course.json collision sections
+
+// gCourseMinY starts at 0 and takes the lowest collision triangle (add_collision_triangle); courses extracted
+// without the collision mesh use their lowest vertex
+function courseMinY(course) {
+  let min = 0;
+  if (course.collision) for (const i of course.collision.indices) min = Math.min(min, course.vertices[i][1]);
+  else for (const v of course.vertices) min = Math.min(min, v[1]);
+  return min;
+}
+
+export function fluidLevel(track) {
+  const course = track.def.native;
+  if (!course) return -1e4 * NATIVE_SCALE;
+  return (FLUID[track.def.id] ?? courseMinY(course) - 10) * NATIVE_SCALE;
+}
+
+// collision.c func_802AAB4C: the fluid level at a kart (scene units), with the per-area overrides: Bowser's
+// Castle moat by the drawbridge, the Koopa Troopa Beach pool, Sherbet Land's snow tunnel and D.K.'s Jungle
+// Parkway's river (-33.9) vs. the cave and the drop below it (-475). floor = the last collision triangle the
+// kart was over (meshIndexZX): { surface, section }.
+export function fluidAt(track, x, z, floor) {
+  const id = track.def.native ? track.def.id : null, S = NATIVE_SCALE;
+  x /= S; z /= S;
+  const surface = floor?.surface, section = floor?.section ?? 0xFF;
+  switch (id) {
+    case 'bowser': return x > 1859 || x < 1549 || z > -1102 || z < -1402 ? track.fluidY : 20 * S;
+    case 'koopa': return x > 239 || x < 67 || z > 2405 || z < 2233 ? track.fluidY : 0.8 * S;
+    case 'sherbet':
+      if (surface === SNOW) return (track.courseMinY ??= courseMinY(track.def.native)) * S - 10 * S;
+      return track.fluidY;
+    case 'dk':
+      if (section === 0xFF) {
+        if (surface === CAVE) return -475 * S;
+        if (x > -478) return -33.9 * S;
+        if (x < -838 || z > -436) return -475 * S;
+        if (z < -993) return -33.9 * S;
+        return (z < x ? -475 : -33.9) * S;
+      }
+      return (section >= 0x14 ? -475 : -33.9) * S;
+    default: return track.fluidY;
+  }
+}
+
+// func_8008ACE0: uniform cubic B-spline basis
+const basis = t => [(1 - t) ** 3 / 6, t ** 3 / 2 - t * t + 2 / 3, -(t ** 3) / 2 + t * t / 2 + t / 2 + 1 / 6, t ** 3 / 6];
+
+class Referee {
+  constructor(scene, layer, textures) {
+    this.textures = textures;
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(12), 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(8), 2));
+    geo.setIndex([0, 1, 2, 0, 2, 3]);
+    this.material = new THREE.MeshBasicMaterial({ transparent: true, alphaTest: 0.5, side: THREE.DoubleSide, toneMapped: false, fog: false });
+    this.mesh = new THREE.Mesh(geo, this.material);
+    this.mesh.frustumCulled = false; this.mesh.visible = false;
+    this.mesh.layers.set(layer);
+    scene.add(this.mesh);
+    this.scene = scene; this.layer = layer;
+    this.mode = null; this.offset = [0, 0, 0];
+    this.model = null;   // Wii 3D Lakitu (src/lakitu3d.js) in place of the sprite, Lakitu.set3D
+  }
+
+  setModel(model) {
+    if (this.model) this.scene.remove(this.model);
+    this.model = model;
+    if (model) { model.userData.setLayer(this.layer); model.visible = false; this.scene.add(model); }
+  }
+
+  start(mode, kart) {
+    this.endIce();   // func_800791F0: a new scene takes the frost off
+    this.mode = mode; this.kart = kart; this.state = 1; this.frame = 0; this.alpha = 1; this.wt = null; this.an = null;
+    this.hum = mode === 'fishing' || mode === 'reverse';   // init_obj_lakitu_red_flag_fishing / _reverse: 0x0100FA28
+    this.sp = null; this.visible = false; this.offset = [0, 0, 0]; this.vel = [0, 0, 0]; this.offscreen = false; this.exiting = 0;
+    const [x0, x1, h] = QUADS[mode].map(v => v * 0.15 * K), pos = this.mesh.geometry.attributes.position;
+    pos.array.set([x0, -h, 0, x1, -h, 0, x1, h, 0, x0, h, 0]); pos.needsUpdate = true;
+    this.mesh.geometry.computeBoundingSphere();
+    this.material.map = this.textures[mode]; this.material.needsUpdate = true;
+  }
+
+  stop() { this.endIce(); this.mode = null; this.mesh.visible = false; if (this.model) this.model.visible = false; this.hum = false; }
+
+  // where the console is done with him he can still be in our closer chase camera's view (the lap sign's spline
+  // ends 2 units off the lens), so instead of vanishing he keeps flying his last heading until he's off the screen
+  // (place() sets offscreen), at most 2 s
+  exit() { if (this.offscreen || !this.visible) this.stop(); else this.exiting = 120; }
+
+  // Sherbet Land (update_object_lakitu_fishing2): the ice block breaks if it hasn't yet and the kart's frost goes
+  endIce() {
+    if (!this.ice) return;
+    const k = this.kart;
+    this.ice = false; this.block = false; this.mirror = false;
+    if (k.rescue?.released) letGo(k, k.rescue); else if (k.rescue) k.rescue.frozen = false;
+    k.cold = null; k.mesh.userData.setCold([0, 0, 0], [0, 0, 0]);
+  }
+
+  // fishing2 unk_0D6 5: FROZEN_EFFECT off, the block breaks into shards (flags 0x10 / 0x20), 0x1900A056
+  shatter() {
+    const k = this.kart;
+    this.block = false; this.mirror = false;
+    if (k.rescue?.released) letGo(k, k.rescue);
+    this.sound?.(1, 0x56);
+    this.shards?.(k);
+  }
+
+  // set_and_run_timer_object: next state after n + 1 ticks
+  wait(n) { if (this.wt === null) this.wt = n; if (--this.wt < 0) { this.wt = null; this.state++; return true; } return false; }
+
+  // func_80072E54 / func_80072F88 (dir -1): frames first..last every `period` ticks, `loops` passes (-1 forever)
+  anim(first, last, period, loops, dir = 1) {
+    if (!this.an) { this.an = { t: period, loops }; this.frame = first; return false; }
+    if (--this.an.t > 0) return false;
+    this.an.t = period; this.frame += dir;
+    if (dir * (this.frame - last) > 0) {
+      if (this.an.loops > 0) this.an.loops--;
+      if (this.an.loops === 0) { this.frame = last; this.an = null; this.state++; return true; }
+      this.frame = first;
+    }
+    return false;
+  }
+
+  // func_800730BC: first..last..first ping-pong
+  pingpong(first, last, period) {
+    if (!this.an) { this.an = { t: period, up: true }; this.frame = first; return; }
+    if (--this.an.t > 0) return;
+    this.an.t = period;
+    if (this.an.up) { if (++this.frame >= last) { this.frame = last; this.an.up = false; } }
+    else if (--this.frame <= first) { this.frame = first; this.an.up = true; }
+  }
+
+  // func_8008B620 (once) / func_8008B6A4 (loop): offset = B-spline over 4 control points, 10000 / velocity per tick
+  splineTick() {
+    const s = this.sp;
+    if (!s || s.done) return;
+    const { n, pts } = s.path, P = i => pts[i % n], t = s.timer / 10000, b = basis(t);
+    for (let a = 0; a < 3; a++) {
+      const o = b.reduce((sum, w, k) => sum + w * P(s.idx + k).p[a], 0);
+      this.vel[a] = o - this.offset[a]; this.offset[a] = o;
+    }
+    const v0 = P(s.idx).v, v1 = P(s.idx + 1).v;
+    s.timer += 10000 / ((v1 - v0) * t + v0);
+    if (s.timer >= 10000) {
+      s.idx++; s.timer = 0;
+      if (s.loop ? s.idx === n : s.idx + 3 === n) { if (s.loop) s.idx = 0; else s.done = true; }
+    }
+  }
+
+  tick(events) {
+    if (this.exiting) {
+      if (this.sp && !this.sp.done) this.splineTick();
+      else for (let a = 0; a < 3; a++) this.offset[a] += this.vel[a];
+      if (this.offscreen || --this.exiting === 0) this.stop();
+      return;
+    }
+    switch (this.mode) {
+      case 'countdown':   // update_object_lakitu_countdown
+        switch (this.state) {
+          case 1: this.frame = 0; this.state++; break;
+          case 2: this.wait(0); break;   // unk_048 = D_8018D180: the console's intro delay, none here
+          case 3: this.visible = true; this.sp = { path: COUNTDOWN_PATH, idx: 0, timer: 0, loop: false }; this.state++; break;
+          case 4: case 5: this.wait(30); break;
+          case 6: this.anim(1, 7, 2, 0); break;
+          case 7: if (this.wait(20)) events?.('red'); break;   // tlutList += 0x200: no lights -> red
+          case 8: this.anim(8, 15, 6, 0); break;
+          case 9: if (this.wait(8)) events?.('red'); break;
+          case 10: if (this.anim(16, 23, 6, 0)) events?.('ready'); break;   // D_801656F0 = 1: rocket start window
+          case 11: if (this.wait(8)) events?.('green'); break;  // red -> blue, SOUND_ACTION_GREEN_LIGHT
+          case 12: this.anim(24, 27, 6, 0); break;
+          case 13: this.state++; break;
+          case 14: this.wait(120); break;
+          case 15: this.exit(); return;
+        }
+        break;
+      case 'flag':   // update_object_lakitu_red_flag; the console waves for ever, we send him off after 4 s
+        if (this.state === 1) { this.sp = { path: FLAG_PATH, idx: 0, timer: 0, loop: true }; this.state++; }
+        else if (this.state === 2) { this.visible = true; this.state++; }
+        else { this.anim(0, 31, 2, -1); if (this.wait(240)) { this.sp = null; this.exit(); return; } }   // off the loop, out on his last heading
+        break;
+      case 'secondlap': case 'finallap':   // update_object_lakitu_second_lap / _final_lap
+        switch (this.state) {
+          case 1: this.sp = { path: LAP_PATH, idx: 0, timer: 0, loop: false }; this.state++; break;
+          case 2: this.visible = true; this.state++; break;
+          case 3: this.wait(20); break;
+          case 4: this.anim(0, 15, 2, 1); break;
+          case 5: this.wait(60); break;
+          case 6: this.anim(15, 0, 2, 1, -1); break;
+          case 7: if (this.sp.done) { this.exit(); return; } break;
+        }
+        break;
+      case 'fishing': {   // update_object_lakitu_fishing + func_80079A5C (offset 80 down to 5, later up to 100)
+        // race karts carry the rescueTick object; arena karts a plain countdown (Kart.updateFree), already hanging
+        // over their start spot, so he comes down from 30 instead of 80 to catch it before the 1.5 s drop
+        const r = typeof this.kart.rescue === 'object' ? this.kart.rescue : null, held = r ? !r.released : this.kart.rescue > 0;
+        if (this.state === 1) { this.offset = [0, r || !this.kart.free ? 80 : 30, 0]; this.stage = 1; this.state++; }
+        else if (this.state === 2) { this.visible = true; this.state++; }
+        else this.pingpong(0, 3, 2);
+        if (this.stage === 1 && (this.offset[1] = Math.max(5, this.offset[1] - 1)) === 5) {
+          if (r) r.held = true;
+          this.stage = 2;
+          if (this.ice) { this.sound?.(1, 0x55); this.block = true; }   // fishing2: 0x1900A055, the ice block (flag 4)
+        }
+        else if (this.stage === 2 && !held) { this.stage = 3; this.t = 0; if (!this.ice) this.hum = false; }   // effects.c: the kart is let go
+        else if (this.stage >= 3) {
+          const up = (this.offset[1] = Math.min(100, this.offset[1] + 1)) === 100;
+          this.vel = [0, 1, 0];
+          if (!this.ice) { if (up) { this.exit(); return; } }
+          // fishing2 unk_0D6 4-8: 30 ticks on, the ice breaks (0x1900A056, shards, the kart drives again); 160 later
+          // the frost starts to thaw (FRIGID -> THAWING); 60 more and he's gone, the hum with him
+          else if (this.stage === 3 && ++this.t > 30) { this.stage = 4; this.t = 0; this.shatter(); }
+          else if (this.stage === 4 && ++this.t > 160) { this.stage = 5; this.t = 0; if (this.kart.cold) this.kart.cold.mode = 'thaw'; }
+          else if (this.stage === 5 && ++this.t > 60) { this.exit(); return; }
+        }
+        // fishing2 unk_0D6 3 (flag 8, func_80052D70): held back over the road (LAKITU_RETRIEVAL off) 30 or less above
+        // it, the block's reflection shows under the ice until it breaks. Assumption: that road is ICE.
+        if (this.stage === 2 && this.ice && held && r?.phase >= 3 && this.kart.world.y - r.road <= 30 * K) this.mirror = true;
+        this.alpha = r ? r.alpha : 1;   // func_8007993C: fades with the kart (LAKITU_FIZZLE)
+        break;
+      }
+      case 'reverse':   // update_object_lakitu_reverse: in on D_800E69B0, the sign swings until the kart turns round,
+        // then out on D_800E69F4 and gone 80 ticks later (unk_0D6 1 -> 2)
+        if (this.state === 1) { this.sp = { path: REVERSE_IN, idx: 0, timer: 0, loop: false }; this.leave = 0; this.state++; }
+        else if (this.state === 2) { this.visible = true; this.state++; }
+        else if (this.state === 3) this.pingpong(0, 15, 2);
+        else { this.exit(); return; }
+        if (this.state >= 3 && !this.leave && !this.kart.wrongWay) { this.sp = { path: REVERSE_OUT, idx: 0, timer: 0, loop: false }; this.leave = 80; this.hum = false; }
+        else if (this.leave && --this.leave === 0) this.state++;
+        break;
+    }
+    this.splineTick();
+  }
+
+  // func_8007A66C (rotated by the camera yaw, height from the kart's ground) / func_8007A778 (fishing: over the kart)
+  place(cam) {
+    const k = this.kart;
+    if (!this.mode || !this.visible || !k) { this.mesh.visible = false; if (this.model) this.model.visible = false; return; }
+    const ox = this.offset[0] * KXZ, oy = this.offset[1] * K, oz = this.offset[2] * KXZ, m = this.mesh.position;
+    if (this.mode === 'fishing') m.set(k.world.x, k.world.y + KART_MID + oy, k.world.z);
+    else {
+      cam.getWorldDirection(_dir);
+      const t = Math.PI - Math.atan2(_dir.x, _dir.z), c = Math.cos(t), s = Math.sin(t);
+      m.set(k.world.x + c * ox - s * oz, (k.groundY ?? k.world.y) + oy, k.world.z + s * ox + c * oz);
+    }
+    this.mesh.rotation.set(0, Math.atan2(cam.position.x - m.x, cam.position.z - m.z), 0);   // func_800418AC: yaw to the camera
+    const [fw, fh, n] = ANIMS[this.mode], cols = Math.min(COLS, n), rows = Math.ceil(n / COLS);
+    const col = this.frame % COLS, row = Math.floor(this.frame / COLS), iu = 0.5 / (fw * cols), iv = 0.5 / (fh * rows);
+    const u0 = col / cols + iu, u1 = (col + 1) / cols - iu, v1 = 1 - row / rows - iv, v0 = 1 - (row + 1) / rows + iv;
+    const uv = this.mesh.geometry.attributes.uv;
+    const [ul, ur] = cam.userData.mirror ? [u1, u0] : [u0, u1];   // EXTRA: flipped back so his signs read under the mirrored projection
+    uv.array.set([ul, v0, ur, v0, ur, v1, ul, v1]); uv.needsUpdate = true;
+    this.material.opacity = this.alpha;
+    // the sprite quad still stands in for the frustum test under the 3D model; hidden too while that model loads
+    this.mesh.visible = !this.model && !this.lakitu?.wait3D;
+    if (this.model) {
+      this.model.position.copy(m); this.model.rotation.copy(this.mesh.rotation);
+      this.model.userData.show(this.mode, this.frame, this.alpha, this.seen?.lap ?? 2);
+      this.model.visible = true;
+    }
+    this.mesh.updateMatrixWorld();
+    cam.updateMatrixWorld();
+    _frustum.setFromProjectionMatrix(_pm.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse));
+    this.offscreen = !_frustum.intersectsObject(this.mesh);
+  }
+}
+const _dir = new THREE.Vector3(), _frustum = new THREE.Frustum(), _pm = new THREE.Matrix4();
+
+export class Lakitu {
+  constructor(scene, track) {
+    this.scene = scene; this.track = track; this.acc = 0; this.referees = []; this.onLight = null;
+    this.onHum = null; this.humming = false;   // main.js: the cloud's hum 0x0100FA28 on / off
+    this.onSound = null;   // main.js: (bank, id) one-shot ROM sound effects
+    this.ice = track.def.id === 'sherbet' ? new Ice(scene) : null;   // Lakitu fishes karts out of its water frozen
+    this.ticks = 0;
+    track.fluidY = fluidLevel(track);
+    track.fluidAt = (x, z, floor) => fluidAt(track, x, z, floor);
+    this.textures = {};
+    for (const mode of Object.keys(ANIMS)) {
+      const tex = HD.loadTexture(`lakitu/${mode}.png`, { mipmaps: false });
+      tex.colorSpace = THREE.SRGBColorSpace;
+      this.textures[mode] = tex;
+    }
+  }
+
+  // views: [{ kart, cam }] in screen order; referee i is drawn on layer 1 + i, which only camera i renders
+  setViews(views) {
+    for (const r of this.referees) { this.scene.remove(r.mesh); r.mesh.geometry.dispose(); r.material.dispose(); r.setModel(null); }
+    this.referees = views.map((v, i) => {
+      for (let l = 1; l <= 4; l++) v.cam.layers.disable(l);
+      v.cam.layers.enable(1 + i);
+      const r = new Referee(this.scene, 1 + i, this.textures);
+      r.kart = v.kart; r.cam = v.cam; r.lakitu = this;
+      r.sound = (bank, id) => this.onSound?.(bank, id);
+      r.shards = k => this.ice?.shatter(k, views.length, 1 + i);
+      return r;
+    });
+    this.syncHum();
+    if (this.build3D) this.set3D(this.build3D);
+  }
+
+  // Wii 3D Lakitu test (src/lakitu3d.js, with the 3 key's Wii karts): build() resolves to a model for each referee;
+  // null brings the sprites back
+  set3D(build) {
+    this.build3D = build || null;
+    if (!build) { this.wait3D = false; for (const r of this.referees) r.setModel(null); return Promise.resolve(); }
+    const referees = this.referees;
+    return Promise.all(referees.map(() => build())).then(models => {
+      if (this.build3D !== build) return;
+      referees.forEach((r, i) => { if (this.referees.includes(r)) r.setModel(models[i]); });
+      this.wait3D = false;
+    }, err => { this.wait3D = false; throw err; });
+  }
+
+  // the hum (func_800C8F80 0x0100FA28 in init_obj_lakitu_red_flag_fishing / _reverse) loops while a fishing or
+  // reverse referee is on his way in or waiting; it stops (func_800C9018) when he lets go of the kart or turns to
+  // leave, or the race restarts. Assumption: one hum shared by the split-screen referees, not one per player.
+  syncHum() {
+    const on = this.referees.some(r => r.hum);
+    if (on !== this.humming) { this.humming = on; this.onHum?.(on); }
+  }
+
+  // the console's func_80078F64: every screen player's referee starts the countdown; P1's calls the lights
+  startCountdown(onLight) {
+    this.onLight = onLight; this.acc = 0;
+    for (const r of this.referees) { r.start('countdown', r.kart); r.seen = { lap: 1, finished: false }; }
+    this.syncHum();
+  }
+
+  update(dt, karts, laps) {
+    for (this.acc += dt; this.acc >= TICK; this.acc -= TICK) {
+      for (const k of karts) {
+        if (k.remote || k.free) continue;   // arena karts keep their own rescue timer (Kart.updateFree)
+        if (k.fell && !k.rescue) this.rescue(k);
+        if (k.rescue) rescueTick(k, this.track);
+      }
+      this.referees.forEach((r, i) => {
+        const k = r.kart;
+        // battle: his player fell into the lava / off the arena (Kart.updateFree's rescue timer), he fishes it out
+        if (k?.free && k.rescue > 0 && (r.mode !== 'countdown' || r.state > 12) && (r.mode !== 'fishing' || r.stage === 3)) r.start('fishing', k);
+        if (k && r.seen && r.mode !== 'countdown') {   // lap signs and the finish flag (func_80079084 / func_800790B4 / func_80079054)
+          const lap = Math.min(laps, k.crossings + 1);
+          if (k.finished && !r.seen.finished) { r.seen.finished = true; if (!k.rescue) r.start('flag', k); }
+          else if (lap > r.seen.lap && !k.finished) {
+            r.seen.lap = lap;
+            if (!k.rescue && lap >= 2) r.start(lap === laps ? 'finallap' : 'secondlap', k);
+          }
+        }
+        if (k && !k.free && !k.remote) {   // func_8007A88C: an idle referee shows the reverse sign
+          this.wrongWay(k);
+          if (k.wrongWay && !r.mode) r.start('reverse', k);
+        }
+        if (r.mode) r.tick(i === 0 ? this.onLight : null);
+      });
+      this.ice?.tick();
+      // render_player.c func_800235AC, a 30 Hz colour step: FRIGID eases the prim colour to 0x646464 (0.5) and the
+      // ENV colour to 0xFF0000 (0.1), the red taken out of the kart; THAWING eases both back to black (0.1)
+      if (++this.ticks % 2 === 0) for (const k of karts) if (k.cold) coldStep(k);
+    }
+    this.syncHum();
+    for (const r of this.referees) r.place(r.cam);
+    this.ice?.place(this.referees);
+  }
+
+  // detect_wrong_player_direction (human screen players): facing 136+ degrees off the course while losing progress
+  // for 5 ticks sets REVERSE_EFFECT (k.wrongWay), back within 45 degrees clears it; a finished kart (cinematic mode)
+  // or one in Lakitu's hands is never wrong-way. Assumption: progress is our continuous s, not path points.
+  wrongWay(k) {
+    if (k.finished || k.rescue) { k.wrongWay = false; k.wrongCount = 0; k.wrongS = k.s; return; }
+    const L = this.track.length, deg = Math.abs(k.psi) * 180 / Math.PI;
+    let ds = k.s - (k.wrongS ?? k.s);
+    if (ds > L / 2) ds -= L; else if (ds < -L / 2) ds += L;
+    k.wrongS = k.s;
+    if (ds < 0 && deg >= WRONG_MIN) { if ((k.wrongCount = (k.wrongCount || 0) + 1) >= WRONG_FRAMES) { k.wrongCount = WRONG_FRAMES; k.wrongWay = true; } }
+    else if (deg < CORRECT_MAX) { k.wrongCount = 0; k.wrongWay = false; }
+  }
+
+  // func_80079860 -> func_800797AC: a screen player's Lakitu comes down to hook it; CPU karts are held at once.
+  // Sherbet Land: a screen player's kart that went under the water level (LAKITU_RETRIEVAL) freezes (FRIGID_EFFECT)
+  // and is fished out in an ice block (update_object_lakitu_fishing2)
+  rescue(k) {
+    const f = k.fell;
+    k.fell = null;
+    k.rescue = { kind: f.kind, base: f.base, phase: 0, count: 0, alpha: 1, held: false, y: k.world.y, swing: 0, swingV: 0.5, swingDir: 1, watch: true };
+    k.air = true; k.v = 0; k.vy = 0;
+    const r = this.referees.find(q => q.kart === k);
+    if (!r) { k.rescue.held = true; return; }
+    r.start('fishing', k);
+    if (this.ice && k.world.y < this.track.fluidAt(k.world.x, k.world.z)) {
+      r.ice = true; k.rescue.frozen = true; k.cold = { mode: 'frigid', rgb: [0, 0, 0], env: [0, 0, 0] };
+    }
+  }
+}
+
+function coldStep(k) {
+  const c = k.cold, frigid = c.mode === 'frigid', p = frigid ? 0x64 : 0, e = frigid ? [0xFF, 0, 0] : [0, 0, 0];
+  for (let i = 0; i < 3; i++) {
+    c.rgb[i] = Math.trunc(c.rgb[i] - (c.rgb[i] - p) * (frigid ? 0.5 : 0.1));
+    c.env[i] = Math.trunc(c.env[i] - (c.env[i] - e[i]) * 0.1);
+  }
+  k.mesh.userData.setCold(c.rgb, c.env);
+}
+
+// effects.c func_80090970 (unk_222 phases 0-4), MK64 heights scaled by K over the fluid level / catch height / road
+function rescueTick(k, track) {
+  const r = k.rescue;
+  switch (r.phase) {
+    case 0:
+      if (r.kind === 'water' && (r.count < 60 || !r.held)) r.count = Math.min(60, r.count + 1);   // sinks first
+      else if (r.held) {
+        r.y += (r.base + 100 * K - r.y) * (r.kind === 'water' ? 0.012 : 0.025);
+        if (r.y >= r.base + 40 * K) r.phase = 1;   // LAKITU_FIZZLE
+      }
+      break;
+    case 1:
+      r.y += (r.base + 40 * K - r.y) * 0.02;
+      r.alpha -= 8 / 255;
+      if (r.alpha < 9 / 255) { r.alpha = 0; r.phase = 2; }
+      break;
+    case 2: {   // func_80090178: over the last road point, facing along the course, 40 up
+      const L = track.length, s0 = k.s, s1 = k.lastGroundS ?? k.s;
+      if (s0 < L * 0.25 && s1 > L * 0.75) k.crossings--;
+      else if (s0 > L * 0.75 && s1 < L * 0.25) k.crossings++;
+      k.s = s1; k.prevS = s1; k.d = 0; k.psi = k.phi = 0;
+      k.y = null; k.groundY = null; k.air = false; k.vy = 0; k.ramp = null; k.takeoffY = null;
+      k.syncMesh(0);
+      r.road = k.world.y; r.y = r.road + 40 * K; r.phase = 3; r.watch = false; r.snap = true;
+      k.air = true;
+      break;
+    }
+    case 3:
+      r.alpha += 8 / 255;
+      if (r.alpha >= 240 / 255) { r.alpha = 1; r.phase = 4; r.count = 0; }
+      break;
+    case 4:
+      r.y += (r.road - r.y) * 0.04;
+      if (++r.count >= 91) {   // let go: the kart drops the rest of the way under its own gravity
+        if (!r.frozen) { letGo(k, r); return; }
+        r.released = true; r.phase = 5;   // HELD_BY_LAKITU off, but FROZEN_EFFECT keeps LAKITU_SCENE: no control yet
+      }
+      break;
+    case 5:   // frozen in the ice block on the road until his referee breaks it (Referee.shatter -> letGo)
+      r.y += (r.road - r.y) * 0.04;
+      k.world.y = r.y; k.mesh.position.copy(k.world); k.mesh.userData.lean = 0;
+      return;
+  }
+  // unk_D9C: the hooked kart swings +-10 degrees
+  r.swingV = Math.min(180, r.swingV + 8);
+  r.swing += r.swingV * r.swingDir;
+  if (Math.abs(r.swing) >= 1820) { r.swingV = 0; r.swingDir *= -1; }
+  k.world.y = r.y; k.mesh.position.copy(k.world);
+  k.mesh.userData.lean = r.swing * Math.PI * 2 / 65536;
+  k.mesh.userData.setAlpha(r.alpha);
+}
+
+function letGo(k, r) {
+  k.rescue = null;
+  k.y = r.y; k.vy = 0; k.air = true; k.takeoffY = r.road;
+  k.mesh.userData.setAlpha(1); k.mesh.userData.lean = 0;
+}
+
+// Sherbet Land's ice (tools/extract-ice-block.py): the block a frozen kart is fished out in (render_ice_block,
+// d_course_sherbet_land_dl_ice_block at scale 0.02 on the kart) and the shards it breaks into (func_80083FD0 /
+// func_80083F18, D_0D005BD0). Both are lit like the console: D_800E4620's ambient plus a white light whose direction
+// D_80165834 turns every tick (func_800419F8), so the ice glints; the shards all share one spin (D_8016582C).
+// G_RM_AA_ZB_XLU_SURF, G_CC TEXEL0 x SHADE, culling off. In 3P / 4P the shards show only on their own player's
+// screen (that referee's layer); with 1-2 screens on every screen (layer 0).
+const MAX_SHARDS = 4 * 80, _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(0, 0, 0, 'YXZ');
+const _n = new THREE.Vector3(), _s = new THREE.Vector3(), _p = new THREE.Vector3();
+const binary = a => a * Math.PI / 32768, rnd = n => Math.floor(Math.random() * n);
+class Ice {
+  constructor(scene) {
+    this.scene = scene; this.blocks = []; this.shards = []; this.light = [0, 0]; this.spin = [0, 0, 0]; this.data = null;
+    const tex = this.tex = HD.loadTexture('lakitu/ice.png', { mipmaps: false });
+    tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.MirroredRepeatWrapping;
+    fetch(`${import.meta.env?.BASE_URL ?? '/'}mk64/lakitu/iceblock.json`).then(r => r.json()).then(d => this.build(d)).catch(() => {});
+  }
+
+  build(d) {
+    const mat = () => new THREE.MeshBasicMaterial({ map: this.tex, transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false });
+    const geo = this.blockGeo = new THREE.BufferGeometry(), S = 0.02 * K;
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(d.positions.map(v => v * S), 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(d.uvs.map((v, i) => i % 2 ? 1 - v : v), 2));
+    geo.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(d.positions.length), 3));
+    this.normals = d.normals;
+    this.blockMat = mat(); this.blockMat.vertexColors = true;
+    // func_80052D70 (1P only): the same block upside down (rsp_set_matrix_transformation_inverted_x_y_orientation:
+    // x and y turned 0x8000 = a half turn about z) at the kart's x / z, 6.5 under its ground (unk_074), drawn after
+    // the course (D_0D007878: XLU surface, TEXEL0 x SHADE, prim alpha 0xFF) with its turned normals lit
+    const mg = new THREE.BufferGeometry();
+    mg.setAttribute('position', geo.attributes.position); mg.setAttribute('uv', geo.attributes.uv);
+    mg.setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(d.positions.length), 3));
+    this.mirror = new THREE.Mesh(mg, this.blockMat);
+    this.mirror.rotation.z = Math.PI; this.mirror.renderOrder = 2; this.mirror.frustumCulled = false; this.mirror.visible = false;
+    this.scene.add(this.mirror);
+    const sg = new THREE.BufferGeometry();
+    sg.setAttribute('position', new THREE.Float32BufferAttribute(d.shard.positions.flat(), 3));
+    sg.setAttribute('uv', new THREE.Float32BufferAttribute(d.shard.uvs.flatMap(([u, v]) => [u, 1 - v]), 2));
+    this.shardMat = mat();
+    this.shardMeshes = [0, 1, 2, 3, 4].map(l => {
+      const m = new THREE.InstancedMesh(sg, this.shardMat, MAX_SHARDS);
+      m.count = 0; m.frustumCulled = false; m.layers.set(l);
+      this.scene.add(m);
+      return m;
+    });
+    this.ambient = d.lights.ambient.map(c => c / 255); this.color = d.lights.color.map(c => c / 255);
+    this.data = d;
+  }
+
+  // N64 lighting: ambient + colour x max(0, n . dir), dir = (0, 0, 120) turned by D_80165834 (vec3f_rotate_x_y),
+  // as a linear-space multiplier for the sRGB texel
+  shade(nx, ny, nz, out, o = 0) {
+    const s1 = Math.sin(binary(this.light[0])), c1 = Math.cos(binary(this.light[0]));
+    const s2 = Math.sin(binary(this.light[1])), c2 = Math.cos(binary(this.light[1]));
+    const d = Math.max(0, (-nx * s2 + ny * s1 * c2 + nz * c1 * c2) * 120 / 127);
+    for (let i = 0; i < 3; i++) out[o + i] = Math.min(1, this.ambient[i] + this.color[i] * d) ** 2.2;
+  }
+
+  // func_8008421C: D_8018D3C0 shards (80 / 40 / 30 for 1 / 2 / 3-4 screens) fanned out D_801657A2 apart
+  shatter(k, screens, layer) {
+    const l = screens >= 3 ? layer : 0;
+    const [n, step] = screens <= 1 ? [80, 4.5] : screens === 2 ? [40, 9] : [30, 12];
+    for (let i = 0; i < n && this.shards.length < MAX_SHARDS; i++) {
+      const a = i * step * Math.PI / 180, speed = 1 + rnd(10) * 0.1;
+      this.shards.push({ scale: 0.04 + rnd(500) * 0.0002, vy: 1 + rnd(50) * 0.05, vx: speed * Math.sin(a), vz: speed * Math.cos(a), life: 100, l,
+        x: k.world.x + (rnd(20) - 10) * K, y: k.world.y + KART_MID + (rnd(10) - 10) * K, z: k.world.z + (rnd(20) - 10) * K });
+    }
+  }
+
+  // func_800842C8 (one object tick): the light and the shards' spin turn, each shard flies for 100 ticks
+  tick() {
+    this.light[0] += 0x200; this.light[1] += 0x400;
+    this.spin[0] += 0x2000; this.spin[1] += 0x1000; this.spin[2] += 0x1800;
+    for (const s of this.shards) { s.vy -= 0.12; s.x += s.vx * K; s.y += s.vy * K; s.z += s.vz * K; s.life--; }
+    this.shards = this.shards.filter(s => s.life >= 0);
+  }
+
+  place(referees) {
+    if (!this.data) return;
+    const col = this.blockGeo.attributes.color, nrm = this.normals;
+    if (referees.some(r => r.block)) {
+      for (let i = 0; i < nrm.length; i += 3) this.shade(nrm[i], nrm[i + 1], nrm[i + 2], col.array, i);
+      col.needsUpdate = true;
+    }
+    referees.forEach((r, i) => {
+      let m = this.blocks[i];
+      if (!m) { m = this.blocks[i] = new THREE.Mesh(this.blockGeo, this.blockMat); m.frustumCulled = false; this.scene.add(m); }
+      m.visible = !!r.block;
+      if (m.visible) m.position.set(r.kart.world.x, r.kart.world.y + KART_MID, r.kart.world.z);
+    });
+    for (let i = referees.length; i < this.blocks.length; i++) this.blocks[i].visible = false;
+    const mr = referees.length === 1 && referees[0].mirror && referees[0].kart.rescue ? referees[0] : null;
+    this.mirror.visible = !!mr;
+    if (mr) {
+      const mc = this.mirror.geometry.attributes.color;
+      for (let i = 0; i < nrm.length; i += 3) this.shade(-nrm[i], -nrm[i + 1], nrm[i + 2], mc.array, i);
+      mc.needsUpdate = true;
+      this.mirror.position.set(mr.kart.world.x, mr.kart.rescue.road - 6.5 * K, mr.kart.world.z);
+    }
+    for (const m of this.shardMeshes) m.count = 0;
+    if (!this.shards.length) return;
+    _e.set(binary(this.spin[0]), binary(this.spin[1]), binary(this.spin[2]));
+    _q.setFromEuler(_e);
+    _n.set(0, 0, 1).applyQuaternion(_q);
+    const c = [0, 0, 0];
+    this.shade(_n.x, _n.y, _n.z, c);
+    this.shardMat.color.setRGB(c[0], c[1], c[2]);
+    for (const s of this.shards) {
+      const m = this.shardMeshes[s.l];
+      m.setMatrixAt(m.count++, _m.compose(_p.set(s.x, s.y, s.z), _q, _s.setScalar(s.scale * K)));
+    }
+    for (const m of this.shardMeshes) m.instanceMatrix.needsUpdate = true;
+  }
+}

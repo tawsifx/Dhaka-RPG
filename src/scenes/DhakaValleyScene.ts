@@ -3614,7 +3614,7 @@ export class DhakaValleyScene extends Phaser.Scene {
             }
           },
           {
-            label: '🏁 Race (Beta) — Tring-Tring Grand Prix',
+            label: '🏁 Race — Grand Prix (MarioKart64JS)',
             onPick: () => {
               this.startRickshawRace();
             }

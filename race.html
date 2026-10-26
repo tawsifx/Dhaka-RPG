@@ -1,196 +1,235 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#182247" />
-  <title>Tring-Tring Grand Prix — 3D Standalone Race Harness</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Outfit:wght@400;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      user-select: none;
-    }
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #0f172a;
-      color: #f8fafc;
-      font-family: 'Outfit', sans-serif;
-    }
-    #race-dev-bar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 99999;
-      background: rgba(15, 23, 42, 0.92);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 6px 14px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 13px;
-      transition: transform 0.25s ease;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-    #race-dev-bar.collapsed {
-      transform: translateY(-100%);
-    }
-    #race-dev-toggle {
-      position: fixed;
-      top: 4px;
-      right: 14px;
-      z-index: 100000;
-      background: #f59e0b;
-      color: #000;
-      border: none;
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-weight: 700;
-      font-size: 11px;
-      font-family: 'Rajdhani', sans-serif;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    .dev-title {
-      font-family: 'Rajdhani', sans-serif;
-      font-weight: 700;
-      font-size: 16px;
-      color: #fbbf24;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-    .dev-group {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .dev-label {
-      color: #94a3b8;
-      font-size: 11px;
-      text-transform: uppercase;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-    select, button, input[type="checkbox"] {
-      cursor: pointer;
-    }
-    select {
-      background: #1e293b;
-      color: #f1f5f9;
-      border: 1px solid #475569;
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-family: 'Outfit', sans-serif;
-      outline: none;
-    }
-    select:focus {
-      border-color: #38bdf8;
-    }
-    .btn-dev {
-      background: #334155;
-      color: #f8fafc;
-      border: 1px solid #475569;
-      border-radius: 4px;
-      padding: 4px 10px;
-      font-size: 12px;
-      font-weight: 600;
-      transition: background 0.15s, border-color 0.15s;
-      white-space: nowrap;
-    }
-    .btn-dev:hover {
-      background: #475569;
-      border-color: #94a3b8;
-    }
-    .btn-dev:active {
-      transform: scale(0.97);
-    }
-    .btn-dev-accent {
-      background: #2563eb;
-      border-color: #3b82f6;
-    }
-    .btn-dev-accent:hover {
-      background: #1d4ed8;
-    }
-    .dev-checkbox {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: #cbd5e1;
-      font-size: 12px;
-      cursor: pointer;
-    }
-  </style>
+<meta charset="utf-8" />
+<title>MarioKart64JS — Dhaka RPG Minigame</title>
+<link rel="icon" type="image/png" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="description" content="MarioKart64JS rebuilt with Three.js in Dhaka Date RPG." />
+<meta name="theme-color" content="#e52521" />
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #000; font-family: "Trebuchet MS", system-ui, sans-serif; user-select: none; }
+  canvas#game { display: block; width: 100%; height: 100%; }
+
+  /* ---------- native 320x240 menu screen, scaled uniformly to fit (4:3 letterbox like the N64 frame) ---------- */
+  #screen { position: fixed; inset: 0; margin: auto; width: 320px; height: 240px; zoom: 3; z-index: 5; display: none; background: #000; }
+  #screen img, #screen canvas { image-rendering: pixelated; }
+  .hd #screen img, .hd #screen canvas { image-rendering: auto; }
+  #res { position: fixed; top: 10px; left: 0; right: 0; text-align: center; font-size: 20px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 #000, 0 0 4px #000; z-index: 7; display: none; pointer-events: none; }
+  #screen .scr { position: absolute; inset: 0; display: none; overflow: hidden; }
+  #screen .scr img { position: absolute; display: block; }
+  #screen .bg { left: 0; top: 0; width: 320px; height: 240px; }
+  #hint { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 13px; color: #fff; opacity: .75; font-weight: 700; text-shadow: 0 1px 0 #000, 0 0 4px #000; z-index: 6; display: none; pointer-events: none; }
+
+  /* ---------- title: START_MENU items at their ROM positions ---------- */
+  #title3d { position: absolute; left: 0; top: 0; width: 320px; height: 240px; display: none; }
+  #titleFlag { position: absolute; left: 0; top: 0; width: 320px; height: 240px; }
+  #titleLogo { left: 32px; top: 7px; width: 256px; height: 128px; }
+  #copyright { left: 98px; top: 199px; width: 124px; height: 17px; }
+  #pushStart { left: 81px; top: 179px; width: 159px; height: 16px; }
+
+  /* ---------- main menu: MAIN_MENU (game select) at ROM positions ---------- */
+  #gameSelect { left: 61px; top: 17px; width: 200px; height: 32px; }
+  .pcol { position: absolute; top: 62px; width: 64px; height: 120px; background: none; border: none; padding: 0; margin: 0; cursor: pointer; }
+  .pcol .box { position: absolute; left: 0; width: 64px; height: 54px; background: rgb(1,1,1); }
+  .pcol .mbox { position: absolute; left: 0; width: 64px; height: 18px; background: rgb(1,1,1); }
+  .pcol .card { left: 0; top: 0; width: 64px; height: 54px; }
+  .pcol .mode { left: 0; width: 64px; height: 18px; }
+  .pcol .tri { left: 27px; top: 56px; width: 12px; height: 7px; }
+  .pcol.gone { display: none; }
+  #ccrows { position: absolute; left: 0; top: 0; }
+  .ccrow { position: absolute; width: 64px; height: 18px; background: none; border: none; padding: 0; margin: 0; cursor: pointer; }
+  .ccrow .box { position: absolute; left: 0; top: 0; width: 64px; height: 18px; background: rgb(1,1,1); }
+  .ccrow img { position: absolute; left: 0; top: 0; width: 64px; height: 18px; }
+  #gameSel .lr { position: absolute; top: 200px; width: 58px; height: 19px; }
+  #gameSel .lr .box { position: absolute; left: 0; top: 0; width: 58px; height: 19px; background: rgb(1,1,1); }
+  #gameSel .lr img { left: 0; top: 0; width: 58px; height: 19px; }
+  #optionBtn { left: 21px; }
+  #dataBtn { left: 85px; }
+
+  /* ---------- course select: COURSE_SELECT_MENU at ROM positions ---------- */
+  #mapSelect { left: 65px; top: 18px; width: 190px; height: 32px; }
+  #menu button { position: absolute; background: none; border: none; padding: 0; margin: 0; cursor: pointer; }
+  .cup { width: 65px; height: 40px; top: 59px; }
+  .cup .box { position: absolute; left: 0; top: 0; width: 64px; height: 39px; background: rgb(1,1,1); }
+  .cup img { left: 0; top: 0; width: 65px; height: 40px; }
+  .prev { width: 64px; height: 39px; }
+  .prev img, #prevBig img { left: 0; top: 0; width: 100%; height: 100%; }
+  #prevBig { position: absolute; left: 23px; top: 112px; width: 128px; height: 78px; }
+  .cname { left: 157px; width: 140px; height: 18px; }
+  .cname .box { position: absolute; left: 0; top: 0; width: 139px; height: 17px; background: rgb(1,1,1); }
+  .cname img { left: 0; top: 0; width: 140px; height: 18px; }
+  #courseOk { left: 265px; top: 208px; width: 31px; height: 19px; }
+  #courseOk .box { position: absolute; left: 0; top: 0; width: 30px; height: 18px; background: rgb(1,1,1); }
+  #courseOk img { left: 0; top: 0; width: 31px; height: 19px; }
+
+  /* ---------- character select: CHARACTER_SELECT_MENU at ROM positions ---------- */
+  #charBanner { left: 51px; top: 16px; width: 220px; height: 32px; }
+  .char { position: absolute; width: 64px; height: 76px; background: none; border: none; padding: 0; margin: 0; cursor: pointer; transition: left .25s, top .25s, transform .2s; }
+  .char.closed { transform: scaleX(0); pointer-events: none; }
+  .char .holder { position: absolute; left: 0; top: 0; width: 64px; height: 64px; overflow: hidden; }
+  .char .face { left: 0; width: 64px; height: 1088px; }
+  .char .name { left: 0; top: 64px; width: 64px; height: 12px; }
+  #screen .char .border { left: 0; top: 0; width: 64px; height: 64px; display: none; pointer-events: none; }
+  #screen .char.cursor .border { display: block; }
+  #charOk { position: absolute; left: 264px; top: 202px; width: 31px; height: 19px; background: none; border: none; padding: 0; margin: 0; cursor: pointer; transition: transform .2s; }
+  #charOk.closed { transform: scaleX(0); pointer-events: none; }
+  #charOk .box { position: absolute; left: 0; top: 0; width: 30px; height: 18px; background: rgb(1,1,1); }
+  #charOk img { left: 0; top: 0; width: 31px; height: 19px; }
+
+  /* ---------- OPTION (L) / DATA (R) ---------- */
+  .lrscr .head { position: absolute; left: 0; right: 0; top: 14px; text-align: center; font: italic 900 22px "Arial Black", "Trebuchet MS", sans-serif; color: #ffd23a; text-shadow: 2px 2px 0 #000, -1px -1px 0 #000; }
+  .lrscr .panel { position: absolute; left: 20px; right: 20px; top: 50px; bottom: 16px; background: rgba(0,0,0,.72); color: #fff; font: 700 9px "Trebuchet MS", system-ui, sans-serif; padding: 6px 8px; box-sizing: border-box; }
+  .lrscr .row { padding: 3px 4px; margin: 2px 0; }
+  .lrscr .row.on { background: #fff; color: #000; }
+  .lrscr .msg { margin-top: 8px; color: #ff8a7a; min-height: 1em; }
+  #dataGrid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-flow: column; grid-template-rows: repeat(4, auto); gap: 3px; }
+  #dataGrid .row { margin: 0; font-size: 7px; line-height: 1.3; }
+  #dataGrid .row b { display: block; color: #7dff6a; }
+  #dataGrid .row.on b { color: #070; }
+  .lrscr table { width: 100%; border-collapse: collapse; }
+  .lrscr td { padding: 2px 4px; }
+
+  /* ---------- HUD ---------- */
+  #hud { position: fixed; inset: 0; pointer-events: none; color: #fff; font-weight: 900; font-family: "Arial Black", "Trebuchet MS", system-ui, sans-serif; text-shadow: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000; display: none; }
+  #pos, #posStroke { position: absolute; left: 24px; bottom: 20px; padding: 0 28px 0 8px; font-size: 128px; font-style: italic; line-height: 1; text-shadow: none; }
+  #posStroke { color: #1a1a6e; }
+  #pos { color: #ffe033; background: linear-gradient(#fff36b, #ff9d00); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  #pos small, #posStroke small { font-size: 44px; }
+  #lap { position: absolute; right: 24px; top: 16px; font-size: 34px; text-align: right; color: #ffe033; }
+  #time { font-size: 24px; color: #fff; font-family: "Courier New", monospace; letter-spacing: 1px; }
+  #speed { position: absolute; right: 24px; bottom: 20px; font-size: 56px; font-style: italic; color: #7dff6a; }
+  #speed small { font-size: 22px; color: #fff; }
+  #banner { position: absolute; left: 0; right: 0; top: 28%; text-align: center; font-size: 150px; font-style: italic; letter-spacing: 0.03em; padding: 0 0.2em; text-shadow: none; background: linear-gradient(180deg, #fffbd0 0%, #ffe24a 35%, #ffa21e 70%, #ff6a00 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; opacity: 0.88; filter: drop-shadow(0 0 4px rgba(255,200,60,0.9)) drop-shadow(0 0 22px rgba(255,120,0,0.6)) drop-shadow(0 6px 10px rgba(120,40,0,0.35)); }
+  #mini { position: absolute; left: 20px; top: 20px; width: 170px; height: 170px; background: rgba(0,0,40,.45); border-radius: 12px; border: 4px solid #fff; box-shadow: 0 0 0 3px #1a1a6e, 0 4px 0 3px #000; }
+  #item { position: absolute; left: 50%; top: 0; transform: translateX(-50%); display: none; text-align: center; font-size: 22px; white-space: nowrap; }
+  #itemWin { display: block; margin: 0 auto; image-rendering: pixelated; }
+  .hd #itemWin { image-rendering: auto; }
+  #help { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 13px; opacity: .7; font-weight: 700; font-family: "Trebuchet MS", system-ui, sans-serif; text-shadow: 0 1px 0 #000, 0 0 4px #000; }
+
+  /* ---------- split screen ---------- */
+  .vhud { position: fixed; pointer-events: none; color: #fff; font-weight: 900; font-family: "Arial Black", "Trebuchet MS", system-ui, sans-serif; text-shadow: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000; }
+  .vhud .vpos { position: absolute; left: 24px; bottom: 20px; font-size: 128px; font-style: italic; line-height: 1; color: #ffe033; padding: 0 28px 0 8px; }
+  .vhud .vpos small { font-size: 44px; }
+  .vhud .vlap { position: absolute; right: 24px; top: 16px; font-size: 34px; color: #ffe033; }
+  .vhud .vname { position: absolute; left: 24px; top: 16px; font-size: 26px; color: #7dff6a; }
+
+  /* ---------- online lobby ---------- */
+  #lobby { position: fixed; inset: 0; display: none; z-index: 8; color: #fff; font-weight: 900; font-family: "Arial Black", "Trebuchet MS", system-ui, sans-serif; text-align: center; text-shadow: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000; background: rgba(0,0,30,.35); }
+  #lobbyTitle { margin-top: 14vh; font-size: 46px; font-style: italic; color: #ffd23a; }
+  #lobbyCount { font-size: 120px; font-style: italic; line-height: 1.1; color: #ffe033; }
+  #lobbyList { font-size: 30px; line-height: 1.4; min-height: 6em; }
+  #lobbyList div { color: #7dff6a; }
+  #lobbyList div.me { color: #fff; }
+  #lobbyMsg { font-size: 22px; color: #ff8a7a; min-height: 1.4em; }
+  #lobbyHint { position: absolute; left: 0; right: 0; bottom: 40px; font-size: 16px; opacity: .8; font-weight: 700; font-family: "Trebuchet MS", system-ui, sans-serif; text-shadow: 0 1px 0 #000, 0 0 4px #000; }
+
+  /* Navigation / Exit Button */
+  #btn-return-rpg {
+    position: fixed;
+    top: 12px;
+    right: 14px;
+    z-index: 99999;
+    background: rgba(15, 23, 42, 0.85);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: "Trebuchet MS", sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  }
+  #btn-return-rpg:hover {
+    background: #fbbf24;
+    color: #0f172a;
+    border-color: #f59e0b;
+  }
+</style>
 </head>
 <body>
-  <!-- Standalone Dev Quick-Bar -->
-  <div id="race-dev-bar">
-    <div class="dev-title">
-      <span>🏎️</span> TRING-TRING DEV HARNESS
-    </div>
+<canvas id="game"></canvas>
 
-    <!-- Track Selector -->
-    <div class="dev-group">
-      <span class="dev-label">Track</span>
-      <select id="sel-track">
-        <option value="fuller_road_sprint" selected>Fuller Road Sprint (Dhaka)</option>
-        <option value="arena">Analytic Proving Ground (Arena)</option>
-      </select>
-    </div>
+<a id="btn-return-rpg" href="/" title="Return to Dhaka RPG">← Return to RPG</a>
 
-    <!-- Difficulty Tier -->
-    <div class="dev-group">
-      <span class="dev-label">Tier</span>
-      <select id="sel-tier">
-        <option value="gorom_cha">Gorom Cha (50cc)</option>
-        <option value="beshi_gorom" selected>Beshi Gorom (100cc)</option>
-        <option value="naga_jhal">Naga Jhal (150cc)</option>
-      </select>
-    </div>
-
-    <!-- Rule Toggles -->
-    <div class="dev-group">
-      <label class="dev-checkbox"><input type="checkbox" id="chk-items" checked /> Items</label>
-      <label class="dev-checkbox"><input type="checkbox" id="chk-hazards" checked /> Hazards</label>
-    </div>
-
-    <!-- Restart / Launch -->
-    <button id="btn-restart" class="btn-dev btn-dev-accent">🔄 Restart</button>
-
-    <!-- Quick Item Spawner -->
-    <div class="dev-group">
-      <span class="dev-label">Give</span>
-      <select id="sel-give-item">
-        <option value="malai_cha">🍵 Malai Cha (Triple Boost)</option>
-        <option value="naga_fuchka">🌶️ Naga Fuchka (Rocket)</option>
-        <option value="mishti_doi">🍯 Mishti Doi (Puddle Trap)</option>
-        <option value="shingara_shield">🥟 Shingara Shield</option>
-        <option value="kacchi_plunger">🍖 Kacchi Plunger</option>
-        <option value="borhani_bomb">🍾 Borhani Bomb</option>
-        <option value="tring_swatter">🔔 Tring Swatter</option>
-        <option value="rickshaw_typhoon">🌀 Cyclone</option>
-      </select>
-      <button id="btn-give-item" class="btn-dev">🎁 Give</button>
-    </div>
-
-    <!-- Quick Actions -->
-    <button id="btn-boost" class="btn-dev">⚡ Boost</button>
-    <button id="btn-spin" class="btn-dev">💫 Spin</button>
-    <button id="btn-warp-finish" class="btn-dev">🏁 Warp Finish</button>
+<!-- 320x240 native menu frame: title / course select / character select -->
+<div id="screen">
+  <!-- START_MENU -->
+  <div id="title" class="scr">
+    <img id="titleBg" class="bg" alt="" src="/mk64/menu/background_blue_sky.png" data-hd="menu/background_blue_sky.png" />
+    <canvas id="title3d" width="320" height="240"></canvas>
+    <canvas id="titleFlag" width="320" height="240"></canvas>
+    <img id="titleLogo" alt="MarioKart64JS" src="/mk64/menu/logo_mario_kart_64.png" data-hd="menu/logo_mario_kart_64.png" />
+    <img id="copyright" alt="" src="/mk64/menu/copyright_1996.png" data-hd="menu/copyright_1996.png" />
+    <img id="pushStart" alt="" src="/mk64/menu/push_start_button.png" data-hd="menu/push_start_button.png" />
   </div>
 
-  <button id="race-dev-toggle" title="Toggle Dev Toolbar (Shortcut: ~)">⚙️ DEV BAR</button>
+  <!-- MAIN_MENU -->
+  <div id="gameSel" class="scr">
+    <img id="gameBg" class="bg" alt="" src="/mk64/menu/background_main_menu.png" data-hd="menu/background_main_menu.png" />
+    <img id="gameSelect" alt="Game select" src="/mk64/mainmenu/game_select.png" data-hd="mainmenu/game_select.png" />
+    <div id="pcols"></div>
+    <div id="ccrows"></div>
+    <div id="optionBtn" class="lr" role="button" style="cursor:pointer"><div class="box"></div><img alt="Option" src="/mk64/mainmenu/l_option.png" data-hd="mainmenu/l_option.png" /></div>
+    <div id="dataBtn" class="lr" role="button" style="cursor:pointer"><div class="box"></div><img alt="Data" src="/mk64/mainmenu/r_data.png" data-hd="mainmenu/r_data.png" /></div>
+  </div>
 
-  <script type="module" src="/src/race-dev.ts"></script>
+  <!-- COURSE_SELECT_MENU -->
+  <div id="menu" class="scr">
+    <img id="menuBg" class="bg" alt="" src="/mk64/menu/background_course_select.png" data-hd="menu/background_course_select.png" />
+    <img id="mapSelect" alt="Map select" src="/mk64/courseselect/map_select.png" data-hd="courseselect/map_select.png" />
+    <div id="cups"></div>
+    <div id="prevs"></div>
+    <div id="prevBig"><img alt="" src="" /></div>
+    <div id="cnames"></div>
+    <button id="courseOk" aria-label="OK"><div class="box"></div><img alt="" src="/mk64/charselect/ok.png" data-hd="charselect/ok.png" /></button>
+  </div>
+
+  <!-- CHARACTER_SELECT_MENU -->
+  <div id="char" class="scr">
+    <img id="charBg" class="bg" alt="" src="/mk64/menu/background_player_select.png" data-hd="menu/background_player_select.png" />
+    <img id="charBanner" alt="" src="/mk64/charselect/player_select_banner.png" data-hd="charselect/player_select_banner.png" />
+    <div id="charGrid"></div>
+    <button id="charOk" aria-label="OK"><div class="box"></div><img alt="" src="/mk64/charselect/ok.png" data-hd="charselect/ok.png" /></button>
+  </div>
+
+  <!-- OPTIONS_MENU & DATA_MENU -->
+  <div id="opt" class="scr lrscr">
+    <img class="bg" alt="" src="/mk64/menu/background_main_menu.png" data-hd="menu/background_main_menu.png" />
+    <div class="head">OPTION</div>
+    <div class="panel" id="optList"></div>
+  </div>
+  <div id="data" class="scr lrscr">
+    <img class="bg" alt="" src="/mk64/menu/background_main_menu.png" data-hd="menu/background_main_menu.png" />
+    <div class="head" id="dataHead">DATA</div>
+    <div class="panel" id="dataList"></div>
+  </div>
+</div>
+<div id="hint"></div>
+<div id="res"></div>
+
+<div id="hud">
+  <canvas id="mini" width="340" height="340"></canvas>
+  <div id="lap"><div id="lapText">LAP 1/3</div><div id="time">0:00.00</div></div>
+  <div id="item"><img id="itemWin" alt="" /><div id="itemName"></div></div>
+  <div id="posStroke">1<small>st</small></div>
+  <div id="pos">1<small>st</small></div>
+  <div id="speed">0<small> km/h</small></div>
+  <div id="banner"></div>
+  <div id="help">↑/W gas · ↓/S brake · ←→/AD steer · Space drift · Shift/E item · Delete restart · Gamepad: A gas, B brake, LB/RB drift, X item · M menu · N music · G res · J jumps · 3 Wii 3D karts</div>
+</div>
+<div id="lobby">
+  <div id="lobbyTitle">WAITING FOR PLAYERS</div>
+  <div id="lobbyCount"></div>
+  <div id="lobbyList"></div>
+  <div id="lobbyMsg"></div>
+  <div id="lobbyHint">Players joining within the countdown race together · Enter races the CPU instead · Esc goes back to the menu</div>
+</div>
+<script type="module" src="/src/scenes/minigames/race/main.js"></script>
 </body>
 </html>

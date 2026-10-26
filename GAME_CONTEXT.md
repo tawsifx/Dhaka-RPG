@@ -282,38 +282,32 @@ The romance progression is measured through **Affection Hearts (0–100%)**, tra
 | **Beli Gajra Garland** | Flower Cart (`x: 1216, y: 544`) | Purchase hand-strung fragrant white Beli flower garlands and tie them around the wrist or hair. | +14 Affection, grants `flower_beli_garland`. |
 | **Pabnar Mishti Doi** | Sweet Stall (`x: 1744, y: 272`) | Taste thick, creamy, caramelized sweet yogurt served in earthen pots. | +10 Affection, boosts stamina recovery. |
 | **Grand Rickshaw Tour** | Fuller Roadway (`x: 1648, y: 816`) | Board an intricately painted cycle rickshaw for an automated scenic tour across Fuller Road with rhythmic rickshaw bells (`rickshaw_bell.wav`). | +25 Affection, full stamina recovery, panorama view. |
-| **Tring-Tring Grand Prix (3D)** | Fuller Roadway (`x: 1648, y: 816`) | Enter the 3D rickshaw racing mini-game spike powered by Three.js on an overlay canvas with arcade kart physics and spring-arm chase camera. | M1–M3 shipped: drift/mini-turbo kart feel, the 3-lap "Fuller Road Sprint" circuit with checkpoints, rescue, minimap and results (see §6.1). M4 adds 7 AI rivals. |
+| **MarioKart64JS Grand Prix (3D)** | Fuller Roadway (`x: 1648, y: 816`) | Enter the 3D kart racing mini-game powered by Three.js MarioKart64JS with 16 Grand Prix circuits, 4 battle arenas, 8 classic drivers, items, and Wii 3D karts toggle. | Replaces previous rickshaw prototype with full MarioKart64JS engine (see §6.1). |
 | **Stargazing Telescope** | Lake Pier (`x: 1776, y: 1328`) | Peer through the brass telescope at dusk to chart 4 custom celestial constellations: The Starry Rickshaw, The Crescent Moon, The Krishnachura, and The Guardian Spirit. | +22 Affection, charts constellations in skybox. |
 | **Lantern Rowboat Finale** | Dhanmondi Lake (`x: 1904, y: 1328`) | The romantic climax of the date. Row across calm waters illuminated by floating paper lanterns and vertical water reflections. | +30 Affection, unlocks Date Completion Confession Cutscene. |
 | **Bose Quantum Quiz** | Curzon Lab (`x: 330, y: 322`) | Answer Prof. Satyendra's physics quiz regarding Bose-Einstein Condensation. | +60 XP, grants `keepsake_quantum_slate`. |
 | **Rakin's Lakeside Concert** | Dhanmondi Lake Shore (`x: 1820, y: 1340`) | Rakin plays an acoustic guitar concert singing the romantic ballad 'Ohona' for Ahona under the weeping willow. Triggers vocal audio cutscene (`playRakinConcertForAhonaCutscene()`). | +35 Affection, unlocks Ahona's Keepsake Ribbon, plays `ohona_song.mp3`. |
 
-### 6.1 3D Rickshaw Racing Mini-Game — "Tring-Tring Grand Prix" (Milestones 1–4: Architecture, Kart Feel, Track Pipeline & Rivals)
+### 6.1 3D Kart Racing Mini-Game — MarioKart64JS Integration
 
-At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with the painted cycle rickshaw now offers a choice hub:
+At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with the painted cycle rickshaw offers a choice hub:
 1. **"🛺 Grand Rickshaw Tour (Sightseeing)"**: Preserves the original 2D automated scenic tour across Dhaka Valley verbatim.
-2. **"🏁 Race (Beta) — Tring-Tring Grand Prix"**: Seamlessly launches the Mario Kart–style 3D rickshaw racing mini-game with full arcade kart feel.
+2. **"🏁 Race — Grand Prix (MarioKart64JS)"**: Seamlessly launches the MarioKart64JS 3D racing mini-game with full authentic physics, sound, and tracks.
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│               Tring-Tring Grand Prix (M1 & M2)            │
+│                    MarioKart64JS Engine                   │
 ├───────────────────────────────────────────────────────────┤
-│ • Renderer: Dedicated <canvas> Three.js overlay (z: 1000) │
-│ • Chunking: Rolldown async chunks (three & race-engine)   │
-│ • Simulation: 60Hz Fixed-Timestep Loop with Alpha Lerp    │
-│ • Drift System: Hop-to-Drift, Slip Angle & 3-Tier Sparks  │
-│ • Mini-Turbo: Blue (T1), Orange (T2), Purple (T3) Boosts  │
-│ • Boost System: Priority State Machine + Off-road Shield  │
-│ • Countdown: 3-2-1-GO Rocket Start & Early Stall Penalty  │
-│ • Surfaces: Asphalt, Grass, Mud, Puddle, Petal Boost Pads │
-│ • Air & Ramps: Gravity Arc, 360° Air Trick, Landing Boost │
-│ • Collisions: Glancing Slide (<40°) vs Head-on Bounce     │
-│ • Archetypes: Light (Swift), Balanced (Curzon), Heavy     │
-│ • Tuning: Live F5 Drawer with Sliders, Presets & JSON Copy│
-│ • VFX: Pooled THREE.InstancedMesh (Sparks, Smoke, Skids)  │
-│ • Audio: Web Audio Engine RPM Synth & Drift Screech Loop  │
-│ • State: 100% Frozen Clock, Weather, NPCs & Player Pos    │
-│ • Cleanup: Full WebGL/DOM disposal (0 leaks in 10 cycles) │
+│ • Renderer: Three.js WebGL with PCF Shadows & CAS Sharpen │
+│ • Tracks: All 16 Grand Prix circuits + 4 Battle Arenas   │
+│ • Drivers: Mario, Luigi, Peach, Toad, Yoshi, DK, Wario,   │
+│            Bowser with custom mass/handling archetypes    │
+│ • Modes: 50cc, 100cc, 150cc, Extra (Mirror), Battle       │
+│ • 3D Mode: Press '3' to toggle Wii 3D karts & dynamic cast│
+│ • Items: Bananas, green/red/blue shells, thunderbolt, etc.│
+│ • Audio: Web Audio music sequencing & original voice clips│
+│ • Integration: RickshawRaceEngine.launch() & /race.html    │
+│ • State: Pauses Phaser scene & audio cleanly while active │
 └───────────────────────────────────────────────────────────┘
 ```
 
