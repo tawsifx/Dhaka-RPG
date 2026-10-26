@@ -280,3 +280,27 @@
 - **Consequences:**  
   Deterministic lap tracking, robust multi-elevation driving, and full crash/fall recovery with zero game freezes or soft locks.
 
+---
+
+### ADR 017: Track Art Sourcing — Honest Status of Fuller Road Sprint (Retroactive, M4 Part A2)
+
+- **Context:**  
+  The M3 prompt required all track visuals, props, sky, kart and sounds to come from external assets, with offline scripts allowed only to *assemble* external pieces. ADR 016 described `visual.glb` as containing landmark facades, trees and "external prop instances". The M4 provenance audit (`ASSETS.md` §3) found that `build-track.mjs` emits only Three.js primitives: the track art is 100% procedural, curbs/sidewalks/props/lantern are missing, and no sourcing decision was ever recorded.
+- **Decision:**  
+  1. Correct the record: Fuller Road Sprint ships with **procedural placeholder art**, which is the explicitly allowed *labeled placeholder* fallback only in spirit — it is a standing violation of the external-art rule.  
+  2. Do **not** replace art in M4 (out of scope). Catalogue the shortages in `ASSET_SHOPPING_LIST.md` (road/curb/sidewalk texture set, Curzon Hall façade, TSC rotunda, Krishnachura trees, flyover deck, barrier rails, sky/skybox, paper-lantern drone, props) with candidate sources (Kenney City/Racing kits, Quaternius, Poly Haven CC0).  
+  3. Gameplay-relevant geometry (collision, spline, gates) is independent of visuals, so the art pass can happen without touching AI tuning, provided the road ribbon width and barrier layout are preserved or the racing line is rebuilt (`npm run race:line`).
+- **Consequences:**  
+  Docs now match reality; M5/M6 art pass has a concrete checklist; AI/balance work in M4 is unaffected.
+
+---
+
+### ADR 018: GLB Budget & Compression Policy (Retroactive, M4 Part A2)
+
+- **Context:**  
+  The M3 prompt asked for a GLB budget/compression decision; none was recorded. Current payload: `visual.glb` 200.4 kB, `collision.glb` 258.2 kB, `track.json` ~10 kB (468 kB total; target ≤ 8 MB).
+- **Decision:**  
+  Budgets (enforced by `race:validate`): collision GLB ≤ 1 MB and ≤ 40,000 triangles, visual GLB ≤ 8 MB, total ≤ 8 MB. **No Draco/Meshopt compression today**: payloads are ~6% of budget, Draco would add a ~280 kB WASM decoder (more than the entire current track), and meshopt would add decoder code to the lazy `three` chunk for no measurable load-time win. Revisit (prefer **meshopt + KTX2/WebP textures**) when textured external art pushes `visual.glb` past ~2 MB. `collision.glb` is never compressed (the BVH needs raw positions and parse time matters on throttled mobile).
+- **Consequences:**  
+  Simple loader, zero decoder cost; a clear trigger for adding compression with the art pass.
+

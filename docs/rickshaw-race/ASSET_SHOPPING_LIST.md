@@ -24,3 +24,19 @@
 1. **Zero Runtime Bloat:** All 3D models must be compressed via Draco or Meshopt where appropriate, keeping total initial track downloads under 8 MB.
 2. **Strict Node Mapping:** Any vehicle model must provide independent wheel nodes so rotation around the X-axis (rolling) and Y-axis (steering) occurs without transforming the chassis body.
 3. **Purity Invariant:** Models must load without custom shaders; PBR `MeshStandardMaterial` or unlit vertex color materials only.
+
+---
+
+### 3. Track Art Shortfalls (found by the M4 provenance audit, ADR 017)
+
+| Slot | Needed | Candidate sources | Budget | Current fallback |
+| :--- | :--- | :--- | :--- | :--- |
+| `track_road_set` | Asphalt, centre-line, curb, sidewalk, grass-verge PBR/vertex-colour set | Kenney Racing Kit, Poly Haven CC0 textures | ≤ 1024² atlas | Flat dark ribbon, no curbs/sidewalks |
+| `track_barrier_rails` | Visible guardrail/barrier prop matching the collision posts (continuous, no gaps) | Kenney Racing Kit barriers | ≤ 1,500 tris/segment instanced | Invisible collision boxes with gaps |
+| `prop_curzon_facade`, `prop_tsc_rotunda` | Real landmark models | Quaternius/Kenney City, custom | see §1 | Box/cone primitives |
+| `prop_krishnachura_tree` | Flowering avenue tree (instanced) | Quaternius Nature | ≤ 600 tris | Cylinder + dodecahedron |
+| `prop_flyover_deck` | Bridge deck/rails/piers | Kenney City | ≤ 3,000 tris | 4 cylinders under the road ribbon |
+| `sky_golden_hour` | Skybox/cubemap | Poly Haven | ≤ 1 MB | Flat colour + fog |
+| `prop_lantern_drone` | Visible rescue lantern (also used by AI rescue pool, M4) | Kenney / in-house | ≤ 1,200 tris | **None — rescue is an instant teleport; M4 uses a labeled marker + fade** |
+| `prop_podium` | 3-step podium model | Kenney Platformer/Racing | ≤ 800 tris | Labeled box placeholder (M4) |
+| `kart_rickshaw_dhaka` | Rival/player rickshaw GLB (see ADR 013) | Sketchfab CC0 / commission | ≤ 8,000 tris | Procedural hierarchy |

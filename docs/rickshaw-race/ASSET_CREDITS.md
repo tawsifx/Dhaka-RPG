@@ -42,3 +42,12 @@
 - **Mini-Turbo Tier 3 Chime:** `public/assets/race/audio/turbo_chime_3.ogg` — Kenney Digital Audio Pack (`zapThreeToneUp.ogg`, CC0 1.0 Universal).
 - **Grass/Mud Off-Road Rumble:** `public/assets/race/audio/grass_rumble.ogg` — Kenney 3D Platformer Starter Kit (`walking.ogg`, CC0 1.0 Universal).
 - **Procedural Synthesizer Fallbacks:** Retained in `RaceAudio.ts` as automatic offline/network-failure fallbacks (sawtooth RPM oscillator, white-noise bandpass filter, and sine envelopes). Zero external dependencies required if samples fail to load.
+
+---
+
+### 4. Fuller Road Sprint Track Art (M3, audited in M4 A2)
+- **All track visuals are procedural** (`scripts/race/build-track.mjs`, in-house, MIT): road ribbon, Curzon Hall pillars/kiosk domes, TSC rotunda, Krishnachura trees, flyover piers, petal pads. **No third-party asset is used in `visual.glb` or `collision.glb`.** See `ASSETS.md` §3 and ADR 017 for the remediation plan.
+
+### 5. Rival Driver Billboards (M4)
+- Rival and player billboards sample the project's own existing character sheets (`public/assets/sprites/characters/*.png`; credits remain those recorded for the overworld characters in `GAME_CONTEXT.md` §12). No new art was added. Missing/unusable sheets fall back to a tinted name-tag marker.
+- Podium: labeled placeholder blocks (no external model yet; see `ASSET_SHOPPING_LIST.md`).

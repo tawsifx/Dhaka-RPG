@@ -11,7 +11,7 @@ export class RaceDebugOverlay {
   private renderer: RaceRenderer;
   private kartController?: KartController;
   private onExitCallback: () => void;
-  private replayRecorder = new ReplayRecorder();
+  readonly replayRecorder = new ReplayRecorder();
 
   // Frame timing
   private lastTime = performance.now();

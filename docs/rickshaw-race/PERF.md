@@ -132,3 +132,45 @@ Automated via `scripts/race/benchmark-bvh.mjs`, `scripts/race/validate-track.mjs
 - **Retained DOM elements:** 0 (`#race-container, #race-hud, #race-minimap-container, #race-loading-screen, #race-results-screen`).
 - **Overworld State:** `playerX: 480, playerY: 1380`, `cutsceneLocked: false`, `isPaused: false`, 100% restored.
 
+
+---
+
+### 6. M4 Part A1 — REAL Fuller Road Sprint Measurements (solo, before AI)
+
+Replaces the arena-based and synthetic numbers above for the real track. Tooling: `scripts/perf_race_track.js` (Playwright, Chrome headless, `--enable-precise-memory-info`, CDP `Emulation.setCPUThrottlingRate`), `scripts/race/measure-real-track.mjs` (Node, real `collision.glb`). Date: October 26, 2026. Machine: Apple Silicon Mac, Chrome 155 headless (software/ANGLE rasteriser — frame rate is therefore capped at the 60 Hz compositor and is a *lower-bound sanity check*, not a real-GPU profile).
+
+| Metric | Desktop 1280×720 | Mobile emulation 844×390 @2×, touch, 4× CPU throttle (80-particle mobile density) |
+| :--- | :--- | :--- |
+| FPS while the autopilot drives (6 s) | **60.1** (worst frame 16.8 ms) | **59.8** (worst frame 33.4 ms, single hitch) |
+| FPS during 3 s of sustained drift on infield | 60.2 | 60.5 |
+| Draw calls | 36 | 38 |
+| Triangles rendered | 2,780 | 2,924 |
+| Geometries in memory | 97 | 101 |
+| Textures in memory | 3 | 3 |
+| **Track load, wall clock** (race start → `trackRuntime` ready, incl. loading-screen setup) | 415 ms | 498 ms |
+| &nbsp;&nbsp;download (both GLBs + parallel, local server) | 14.3 ms | 19.8 ms |
+| &nbsp;&nbsp;GLTF parse | 9.3 ms | 45.0 ms |
+| &nbsp;&nbsp;BVH ground+wall build (merge + `MeshBVH`) | 3.2 ms | 13.9 ms |
+| &nbsp;&nbsp;loader total (download+parse+BVH+spline) | 105 ms | 170 ms |
+| **JS heap over 60 s sustained drift** (GC forced before each sample) | 110.04 → 110.33 MB (**+0.29 MB**) | 110.02 → 110.28 MB (**+0.25 MB**) |
+
+*Note:* geometries (97) are higher than the arena baseline (52) because the real track adds the visual scene while `RaceRenderer` still instantiates the arena meshes (hidden on tracks). That arena build is dead weight on track runs and is flagged for cleanup (not changed in M4, to keep M2/M3 paths bit-identical).
+
+**BVH on the REAL `collision.glb`** (`measure-real-track.mjs`, Node): 258.2 kB, 2,524 triangles; parse+assemble 22.9 ms; **BVH build 4.43 ms** (replaces "estimated ~40.5 ms" — measured throttled value above is 13.9 ms, i.e. 3.1× slower rather than the 4× estimate); **ground raycast + wall sphere query 4.17 µs per kart-step** (100k samples on the real mesh; replaces the synthetic 15k/40k-triangle 3.46 µs figure).
+
+**Post-M3 chunk table** (`npm run build`, pre-AI baseline for M4; raw / gzip):
+
+| Chunk | Raw | Gzip | Notes |
+| :--- | :--- | :--- | :--- |
+| `index-*.js` (entry) | 1.58 kB | 0.90 kB | unchanged since M1 |
+| `rolldown-runtime-*.js` | 0.72 kB | 0.42 kB | |
+| `race-engine-*.js` | 127.17 kB (128.42 kB after A1 loader/assembler refactor) | 35.91 kB (36.39 kB) | lazy |
+| `three-*.js` | 672.90 kB | 172.60 kB | lazy; **`three-mesh-bvh` landed here** (vite `codeSplitting` group `three|three-mesh-bvh`), together with GLTFLoader/BufferGeometryUtils. M2 → M3 delta +133.76 kB raw |
+| `phaser-*.js` | 1,190.68 kB | 317.07 kB | |
+| `scene-dhaka-*.js` | 228.97 kB | 74.41 kB | |
+| `graphics-world-*.js` | 156.14 kB | 40.79 kB | |
+| `game-db-*.js` | 125.84 kB | 33.58 kB | |
+| `game-systems-*.js` | 104.64 kB | 35.22 kB | |
+| `graphics-creatures-*.js` | 55.31 kB | 12.34 kB | |
+| `graphics-characters-*.js` | 49.78 kB | 11.29 kB | |
+| `index-*.css` | 25.26 kB | 6.14 kB | |

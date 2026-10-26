@@ -281,13 +281,13 @@ The romance progression is measured through **Affection Hearts (0–100%)**, tra
 | **Beli Gajra Garland** | Flower Cart (`x: 1216, y: 544`) | Purchase hand-strung fragrant white Beli flower garlands and tie them around the wrist or hair. | +14 Affection, grants `flower_beli_garland`. |
 | **Pabnar Mishti Doi** | Sweet Stall (`x: 1744, y: 272`) | Taste thick, creamy, caramelized sweet yogurt served in earthen pots. | +10 Affection, boosts stamina recovery. |
 | **Grand Rickshaw Tour** | Fuller Roadway (`x: 1648, y: 816`) | Board an intricately painted cycle rickshaw for an automated scenic tour across Fuller Road with rhythmic rickshaw bells (`rickshaw_bell.wav`). | +25 Affection, full stamina recovery, panorama view. |
-| **Tring-Tring Grand Prix (3D)** | Fuller Roadway (`x: 1648, y: 816`) | Enter the 3D rickshaw racing mini-game spike powered by Three.js on an overlay canvas with arcade kart physics and spring-arm chase camera. | Prototype M1 spike: driveable kart, 60 FPS, state preserved. |
+| **Tring-Tring Grand Prix (3D)** | Fuller Roadway (`x: 1648, y: 816`) | Enter the 3D rickshaw racing mini-game spike powered by Three.js on an overlay canvas with arcade kart physics and spring-arm chase camera. | M1–M3 shipped: drift/mini-turbo kart feel, the 3-lap "Fuller Road Sprint" circuit with checkpoints, rescue, minimap and results (see §6.1). M4 adds 7 AI rivals. |
 | **Stargazing Telescope** | Lake Pier (`x: 1776, y: 1328`) | Peer through the brass telescope at dusk to chart 4 custom celestial constellations: The Starry Rickshaw, The Crescent Moon, The Krishnachura, and The Guardian Spirit. | +22 Affection, charts constellations in skybox. |
 | **Lantern Rowboat Finale** | Dhanmondi Lake (`x: 1904, y: 1328`) | The romantic climax of the date. Row across calm waters illuminated by floating paper lanterns and vertical water reflections. | +30 Affection, unlocks Date Completion Confession Cutscene. |
 | **Bose Quantum Quiz** | Curzon Lab (`x: 330, y: 322`) | Answer Prof. Satyendra's physics quiz regarding Bose-Einstein Condensation. | +60 XP, grants `keepsake_quantum_slate`. |
 | **Rakin's Lakeside Concert** | Dhanmondi Lake Shore (`x: 1820, y: 1340`) | Rakin plays an acoustic guitar concert singing the romantic ballad 'Ohona' for Ahona under the weeping willow. Triggers vocal audio cutscene (`playRakinConcertForAhonaCutscene()`). | +35 Affection, unlocks Ahona's Keepsake Ribbon, plays `ohona_song.mp3`. |
 
-### 6.1 3D Rickshaw Racing Mini-Game — "Tring-Tring Grand Prix" (Milestones 1 & 2: Architecture & Mario Kart Feel)
+### 6.1 3D Rickshaw Racing Mini-Game — "Tring-Tring Grand Prix" (Milestones 1–4: Architecture, Kart Feel, Track Pipeline & Rivals)
 
 At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with the painted cycle rickshaw now offers a choice hub:
 1. **"🛺 Grand Rickshaw Tour (Sightseeing)"**: Preserves the original 2D automated scenic tour across Dhaka Valley verbatim.
@@ -340,6 +340,14 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
   - `F4`: Real-time telemetry (FPS, frame time, draw calls, triangles, memory, surface, drift tier, boost state).
   - `F5` / `?race-tune`: Interactive tuning drawer with 13 sliders, "Copy JSON", "Reset", and 3 presets ("Snappy", "Floaty", "Heavy").
   - `window.__race`: Developer console API (`stats()`, `exit()`, `getKartState()`, `setKartState()`, `tune()`, `giveBoost()`, `setStats()`, `setSurfaceOverride()`, `replay`).
+
+#### Milestone 3 — Track Pipeline, Laps & "Fuller Road Sprint" (ADR 014–016)
+- **Track format (`docs/rickshaw-race/03-track-format.md`, `src/config/tracks.db.ts`)**: each track lives in `public/assets/race/tracks/<id>/` as `track.json` (spline control points, 14 checkpoint gates, 8-slot start grid, boost pads, ramps, hazards, minimap bounds, kill planes) + `collision.glb` (named materials `surf_asphalt|grass|mud|puddle|boostpad|ramp|offtrack_kill`, `wall_barrier`) + `visual.glb`. All of it is **fetched at race start only** (never bundled); `scripts/race/build-track.mjs` regenerates the files. Fuller Road Sprint: 1,316 m lap, 3 laps, 2,524 collision triangles, 468 kB total download. **Its visuals are currently PROCEDURAL primitives (see `docs/rickshaw-race/ASSETS.md` §3 and ADR 017)** — an art pass with external assets is outstanding.
+- **BVH queries (`BvhGroundQuery`, `BvhCollisionWorld`, ADR 014)**: `three-mesh-bvh@0.9.16` multi-level downward ray (flyover-safe: `y + upOffset − 0.1` threshold) returns height, normal, surface type; sphere sweeps against the wall mesh give glancing-slide vs head-on-bounce response. Shared pure assembly lives in `track/TrackAssembler.ts` (browser `TrackLoader`, headless scripts and tests all use it).
+- **Spline, laps, gates (`TrackSpline`, `LapTracker`)**: arc-length Catmull-Rom spline with local-window nearest search (never jumps across the flyover); continuous segment-vs-plane gate crossing (reversing rejected); ordered gates with **`any-of` groups** (`groupId`, the courtyard shortcut gates 11A/11B count as one index).
+- **Rescue (`RescueSystem`)**: kill plane (`y < −10`) or 3.5 s of throttle-held standstill → respawn behind the last gate with invulnerability.
+- **UI**: `RaceMinimap` (canvas radar from track data), `RaceLoadingScreen`, `RaceResults` (total time, lap splits, best-lap star, Race Again/Exit), `TrackDebugOverlay` (**F6**).
+- **Tooling**: `npm run race:validate` (schema, budgets, grid/gates on ground, headless autopilot 3-lap run), `npm run test:race:m3`, `__race` additions (`getStats`, `start(trackId)`, `teleport`, `triggerRescue`, `engine`, `TrackAutopilot`). The M2 analytic arena stays available via `?race-arena` / `__race.start('arena')` as a permanent regression bed.
 
 ---
 

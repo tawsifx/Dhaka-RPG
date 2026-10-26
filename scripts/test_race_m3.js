@@ -83,17 +83,25 @@ async function run() {
       window.DateState.dateStarted = true;
     });
 
-    // Capture Overworld baseline
-    const overworldBaseline = await page.evaluate(() => {
+    // Capture Overworld baseline at the REAL Rickshaw stand (x: 1648, y: 816) - A5 entry realism
+    await page.evaluate(() => {
+      const scene = window.__activeScene;
+      scene.player.x = 1648;
+      scene.player.y = 816;
+      scene.totoro.x = 1648;
+      scene.totoro.y = 850;
+    });
+    const readOverworld = () => page.evaluate(() => {
       const scene = window.__activeScene;
       return {
         playerX: scene.player?.x,
         playerY: scene.player?.y,
-        timeMin: scene.timeCalendar?.timeMinutes,
-        weather: scene.weatherSystem?.currentWeather
+        timeMin: scene.timeCalendar ? scene.timeCalendar.getTotalMinutes() : null,
+        weather: scene.weatherSystem ? scene.weatherSystem.getCurrentWeather() : null
       };
     });
-    console.log('  📍 Overworld Baseline:', overworldBaseline);
+    const overworldBaseline = await readOverworld();
+    console.log('  📍 Overworld Baseline (at Rickshaw stand):', overworldBaseline);
 
     // ── STEP 1: Verify Lazy-Loading of Track Assets ──────────────────────────
     console.log('\n📍 [STEP 1] Verifying 3D Track Lazy-Loading (Zero 3D assets on initial page load)...');
@@ -104,9 +112,11 @@ async function run() {
 
     // ── STEP 2: Launch Fuller Road Sprint & Verify Loading Screen + Countdown ─
     console.log('\n📍 [STEP 2] Launching "Fuller Road Sprint" Track & Verifying Loading Screen + Countdown...');
-    await page.evaluate(() => {
-      window.__activeScene.startRickshawRace();
-    });
+    // Enter through the REAL stand interaction -> choice hub -> "Race (Beta)" button (A5)
+    await page.evaluate(() => window.__activeScene.interactRickshawTour());
+    await page.waitForTimeout(400);
+    const raceBtn = await page.waitForSelector('button.choice-option-btn:has-text("Race (Beta)")', { timeout: 5000 });
+    await raceBtn.click();
 
     // Wait for race container
     await page.waitForSelector('#race-container', { state: 'attached', timeout: 10000 });
@@ -267,21 +277,12 @@ async function run() {
 
     // ── STEP 8: Zero Overworld State Loss ────────────────────────────────────
     console.log('\n📍 [STEP 8] Verifying Zero Overworld State Loss...');
-    const finalOverworld = await page.evaluate(() => {
-      const scene = window.__activeScene;
-      return {
-        playerX: scene.player?.x,
-        playerY: scene.player?.y,
-        timeMin: scene.timeCalendar?.timeMinutes,
-        weather: scene.weatherSystem?.currentWeather,
-        isPaused: scene.timeCalendar?.isPaused,
-        cutsceneLocked: scene.cutsceneLocked
-      };
-    });
+    const finalOverworld = await readOverworld();
     console.log('  📍 Final Overworld State:', finalOverworld);
-
-    if (finalOverworld.isPaused || finalOverworld.cutsceneLocked) {
-      throw new Error(`FAIL: Overworld state not restored: ${JSON.stringify(finalOverworld)}`);
+    const stateDrift = JSON.stringify(finalOverworld) !== JSON.stringify(overworldBaseline);
+    const locks = await page.evaluate(() => ({ paused: window.__activeScene.timeCalendar?.isPaused?.(), locked: window.__activeScene.cutsceneLocked }));
+    if (stateDrift || locks.paused || locks.locked) {
+      throw new Error(`FAIL: Overworld state not restored. baseline=${JSON.stringify(overworldBaseline)} final=${JSON.stringify(finalOverworld)} locks=${JSON.stringify(locks)}`);
     }
     console.log('  ✅ Overworld state 100% preserved with zero loss');
 
