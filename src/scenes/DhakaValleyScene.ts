@@ -28,6 +28,7 @@ import { AtmosphereSystem } from '../systems/AtmosphereSystem';
 import { PlayerBehaviors } from '../systems/player/PlayerBehaviors';
 import { OpeningDialogueSystem } from '../systems/OpeningDialogueSystem';
 import { RickshawTourEngine, StargazingEngine, LakeBoatEngine } from './minigames';
+import { TotoroKartEngine } from './minigames/race/TotoroKartEngine';
 import { MinimapRenderer, InteriorBuilder } from './world';
 import { CampusRomanceQuests } from './quests';
 
@@ -3626,7 +3627,6 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   async startTotoroKart() {
     try {
-      const { TotoroKartEngine } = await import('./minigames/race/TotoroKartEngine');
       const result = await TotoroKartEngine.launch(this);
       console.log('🏁 [Race] Completed with result:', result);
       return result;

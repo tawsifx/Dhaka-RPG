@@ -354,12 +354,13 @@ function sceneImage(src?: string): HTMLImageElement | null {
 
 /** Draws the painted background with a slow Ken Burns pan/zoom, else the procedural scene. */
 function renderScene(c: Ctx, scene: Scene, t: number, localMs: number, s: Sprites): void {
+  if (!scene) return;
   const img = sceneImage(scene.image);
   if (!img) {
     c.save();
     c.scale(OUT_SCALE, OUT_SCALE);
     c.imageSmoothingEnabled = false;
-    scene.draw(c, t, s);
+    scene.draw?.(c, t, s);
     c.restore();
     return;
   }
@@ -425,8 +426,8 @@ export function initTitleSlideshow(): void {
     requestAnimationFrame(frame);
     if (overlay.hidden || overlay.style.display === 'none' || document.hidden) return;
 
-    const elapsed = reduceMotion ? 0 : now - start;
-    const idx = Math.floor(elapsed / SCENE_MS) % SCENES.length;
+    const elapsed = Math.max(0, reduceMotion ? 0 : now - start);
+    const idx = ((Math.floor(elapsed / SCENE_MS) % SCENES.length) + SCENES.length) % SCENES.length;
     const local = elapsed % SCENE_MS;
     const t = elapsed / 1000;
 

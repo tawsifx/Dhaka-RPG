@@ -30,7 +30,7 @@
       ]
     },
     {
-      "source": "/index.html",
+      "source": "/(index\\.html|race\\.html)?",
       "headers": [
         {
           "key": "Cache-Control",

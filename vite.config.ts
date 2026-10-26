@@ -25,7 +25,7 @@ export default defineConfig({
             },
             {
               name: 'race-engine',
-              test: /src[\\/]scenes[\\/]minigames[\\/]race/
+              test: /src[\\/]scenes[\\/]minigames[\\/]race[\\/](?!TotoroKartEngine)/
             },
             {
               name: 'phaser',
