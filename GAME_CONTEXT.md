@@ -289,6 +289,7 @@ The romance progression is measured through **Affection Hearts (0–100%)**, tra
 | **Rakin's Lakeside Concert** | Dhanmondi Lake Shore (`x: 1820, y: 1340`) | Rakin plays an acoustic guitar concert singing the romantic ballad 'Ohona' for Ahona under the weeping willow. Triggers vocal audio cutscene (`playRakinConcertForAhonaCutscene()`). | +35 Affection, unlocks Ahona's Keepsake Ribbon, plays `ohona_song.mp3`. |
 
 ### 6.1 3D Kart Racing Mini-Game — MarioKart64JS Integration
+*(For the complete standalone technical manual and architecture guide, see [`KART_GAME_CONTEXT.md`](KART_GAME_CONTEXT.md)).*
 
 At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with the painted cycle rickshaw offers a choice hub:
 1. **"🛺 Grand Rickshaw Tour (Sightseeing)"**: Preserves the original 2D automated scenic tour across Dhaka Valley verbatim.
