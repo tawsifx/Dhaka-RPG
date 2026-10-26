@@ -10,6 +10,9 @@ node_modules
 *.key
 *secret*
 dist
-tools/
+tools/*
+!tools/character-pipeline/
+tools/character-pipeline/__pycache__/
+tools/character-pipeline/*.blend1
 .cache
 .cache/**
