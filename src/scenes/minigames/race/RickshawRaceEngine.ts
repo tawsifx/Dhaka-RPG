@@ -1,4 +1,4 @@
-// src/scenes/minigames/race/RickshawRaceEngine.ts - MarioKart64JS Bridge & Lifecycle Orchestrator for Dhaka RPG
+// src/scenes/minigames/race/RickshawRaceEngine.ts - Totoro Kart Bridge & Lifecycle Orchestrator for Dhaka RPG
 
 export interface RaceResult {
   reason: 'finished' | 'user' | 'error';
@@ -18,8 +18,8 @@ export class RickshawRaceEngine {
   }
 
   /**
-   * Launch MarioKart64JS from within the RPG scene.
-   * Creates a full-screen, high-performance overlay running MarioKart64JS in /race.html.
+   * Launch Totoro Kart from within the RPG scene.
+   * Creates a full-screen, high-performance overlay running Totoro Kart in /race.html.
    */
   static async launch(scene: any, trackId: string = ''): Promise<RaceResult> {
     if (this.activeIframeContainer) {

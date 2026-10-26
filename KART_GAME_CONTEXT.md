@@ -1,4 +1,4 @@
-# KART_GAME_CONTEXT.md — 3D Kart Racing Engine ("MarioKart64JS")
+# KART_GAME_CONTEXT.md — 3D Kart Racing Engine ("Totoro Kart", formerly MarioKart64JS)
 > **Canonical System Documentation & Reference Manual for the 3D Kart Subsystem**
 > *Totoro & Moon Walker: Chronicles of the Six Realms RPG*
 
@@ -6,11 +6,11 @@
 
 ## 1. Executive Summary & Architecture
 
-The 3D kart racing minigame in this project is powered by **MarioKart64JS**, a complete, faithful browser-based reconstruction of *Mario Kart 64* built with **Three.js (v0.186.1)**, modern ES Modules, and the Web Audio API. It completely replaces the previous prototype and integrates into the Dhaka Date RPG both as an in-world interactive minigame and as a dedicated standalone web game.
+The 3D kart racing minigame in this project is powered by **Totoro Kart** (formerly MarioKart64JS), a complete, faithful browser-based reconstruction of *Mario Kart 64* built with **Three.js (v0.186.1)**, modern ES Modules, and the Web Audio API. It completely replaces the previous prototype and integrates into the Dhaka Date RPG both as an in-world interactive minigame and as a dedicated standalone web game.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
-│                        MarioKart64JS Architecture                      │
+│                          Totoro Kart Architecture                      │
 ├────────────────────────────────────────────────────────────────────────┤
 │ • Core Runtime: Three.js 0.186.1 (WebGLRenderer, PCF Shadows, Stencil) │
 │ • Resolution / CAS Sharpening: 1× (240p), 2× (480p), 4× (960p), Native │
@@ -34,7 +34,7 @@ The 3D kart racing minigame in this project is powered by **MarioKart64JS**, a c
 * **Location:** Fuller Roadway (`x: 1648, y: 816`) at the painted cycle rickshaw stand in [`src/scenes/DhakaValleyScene.ts`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/DhakaValleyScene.ts#L3616-L3622).
 * **Choice Hub:**
   1. `"🛺 Grand Rickshaw Tour (Sightseeing)"`: 2D automated scenic tour across Dhaka Valley.
-  2. `"🏁 Race — Grand Prix (MarioKart64JS)"`: Launches the 3D kart racing engine.
+  2. `"🏁 Race — Grand Prix (Totoro Kart)"`: Launches the 3D kart racing engine.
 
 ### 2.2 In-Game Overlay Lifecycle ([`RickshawRaceEngine.ts`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/RickshawRaceEngine.ts))
 When launched from the RPG:
