@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite';
+import path from 'path';
 
 export default defineConfig({
   root: './',
@@ -11,6 +12,10 @@ export default defineConfig({
     target: 'es2022',
     chunkSizeWarningLimit: 1250,
     rolldownOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        race: path.resolve(__dirname, 'race.html')
+      },
       output: {
         codeSplitting: {
           groups: [

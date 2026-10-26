@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#182247" />
+  <title>Tring-Tring Grand Prix — 3D Standalone Race Harness</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Outfit:wght@400;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: 'Outfit', sans-serif;
+    }
+    #race-dev-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 99999;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      transition: transform 0.25s ease;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+    #race-dev-bar.collapsed {
+      transform: translateY(-100%);
+    }
+    #race-dev-toggle {
+      position: fixed;
+      top: 4px;
+      right: 14px;
+      z-index: 100000;
+      background: #f59e0b;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-weight: 700;
+      font-size: 11px;
+      font-family: 'Rajdhani', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .dev-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: #fbbf24;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .dev-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dev-label {
+      color: #94a3b8;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    select, button, input[type="checkbox"] {
+      cursor: pointer;
+    }
+    select {
+      background: #1e293b;
+      color: #f1f5f9;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 12px;
+      font-family: 'Outfit', sans-serif;
+      outline: none;
+    }
+    select:focus {
+      border-color: #38bdf8;
+    }
+    .btn-dev {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .btn-dev:hover {
+      background: #475569;
+      border-color: #94a3b8;
+    }
+    .btn-dev:active {
+      transform: scale(0.97);
+    }
+    .btn-dev-accent {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+    .btn-dev-accent:hover {
+      background: #1d4ed8;
+    }
+    .dev-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #cbd5e1;
+      font-size: 12px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <!-- Standalone Dev Quick-Bar -->
+  <div id="race-dev-bar">
+    <div class="dev-title">
+      <span>🏎️</span> TRING-TRING DEV HARNESS
+    </div>
+
+    <!-- Track Selector -->
+    <div class="dev-group">
+      <span class="dev-label">Track</span>
+      <select id="sel-track">
+        <option value="fuller_road_sprint" selected>Fuller Road Sprint (Dhaka)</option>
+        <option value="arena">Analytic Proving Ground (Arena)</option>
+      </select>
+    </div>
+
+    <!-- Difficulty Tier -->
+    <div class="dev-group">
+      <span class="dev-label">Tier</span>
+      <select id="sel-tier">
+        <option value="gorom_cha">Gorom Cha (50cc)</option>
+        <option value="beshi_gorom" selected>Beshi Gorom (100cc)</option>
+        <option value="naga_jhal">Naga Jhal (150cc)</option>
+      </select>
+    </div>
+
+    <!-- Rule Toggles -->
+    <div class="dev-group">
+      <label class="dev-checkbox"><input type="checkbox" id="chk-items" checked /> Items</label>
+      <label class="dev-checkbox"><input type="checkbox" id="chk-hazards" checked /> Hazards</label>
+    </div>
+
+    <!-- Restart / Launch -->
+    <button id="btn-restart" class="btn-dev btn-dev-accent">🔄 Restart</button>
+
+    <!-- Quick Item Spawner -->
+    <div class="dev-group">
+      <span class="dev-label">Give</span>
+      <select id="sel-give-item">
+        <option value="malai_cha">🍵 Malai Cha (Triple Boost)</option>
+        <option value="naga_fuchka">🌶️ Naga Fuchka (Rocket)</option>
+        <option value="mishti_doi">🍯 Mishti Doi (Puddle Trap)</option>
+        <option value="shingara_shield">🥟 Shingara Shield</option>
+        <option value="kacchi_plunger">🍖 Kacchi Plunger</option>
+        <option value="borhani_bomb">🍾 Borhani Bomb</option>
+        <option value="tring_swatter">🔔 Tring Swatter</option>
+        <option value="rickshaw_typhoon">🌀 Cyclone</option>
+      </select>
+      <button id="btn-give-item" class="btn-dev">🎁 Give</button>
+    </div>
+
+    <!-- Quick Actions -->
+    <button id="btn-boost" class="btn-dev">⚡ Boost</button>
+    <button id="btn-spin" class="btn-dev">💫 Spin</button>
+    <button id="btn-warp-finish" class="btn-dev">🏁 Warp Finish</button>
+  </div>
+
+  <button id="race-dev-toggle" title="Toggle Dev Toolbar (Shortcut: ~)">⚙️ DEV BAR</button>
+
+  <script type="module" src="/src/race-dev.ts"></script>
+</body>
+</html>

@@ -5,6 +5,7 @@
   "main": "telegram-bot.js",
   "scripts": {
     "dev": "vite",
+    "dev:race": "vite --open /race.html",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
