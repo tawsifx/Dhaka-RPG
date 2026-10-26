@@ -41,7 +41,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
 | **Game Engine** | [Phaser 3.87.0](https://phaser.io/) | Canvas/WebGL 2D renderer, Arcade Physics, Custom Y-sorting, Multi-camera system |
-| **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Lazy-loaded dedicated `<canvas>` overlay for "Tring-Tring Grand Prix" 3D rickshaw racing, PBR materials, shadow maps, spring-arm camera, instanced VFX |
+| **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Dedicated WebGL overlay and standalone harness for MarioKart64JS Grand Prix (all 16 N64 tracks, 4 battle arenas, 8 classic drivers, Wii 3D karts, synthesized Web Audio) |
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 223 unit & regression tests across 20 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics, drift, turbo, surfaces, air, BVH collision, track spline, lap tracking, rescue, and countdown) + automated Playwright E2E suites (`test:race:m1`, `test:race:m2`, `test:race:m3`) + CLI track validation (`race:validate`) |
@@ -69,7 +69,7 @@ dhaka-date-rpg/
 │   │   ├── mcp-inventory.md         # MCP tooling map
 │   │   ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
 │   │   └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
-│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1–M4)
+│   └── mariokart64/                 # MarioKart64JS 3D Racing Subsystem Documentation
 │       ├── 00-audit.md              # Codebase integration points, lifecycle & bundle impact audit
 │       ├── 01-research.md           # Mario Kart & SuperTuxKart kinematics equations & formulas
 │       ├── 02-design.md             # System architecture & pure subsystem decomposition specs
@@ -128,7 +128,7 @@ dhaka-date-rpg/
     │       ├── RickshawTourEngine.ts # 2D Grand Dhaka Rickshaw Tour
     │       ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
     │       ├── LakeBoatEngine.ts     # Lantern Rowboat Simulation
-    │       └── race/                # Three.js 3D Rickshaw Race ("Tring-Tring Grand Prix")
+    │       └── race/                # Three.js 3D Racing Engine (MarioKart64JS)
     │           ├── RickshawRaceEngine.ts  # Lifecycle orchestrator (enter/run/exit/dispose)
     │           ├── core/KartController.ts # Pure arcade kart kinematics math
     │           ├── core/FixedStepLoop.ts  # 60Hz fixed-timestep accumulator & interpolation
@@ -370,7 +370,7 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
   - Steel barrier guardrails placed along collision boundary walls (±0.3m).
   - Concrete flyover bridge support piers and elevated road deck.
   - Kitbashed Dhaka Campus Landmarks: Curzon Hall Mughal-Gothic red-brick verandas, TSC green-domed rotunda with white colonnade, and Central Shaheed Minar monumental frame with red sun disc.
-  - Start/Finish Gantry Arch spanning the road with bilingual banner ("Tring-Tring Grand Prix" / "ট্রিং-ট্রিং গ্রাঁ প্রি") and celebratory hanging red lanterns.
+  - Start/Finish Gantry Arch spanning the road with bilingual banner ("Grand Prix" / "গ্রাঁ প্রি") and celebratory hanging red lanterns.
   - Glowing petal boost pad overlays and mud/puddle surface decals.
 - **Batch Scenery Instancing & Scalability (`PropInstancer.ts`, `GfxQuality.ts`, ADR 026):** Roadside props (street lamps, benches, Krishnachura trees, shrubs, barrels, lanterns) rendered via `THREE.InstancedMesh` with 1 draw call per prop type. Scalable via `?race-gfx=low|med|high`.
 - **Rickshaw Kart Articulation & Visuals:** Added driver and passenger attachment anchors, spinning spoke wheels with front steering pivot, 8 unique rival color tints, and a swinging red rescue lantern.
@@ -1321,15 +1321,13 @@ src/
     │   ├── RickshawTourEngine.ts # Grand Dhaka Rickshaw Tour "Tring-Tring Rush"
     │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
     │   ├── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
-    │   └── race/                # Three.js 3D Rickshaw Race ("Tring-Tring Grand Prix")
-    │       ├── ai/              # Pure AI drivers (AiDriver, ItemBrain), avoidance sensors, rubber-band & seeded PRNG (AiRng)
-    │       ├── core/            # KartController, KartCollisionSystem, RaceSession, RankingSystem, ItemBoxSystem, HitReaction, WorldItems, HazardSystem, BvhGroundQuery, BvhCollisionWorld
-    │       ├── track/           # TrackSpline, LapTracker, RaceStateMachine, RescueSystem, TrackLoader, TrackValidator, TrackAutopilot
-    │       ├── render/          # Three.js renderer, chase camera, arena builder, kart visuals, ItemRenderer, HazardRenderer, BillboardDriver, RivalKartRenderer
-    │       ├── audio/           # Sample-based CC0 engine/skid audio loop & procedural fallbacks
-    │       ├── input/           # Action-map inputs (keyboard, gamepad API, touch)
-    │       ├── ui/              # DOM HUD, speedometer, minimap radar, loading screen, pre-race panel, results modal, ItemSlotHud, IncomingWarning
-    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, F6 track debug overlay, F7 AI overlay, F8 items debug, replay recorder
+    │   └── race/                # Three.js 3D Racing Engine (MarioKart64JS)
+    │       ├── main.js          # Core MarioKart64JS game loop, views, camera, controls
+    │       ├── track.js         # 16 GP circuits + 4 battle arenas loader and geometry
+    │       ├── kart.js          # Kart kinematics, collision response, rivals, physics
+    │       ├── kart3d.js        # Wii 3D Standard Kart & driver mesh assembler
+    │       ├── items.js         # Authentic N64 item system, boxes, projectile logic
+    │       ├── audio.js         # Web Audio synthesizer sequencing & driver voice clips
     │       ├── RickshawRaceEngine.ts # Master lifecycle coordinator (enter, loop, exit, dispose)
     │       └── index.ts         # Clean barrel export
     ├── world/                   # Architectural & world builders + index.ts
@@ -1354,4 +1352,4 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
     - Update `src/config/assetSpecs.manifest.ts`.
     - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 26, 2026 — Milestone 5 ("Tring-Tring Grand Prix") Dhaka Street Items, Hazards & Parallel Downloader*
+*Last Updated: October 26, 2026 — MarioKart64JS Engine Integration (16 GP Circuits, 4 Arenas, 8 Drivers)*

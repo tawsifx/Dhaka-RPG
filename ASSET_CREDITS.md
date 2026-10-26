@@ -6,7 +6,7 @@ This project incorporates third-party art, 3D models, textures, audio, and VFX a
 
 ## 1. SuperTuxKart (STK) Assets — Fuller Road Sprint Art Pass (M3.5)
 
-The 3D rickshaw racing mini-game ("Tring-Tring Grand Prix") incorporates selected visual props, textures, particle sprites, wheels, and music from **SuperTuxKart**, an open-source kart racing game.
+The 3D racing mini-game is powered by **MarioKart64JS**, a browser-based recreation of Mario Kart 64 in Three.js with Wii 3D karts and synthesized Web Audio.
 
 - **Upstream Repository**: [https://svn.code.sf.net/p/supertuxkart/code/stk-assets](https://svn.code.sf.net/p/supertuxkart/code/stk-assets)
 - **Website**: [https://supertuxkart.net](https://supertuxkart.net)
