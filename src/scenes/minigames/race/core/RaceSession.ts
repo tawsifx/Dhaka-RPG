@@ -105,6 +105,17 @@ export class RaceSession {
       // Quick Race: 8 Karts (7 AI + 1 Player in slot 8)
       // Slot 8 = Player, Slots 1-7 = Rivals
       const rivalRoster = [...RIVAL_DRIVERS];
+      // Seeded shuffle of rivals across grid slots so no single rival monopolizes pole position
+      if (this.config.seed) {
+        let rng = this.config.seed;
+        for (let k = rivalRoster.length - 1; k > 0; k--) {
+          rng = (rng * 1664525 + 1013904223) >>> 0;
+          const j = rng % (k + 1);
+          const temp = rivalRoster[k];
+          rivalRoster[k] = rivalRoster[j];
+          rivalRoster[j] = temp;
+        }
+      }
 
       for (let i = 0; i < 8; i++) {
         const slot = startSlots[i] || { x: 0, y: 0, z: 20 + i * 7, rotation: 0 };
@@ -167,7 +178,11 @@ export class RaceSession {
   } {
     this.raceTimeMs += dt * 1000;
     const playerKart = this.karts.find((k) => k.isPlayer)!;
-    const playerProgress = playerKart.controller.getState().distanceTravelled;
+    const playerState = playerKart.controller.getState();
+    const playerSplineNear = this.spline.findNearest(playerState.x, playerState.y, playerState.z);
+    const trackLen = this.spline.getTotalLength() || 1;
+    const playerProgress =
+      (playerKart.lapTracker.getCurrentLap() - 1) * trackLen + playerSplineNear.distanceAlongSpline;
     const currentTimeSec = this.raceTimeMs / 1000;
 
     const allKartStates = this.karts.map((k) => k.controller.getState());
@@ -181,10 +196,10 @@ export class RaceSession {
         input = playerInput;
       } else if (entry.aiDriver) {
         if (entry.finished) {
-          // Slow down smoothly after finish
+          // Come to a smooth stop after finish line
           input = {
-            throttle: 0.3,
-            brake: 0,
+            throttle: 0,
+            brake: 0.8,
             steer: 0,
             drift: false,
             lookBehind: false,
@@ -197,7 +212,8 @@ export class RaceSession {
             allKartStates,
             i,
             playerProgress,
-            currentTimeSec
+            currentTimeSec,
+            entry.lapTracker.getCurrentLap()
           );
         }
       } else {
@@ -207,7 +223,8 @@ export class RaceSession {
       // Check rescue
       const currState = entry.controller.getState();
       const lastGate = this.track.checkpoints[entry.lapTracker.getState().lastPassedGateIndex] || null;
-      const rescueRes = entry.rescueSystem.update(dt, currState, input.throttle, lastGate, this.isStarted);
+      const isKartActive = this.isStarted && !entry.finished;
+      const rescueRes = entry.rescueSystem.update(dt, currState, input.throttle, lastGate, isKartActive);
 
       if (rescueRes.rescueCompleted && rescueRes.respawnPose) {
         entry.controller.setState({

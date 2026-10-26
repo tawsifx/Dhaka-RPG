@@ -18,6 +18,8 @@ export class RescueSystem {
   private stuckTimer = 0;
   private rescueDurationSec = 1.6;
   private invulnerableDurationSec = 0.8;
+  private fallRescues = 0;
+  private stuckRescues = 0;
 
   private state: RescueState = {
     isRescuing: false,
@@ -37,6 +39,14 @@ export class RescueSystem {
 
   isRescuing(): boolean {
     return this.state.isRescuing;
+  }
+
+  getFallRescues(): number {
+    return this.fallRescues;
+  }
+
+  getStuckRescues(): number {
+    return this.stuckRescues;
   }
 
   isInvulnerable(): boolean {
@@ -98,6 +108,7 @@ export class RescueSystem {
     const hitOfftrackKill = kart.surface === 'offtrack_kill';
 
     if (fellBelowKillPlane || hitOfftrackKill) {
+      this.fallRescues++;
       this.initiateRescue(lastPassedGate);
       return {
         triggerRescue: true,
@@ -115,6 +126,7 @@ export class RescueSystem {
     if (throttle > 0.6 && Math.abs(kart.speed) < 0.6 && !kart.air.isAirborne) {
       this.stuckTimer += dt;
       if (this.stuckTimer >= this.stuckThresholdSec) {
+        this.stuckRescues++;
         this.initiateRescue(lastPassedGate);
         return {
           triggerRescue: true,

@@ -24,19 +24,22 @@ export class AiDriver {
   private stuckTimer = 0;
   private reverseTimer = 0;
   private reverseSteerDirection = 0.6;
+  private enableRubberBand = true;
 
   constructor(
     profile: DriverProfile,
     difficultyTier: keyof typeof DIFFICULTY_CONFIGS,
     spline: TrackSpline,
     racingLine: RacingLinePoint[] = [],
-    seed = 42
+    seed = 42,
+    enableRubberBand = true
   ) {
     this.profile = profile;
     this.difficulty = DIFFICULTY_CONFIGS[difficultyTier] || DIFFICULTY_CONFIGS.beshi_gorom;
     this.spline = spline;
     this.racingLine = racingLine;
     this.rng = new AiRng(seed);
+    this.enableRubberBand = enableRubberBand;
   }
 
   setRacingLine(racingLine: RacingLinePoint[]): void {
@@ -48,7 +51,8 @@ export class AiDriver {
     allKarts: KartState[],
     selfIndex: number,
     playerProgressMeters: number,
-    currentTimeSec: number
+    currentTimeSec: number,
+    currentLap = 1
   ): RaceActionInput {
     // 0. Anti-stuck reverse recovery
     if (this.reverseTimer > 0) {
@@ -96,8 +100,11 @@ export class AiDriver {
       const rlIdx = Math.floor(targetT * (this.racingLine.length - 1));
       const rlPt = this.racingLine[rlIdx];
       if (rlPt) {
-        targetPos.x += targetNormal.x * (rlPt.lateralOffset * 0.7);
-        targetPos.z += targetNormal.z * (rlPt.lateralOffset * 0.7);
+        // Blend between centerline and pre-computed safe racing line based on driver skill
+        const skill = Math.max(0.2, Math.min(1.0, this.profile.personality.skill));
+        targetPos.x = baseTargetPos.x + (rlPt.x - baseTargetPos.x) * skill;
+        targetPos.y = baseTargetPos.y + (rlPt.y - baseTargetPos.y) * skill;
+        targetPos.z = baseTargetPos.z + (rlPt.z - baseTargetPos.z) * skill;
         targetSpeed = rlPt.targetSpeed;
         idealDrift = rlPt.idealDriftState;
       }
@@ -133,25 +140,30 @@ export class AiDriver {
 
     steer = Math.max(-1.0, Math.min(1.0, steer));
 
-    // 6. Curvature anticipation: sample track direction 22m ahead to prepare for sharp bends
+    // 6. Curvature anticipation: sample track direction 12m and 22m ahead to prepare for sharp bends
     const tanNow = this.spline.getTangent(this.currentT || 0);
-    const lookaheadCurveT = ((this.currentT || 0) + 22.0 / totalLen) % 1.0;
-    const tanAhead = this.spline.getTangent(lookaheadCurveT);
-    const cornerBend = tanNow.x * tanAhead.x + tanNow.z * tanAhead.z;
+    const lookahead12T = ((this.currentT || 0) + 12.0 / totalLen) % 1.0;
+    const tan12 = this.spline.getTangent(lookahead12T);
+    const bend12 = tanNow.x * tan12.x + tanNow.z * tan12.z;
+
+    const lookahead22T = ((this.currentT || 0) + 22.0 / totalLen) % 1.0;
+    const tan22 = this.spline.getTangent(lookahead22T);
+    const bend22 = tanNow.x * tan22.x + tanNow.z * tan22.z;
+
+    const cornerBend = Math.min(bend12, bend22);
 
     let maxSafeSpeed = targetSpeed;
     if (cornerBend < 0.5) {
-      maxSafeSpeed = Math.min(maxSafeSpeed, 12.0);
+      maxSafeSpeed = Math.min(maxSafeSpeed, 12.5);
     } else if (cornerBend < 0.75) {
       maxSafeSpeed = Math.min(maxSafeSpeed, 16.5);
     }
 
     // 7. Speed Control & Rubber-Banding
-    const rubberBandMult = RubberBand.computeMultiplier(
-      selfState.distanceTravelled,
-      playerProgressMeters,
-      false
-    );
+    const raceProgressMeters = (currentLap - 1) * totalLen + nearest.distanceAlongSpline;
+    const rubberBandMult = this.enableRubberBand
+      ? RubberBand.computeMultiplier(raceProgressMeters, playerProgressMeters, false)
+      : 1.0;
 
     const effectiveTargetSpeed =
       maxSafeSpeed * this.difficulty.speedMultiplier * rubberBandMult;
@@ -160,8 +172,8 @@ export class AiDriver {
     let brake = 0.0;
 
     if (avoidance.brakeRecommended) {
-      throttle = 0.2;
-      brake = 0.6;
+      throttle = 0.5;
+      brake = 0.25;
     } else if (selfState.speed > effectiveTargetSpeed + 1.0) {
       throttle = 0.0;
       brake = Math.min(1.0, (selfState.speed - effectiveTargetSpeed) / 3.0);
@@ -174,7 +186,8 @@ export class AiDriver {
     let drift = false;
     const canDrift =
       this.difficulty.maxDriftTier > 0 &&
-      selfState.speed > 16.0 &&
+      selfState.speed > 14.0 &&
+      selfState.speed <= effectiveTargetSpeed + 2.5 &&
       this.profile.personality.driftiness > 0.3;
 
     if (canDrift) {
@@ -203,6 +216,13 @@ export class AiDriver {
       }
     } else {
       this.isDrifting = false;
+    }
+
+    // Drifting dynamics: prevent braking from cancelling active drift,
+    // but ease throttle if exceeding target cornering speed so drift scrubs speed
+    if (drift) {
+      brake = 0.0;
+      throttle = selfState.speed > effectiveTargetSpeed ? 0.3 : 1.0;
     }
 
     // 8. Flavor Bell

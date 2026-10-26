@@ -59,8 +59,8 @@ export class AvoidanceSensors {
         const intensity = 1.0 - (relFwd / AvoidanceSensors.FRONT_DETECTION_DIST);
         steeringBias += pushDirection * intensity * 0.45;
 
-        // If very close and slower, recommend gentle braking to prevent hard rear-end ramming
-        if (relFwd < 3.0 && selfState.speed > other.speed + 3.0) {
+        // If directly dead-center ahead and carrying closing speed, recommend mild braking to avoid rear-end ramming
+        if (relFwd < 3.0 && Math.abs(relRight) < 1.5 && selfState.speed > other.speed + 3.0) {
           brakeRecommended = true;
         }
       }

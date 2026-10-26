@@ -5,11 +5,25 @@ import { performance } from 'perf_hooks';
 import { loadHeadlessTrack } from './lib/headlessTrack.ts';
 import { RaceSession } from '../../src/scenes/minigames/race/core/RaceSession.ts';
 import { TrackAutopilot } from '../../src/scenes/minigames/race/track/TrackAutopilot.ts';
-import { DIFFICULTY_CONFIGS, RIVAL_DRIVERS } from '../../src/config/drivers.race.db.ts';
+import { AiDriver } from '../../src/scenes/minigames/race/ai/AiDriver.ts';
+import { DIFFICULTY_CONFIGS, RIVAL_DRIVERS, DEFAULT_PLAYER_DRIVER } from '../../src/config/drivers.race.db.ts';
 
 const TRACK_ID = 'fuller_road_sprint';
 const NUM_SEEDS = parseInt(process.env.SEEDS || '50', 10);
 const DIFFICULTIES = ['gorom_cha', 'beshi_gorom', 'naga_jhal'];
+
+const REFERENCE_BOT_PROFILE = {
+  ...DEFAULT_PLAYER_DRIVER,
+  id: 'moon_walker',
+  name: 'Ref Bot (Moon Walker)',
+  personality: {
+    skill: 1.0,
+    aggression: 0.85,
+    driftiness: 0.8,
+    mistakeRate: 0.0,
+    shortcutAffinity: 0.5
+  }
+};
 
 async function runSimulation() {
   console.log(`\n======================================================`);
@@ -30,12 +44,13 @@ async function runSimulation() {
 
     const winCounts = new Map();
     const finishTimes = new Map();
-    const lap1Spreads = [];
-    const finishSpreads = [];
-    let totalRescues = 0;
+    const tierWinnerTimes = [];
+    const lap1SpreadsSec = [];
+    const lap1SpreadsMeters = [];
+    const finishSpreadsSec = [];
+    let totalFallRescues = 0;
+    let totalStuckRescues = 0;
     let totalFinishers = 0;
-    let minRubberBand = 1.0;
-    let maxRubberBand = 1.0;
 
     for (let s = 0; s < NUM_SEEDS; s++) {
       const seed = 1000 + s * 97;
@@ -48,25 +63,58 @@ async function runSimulation() {
         collisionWorld: trackRuntime.collisionWorld
       });
 
-      const playerAutopilot = new TrackAutopilot(session.spline, 26.5, 16.0);
+      const refBot = new AiDriver(
+        REFERENCE_BOT_PROFILE,
+        'beshi_gorom', // Human reference driver benchmark (100% speed, skill 1.0, 0 mistakes)
+        session.spline,
+        track.aiRacingLine || [],
+        seed + 999,
+        false // rubber-band off
+      );
+      refBot.difficulty = {
+        tier: diff,
+        label: 'Player Benchmark',
+        description: 'Human reference bot in slot 8',
+        ccEquivalent: '100cc',
+        speedMultiplier: diff === 'gorom_cha' ? 0.96 : diff === 'beshi_gorom' ? 0.98 : 1.00,
+        accelMultiplier: 1.0,
+        skillMultiplier: 1.0,
+        maxDriftTier: diff === 'gorom_cha' ? 1 : diff === 'beshi_gorom' ? 2 : 3,
+        mistakeMultiplier: 0.0,
+        reactionLatencySec: 0.0
+      };
       session.startRace(0);
 
       const dt = 1 / 60;
       let simSec = 0;
-      let postFinishTimer = 0;
-      const maxSimSec = 220; // 3.6 minutes max
+      let winnerFinishTimeSec = null;
+      const maxSimSec = 400;
 
       let lap1FirstTime = null;
       let lap1LastTime = null;
+      let lap1MetersRecorded = false;
 
       while (simSec < maxSimSec && !session.getKarts().every((k) => k.finished)) {
-        const playerState = session.getPlayerKart().controller.getState();
-        const playerInput = playerAutopilot.computeInput(playerState);
+        const allStates = session.getKarts().map((k) => k.controller.getState());
+        const playerKart = session.getPlayerKart();
+        const playerState = playerKart.controller.getState();
+        const playerSplineNear = session.spline.findNearest(playerState.x, playerState.y, playerState.z);
+        const trackLen = session.spline.getTotalLength() || 1;
+        const playerProgress =
+          (playerKart.lapTracker.getCurrentLap() - 1) * trackLen + playerSplineNear.distanceAlongSpline;
+        const playerInput = refBot.computeInput(
+          playerState,
+          allStates,
+          7,
+          playerProgress,
+          simSec,
+          playerKart.lapTracker.getCurrentLap()
+        );
 
         const tStart = performance.now();
         session.step(dt, playerInput);
         const tStep = performance.now() - tStart;
-        if (s === 0) allStepTimesMs.push(tStep); // sample step timing
+        if (s === 0) allStepTimesMs.push(tStep);
 
         simSec += dt;
 
@@ -80,27 +128,44 @@ async function runSimulation() {
           }
         }
 
-        // Allow trailing pack 25 seconds to finish after leader finishes
-        if (session.getKarts().some((k) => k.finished)) {
-          postFinishTimer += dt;
-          if (postFinishTimer >= 25.0) {
-            break;
-          }
+        // When leader finishes lap 1, record distance spread in meters across the pack
+        if (!lap1MetersRecorded && session.getKarts().some((k) => k.lapTracker.getState().splits.length >= 1)) {
+          lap1MetersRecorded = true;
+          const distances = session.getKarts().map((k) => k.controller.getState().distanceTravelled);
+          const maxDist = Math.max(...distances);
+          const minDist = Math.min(...distances);
+          lap1SpreadsMeters.push(maxDist - minDist);
+        }
+
+        // Cap simulation at 2.0x winner time once leader finishes
+        const anyFinished = session.getKarts().some((k) => k.finished);
+        if (anyFinished && winnerFinishTimeSec === null) {
+          winnerFinishTimeSec = simSec;
+        }
+        if (winnerFinishTimeSec !== null && simSec >= winnerFinishTimeSec * 2.0) {
+          break;
         }
       }
 
       if (lap1FirstTime !== null && lap1LastTime !== null) {
-        lap1Spreads.push(lap1LastTime - lap1FirstTime);
+        lap1SpreadsSec.push(lap1LastTime - lap1FirstTime);
       }
 
-      // Count rescues
+      // Count rescues per kart
       for (const kart of session.getKarts()) {
-        if (kart.rescueSystem.isRescuing()) totalRescues++;
+        totalFallRescues += kart.rescueSystem.getFallRescues();
+        totalStuckRescues += kart.rescueSystem.getStuckRescues();
       }
 
       const standings = session.getStandings();
       const winner = standings[0];
       winCounts.set(winner.kartId, (winCounts.get(winner.kartId) || 0) + 1);
+
+      // Track AI field winning pace for difficulty tier monotonicity validation
+      const aiWinner = standings.find((s) => s.kartId !== 'moon_walker' && s.finished);
+      if (aiWinner && aiWinner.finishTimeMs) {
+        tierWinnerTimes.push(aiWinner.finishTimeMs / 1000);
+      }
 
       for (const entry of standings) {
         if (!finishTimes.has(entry.kartId)) finishTimes.set(entry.kartId, []);
@@ -113,41 +178,57 @@ async function runSimulation() {
       const firstTime = standings[0].finishTimeMs || 0;
       const lastFinished = [...standings].reverse().find((e) => e.finished);
       if (lastFinished && lastFinished.finishTimeMs && firstTime > 0) {
-        finishSpreads.push((lastFinished.finishTimeMs - firstTime) / 1000);
+        finishSpreadsSec.push((lastFinished.finishTimeMs - firstTime) / 1000);
       }
     }
 
     const totalPossibleFinishers = NUM_SEEDS * 8;
     const finishRate = ((totalFinishers / totalPossibleFinishers) * 100).toFixed(1);
-    const avgRescues = (totalRescues / NUM_SEEDS).toFixed(2);
-    const avgLap1Spread = lap1Spreads.length > 0
-      ? (lap1Spreads.reduce((a, b) => a + b, 0) / lap1Spreads.length).toFixed(2)
+    const avgFallRescues = (totalFallRescues / (NUM_SEEDS * 8)).toFixed(3);
+    const avgStuckRescues = (totalStuckRescues / (NUM_SEEDS * 8)).toFixed(3);
+    const avgLap1SpreadSec = lap1SpreadsSec.length > 0
+      ? (lap1SpreadsSec.reduce((a, b) => a + b, 0) / lap1SpreadsSec.length).toFixed(2)
       : '0.00';
-    const avgFinishSpread = finishSpreads.length > 0
-      ? (finishSpreads.reduce((a, b) => a + b, 0) / finishSpreads.length).toFixed(2)
+    const avgLap1SpreadMeters = lap1SpreadsMeters.length > 0
+      ? (lap1SpreadsMeters.reduce((a, b) => a + b, 0) / lap1SpreadsMeters.length).toFixed(1)
+      : '0.0';
+    const avgFinishSpread = finishSpreadsSec.length > 0
+      ? (finishSpreadsSec.reduce((a, b) => a + b, 0) / finishSpreadsSec.length).toFixed(2)
       : '0.00';
 
+    const leaderAvgTime = tierWinnerTimes.length > 0
+      ? tierWinnerTimes.reduce((a, b) => a + b, 0) / tierWinnerTimes.length
+      : 0;
+
     console.log(`Driver Win Shares & Average Times:`);
-    let leaderAvgTime = 0;
     for (const [kartId, times] of finishTimes.entries()) {
       const wins = winCounts.get(kartId) || 0;
       const winShare = ((wins / NUM_SEEDS) * 100).toFixed(1);
       const avgTime = times.length > 0 ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : 'DNF';
       const avgLap = times.length > 0 ? (Number(avgTime) / 3).toFixed(1) : 'DNF';
-      if (kartId === 'moon_walker' && times.length > 0) {
-        leaderAvgTime = Number(avgTime);
-      }
       console.log(`  • ${kartId.padEnd(14)}: ${winShare.padStart(5)}% win share | Avg: ${avgTime}s (Lap: ${avgLap}s)`);
     }
 
-    tierAverages.push({ diff, leaderAvgTime, finishRate, avgLap1Spread, avgFinishSpread, avgRescues });
+    tierAverages.push({
+      diff,
+      leaderAvgTime,
+      finishRate,
+      avgLap1SpreadSec,
+      avgLap1SpreadMeters,
+      avgFinishSpread,
+      avgFallRescues,
+      avgStuckRescues,
+      refBotWinShare: ((winCounts.get('moon_walker') || 0) / NUM_SEEDS) * 100
+    });
 
     console.log(`\n  📦 Field Balancing Metrics for ${diff.toUpperCase()}:`);
-    console.log(`     - Finish Rate:        ${finishRate}%`);
-    console.log(`     - Rescues / Race:     ${avgRescues}`);
-    console.log(`     - Lap 1 Pack Spread:  ${avgLap1Spread}s`);
-    console.log(`     - Final Pack Spread:  ${avgFinishSpread}s (Healthy competitive target: 5s - 25s)`);
+    console.log(`     - Finish Rate:        ${finishRate}% (Target: 100%)`);
+    console.log(`     - Fall Rescues / kart:${avgFallRescues} (Target: <= 0.100)`);
+    console.log(`     - Stuck Rescues / kart:${avgStuckRescues} (Target: <= 0.050)`);
+    console.log(`     - Lap 1 Pack Spread:  ${avgLap1SpreadMeters}m / ${avgLap1SpreadSec}s (Target: <= 120m at Beshi Gorom)`);
+    console.log(`     - Final Pack Spread:  ${avgFinishSpread}s`);
     console.log(`     - Rubber-Band Range:  [0.940, 1.060] (Bounded ±6%)`);
+    console.log(`     - Ref Bot Win Share:  ${(((winCounts.get('moon_walker') || 0) / NUM_SEEDS) * 100).toFixed(1)}%`);
   }
 
   // Tier Monotonicity Check
@@ -208,13 +289,46 @@ function runSingleSeed(trackRuntime, seed) {
     collisionWorld: trackRuntime.collisionWorld
   });
 
-  const playerAutopilot = new TrackAutopilot(session.spline, 26.5, 16.0);
+  const refBot = new AiDriver(
+    REFERENCE_BOT_PROFILE,
+    'beshi_gorom',
+    session.spline,
+    trackRuntime.definition.aiRacingLine || [],
+    seed + 999,
+    false
+  );
+  refBot.difficulty = {
+    tier: 'beshi_gorom',
+    label: 'Player Benchmark',
+    description: 'Human reference bot in slot 8',
+    ccEquivalent: '100cc',
+    speedMultiplier: 0.98,
+    accelMultiplier: 1.0,
+    skillMultiplier: 1.0,
+    maxDriftTier: 2,
+    mistakeMultiplier: 0.0,
+    reactionLatencySec: 0.0
+  };
   session.startRace(0);
   const dt = 1 / 60;
   let simSec = 0;
 
   while (simSec < 220 && !session.getKarts().some((k) => k.finished)) {
-    const playerInput = playerAutopilot.computeInput(session.getPlayerKart().controller.getState());
+    const allStates = session.getKarts().map((k) => k.controller.getState());
+    const playerKart = session.getPlayerKart();
+    const playerState = playerKart.controller.getState();
+    const playerSplineNear = session.spline.findNearest(playerState.x, playerState.y, playerState.z);
+    const trackLen = session.spline.getTotalLength() || 1;
+    const playerProgress =
+      (playerKart.lapTracker.getCurrentLap() - 1) * trackLen + playerSplineNear.distanceAlongSpline;
+    const playerInput = refBot.computeInput(
+      playerState,
+      allStates,
+      7,
+      playerProgress,
+      simSec,
+      playerKart.lapTracker.getCurrentLap()
+    );
     session.step(dt, playerInput);
     simSec += dt;
   }

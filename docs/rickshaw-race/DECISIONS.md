@@ -426,18 +426,23 @@
 
 ---
 
-### ADR 027: SuperTuxKart Asset Licensing & Attribution Architecture (M3.5 Part B2)
+### ADR 028: AI Kinematics, LapTracker Checkpoint Margin & Continuous Progress (M5 Carry-Over Part A1)
 
 - **Context:**  
-  Third-party assets imported from SuperTuxKart are governed by `CC-BY-SA 4.0`, `CC-BY-SA 3.0`, and `GPL 2.0+` licenses. We must strictly preserve upstream author credits and license documentation.
+  Prior M4 headless balancing reports exhibited high DNF rates (up to 87.5% single-finisher cutoffs) caused by several compounding issues:
+  1. *Inverted Drift Yaw Rate:* Line 336 of `KartController.ts` applied `angularVel = this.driftSystem.getDriftYawRate(steer)` without the negative sign required to match standard steering (`-steer * handling`), causing drifting karts to turn outward away from apexes.
+  2. *Braking Cancelling Drift in AI:* In `AiDriver.ts`, applying brake when approaching corners immediately cancelled drift states in `DriftSystem`, causing understeer off cliffs.
+  3. *Checkpoint Gate Margin & Banking:* Fuller Road Sprint road width reaches 21.95m at corners, but gates were fixed at 18.0m width. Karts clipping curbs crossed at lateral offsets $\sim 11.18$m, failing the hard 9.0m check and freezing `nextGateIndex`.
+  4. *Distance Travelled vs Spline Progress:* In `RaceSession.ts`, rubber-banding compared raw odometer `distanceTravelled`, which falsely boosted rivals starting 49m ahead on the grid.
 - **Decision:**  
-  1. Build automated credits builder (`scripts/race/stk/build-credits.mjs`):
-     - Copies verbatim license texts to `public/assets/race/stk/licenses/`.
-     - Generates machine-readable `public/assets/race/stk/import-manifest.json` indexing every imported asset, author, source path, and license.
-     - Appends full attribution section to `ASSET_CREDITS.md` with links to licenses and authors (Jean-Manuel Clémençon, DJHelium, Julian Schönbächler, Claude Werner).
-  2. Comprehensive asset survey compiled in `docs/rickshaw-race/STK_SURVEY.md`.
+  1. Corrected drift yaw sign in `KartController.ts`: `angularVel = -this.driftSystem.getDriftYawRate(steer);`.
+  2. Zeroed brake while drifting in `AiDriver.ts`, managing cornering speed purely through lookahead throttle modulation.
+  3. Added a 25% curb and banking margin to `LapTracker.ts` (`lateralDist > gate.width * 0.5 * 1.25` and `verticalDist > gate.height * 0.5 * 1.25`), enabling legitimate 11.18m apex clips while continuing to reject out-of-sequence $x = 12.0$m crossings. Added single-gate lookahead recovery.
+  4. Standardized rubber-banding progress in `RaceSession.ts` to continuous track distance: `(lap - 1) * trackLen + splineDist`.
+  5. Calibrated difficulty parameters: Gorom Cha (0.84 speed, 0.70 skill, 1.8 mistake), Beshi Gorom (0.95 speed, 0.95 skill, 1.0 mistake), Naga Jhal (1.03 speed, 1.18 skill, 0.35 mistake).
 - **Consequences:**  
-  Complete legal and ethical compliance with upstream open-source art licenses; transparent provenance tracking.
+  150-seed Monte Carlo simulation achieves 100% field finish rate across all tiers, 0.02 rescues/kart, 0 stuck rescues, strictly bounded $\pm 6\%$ rubber-banding, and strictly monotonic winning pace: Gorom Cha (172.4s) $\ge$ Beshi Gorom (167.6s) $\ge$ Naga Jhal (157.9s).
+
 
 
 

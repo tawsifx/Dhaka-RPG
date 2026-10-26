@@ -113,9 +113,9 @@ export const RIVAL_DRIVERS: DriverProfile[] = [
     stats: {
       id: 'arif_rickshaw',
       name: 'TSC Turbo',
-      topSpeed: 28.5,
-      acceleration: 16.8,
-      handling: 2.7,
+      topSpeed: 28.0,
+      acceleration: 17.2,
+      handling: 2.8,
       weight: 1.05,
       driftChargeMultiplier: 1.0
     },
@@ -226,11 +226,11 @@ export const DIFFICULTY_CONFIGS: Record<RaceDifficultyTier, DifficultyConfig> = 
     label: 'Gorom Cha (Easy)',
     description: 'Relaxed street cruising with mild rivals. Great for learning tracks.',
     ccEquivalent: '50cc',
-    speedMultiplier: 0.88,
-    accelMultiplier: 0.90,
-    skillMultiplier: 0.75,
+    speedMultiplier: 0.84,
+    accelMultiplier: 0.88,
+    skillMultiplier: 0.70,
     maxDriftTier: 1,
-    mistakeMultiplier: 1.6,
+    mistakeMultiplier: 1.8,
     reactionLatencySec: 0.22
   },
   beshi_gorom: {
@@ -238,8 +238,8 @@ export const DIFFICULTY_CONFIGS: Record<RaceDifficultyTier, DifficultyConfig> = 
     label: 'Beshi Gorom (Medium)',
     description: 'Competitive championship pace. Rivals drift and take shortcuts.',
     ccEquivalent: '100cc',
-    speedMultiplier: 0.96,
-    accelMultiplier: 0.98,
+    speedMultiplier: 0.95,
+    accelMultiplier: 0.96,
     skillMultiplier: 0.95,
     maxDriftTier: 2,
     mistakeMultiplier: 1.0,
@@ -250,11 +250,11 @@ export const DIFFICULTY_CONFIGS: Record<RaceDifficultyTier, DifficultyConfig> = 
     label: 'Naga Jhal (Hard)',
     description: 'Brutal Grand Prix speed! Rivals attack apexes with Tier 3 mini-turbos.',
     ccEquivalent: '150cc',
-    speedMultiplier: 1.02,
-    accelMultiplier: 1.05,
-    skillMultiplier: 1.15,
+    speedMultiplier: 1.03,
+    accelMultiplier: 1.06,
+    skillMultiplier: 1.18,
     maxDriftTier: 3,
-    mistakeMultiplier: 0.4,
+    mistakeMultiplier: 0.35,
     reactionLatencySec: 0.04
   }
 };

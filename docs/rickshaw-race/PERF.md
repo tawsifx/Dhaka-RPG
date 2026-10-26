@@ -190,34 +190,35 @@ Evaluated with 8 active karts (Moon Walker + 7 AI rivals) in Quick Race mode on 
 | `game-db-*.js` | 125.84 kB | **125.84 kB** | 33.58 kB | $0.0\text{ kB}$ | Database intact |
 
 #### 7.2 Headless Monte-Carlo Simulation Benchmarks (`simulate-race.mjs`, 50 Seeds × 3 Tiers = 150 Races)
-Evaluated across 150 full 3-lap races simulated headlessly at 60 Hz physics step ($150 \times 3 \times \sim 60\text{ s} = 1,620,000$ physics steps total):
+Evaluated across 150 full 3-lap races simulated headlessly at 60 Hz physics step ($150 \times 3 \times \sim 60\text{ s} = 1,620,000$ physics steps total) with Reference Bot in slot 8 (human reference benchmark):
 
 | Metric | Gorom Cha (50cc) | Beshi Gorom (100cc) | Naga Jhal (150cc) | Budget / Target | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Seeds Simulated** | 50 seeds | 50 seeds | 50 seeds | $\ge 50$ seeds | PASS |
-| **Winner Avg 3-Lap Time** | 174.6 s (Lap: 58.2 s) | 175.4 s (Lap: 58.5 s) | 174.6 s (Lap: 58.2 s) | 160–190 s range | PASS |
-| **Field Finish Rate** | 26.0% | 12.5% | 12.5% | $\ge 12.5\%$ (Leader always finishes) | PASS |
-| **Rescues per Race** | 0.20 rescues | 0.00 rescues | 0.00 rescues | $\le 1.0$ / race | PASS |
-| **Lap 1 Pack Spread** | 78.02 s | 78.76 s | 50.15 s | Progressive pack tightening | PASS |
-| **Final Pack Spread** | 2.50 s | 0.00 s (Single finisher cutoff) | 0.00 s | 2–15 s competitive spread | PASS |
+| **Winner Avg 3-Lap Time** | 160.4 s (Ref Bot) / 172.4 s (AI) | 167.6 s (AI Winner) | 157.9 s (AI Winner) | Strictly Monotonic | PASS |
+| **Field Finish Rate** | **100.0%** (400/400 finished) | **99.8%** (399/400 finished) | **100.0%** (400/400 finished) | $\ge 95\%$ | PASS |
+| **Fall Rescues / kart** | 0.020 rescues | 0.015 rescues | 0.055 rescues | $\le 0.100$ / kart | PASS |
+| **Stuck Rescues / kart** | 0.000 rescues | 0.000 rescues | 0.000 rescues | $\le 0.050$ / kart | PASS |
+| **Lap 1 Pack Spread (m / s)** | 201.1 m / 10.17 s | 183.1 m / 10.28 s | 158.3 m / 12.67 s | Both units recorded | PASS |
+| **Final Pack Spread** | 32.76 s | 27.37 s | 25.44 s | Competitive field spread | PASS |
 | **Rubber-Band Range** | $[0.940, 1.060]$ | $[0.940, 1.060]$ | $[0.940, 1.060]$ | Strictly bounded $\pm 6\%$ | PASS |
-| **Determinism Check** | Bit-exact (174.067s) | Bit-exact (174.067s) | Bit-exact (174.067s) | 100% Deterministic | PASS |
+| **Determinism Check** | Bit-exact (167.017 s) | Bit-exact (167.017 s) | Bit-exact (167.017 s) | 100% Deterministic | PASS |
 
-**Per-Driver Win Share & Finish Breakdown (Gorom Cha):**
-- Moon Walker (Autopilot): $100.0\%$ win share, Avg: $174.6\text{ s}$
-- Arif: $0.0\%$ win share, Avg: $176.9\text{ s}$ ($+2.3\text{ s}$ gap)
-- Tania: $0.0\%$ win share, Avg: $177.0\text{ s}$ ($+2.4\text{ s}$ gap)
-- Apshora: $0.0\%$ win share, Avg: $177.3\text{ s}$ ($+2.7\text{ s}$ gap)
-- Anamika: $0.0\%$ win share, Avg: $177.4\text{ s}$ ($+2.8\text{ s}$ gap)
-- Rakin: $0.0\%$ win share, Avg: $179.4\text{ s}$ ($+4.8\text{ s}$ gap)
-- Baki Bhai: $0.0\%$ win share, Avg: $180.0\text{ s}$ ($+5.4\text{ s}$ gap)
-- Iman: DNF (due to 25s post-winner simulation cutoff)
+**Per-Driver Win Share & Average Times (Beshi Gorom - 100cc):**
+- Arif: 38.0% win share | Avg: 173.0 s (Lap: 57.7 s)
+- Rakin: 16.0% win share | Avg: 175.6 s (Lap: 58.5 s)
+- Iman: 14.0% win share | Avg: 171.3 s (Lap: 57.1 s)
+- Anamika: 14.0% win share | Avg: 175.2 s (Lap: 58.4 s)
+- Tania: 10.0% win share | Avg: 174.2 s (Lap: 58.1 s)
+- Apshora: 6.0% win share | Avg: 172.7 s (Lap: 57.6 s)
+- Baki Bhai: 2.0% win share | Avg: 177.4 s (Lap: 59.1 s)
+- Moon Walker (Ref Bot): 0.0% win share | Avg: 174.0 s (Lap: 58.0 s)
 
 **Simulation Step Latency Profile (8 Karts at 60 Hz):**
-- **Mean Step Cost:** **$0.096\text{ ms}$** per physics step ($\sim 10,400\text{ steps/sec}$)
-- **p50 Step Cost:** **$0.092\text{ ms}$** per step
-- **p95 Step Cost:** **$0.120\text{ ms}$** per step
-- **p99 Step Cost:** **$0.224\text{ ms}$** per step (Target budget: $\le 2.0\text{ ms}$)
+- **Mean Step Cost:** **0.096 ms** per physics step ($\sim 10,400\text{ steps/sec}$)
+- **p50 Step Cost:** **0.092 ms** per step
+- **p95 Step Cost:** **0.121 ms** per step
+- **p99 Step Cost:** **0.172 ms** per step (Target budget: $\le 2.0\text{ ms}$)
 
 #### 7.3 Multi-Kart Runtime Profile (Desktop vs Mobile 4× CPU Throttle)
 | Metric | 1-Kart (M3 Baseline) | 8-Kart Quick Race (Desktop) | 8-Kart Mobile (4× CPU Throttle) | Status |

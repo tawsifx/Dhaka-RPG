@@ -333,7 +333,7 @@ export class KartController {
 
     if (this.driftSystem.isDrifting()) {
       // Drift arc turning
-      angularVel = this.driftSystem.getDriftYawRate(steer);
+      angularVel = -this.driftSystem.getDriftYawRate(steer);
     } else {
       // Standard speed-sensitive steering
       const speedRatio = Math.min(1, Math.abs(speed) / baseMaxSpeed);

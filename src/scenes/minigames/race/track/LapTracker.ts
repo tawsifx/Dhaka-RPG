@@ -95,6 +95,27 @@ export class LapTracker {
     }
 
     if (!passedCandidate) {
+      // Lookahead recovery: if an isolated checkpoint was clipped on outer curb,
+      // allow forward recovery if the subsequent checkpoint is pierced cleanly forward.
+      // (Cannot skip to the final lap completion gate directly)
+      const lookaheadIdx = this.nextGateIndex + 1;
+      if (lookaheadIdx < this.gates.length - 1) {
+        const lookaheadGate = this.gates[lookaheadIdx];
+        const lookaheadCandidates = lookaheadGate.groupId
+          ? this.gates.filter((g) => g.groupId === lookaheadGate.groupId)
+          : [lookaheadGate];
+
+        for (const gate of lookaheadCandidates) {
+          if (this.checkGateCrossing(prevX, prevY, prevZ, currX, currY, currZ, gate)) {
+            passedCandidate = gate;
+            this.nextGateIndex = lookaheadIdx;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!passedCandidate) {
       return {
         gatePassed: false,
         gateId: null,
@@ -195,18 +216,17 @@ export class LapTracker {
     const iy = p1y + (p2y - p1y) * t;
     const iz = p1z + (p2z - p1z) * t;
 
-    // Check width and vertical bounds of the gate plane
-    // Horizontal vector tangent to normal in X-Z plane
+    // Check width and vertical bounds of the gate plane (with 25% curb & banking tolerance)
     const tx = -nz;
     const tz = nx;
 
     const lateralDist = Math.abs((ix - cx) * tx + (iz - cz) * tz);
-    if (lateralDist > gate.width * 0.5) {
+    if (lateralDist > gate.width * 0.5 * 1.25) {
       return false;
     }
 
     const verticalDist = Math.abs(iy - cy);
-    if (verticalDist > gate.height * 0.5) {
+    if (verticalDist > gate.height * 0.5 * 1.25) {
       return false;
     }
 
