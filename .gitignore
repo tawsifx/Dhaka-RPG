@@ -11,3 +11,5 @@ node_modules
 *secret*
 dist
 tools/
+.cache
+.cache/**
