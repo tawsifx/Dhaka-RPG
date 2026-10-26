@@ -351,7 +351,7 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **Tooling**: `npm run race:validate` (schema, budgets, grid/gates on ground, headless autopilot 3-lap run), `npm run test:race:m3`, `__race` additions (`getStats`, `start(trackId)`, `teleport`, `triggerRescue`, `engine`, `TrackAutopilot`). The M2 analytic arena stays available via `?race-arena` / `__race.start('arena')` as a permanent regression bed.
 
 #### Milestone 4 — Rivals, 8-Kart Grid, AI Drivers & Race Flow (ADRs 018–022)
-- **8-Kart Start Grid & Roster (`src/config/drivers.race.db.ts`, ADR 018):** 8-driver roster featuring Moon Walker (player) and 7 distinct AI rivals (Ahona, Rakin, Mehjabin, Iman, Anamika, Apshora, Mama). Each driver has custom body/canopy colors, unique weight categories (Light, Balanced, Heavy), handling (2.4–3.2 rad/s), skill rating ($0.65 - 0.95$), aggression ($0.20 - 0.85$), driftiness, mistake rates, and shortcut affinity.
+- **8-Kart Start Grid & Roster (`src/config/drivers.race.db.ts`, ADR 018):** 8-driver roster featuring Moon Walker (player) and 7 distinct AI rivals (Tania, Baki Bhai, Iman, Arif, Anamika, Rakin, Apshora). Each driver has custom body/canopy colors, unique weight categories (Light, Balanced, Heavy), handling (2.4–3.2 rad/s), skill rating ($0.65 - 0.95$), aggression ($0.20 - 0.85$), driftiness, mistake rates, and shortcut affinity.
 - **Difficulty Tiers:** 3 selectable difficulty levels:
   - *Gorom Cha (Easy / 50cc feel):* Top speed $23.0\text{ m/s}$, relaxed AI line tracking, $0\%$ shortcut usage.
   - *Beshi Gorom (Normal / 100cc feel):* Top speed $26.0\text{ m/s}$, sharp apex tracking, occasional shortcut usage ($30\%$).
