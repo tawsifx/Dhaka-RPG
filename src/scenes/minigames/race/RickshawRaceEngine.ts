@@ -150,7 +150,7 @@ export class RickshawRaceEngine {
     document.body.appendChild(this.container);
 
     // 5. Instantiate renderer & core rendering objects
-    this.renderer = new RaceRenderer({ canvas: this.canvas });
+    this.renderer = new RaceRenderer({ canvas: this.canvas, isTrackMode: this.trackId !== 'arena' });
     this.kartMesh = new PlaceholderKart();
     this.renderer.scene.add(this.kartMesh.group);
 

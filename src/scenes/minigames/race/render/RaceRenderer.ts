@@ -6,6 +6,7 @@ export interface RaceRendererOptions {
   canvas: HTMLCanvasElement;
   width?: number;
   height?: number;
+  isTrackMode?: boolean;
 }
 
 export class RaceRenderer {
@@ -18,7 +19,7 @@ export class RaceRenderer {
   private hemiLight: THREE.HemisphereLight;
   private groundMesh: THREE.Mesh;
   private gridHelper: THREE.GridHelper;
-  private arenaMeshes: ArenaMeshes;
+  private arenaMeshes?: ArenaMeshes;
   private resizeObserver?: ResizeObserver;
   private onWindowResizeBound: () => void;
 
@@ -87,8 +88,14 @@ export class RaceRenderer {
     this.scene.add(this.gridHelper);
 
     // 4. Procedural Test Arena (Oval track, grass, mud, puddle, boost pads, ramps, cones)
-    this.arenaMeshes = ArenaBuilder.buildArena();
-    this.scene.add(this.arenaMeshes.root);
+    if (!options.isTrackMode) {
+      this.arenaMeshes = ArenaBuilder.buildArena();
+      this.scene.add(this.arenaMeshes.root);
+    } else {
+      // In track mode, track mesh provides visual ground and boundaries
+      this.groundMesh.visible = false;
+      this.gridHelper.visible = false;
+    }
 
     // 5. Responsive Resize Listener
     this.onWindowResizeBound = this.onWindowResize.bind(this);
@@ -127,7 +134,9 @@ export class RaceRenderer {
       this.resizeObserver.disconnect();
     }
 
-    this.arenaMeshes.dispose();
+    if (this.arenaMeshes) {
+      this.arenaMeshes.dispose();
+    }
 
     // Traverse and dispose all scene objects
     this.scene.traverse((obj: THREE.Object3D) => {
