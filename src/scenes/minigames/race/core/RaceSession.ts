@@ -23,6 +23,19 @@ import { AiDriver } from '../ai/AiDriver';
 import { TrackSpline } from '../track/TrackSpline';
 import { LapTracker, LapTrackerState } from '../track/LapTracker';
 import { RescueSystem } from '../track/RescueSystem';
+import { ItemType, ITEMS_DB, HitReactionType } from '../../../../config/items.race.db';
+import { ItemRng } from './ItemRng';
+import { ItemRoller } from './ItemRoller';
+import { ItemBoxSystem, ItemBoxDef } from './ItemBoxSystem';
+import { WorldItems, WorldItemInstance } from './WorldItems';
+import { HitReaction } from './HitReaction';
+import { ItemBrain } from '../ai/ItemBrain';
+import { HazardSystem } from './HazardSystem';
+
+export interface RaceRules {
+  itemsEnabled?: boolean;
+  hazardsEnabled?: boolean;
+}
 
 export interface RaceSessionConfig {
   track: TrackDefinition;
@@ -33,6 +46,7 @@ export interface RaceSessionConfig {
   groundQuery?: IGroundQuery;
   collisionWorld?: ICollisionWorld;
   startDelaySec?: number;
+  rules?: RaceRules;
 }
 
 export interface SessionKartEntry {
@@ -46,6 +60,12 @@ export interface SessionKartEntry {
   prevPos: { x: number; y: number; z: number };
   finished: boolean;
   finishTimeMs?: number;
+  // M5 Item & Hazard state
+  heldItem: ItemType | null;
+  rouletteTimerSec: number;
+  hitReaction: HitReaction;
+  itemBrain: ItemBrain;
+  shieldRemainingSec: number;
 }
 
 export class RaceSession {
@@ -55,6 +75,12 @@ export class RaceSession {
   readonly difficulty: RaceDifficultyTier;
   readonly spline: TrackSpline;
   readonly rankingSystem: RankingSystem;
+  readonly rules: RaceRules;
+
+  readonly itemBoxSystem?: ItemBoxSystem;
+  readonly worldItems?: WorldItems;
+  readonly itemRoller?: ItemRoller;
+  readonly hazardSystem?: HazardSystem;
 
   private karts: SessionKartEntry[] = [];
   private raceTimeMs = 0;
@@ -68,6 +94,35 @@ export class RaceSession {
     this.difficulty = config.difficulty || 'beshi_gorom';
     this.spline = new TrackSpline(this.track.centerline, true, 300);
     this.rankingSystem = new RankingSystem();
+    this.rules = config.rules || {};
+
+    if (this.rules.itemsEnabled) {
+      const defaultBoxes: ItemBoxDef[] = [
+        { id: 'item_box_straight_1', clusterId: 'item_box_straight', slotIndex: 0, x: -4.5, y: 1.2, z: -60, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_straight_2', clusterId: 'item_box_straight', slotIndex: 1, x: -1.5, y: 1.2, z: -60, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_straight_3', clusterId: 'item_box_straight', slotIndex: 2, x: 1.5, y: 1.2, z: -60, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_straight_4', clusterId: 'item_box_straight', slotIndex: 3, x: 4.5, y: 1.2, z: -60, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_rotunda_1', clusterId: 'item_box_rotunda', slotIndex: 0, x: 215, y: 1.2, z: -179.5, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_rotunda_2', clusterId: 'item_box_rotunda', slotIndex: 1, x: 215, y: 1.2, z: -176.5, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_rotunda_3', clusterId: 'item_box_rotunda', slotIndex: 2, x: 215, y: 1.2, z: -173.5, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_rotunda_4', clusterId: 'item_box_rotunda', slotIndex: 3, x: 215, y: 1.2, z: -170.5, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_avenue_1', clusterId: 'item_box_avenue', slotIndex: 0, x: 106.8, y: 1.2, z: 11.8, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_avenue_2', clusterId: 'item_box_avenue', slotIndex: 1, x: 108.9, y: 1.2, z: 13.9, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_avenue_3', clusterId: 'item_box_avenue', slotIndex: 2, x: 111.1, y: 1.2, z: 16.1, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_avenue_4', clusterId: 'item_box_avenue', slotIndex: 3, x: 113.2, y: 1.2, z: 18.2, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_post_landing_1', clusterId: 'item_box_post_landing', slotIndex: 0, x: -112.2, y: 1.2, z: -31.1, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_post_landing_2', clusterId: 'item_box_post_landing', slotIndex: 1, x: -110.8, y: 1.2, z: -33.7, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_post_landing_3', clusterId: 'item_box_post_landing', slotIndex: 2, x: -109.2, y: 1.2, z: -36.3, radiusMeters: 1.3, respawnTimeSec: 3.5 },
+        { id: 'item_box_post_landing_4', clusterId: 'item_box_post_landing', slotIndex: 3, x: -107.8, y: 1.2, z: -38.9, radiusMeters: 1.3, respawnTimeSec: 3.5 }
+      ];
+      this.itemBoxSystem = new ItemBoxSystem(defaultBoxes);
+      this.worldItems = new WorldItems();
+      this.itemRoller = new ItemRoller(new ItemRng(this.config.seed || 1337));
+    }
+
+    if (this.rules.hazardsEnabled) {
+      this.hazardSystem = new HazardSystem();
+    }
 
     this.initializeKarts();
   }
@@ -99,7 +154,12 @@ export class RaceSession {
         lapTracker,
         rescueSystem,
         prevPos: { x: slot.x, y: slot.y, z: slot.z },
-        finished: false
+        finished: false,
+        heldItem: null,
+        rouletteTimerSec: 0,
+        hitReaction: new HitReaction(),
+        itemBrain: new ItemBrain(),
+        shieldRemainingSec: 0
       });
     } else {
       // Quick Race: 8 Karts (7 AI + 1 Player in slot 8)
@@ -154,7 +214,12 @@ export class RaceSession {
           lapTracker,
           rescueSystem,
           prevPos: { x: slot.x, y: slot.y, z: slot.z },
-          finished: false
+          finished: false,
+          heldItem: null,
+          rouletteTimerSec: 0,
+          hitReaction: new HitReaction(),
+          itemBrain: new ItemBrain(),
+          shieldRemainingSec: 0
         });
       }
     }
@@ -220,6 +285,16 @@ export class RaceSession {
         input = { throttle: 0, brake: 0, steer: 0, drift: false, lookBehind: false, bell: false, trick: false };
       }
 
+      // If control locked by hit reaction, neutralize steering and throttle
+      if (entry.hitReaction.isControlLocked()) {
+        input = {
+          ...input,
+          throttle: 0,
+          steer: 0,
+          drift: false
+        };
+      }
+
       // Check rescue
       const currState = entry.controller.getState();
       const lastGate = this.track.checkpoints[entry.lapTracker.getState().lastPassedGateIndex] || null;
@@ -279,7 +354,136 @@ export class RaceSession {
       KartCollisionSystem.resolveCollisions(collisionParticipants);
     }
 
-    // 3. Update Standings
+    // 3. M5 Items & Projectiles Processing (Only if enabled)
+    if (this.rules.itemsEnabled && this.itemBoxSystem && this.worldItems && this.itemRoller) {
+      this.itemBoxSystem.update(dt);
+
+      // Check item box pickups
+      for (let i = 0; i < this.karts.length; i++) {
+        const kart = this.karts[i];
+        if (kart.finished) continue;
+
+        const kState = kart.controller.getState();
+        if (!kart.heldItem && kart.rouletteTimerSec <= 0) {
+          const collectedBox = this.itemBoxSystem.checkCollision(kState.x, kState.y, kState.z, 1.0);
+          if (collectedBox) {
+            kart.rouletteTimerSec = 1.2;
+          }
+        }
+
+        if (kart.rouletteTimerSec > 0) {
+          kart.rouletteTimerSec -= dt;
+          if (kart.rouletteTimerSec <= 0) {
+            kart.rouletteTimerSec = 0;
+            const rank = this.rankingSystem.getKartRank(kart.id) || (i + 1);
+            kart.heldItem = this.itemRoller.rollItem(rank);
+          }
+        }
+
+        if (kart.shieldRemainingSec > 0) {
+          kart.shieldRemainingSec -= dt;
+        }
+
+        kart.hitReaction.update(dt);
+        if (kart.hitReaction.currentReaction !== 'none') {
+          const damp = kart.hitReaction.getSpeedMultiplier();
+          const curSpd = kart.controller.getState().speed;
+          if (Math.abs(curSpd) > 6.0) {
+            kart.controller.setState({ speed: curSpd * damp });
+          }
+        }
+      }
+
+      // Update world items & handle projectile hits
+      const kartPositions = this.karts.map((k) => {
+        const s = k.controller.getState();
+        return {
+          id: k.id,
+          x: s.x,
+          y: s.y,
+          z: s.z,
+          isImmune: k.hitReaction.isImmune(),
+          hasShield: k.shieldRemainingSec > 0
+        };
+      });
+
+      const itemHits = this.worldItems.update(dt, kartPositions);
+      for (const hit of itemHits) {
+        const target = this.karts.find((k) => k.id === hit.kartId);
+        if (target) {
+          if (hit.hitReaction === 'none' && target.shieldRemainingSec > 0) {
+            target.shieldRemainingSec = 0;
+          } else if (hit.hitReaction !== 'none') {
+            const ok = target.hitReaction.triggerHit(hit.hitReaction);
+            if (ok) {
+              const s = target.controller.getState();
+              target.controller.setState({ speed: s.speed * target.hitReaction.getSpeedMultiplier() });
+            }
+          }
+        }
+      }
+
+      // Execute Player Item
+      if (playerKart && playerKart.heldItem && playerInput.useItem && playerKart.rouletteTimerSec <= 0) {
+        this.executeKartItem(playerKart, playerInput.aimBack || false);
+      }
+
+      // Execute AI Items
+      for (let i = 0; i < this.karts.length; i++) {
+        const k = this.karts[i];
+        if (k.isPlayer || k.finished || !k.heldItem || k.rouletteTimerSec > 0) continue;
+
+        k.itemBrain.update(dt);
+        const kState = k.controller.getState();
+        const otherPositions = this.karts
+          .filter((other) => other.id !== k.id)
+          .map((other) => {
+            const s = other.controller.getState();
+            return { id: other.id, x: s.x, y: s.y, z: s.z, isImmune: other.hitReaction.isImmune() };
+          });
+
+        const decision = k.itemBrain.evaluate(
+          k.heldItem,
+          k.driver.personality.skill || 1.0,
+          { x: kState.x, y: kState.y, z: kState.z, yaw: kState.rotation, speed: kState.speed },
+          otherPositions,
+          this.worldItems.getItems()
+        );
+
+        if (decision.useItem) {
+          this.executeKartItem(k, decision.aimBack);
+        }
+      }
+    }
+
+    // 4. M5 Street Hazards Processing (Only if enabled)
+    if (this.rules.hazardsEnabled && this.hazardSystem) {
+      const hazardKartData = this.karts.map((k) => {
+        const s = k.controller.getState();
+        return {
+          id: k.id,
+          x: s.x,
+          y: s.y,
+          z: s.z,
+          isImmune: k.hitReaction.isImmune(),
+          isBoosting: Boolean(s.boost?.active)
+        };
+      });
+
+      const hazardHits = this.hazardSystem.update(dt, hazardKartData);
+      for (const h of hazardHits) {
+        const target = this.karts.find((k) => k.id === h.kartId);
+        if (target) {
+          const ok = target.hitReaction.triggerHit(h.hitReaction);
+          if (ok) {
+            const s = target.controller.getState();
+            target.controller.setState({ speed: s.speed * target.hitReaction.getSpeedMultiplier() });
+          }
+        }
+      }
+    }
+
+    // 5. Update Standings
     const standings = this.rankingSystem.updateStandings();
     const playerRank = this.rankingSystem.getKartRank(playerKart.id);
     const playerLapState = playerKart.lapTracker.getState(this.raceTimeMs);
@@ -296,6 +500,61 @@ export class RaceSession {
     };
   }
 
+  private executeKartItem(kart: SessionKartEntry, aimBack: boolean): void {
+    if (!kart.heldItem) return;
+    const itemType = kart.heldItem;
+    kart.heldItem = null;
+
+    const s = kart.controller.getState();
+
+    switch (itemType) {
+      case 'malai_cha': {
+        kart.controller.giveBoost('boost_pad', 0.65, 2.5);
+        break;
+      }
+      case 'parasol_shield': {
+        kart.shieldRemainingSec = 7.5;
+        break;
+      }
+      case 'naga_fuchka': {
+        if (this.worldItems) {
+          this.worldItems.spawnNagaFuchka(kart.id, s.x, s.y, s.z, s.rotation, aimBack);
+        }
+        break;
+      }
+      case 'mishti_doi': {
+        if (this.worldItems) {
+          this.worldItems.spawnMishtiDoi(kart.id, s.x, s.y, s.z, s.rotation);
+        }
+        break;
+      }
+      case 'rickshaw_bell': {
+        for (const other of this.karts) {
+          if (other.id === kart.id) continue;
+          const os = other.controller.getState();
+          const dist = Math.hypot(os.x - s.x, os.z - s.z);
+          if (dist <= 6.0 && !other.hitReaction.isImmune()) {
+            if (other.shieldRemainingSec > 0) {
+              other.shieldRemainingSec = 0;
+            } else {
+              other.hitReaction.triggerHit('stun');
+            }
+          }
+        }
+        break;
+      }
+      case 'ghuri_kite': {
+        const standings = this.rankingSystem.getStandings();
+        const leader = standings[0];
+        const targetId = leader && leader.kartId !== kart.id ? leader.kartId : this.karts[0].id;
+        if (this.worldItems) {
+          this.worldItems.spawnGhuriKite(kart.id, s.x, s.y, s.z, targetId);
+        }
+        break;
+      }
+    }
+  }
+
   getKarts(): ReadonlyArray<SessionKartEntry> {
     return this.karts;
   }
@@ -306,6 +565,33 @@ export class RaceSession {
 
   getStandings(): ReadonlyArray<StandingEntry> {
     return this.rankingSystem.getStandings();
+  }
+
+  getItemBoxSystem(): ItemBoxSystem | undefined {
+    return this.itemBoxSystem;
+  }
+
+  getWorldItems(): WorldItems | undefined {
+    return this.worldItems;
+  }
+
+  usePlayerItem(aimBack: boolean = false): void {
+    const player = this.getPlayerKart();
+    if (player && player.heldItem) {
+      this.executeKartItem(player, aimBack);
+    }
+  }
+
+  givePlayerItem(item: ItemType): void {
+    const player = this.getPlayerKart();
+    if (player) {
+      player.heldItem = item;
+      player.rouletteTimerSec = 0;
+    }
+  }
+
+  getHazardSystem(): HazardSystem | undefined {
+    return this.hazardSystem;
   }
 
   getFinalResults(exitReason: 'finish' | 'user' | 'error' = 'finish'): RaceResult {

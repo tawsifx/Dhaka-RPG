@@ -426,22 +426,45 @@
 
 ---
 
-### ADR 028: AI Kinematics, LapTracker Checkpoint Margin & Continuous Progress (M5 Carry-Over Part A1)
+### ADR 029: Multi-Channel Parallel Download Manager with Chunked Range Requests (M5 Part B0)
 
 - **Context:**  
-  Prior M4 headless balancing reports exhibited high DNF rates (up to 87.5% single-finisher cutoffs) caused by several compounding issues:
-  1. *Inverted Drift Yaw Rate:* Line 336 of `KartController.ts` applied `angularVel = this.driftSystem.getDriftYawRate(steer)` without the negative sign required to match standard steering (`-steer * handling`), causing drifting karts to turn outward away from apexes.
-  2. *Braking Cancelling Drift in AI:* In `AiDriver.ts`, applying brake when approaching corners immediately cancelled drift states in `DriftSystem`, causing understeer off cliffs.
-  3. *Checkpoint Gate Margin & Banking:* Fuller Road Sprint road width reaches 21.95m at corners, but gates were fixed at 18.0m width. Karts clipping curbs crossed at lateral offsets $\sim 11.18$m, failing the hard 9.0m check and freezing `nextGateIndex`.
-  4. *Distance Travelled vs Spline Progress:* In `RaceSession.ts`, rubber-banding compared raw odometer `distanceTravelled`, which falsely boosted rivals starting 49m ahead on the grid.
+  External asset fetching for 3D race tracks and models (e.g. tracks, sound files, meshes > 256 KB) required high-throughput, resilient downloads with fallback support for servers without HTTP range support, retry handling on flaky connections, SHA-256 verification, and strict lockfile pinning.
 - **Decision:**  
-  1. Corrected drift yaw sign in `KartController.ts`: `angularVel = -this.driftSystem.getDriftYawRate(steer);`.
-  2. Zeroed brake while drifting in `AiDriver.ts`, managing cornering speed purely through lookahead throttle modulation.
-  3. Added a 25% curb and banking margin to `LapTracker.ts` (`lateralDist > gate.width * 0.5 * 1.25` and `verticalDist > gate.height * 0.5 * 1.25`), enabling legitimate 11.18m apex clips while continuing to reject out-of-sequence $x = 12.0$m crossings. Added single-gate lookahead recovery.
-  4. Standardized rubber-banding progress in `RaceSession.ts` to continuous track distance: `(lap - 1) * trackLen + splineDist`.
-  5. Calibrated difficulty parameters: Gorom Cha (0.84 speed, 0.70 skill, 1.8 mistake), Beshi Gorom (0.95 speed, 0.95 skill, 1.0 mistake), Naga Jhal (1.03 speed, 1.18 skill, 0.35 mistake).
+  1. Implement `scripts/lib/parallel-download.mjs` providing `downloadFile()` with:
+     - `Accept-Ranges: bytes` probe via `probeUrl()`.
+     - Chunked downloads across 4 concurrent channels for range-supporting servers.
+     - Fallback to streaming single-stream download when ranges are unsupported (`501/416` or no header).
+     - Exponential backoff retry with jitter up to `maxRetries = 3`.
+     - SHA-256 integrity verification against expected hash or writing to `scripts/race/downloads.lock.json`.
+  2. Implement CLI runner `scripts/race/download.mjs` (`npm run race:dl`) and benchmark runner `scripts/race/download-benchmark.mjs` (`npm run race:dl:bench`).
+  3. Integrated with `scripts/race/stk/fetch-stk.mjs` to eliminate all ad-hoc downloading.
 - **Consequences:**  
-  150-seed Monte Carlo simulation achieves 100% field finish rate across all tiers, 0.02 rescues/kart, 0 stuck rescues, strictly bounded $\pm 6\%$ rubber-banding, and strictly monotonic winning pace: Gorom Cha (172.4s) $\ge$ Beshi Gorom (167.6s) $\ge$ Naga Jhal (157.9s).
+  Zero flake downloads across build steps and CI, verified with 25 unit tests in `tests/race/downloader.test.ts`.
+
+---
+
+### ADR 030: Dhaka Street Items & Hazards Ported from SuperTuxKart (M5 Part B)
+
+- **Context:**  
+  To introduce Mario Kart / SuperTuxKart style dynamic racing combat, we needed a robust item system (pickups, weights, projectiles, stationary traps, shields, homing flyers, hit reactions, and AI decision logic) customized for Dhaka street racing aesthetics while preserving strict gameplay invariance when items and hazards are disabled (`RaceRules { itemsEnabled: false, hazardsEnabled: false }`).
+- **Decision:**  
+  1. **SuperTuxKart C++ Architecture Port:** Ported probability distributions and algorithms from SuperTuxKart's `data/powerup.xml`, `powerup_manager.cpp`, `flyable.cpp`, and `skidding_ai.cpp`.
+  2. **1000-Sum Rank-Based Distribution:** Implemented in `src/config/itemWeights.race.json` across 8 positions (Rank 1: heavy defensive bias with 35% Mishti Doi, 25% Parasol Shield, 0% Ghuri Kite; Rank 8: catch-up bias with 45% Malai Cha, 25% Ghuri Kite).
+  3. **Dhaka Street Item Theming (`items.race.db.ts`):**
+     - *Malai Cha:* +6.0 m/s sustained nitro boost for 2.5s.
+     - *Naga Fuchka:* Ballistic red-chili projectile (35 m/s, forward or backward, 3 wall bounces).
+     - *Mishti Doi:* Stationary sweet yogurt trap causing spin-out.
+     - *Parasol Shield:* 7.5s protective dome deflecting 1 projectile.
+     - *Rickshaw Bell:* Radial sonic shockwave stunning rivals within 6m.
+     - *Ghuri Kite:* Homing kite flyer targeting 1st place leader with 38 m/s speed and explosion hit.
+  4. **Item Boxes & Hazards:** Data-driven `items.json` generated by `npm run race:items` with 16 tiffin boxes (3.5s respawn) and street hazards (crossing rickshaws, fallen Krishnachura flower petal slicks).
+  5. **HitReaction State Machine (`HitReaction.ts`):** Deterministic states (`spin_out`, `explosion`, `squash`, `stun`), speed damping, control locks, visual juice offsets (yaw spin, tumble pitch, squash scale), and post-hit invulnerability windows.
+  6. **AI ItemBrain (`ItemBrain.ts`):** Ported from STK `skidding_ai.cpp` with forward projectile targeting cone ($< 38$m, $|\Delta\theta| < 0.38$ rad), backward defense ($< 16$m, $|\Delta\theta| < 0.30$ rad), and shield deployment on incoming threat.
+  7. **Strict Gameplay Invariance:** When `itemsEnabled = false`, zero item allocations occur, keeping all M2/M3/M4 goldens bit-identical.
+- **Consequences:**  
+  30-race Monte-Carlo balancing simulation achieves 99.6% field completion with active items/hazards, strict tier monotonicity, and determinism. Verified by 32 unit tests in `race_m5.test.ts` and 9-phase E2E Playwright test in `test_race_m5.js`.
+
 
 
 

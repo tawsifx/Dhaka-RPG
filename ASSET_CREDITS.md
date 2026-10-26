@@ -38,3 +38,18 @@ The 3D rickshaw racing mini-game ("Tring-Tring Grand Prix") incorporates selecte
 - **Kenney Assets**: Particle textures and UI icons (CC0 1.0 Universal).
 - **Phaser 3**: Phaser game engine (MIT License).
 - **Three.js**: 3D library (MIT License).
+
+---
+
+## 3. SuperTuxKart Code & Algorithmic Design (Milestone 5 Items & AI)
+
+Portions of the item probabilities, AI item evaluation heuristics, and projectile kinematics are derived and ported to deterministic TypeScript from **SuperTuxKart**:
+
+- **Upstream Repository**: [https://github.com/supertuxkart/stk-code](https://github.com/supertuxkart/stk-code)
+- **License**: GNU General Public License v2.0 or later (GPL-2.0+)
+- **Components Ported**:
+  - `data/powerup.xml`: 1000-sum probability distribution across 8 positions (ported into `src/config/itemWeights.race.json`).
+  - `src/items/powerup_manager.cpp`: Item collection, roulette cooldown timer, and probability scaling.
+  - `src/items/flyable.cpp`: Projectile flight constants, wall bounce mechanics, and homing kite tracking.
+  - `src/karts/controller/skidding_ai.cpp`: AI item usage decision logic, forward targeting cone angle/distance thresholds, and defensive rear-firing checks (ported into `src/scenes/minigames/race/ai/ItemBrain.ts`).
+  - `src/animations/explosion_animation.cpp`: Hit reaction pitch tumble and speed scrub constants (ported into `src/scenes/minigames/race/core/HitReaction.ts`).

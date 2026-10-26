@@ -4,6 +4,7 @@ import { RaceActionInput } from '../../../../types/race.types';
 export class RaceInput {
   private keysDown: Set<string> = new Set();
   private bellRequested = false;
+  private itemRequested = false;
   private exitRequested = false;
   private resetRequested = false;
   private f6JustPressed = false;
@@ -41,8 +42,9 @@ export class RaceInput {
   private onKeyDown(e: KeyboardEvent): void {
     this.keysDown.add(e.code);
 
-    if (e.code === 'Space') {
+    if (e.code === 'Space' || e.code === 'KeyE') {
       this.bellRequested = true;
+      this.itemRequested = true;
       e.preventDefault();
     } else if (e.code === 'Escape') {
       this.exitRequested = true;
@@ -119,6 +121,10 @@ export class RaceInput {
 
   triggerBell(): void {
     this.bellRequested = true;
+  }
+
+  triggerItem(): void {
+    this.itemRequested = true;
   }
 
   triggerExit(): void {
@@ -230,6 +236,9 @@ export class RaceInput {
     const bell = this.bellRequested || padBell;
     this.bellRequested = false;
 
+    const useItem = this.itemRequested || padBell;
+    this.itemRequested = false;
+
     const exit = this.exitRequested || padExit;
     this.exitRequested = false;
 
@@ -244,6 +253,8 @@ export class RaceInput {
       bell,
       lookBehind,
       trick,
+      useItem,
+      aimBack: lookBehind,
       exit,
       reset
     };

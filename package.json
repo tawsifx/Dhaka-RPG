@@ -21,6 +21,7 @@
     "test:race:m5": "node scripts/test_race_m5.js",
     "race:validate": "tsx scripts/race/validate-track.mjs",
     "race:simulate": "tsx scripts/race/simulate-race.mjs",
+    "race:items": "tsx scripts/race/build-items.mjs",
     "race:dl": "node scripts/race/download.mjs",
     "race:dl:bench": "node scripts/race/download-benchmark.mjs",
     "race:stk:fetch": "node scripts/race/stk/fetch-stk.mjs",

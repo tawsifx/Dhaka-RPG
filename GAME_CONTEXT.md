@@ -1252,8 +1252,12 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 - `npm run test:race:m3`: Run Playwright E2E verification test suite for M3 track pipeline (lazy loading, countdown, minimap, flyover bridge elevation, ramp jump, lantern rescue, 3 full laps, finish modal splits, 10-cycle zero-leak audit).
 - `npm run test:race:m35`: Run Playwright E2E verification test suite for M3.5 SuperTuxKart art pass (graphics quality presets, dressed Fuller Road circuit, zero 2D overworld leaks).
 - `npm run test:race:m4`: Run Playwright E2E verification test suite for M4 rivals (8-kart grid, AI drivers, multi-kart collisions, ranking standings, rubber-band, podium finish, 10-cycle zero-leak audit).
+- `npm run test:race:m5`: Run Playwright E2E verification test suite for M5 items & hazards (item boxes, roulette slot, Malai Cha nitro, Naga Fuchka rocket, Mishti Doi puddles, hit reaction states, F8 debug overlay, 10-cycle zero-leak audit).
 - `npm run race:validate`: Run CLI track data, geometry, and headless autopilot 3-lap simulation validator.
-- `npm run race:simulate`: Run headless 8-kart Monte-Carlo race simulation harness across difficulty tiers with determinism and spread validation.
+- `npm run race:simulate`: Run headless 8-kart Monte-Carlo race simulation harness across difficulty tiers with determinism, spread validation, and items/hazards.
+- `npm run race:items`: Offline item box and hazard builder generating `items.json` for tracks.
+- `npm run race:dl`: Multi-channel parallel download manager CLI for high-throughput asset fetching.
+- `npm run race:dl:bench`: Throughput benchmark comparing parallel range downloads vs single-stream.
 - `npm run race:build`: Offline track builder compiling spline, prop instances, collision geometry, and `track.json`.
 - `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
@@ -1274,11 +1278,12 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 5. Run `npm run test:race:m2` — Playwright end-to-end 3D race M2 feel test verified (drift sparks, mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
 6. Run `npm run test:race:m3` — Playwright end-to-end 3D race M3 track pipeline verified (flyover bridge, ramp, rescue, 3 laps, results modal, 10-cycle zero-leak audit).
 7. Run `npm run test:race:m4` — Playwright end-to-end 3D race M4 rivals verified (8-kart grid, AI drivers, collision resolution, position badge, standings ladder, podium finish, 10-cycle zero-leak audit).
-8. Run `npm run race:validate` — 3 full laps simulated with 100% checkpoint passing.
-9. Run `npm run race:simulate` — headless Monte-Carlo race simulation passing with valid spread and determinism.
-10. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
-11. Run `npm run build` — bundle compiles cleanly with no missing assets.
-12. Deploy to Cloudflare Pages (`npm run deploy:cf`) and Vercel (`npx vercel --prod --yes`).
+8. Run `npm run test:race:m5` — Playwright end-to-end 3D race M5 items & hazards verified (item boxes, roulette slot, Malai Cha boost, Naga Fuchka rocket, Mishti Doi puddles, hit reaction states, F8 debug overlay, 10-cycle zero-leak audit).
+9. Run `npm run race:validate` — 3 full laps simulated with 100% checkpoint passing.
+10. Run `npm run race:simulate` — headless Monte-Carlo race simulation passing with valid spread, items/hazards, and determinism.
+11. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
+12. Run `npm run build` — bundle compiles cleanly with no missing assets.
+13. Deploy to Cloudflare Pages (`npm run deploy:cf`) and Vercel (`npx vercel --prod --yes`).
 
 ### 10.20 Modular Filesystem Architecture & Subsystem Decomposition (v4.0.0 Overhaul)
 To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.ts`), the filesystem architecture was restructured into dedicated, single-responsibility engine subsystems with idiomatic barrel exports:
@@ -1289,7 +1294,9 @@ src/
 ├── main.ts                      # Slim application bootloader (58 lines)
 ├── types/                       # Core TypeScript definitions (rpg, npc, stardew, race + index.ts)
 ├── config/                      # Configuration, manifest, & databases + index.ts
-│   └── drivers.race.db.ts       # 8-driver roster (Moon Walker + 7 rivals), stats, colors, difficulty tiers
+│   ├── drivers.race.db.ts       # 8-driver roster (Moon Walker + 7 rivals), stats, colors, difficulty tiers
+│   ├── items.race.db.ts         # 6 Dhaka street items (Malai Cha, Naga Fuchka, Mishti Doi, Parasol, Bell, Ghuri Kite)
+│   └── itemWeights.race.json    # 1000-sum probability distribution across 8 positions (ported from SuperTuxKart)
 ├── state/                       # Reactive state machines (DateState, RPGStats, SaveManager + index.ts)
 ├── audio/                       # SFX & Procedural audio (SoundEngine + index.ts)
 ├── graphics/                    # Procedural & External asset adapters + index.ts
@@ -1304,14 +1311,14 @@ src/
     │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
     │   ├── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
     │   └── race/                # Three.js 3D Rickshaw Race ("Tring-Tring Grand Prix")
-    │       ├── ai/              # Pure AI drivers (AiDriver), avoidance sensors, rubber-band & seeded PRNG (AiRng)
-    │       ├── core/            # KartController, KartCollisionSystem, RaceSession, RankingSystem, BvhGroundQuery, BvhCollisionWorld
+    │       ├── ai/              # Pure AI drivers (AiDriver, ItemBrain), avoidance sensors, rubber-band & seeded PRNG (AiRng)
+    │       ├── core/            # KartController, KartCollisionSystem, RaceSession, RankingSystem, ItemBoxSystem, HitReaction, WorldItems, HazardSystem, BvhGroundQuery, BvhCollisionWorld
     │       ├── track/           # TrackSpline, LapTracker, RaceStateMachine, RescueSystem, TrackLoader, TrackValidator, TrackAutopilot
-    │       ├── render/          # Three.js renderer, chase camera, arena builder, kart visuals, BillboardDriver, RivalKartRenderer
+    │       ├── render/          # Three.js renderer, chase camera, arena builder, kart visuals, ItemRenderer, HazardRenderer, BillboardDriver, RivalKartRenderer
     │       ├── audio/           # Sample-based CC0 engine/skid audio loop & procedural fallbacks
     │       ├── input/           # Action-map inputs (keyboard, gamepad API, touch)
-    │       ├── ui/              # DOM HUD, speedometer, minimap radar, loading screen, pre-race panel, results modal
-    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, F6 track debug overlay, F7 AI overlay, replay recorder
+    │       ├── ui/              # DOM HUD, speedometer, minimap radar, loading screen, pre-race panel, results modal, ItemSlotHud, IncomingWarning
+    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, F6 track debug overlay, F7 AI overlay, F8 items debug, replay recorder
     │       ├── RickshawRaceEngine.ts # Master lifecycle coordinator (enter, loop, exit, dispose)
     │       └── index.ts         # Clean barrel export
     ├── world/                   # Architectural & world builders + index.ts
@@ -1332,8 +1339,8 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
 2. **Unrestricted External Asset Policy (§0+ Art Policy)**: Visuals come from **EXTERNAL ART**. This is a strictly personal, non-commercial project with **zero licensing or copyright concerns**—you are fully authorized to source, adapt, and integrate external pixel art, sprites, tilesets, and audio from any source (Pokémon, Studio Ghibli, Stardew Valley, etc.). Never write new procedural canvas generators for weapons, mobs, or decals; place authentic external pixel art into `public/assets/` and register them in `src/config/assetSpecs.manifest.ts`. Missing assets safely fallback to labeled placeholder rectangles registered via `ExternalAssetAdapter`.
 3. **Preserve Dialogue Integrity**: Maintain the rich cultural Bengali and English dialogues, food names, and authentic Dhaka university landmarks.
 4. **Mandatory Synchronization**: If you add an NPC, modify an item, alter world dimensions, or introduce a new system:
-   - Update the code.
-   - Update `src/config/assetSpecs.manifest.ts`.
-   - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
+    - Update the code.
+    - Update `src/config/assetSpecs.manifest.ts`.
+    - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 26, 2026 — Art Pass M3.5 ("Tring-Tring Grand Prix") SuperTuxKart Dressing & Master Art Policy*
+*Last Updated: October 26, 2026 — Milestone 5 ("Tring-Tring Grand Prix") Dhaka Street Items, Hazards & Parallel Downloader*

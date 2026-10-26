@@ -24,6 +24,12 @@ import { RivalKartRenderer } from './render/RivalKartRenderer';
 import { AiDebugOverlay } from './debug/AiDebugOverlay';
 import { PropInstancer } from './render/PropInstancer';
 import { RaceGallery } from './ui/RaceGallery';
+import { ItemRenderer } from './render/ItemRenderer';
+import { HazardRenderer } from './render/HazardRenderer';
+import { ItemSlotHud } from './ui/ItemSlotHud';
+import { IncomingWarning } from './ui/IncomingWarning';
+import { ItemsDebugOverlay } from './debug/ItemsDebugOverlay';
+import { ItemType, HitReactionType } from '../../../config/items.race.db';
 import { ALL_DRIVERS, RIVAL_DRIVERS } from '../../../config/drivers.race.db';
 import { DriverProfile } from '../../../types/race.types';
 import { SoundEngine } from '../../../audio/SoundEngine';
@@ -56,6 +62,11 @@ export class RickshawRaceEngine {
   private aiDebugOverlay: AiDebugOverlay | null = null;
   private propInstancer: PropInstancer | null = null;
   private gallery: RaceGallery | null = null;
+  private itemRenderer: ItemRenderer | null = null;
+  private hazardRenderer: HazardRenderer | null = null;
+  private itemSlotHud: ItemSlotHud | null = null;
+  private incomingWarning: IncomingWarning | null = null;
+  private itemsDebugOverlay: ItemsDebugOverlay | null = null;
   private driverProfilesMap: Map<string, DriverProfile> = new Map();
 
   private animFrameId: number | null = null;
@@ -204,13 +215,14 @@ export class RickshawRaceEngine {
           this.driverProfilesMap.set(d.id, d);
         }
 
-        // Initialize 8-kart Race Session (Quick Race)
+        // Initialize 8-kart Race Session (Quick Race) with M5 items & hazards
         this.session = new RaceSession({
           track: this.trackRuntime.definition,
           mode: 'quick_race',
           difficulty: 'beshi_gorom',
           groundQuery: this.trackRuntime.groundQuery,
-          collisionWorld: this.trackRuntime.collisionWorld
+          collisionWorld: this.trackRuntime.collisionWorld,
+          rules: { itemsEnabled: true, hazardsEnabled: true }
         });
 
         this.controller = this.session.getPlayerKart().controller;
@@ -228,6 +240,13 @@ export class RickshawRaceEngine {
           this.container,
           this.session
         );
+
+        // Initialize M5 Items & Hazards Visual & HUD Systems
+        this.itemRenderer = new ItemRenderer(this.renderer.scene);
+        this.hazardRenderer = new HazardRenderer(this.renderer.scene);
+        this.itemSlotHud = new ItemSlotHud(this.container);
+        this.incomingWarning = new IncomingWarning(this.container);
+        this.itemsDebugOverlay = new ItemsDebugOverlay(this.container, this.session);
 
         this.session.startRace();
 
@@ -397,7 +416,28 @@ export class RickshawRaceEngine {
       getSession: () => this.session,
       getRivals: () => this.session?.getKarts().filter((k) => !k.isPlayer),
       getStandings: () => this.session?.getStandings(),
-      toggleAiDebug: (force?: boolean) => this.aiDebugOverlay?.toggle(force)
+      toggleAiDebug: (force?: boolean) => this.aiDebugOverlay?.toggle(force),
+      giveItem: (item: ItemType) => {
+        const p = this.session?.getPlayerKart();
+        if (p) {
+          p.heldItem = item;
+          p.rouletteTimerSec = 0;
+        }
+      },
+      useItem: (aimBack: boolean = false) => {
+        this.session?.usePlayerItem(aimBack);
+      },
+      triggerHit: (reaction: HitReactionType) => {
+        const p = this.session?.getPlayerKart();
+        if (p) {
+          const ok = p.hitReaction.triggerHit(reaction);
+          if (ok) {
+            const s = p.controller.getState();
+            p.controller.setState({ speed: s.speed * p.hitReaction.getSpeedMultiplier() });
+          }
+        }
+      },
+      toggleItemsDebug: () => this.itemsDebugOverlay?.toggle()
     };
   }
 
@@ -562,6 +602,48 @@ export class RickshawRaceEngine {
         lapState.currentLap,
         currState.surface
       );
+
+      // Update M5 Item & Hazard Renderers & HUD
+      if (this.session) {
+        const playerKart = this.session.getPlayerKart();
+        if (this.itemSlotHud && playerKart) {
+          this.itemSlotHud.update(playerKart.heldItem, playerKart.rouletteTimerSec, () => {
+            if (this.input) this.input.triggerItem();
+          });
+        }
+
+        if (this.itemRenderer) {
+          this.itemRenderer.update(
+            this.session.getItemBoxSystem(),
+            this.session.getWorldItems()
+          );
+        }
+
+        if (this.hazardRenderer) {
+          this.hazardRenderer.update(this.session.getHazardSystem());
+        }
+
+        if (this.itemsDebugOverlay) {
+          this.itemsDebugOverlay.update();
+        }
+
+        if (this.incomingWarning && playerKart) {
+          const pState = playerKart.controller.getState();
+          const worldItems = this.session.getWorldItems()?.getItems() || [];
+          const incoming = worldItems.find((w) => {
+            if (w.ownerId === playerKart.id) return false;
+            const dist = Math.hypot(w.x - pState.x, w.z - pState.z);
+            return dist < 25.0;
+          });
+          if (incoming) {
+            const dist = Math.hypot(incoming.x - pState.x, incoming.z - pState.z);
+            const icon = incoming.type === 'ghuri_kite' ? '🪁' : '🌶️';
+            this.incomingWarning.show(icon, dist);
+          } else {
+            this.incomingWarning.hide();
+          }
+        }
+      }
     }
 
     // 4. Render interpolation between previous tick and current tick
@@ -797,6 +879,31 @@ export class RickshawRaceEngine {
     if (this.gallery) {
       this.gallery.close();
       this.gallery = null;
+    }
+
+    if (this.itemRenderer) {
+      this.itemRenderer.dispose();
+      this.itemRenderer = null;
+    }
+
+    if (this.hazardRenderer) {
+      this.hazardRenderer.dispose();
+      this.hazardRenderer = null;
+    }
+
+    if (this.itemSlotHud) {
+      this.itemSlotHud.dispose();
+      this.itemSlotHud = null;
+    }
+
+    if (this.incomingWarning) {
+      this.incomingWarning.dispose();
+      this.incomingWarning = null;
+    }
+
+    if (this.itemsDebugOverlay) {
+      this.itemsDebugOverlay.dispose();
+      this.itemsDebugOverlay = null;
     }
 
     this.session = null;

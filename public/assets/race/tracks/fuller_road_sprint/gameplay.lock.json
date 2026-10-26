@@ -4,5 +4,7 @@
   "collisionGlbSha256": "5f6450cee98d67fe84a520c22cb1cb902a5db0d2a7bf10f9f3c310a77eff15be",
   "collisionSizeBytes": 264424,
   "gameplayDataSha256": "7da3a1e381ccbff99f62fb684cb6701659482510b328accae65035d3d2cabd45",
-  "notes": "Gameplay lock for M3.5 Art Pass. Collision geometry and track gameplay fields must remain 100% byte-identical."
+  "notes": "Gameplay lock for M3.5 Art Pass. Collision geometry and track gameplay fields must remain 100% byte-identical.",
+  "itemsSha256": "507c0fa723701ea7473a19851bc412fcccf8b2fd8a360843f580199d37d70711",
+  "itemsCount": 16
 }

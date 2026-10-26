@@ -1,0 +1,173 @@
+{
+  "trackId": "fuller_road_sprint",
+  "version": 1,
+  "boxCount": 16,
+  "clusters": [
+    "item_box_straight",
+    "item_box_rotunda",
+    "item_box_avenue",
+    "item_box_post_landing"
+  ],
+  "boxes": [
+    {
+      "id": "item_box_straight_1",
+      "clusterId": "item_box_straight",
+      "slotIndex": 0,
+      "x": -4.5,
+      "y": 1.2,
+      "z": -60,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_straight_2",
+      "clusterId": "item_box_straight",
+      "slotIndex": 1,
+      "x": -1.5,
+      "y": 1.2,
+      "z": -60,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_straight_3",
+      "clusterId": "item_box_straight",
+      "slotIndex": 2,
+      "x": 1.5,
+      "y": 1.2,
+      "z": -60,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_straight_4",
+      "clusterId": "item_box_straight",
+      "slotIndex": 3,
+      "x": 4.5,
+      "y": 1.2,
+      "z": -60,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_rotunda_1",
+      "clusterId": "item_box_rotunda",
+      "slotIndex": 0,
+      "x": 215,
+      "y": 1.2,
+      "z": -179.5,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_rotunda_2",
+      "clusterId": "item_box_rotunda",
+      "slotIndex": 1,
+      "x": 215,
+      "y": 1.2,
+      "z": -176.5,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_rotunda_3",
+      "clusterId": "item_box_rotunda",
+      "slotIndex": 2,
+      "x": 215,
+      "y": 1.2,
+      "z": -173.5,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_rotunda_4",
+      "clusterId": "item_box_rotunda",
+      "slotIndex": 3,
+      "x": 215,
+      "y": 1.2,
+      "z": -170.5,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_avenue_1",
+      "clusterId": "item_box_avenue",
+      "slotIndex": 0,
+      "x": 106.82,
+      "y": 1.2,
+      "z": 11.82,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_avenue_2",
+      "clusterId": "item_box_avenue",
+      "slotIndex": 1,
+      "x": 108.94,
+      "y": 1.2,
+      "z": 13.94,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_avenue_3",
+      "clusterId": "item_box_avenue",
+      "slotIndex": 2,
+      "x": 111.06,
+      "y": 1.2,
+      "z": 16.06,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_avenue_4",
+      "clusterId": "item_box_avenue",
+      "slotIndex": 3,
+      "x": 113.18,
+      "y": 1.2,
+      "z": 18.18,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_post_landing_1",
+      "clusterId": "item_box_post_landing",
+      "slotIndex": 0,
+      "x": -112.25,
+      "y": 1.2,
+      "z": -31.1,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_post_landing_2",
+      "clusterId": "item_box_post_landing",
+      "slotIndex": 1,
+      "x": -110.75,
+      "y": 1.2,
+      "z": -33.7,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_post_landing_3",
+      "clusterId": "item_box_post_landing",
+      "slotIndex": 2,
+      "x": -109.25,
+      "y": 1.2,
+      "z": -36.3,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    },
+    {
+      "id": "item_box_post_landing_4",
+      "clusterId": "item_box_post_landing",
+      "slotIndex": 3,
+      "x": -107.75,
+      "y": 1.2,
+      "z": -38.9,
+      "radiusMeters": 1.3,
+      "respawnTimeSec": 3.5
+    }
+  ]
+}

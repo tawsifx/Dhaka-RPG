@@ -141,6 +141,8 @@ export interface RaceActionInput {
   lookBehind: boolean;
   bell: boolean;
   trick: boolean;
+  useItem?: boolean;
+  aimBack?: boolean;
   reset?: boolean;
   exit?: boolean;
 }

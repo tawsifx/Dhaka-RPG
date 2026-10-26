@@ -1726,5 +1726,22 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       origin: { x: 0.5, y: 0.5 },
       styleSearchTags: ['race track props', 'instanced scenery gltf']
     }
+  },
+  'track-fuller-road-items': {
+    id: 'track-fuller-road-items',
+    name: 'Fuller Road Sprint Items & Hazards Manifest',
+    category: 'landmark',
+    description: 'Declarative item box clusters (tiffin boxes) and dynamic street hazards (crossing rickshaws, petal slicks) along Fuller Road.',
+    externalPath: 'assets/race/tracks/fuller_road_sprint/items.json',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'track-arena-flat',
+    logicalGridFootprint: { cols: 1, rows: 1 },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 1, height: 1 },
+      acceptedNativeSizes: ['JSON Manifest'],
+      sheetLayout: 'Declarative Items Map',
+      origin: { x: 0.5, y: 0.5 },
+      styleSearchTags: ['race items', 'tiffin boxes', 'street hazards']
+    }
   }
 };

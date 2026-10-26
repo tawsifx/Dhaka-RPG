@@ -11,6 +11,8 @@ import { DIFFICULTY_CONFIGS, RIVAL_DRIVERS, DEFAULT_PLAYER_DRIVER } from '../../
 const TRACK_ID = 'fuller_road_sprint';
 const NUM_SEEDS = parseInt(process.env.SEEDS || '50', 10);
 const DIFFICULTIES = ['gorom_cha', 'beshi_gorom', 'naga_jhal'];
+const ENABLE_ITEMS = process.argv.includes('--items');
+const ENABLE_HAZARDS = process.argv.includes('--hazards');
 
 const REFERENCE_BOT_PROFILE = {
   ...DEFAULT_PLAYER_DRIVER,
@@ -60,7 +62,8 @@ async function runSimulation() {
         difficulty: diff,
         seed,
         groundQuery: trackRuntime.groundQuery,
-        collisionWorld: trackRuntime.collisionWorld
+        collisionWorld: trackRuntime.collisionWorld,
+        rules: { itemsEnabled: ENABLE_ITEMS, hazardsEnabled: ENABLE_HAZARDS }
       });
 
       const refBot = new AiDriver(
