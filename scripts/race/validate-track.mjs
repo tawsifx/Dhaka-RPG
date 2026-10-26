@@ -120,14 +120,51 @@ async function validateTrack(trackId) {
     bvhCollisionWorld = new BvhCollisionWorld(mergedGround);
   }
 
-  // Check that all start slots lie on valid ground
-  for (const slot of trackData.startGrid) {
-    const res = groundQuery.queryGround(slot.x, slot.y, slot.z);
-    if (!res.onGround && Math.abs(slot.y - res.height) > 1.5) {
-      throw new Error(`Start grid slot ${slot.slot} at (${slot.x}, ${slot.z}) does not lie on ground (height diff: ${Math.abs(slot.y - res.height)})`);
+  // Check that all start slots lie on valid ground and do not overlap
+  if (trackData.startGrid.length < 8) {
+    throw new Error(`Track must provide at least 8 start grid slots for an 8-kart grid (found ${trackData.startGrid.length})`);
+  }
+  for (let i = 0; i < trackData.startGrid.length; i++) {
+    const slotA = trackData.startGrid[i];
+    const res = groundQuery.queryGround(slotA.x, slotA.y, slotA.z);
+    if (!res.onGround && Math.abs(slotA.y - res.height) > 1.5) {
+      throw new Error(`Start grid slot ${slotA.slot} at (${slotA.x}, ${slotA.z}) does not lie on ground (height diff: ${Math.abs(slotA.y - res.height)})`);
+    }
+    for (let j = i + 1; j < trackData.startGrid.length; j++) {
+      const slotB = trackData.startGrid[j];
+      const dist = Math.hypot(slotA.x - slotB.x, slotA.z - slotB.z);
+      if (dist < 2.5) {
+        throw new Error(`Start grid overlap between slots ${slotA.slot} and ${slotB.slot}: distance ${dist.toFixed(2)}m < 2.5m minimum`);
+      }
     }
   }
-  console.log(`  ✅ All ${trackData.startGrid.length} start grid slots lie on valid ground`);
+  console.log(`  ✅ All ${trackData.startGrid.length} start grid slots lie on valid ground with >= 2.5m non-overlapping spacing`);
+
+  // Validate aiRacingLine if present
+  if (trackData.aiRacingLine) {
+    if (!Array.isArray(trackData.aiRacingLine) || trackData.aiRacingLine.length < 50) {
+      throw new Error(`Invalid aiRacingLine: expected array with >= 50 points, got ${trackData.aiRacingLine?.length}`);
+    }
+    for (const p of trackData.aiRacingLine) {
+      if (typeof p.x !== 'number' || typeof p.y !== 'number' || typeof p.z !== 'number') {
+        throw new Error(`aiRacingLine point has invalid non-numeric coordinates`);
+      }
+      if (typeof p.targetSpeed !== 'number' || p.targetSpeed < 10 || p.targetSpeed > 35) {
+        throw new Error(`aiRacingLine point has out-of-bounds targetSpeed: ${p.targetSpeed}`);
+      }
+    }
+    console.log(`  ✅ AI Racing Line validated: ${trackData.aiRacingLine.length} points, speeds ${Math.min(...trackData.aiRacingLine.map(p => p.targetSpeed))} - ${Math.max(...trackData.aiRacingLine.map(p => p.targetSpeed))} m/s`);
+  }
+
+  // Validate shortcuts if present
+  if (trackData.shortcuts) {
+    for (const sc of trackData.shortcuts) {
+      if (!sc.id || !sc.entranceGateId || !sc.exitGateId) {
+        throw new Error(`Shortcut missing id or gate references: ${JSON.stringify(sc)}`);
+      }
+    }
+    console.log(`  ✅ Shortcuts validated: ${trackData.shortcuts.length} shortcut(s) verified`);
+  }
 
   // Check that all checkpoints lie on valid ground
   for (const gate of trackData.checkpoints) {

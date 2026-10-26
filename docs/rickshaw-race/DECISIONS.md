@@ -304,3 +304,62 @@
 - **Consequences:**  
   Simple loader, zero decoder cost; a clear trigger for adding compression with the art pass.
 
+---
+
+### ADR 019: Pure Pursuit Racing Line & Curvature-Aware AI Steering (M4)
+
+- **Context:**  
+  Rival karts need to drive realistically, smoothly hitting corner apexes, braking before sharp hairpins, and initiating drift on high-speed bends, without using physics shortcuts, teleports, or separate kinematics.
+- **Decision:**  
+  1. Offline generation (`scripts/race/build-racing-line.mjs`): Emits an optimal smoothed racing line into `track.json` with lateral offsets (outside-inside-outside apex trajectory), target cornering speeds derived from lateral grip ($a_{\text{lat}} \approx 14\text{ m/s}^2$), and ideal drift zones.
+  2. Pure pursuit tracking (`AiDriver.ts`): Dynamic lookahead distance $L = 6.0 + 0.45 \times \text{speed}$; proportional steering targeting racing line lookahead; curvature braking if heading error $> 0.45$ rad or current speed exceeds local target speed; anti-stuck reverse recovery.
+  3. Strict Fairness: AI drivers emit the exact same `RaceActionInput` actions as human players and run through the exact same `KartController` physics pipeline.
+- **Consequences:**  
+  AI drivers corner smoothly, drift when appropriate, recover from barriers, and produce realistic racing lap times (58s - 64s).
+
+---
+
+### ADR 020: Multi-Kart Collision Resolution & Mass Asymmetry (M4)
+
+- **Context:**  
+  With 8 karts racing together on a narrow track, karts must physically interact: bump, push, and bounce without overlapping, glitching, or passing through each other.
+- **Decision:**  
+  Implement pure, deterministic multi-kart collision in `KartCollisionSystem.ts`:
+  1. Pairwise sphere checks ($r_A + r_B = 1.8\text{m}$) in ascending $(i, j)$ index order for determinism.
+  2. Mass asymmetry: Inverted mass ratios ($w_A = m_B / (m_A + m_B)$) push lighter karts further when colliding with heavy karts (e.g. Baki Bhai's Juggernaut at 1.45 vs Iman's Breeze at 0.80).
+  3. Impulse & restitution: Arcade restitution $e = 0.35$ separates colliding karts without spring ping-pong.
+  4. Speed scrub: Trailing karts scrub 12% speed upon rear-ending a lead kart.
+  5. Hard impact drift cancellation: Relative impact velocities $> 10.0\text{ m/s}$ cancel drift and reset turbo charge.
+  6. Multi-level flyover isolation: Karts on different vertical levels ($|\Delta y| > 2.0\text{m}$) strictly ignore each other.
+- **Consequences:**  
+  Arcade-feeling physical bumping, tactical weight advantages, and robust flyover bridge separation.
+
+---
+
+### ADR 021: Bounded Transparent Rubber-Banding Policy (M4)
+
+- **Context:**  
+  Rubber-banding in racing games can easily feel cheap or unfair if karts teleport or accelerate to impossible speeds. We need tight, competitive pack racing while maintaining complete competitive integrity.
+- **Decision:**  
+  Implement pure `RubberBand.ts` with strict mathematical bounds:
+  1. **Player Invariant:** The human player ALWAYS receives exactly $1.000$ (0.0% assist or handicap).
+  2. **Bounded AI Speed Modifier:** Strictly capped between $[0.94, 1.06]$ (max $\pm 6\%$ top speed adjustment).
+  3. **Linear Distance Ramp:** Modifier ramps over $60\text{m}$ gap to the player.
+  4. **Zero Physics Bypassing:** No teleport catch-up, no infinite grip, no sudden speed bursts. Fully transparent and visible in F7 debug telemetry.
+- **Consequences:**  
+  Competitive pack racing where rivals stay grouped (within 10-25s spread across 3 laps), but player skill is 100% decisive.
+
+---
+
+### ADR 022: 2.5D Sprite Billboard Driver & Instanced Rival Rendering (M4)
+
+- **Context:**  
+  Rendering 8 fully animated 3D character models on low-power mobile devices risks frame drops and violates our asset policy. We have authentic 2D character spritesheets for Moon Walker and all NPCs.
+- **Decision:**  
+  1. Mario Kart 64 style 2.5D billboard drivers (`BillboardDriver.ts`): A quad mounted on the rickshaw saddle displaying the driver's authentic character spritesheet. The texture row is dynamically selected based on the relative angle between the kart heading and camera yaw (Down for front view, Up for back view, Left/Right for flanks) with `NearestFilter` for crisp pixel-art.
+  2. 3D Karts: Distinct body and canopy colors per driver matching their lore profile (Tania crimson red, Baki Bhai gold, etc.).
+  3. Floating Projected Name Tags: Lightweight HTML badges projected from 3D coordinates to screen space with distance attenuation.
+- **Consequences:**  
+  Charming retro aesthetic, lightweight WebGL overhead, zero procedural art generation, and seamless integration with overworld sprites.
+
+

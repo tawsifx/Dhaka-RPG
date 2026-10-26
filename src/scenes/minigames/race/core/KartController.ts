@@ -114,6 +114,10 @@ export class KartController {
     }
   }
 
+  cancelDrift(): void {
+    this.driftSystem.cancelDrift();
+  }
+
   giveBoost(source: BoostSource, strength?: number, durationSec?: number): void {
     let s = strength;
     let d = durationSec;

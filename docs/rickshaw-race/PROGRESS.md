@@ -56,8 +56,26 @@
   - [x] **UI & Runtime Integration:** `TrackLoader.ts`, `RaceMinimap.ts` 2D canvas radar map with live track ribbon and player blip, `RaceLoadingScreen.ts` progress indicator, `RaceResults.ts` finish modal with lap split readouts, and `TrackDebugOverlay.ts` (F6).
   - [x] **Validation & Testing:** `npm run race:validate` (3 full laps, 63.99s avg lap, 100% checkpoints passed in order), 46 new pure Vitest unit tests (223/223 total project tests green), and comprehensive Playwright E2E automation (`scripts/test_race_m3.js`).
 
-- [ ] **M4: AI Opponents & Race Director** *(Pending)*
+- [x] **M4: Rivals — AI Drivers, 8-Kart Grid, Ranking, Rubber-Banding & Race Flow**
+  - [x] **M3 Carry-Overs (A1-A5):** Real-track benchmarks recorded in `PERF.md` (258.2 kB, 2,524 collision tris, 4.43ms BVH build, 4.17 µs/step queries, 60 FPS), honest art provenance audit in `ASSETS.md` §3 (ADR 017), GLB budget policy (ADR 018), lap-time fact finding (1,316.4m spline), documentation updated, real stand interaction integrated in `test_race_m3.js`.
+  - [x] **Offline Racing Line Generator:** `scripts/race/build-racing-line.mjs` calculates smoothed outside-inside-outside apex trajectory, lateral offsets, cornering speed recommendations from lateral grip, ideal drift zones, and courtyard shortcut metadata into `track.json`.
+  - [x] **8-Slot Start Grid & Track Validation:** `scripts/race/validate-track.mjs` (`npm run race:validate`) asserts 8 non-overlapping starting slots ($\ge 2.5$m spacing), ground snapping, and racing line schema validation.
+  - [x] **Pure Deterministic AI Driver:** `AiDriver.ts` uses pure pursuit lookahead, curvature-based braking before sharp bends, drift initiation and mini-turbo release, deterministic mistake injection via Mulberry32 PRNG (`AiRng.ts`), and anti-stuck reverse recovery.
+  - [x] **Driver Roster & Personalities:** Data-driven `src/config/drivers.race.db.ts` defining Moon Walker + 7 distinct rivals (Tania, Baki Bhai, Iman, Arif, Anamika, Rakin, Apshora) with individual weights, handling (2.4 to 3.2 rad/s), skill, aggression, driftiness, mistake rates, and shortcut affinity.
+  - [x] **Difficulty Tiers:** "Gorom Cha" (Easy/50cc), "Beshi Gorom" (Medium/100cc), "Naga Jhal" (Hard/150cc) with scaled speed multipliers, mistake rates, and drift tier caps.
+  - [x] **Avoidance Sensors:** `AvoidanceSensors.ts` detects frontal obstacles and lateral crowding, applies steering repulsion bias, recommends braking on close obstructions, and filters out flyover vertical separation ($|\Delta y| > 2.0$m).
+  - [x] **Multi-Kart Collision System:** `KartCollisionSystem.ts` resolves pairwise collisions with mass asymmetry ($m_B / (m_A + m_B)$), arcade restitution $e = 0.35$, rear-end speed scrub, drift cancellation on hard impacts ($> 10$ m/s), and flyover bridge isolation.
+  - [x] **Ranking System & Points:** `RankingSystem.ts` continuous monotonic progress key, shortcut group neutrality (`any-of`), live standings ladder, gap to leader in seconds, and authentic Mario Kart points (15, 12, 10, 8, 6, 4, 2, 1).
+  - [x] **Bounded Rubber-Banding:** `RubberBand.ts` provides strictly bounded speed modifier within $[0.94, 1.06]$ ($\pm 6\%$), zero for human player (1.000 invariant), ramping over 60m gap.
+  - [x] **Race Session Orchestrator:** `RaceSession.ts` manages all 8 karts, AI driving, collisions, laps, standings, and finishes headlessly in Node/browser.
+  - [x] **Rival Presentation & 2.5D Billboards:** `BillboardDriver.ts` samples character spritesheets (`moon_walker`, `npc_walker1`, `npc_walker3`, `npc_iman`, `npc_anamika`, etc.) with 4-directional row switching based on camera-relative heading; `RivalKartRenderer.ts` manages 7 tinted karts and projected screen-space name tags.
+  - [x] **HUD Upgrades:** Position badge (`1st / 8` to `8th / 8`), live 8-driver standings ladder with time gaps, animated "FINAL LAP!" banner overlay, and multi-blip minimap in `RaceMinimap.ts`.
+  - [x] **Pre-Race & Results Panels:** `RacePreRacePanel.ts` for difficulty & mode selection; `RaceResults.ts` podium finish modal with 8-kart standings and points awarded.
+  - [x] **F7 AI Debug Overlay:** `AiDebugOverlay.ts` toggles real-time 8-driver telemetry table and 3D racing line visualizer.
+  - [x] **Simulation & Testing:** Headless Monte-Carlo simulator `scripts/race/simulate-race.mjs` (`npm run race:simulate`), 36 new pure Vitest unit tests (259/259 total tests green), and comprehensive Playwright E2E automation `scripts/test_race_m4.js` (`npm run test:race:m4`) passing all 9 phases with zero errors.
+
 - [ ] **M5: Dhaka Street Items & Hazards** *(Pending)*
+- [ ] **M6: Championship Cups & Save Data** *(Pending)*
 - [ ] **M6: Circuit Content & Environmental Themes** *(Pending)*
 - [ ] **M7: Overworld Metagame Integration** *(Pending)*
 - [ ] **M8: Final Polish, Mobile Optimization & Ship** *(Pending)*

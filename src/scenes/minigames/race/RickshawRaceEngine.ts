@@ -19,6 +19,11 @@ import { TrackDebugOverlay } from './debug/TrackDebugOverlay';
 import { TrackLoader, TrackRuntime } from './track/TrackLoader';
 import { TrackAutopilot } from './track/TrackAutopilot';
 import { RaceStateMachine } from './track/RaceStateMachine';
+import { RaceSession } from './core/RaceSession';
+import { RivalKartRenderer } from './render/RivalKartRenderer';
+import { AiDebugOverlay } from './debug/AiDebugOverlay';
+import { ALL_DRIVERS, RIVAL_DRIVERS } from '../../../config/drivers.race.db';
+import { DriverProfile } from '../../../types/race.types';
 import { SoundEngine } from '../../../audio/SoundEngine';
 import { DEFAULT_KART_CONFIG, KART_ARCHETYPES } from '../../../config/race.config';
 
@@ -44,6 +49,10 @@ export class RickshawRaceEngine {
   private trackDebugOverlay: TrackDebugOverlay | null = null;
   private trackRuntime: TrackRuntime | null = null;
   private stateMachine: RaceStateMachine | null = null;
+  private session: RaceSession | null = null;
+  private rivalRenderer: RivalKartRenderer | null = null;
+  private aiDebugOverlay: AiDebugOverlay | null = null;
+  private driverProfilesMap: Map<string, DriverProfile> = new Map();
 
   private animFrameId: number | null = null;
   private isRunning = false;
@@ -185,25 +194,38 @@ export class RickshawRaceEngine {
         this.trackDebugOverlay.setTrack(this.trackRuntime.spline, this.trackRuntime.definition.checkpoints);
         this.hud.setTrackTitle(this.trackRuntime.meta.name);
 
-        // Setup starting slot pose (Slot 1)
-        const slot1 = this.trackRuntime.definition.startGrid[0];
-        if (slot1) {
-          initialPose = {
-            x: slot1.x,
-            y: slot1.y,
-            z: slot1.z,
-            rotation: slot1.rotation
-          };
+        // Initialize Driver Profiles Map
+        this.driverProfilesMap.clear();
+        for (const d of ALL_DRIVERS) {
+          this.driverProfilesMap.set(d.id, d);
         }
 
-        // Initialize Kart Controller with 3D Ground & Collision World
-        this.controller = new KartController(
-          {},
-          initialPose,
-          undefined,
-          this.trackRuntime.groundQuery,
-          this.trackRuntime.collisionWorld
+        // Initialize 8-kart Race Session (Quick Race)
+        this.session = new RaceSession({
+          track: this.trackRuntime.definition,
+          mode: 'quick_race',
+          difficulty: 'beshi_gorom',
+          groundQuery: this.trackRuntime.groundQuery,
+          collisionWorld: this.trackRuntime.collisionWorld
+        });
+
+        this.controller = this.session.getPlayerKart().controller;
+
+        // Initialize 3D Rival Karts Renderer
+        this.rivalRenderer = new RivalKartRenderer(
+          this.renderer.scene,
+          this.container,
+          RIVAL_DRIVERS
         );
+
+        // Initialize F7 AI Debug Overlay
+        this.aiDebugOverlay = new AiDebugOverlay(
+          this.renderer.scene,
+          this.container,
+          this.session
+        );
+
+        this.session.startRace();
 
         // Hide loading screen smoothly
         await this.loadingScreen.hide();
@@ -345,7 +367,11 @@ export class RickshawRaceEngine {
           this.controller.reset(respawn);
           this.camera?.snapTo(this.controller.getState());
         }
-      }
+      },
+      getSession: () => this.session,
+      getRivals: () => this.session?.getKarts().filter((k) => !k.isPlayer),
+      getStandings: () => this.session?.getStandings(),
+      toggleAiDebug: (force?: boolean) => this.aiDebugOverlay?.toggle(force)
     };
   }
 
@@ -409,7 +435,18 @@ export class RickshawRaceEngine {
     // 2. Fixed timestep physics progression
     const prevState = { ...this.controller.getState() };
     const { alpha } = this.loop.step(frameDeltaSec, (dt) => {
-      this.controller!.update(dt, inputState);
+      if (this.session) {
+        const sessionRes = this.session.step(dt, inputState);
+        this.hud?.setStandings(sessionRes.standings, 'moon_walker', this.driverProfilesMap);
+        if (sessionRes.playerLapState.finalLap) {
+          this.hud?.showFinalLapBanner();
+        }
+        if (sessionRes.raceFinished) {
+          this.handleRaceFinished(sessionRes.playerLapState);
+        }
+      } else {
+        this.controller!.update(dt, inputState);
+      }
     });
     const currState = this.controller.getState();
     const countdownState = this.controller.countdown.getState();
@@ -417,46 +454,67 @@ export class RickshawRaceEngine {
     // 3. Track Progression, Laps, Rescue & Anti-Cheat Check
     if (this.trackRuntime) {
       const nowMs = performance.now();
+      const lapTracker = this.session ? this.session.getPlayerKart().lapTracker : this.trackRuntime.lapTracker;
+      const lapState = lapTracker.getState(nowMs);
 
-      // Update Lap Tracker
-      const lapResult = this.trackRuntime.lapTracker.update(
-        prevState.x,
-        prevState.y,
-        prevState.z,
-        currState.x,
-        currState.y,
-        currState.z,
-        nowMs
-      );
-
-      const lapState = this.trackRuntime.lapTracker.getState(nowMs);
-
-      if (lapResult.gatePassed) {
-        this.audio?.playCheckpointBeep();
-      }
-
-      if (lapResult.lapCompleted) {
-        SoundEngine.rickshawBell();
-        if (lapResult.raceFinished) {
-          this.handleRaceFinished(lapState);
+      // Collect rival states for 3D visual rendering and 2D minimap
+      const rivalStates = new Map<string, KartState>();
+      const rivalBlips: Array<{ x: number; z: number; color?: string }> = [];
+      if (this.session) {
+        for (const k of this.session.getKarts()) {
+          if (!k.isPlayer) {
+            const st = k.controller.getState();
+            rivalStates.set(k.id, st);
+            rivalBlips.push({ x: st.x, z: st.z, color: k.driver.kartColor });
+          }
         }
       }
 
-      // Update Rescue System (Kill Plane / Stuck)
-      const lastIdx = this.trackRuntime.lapTracker.getNextGateIndex();
-      const lastGate = lastIdx > 0 ? this.trackRuntime.definition.checkpoints[lastIdx - 1] : this.trackRuntime.definition.checkpoints[0];
-      const rescueAction = this.trackRuntime.rescueSystem.update(
-        frameDeltaSec,
-        currState,
-        inputState.throttle,
-        lastGate,
-        true
-      );
+      if (this.rivalRenderer && this.camera) {
+        this.rivalRenderer.update(
+          rivalStates,
+          this.camera.camera,
+          this.camera.camera.rotation.y,
+          window.innerWidth,
+          window.innerHeight
+        );
+      }
 
-      if (rescueAction.respawnPose) {
-        this.controller.reset(rescueAction.respawnPose);
-        this.camera.snapTo(this.controller.getState());
-        this.audio?.playWallBump();
+      this.aiDebugOverlay?.update();
+
+      if (!this.session) {
+        // Arena solo mode lap tracking fallback
+        const lapResult = this.trackRuntime.lapTracker.update(
+          prevState.x,
+          prevState.y,
+          prevState.z,
+          currState.x,
+          currState.y,
+          currState.z,
+          nowMs
+        );
+        if (lapResult.gatePassed) this.audio?.playCheckpointBeep();
+        if (lapResult.lapCompleted) {
+          SoundEngine.rickshawBell();
+          if (lapResult.raceFinished) {
+            this.handleRaceFinished(lapState);
+          }
+        }
+
+        const lastIdx = this.trackRuntime.lapTracker.getNextGateIndex();
+        const lastGate = lastIdx > 0 ? this.trackRuntime.definition.checkpoints[lastIdx - 1] : this.trackRuntime.definition.checkpoints[0];
+        const rescueAction = this.trackRuntime.rescueSystem.update(
+          frameDeltaSec,
+          currState,
+          inputState.throttle,
+          lastGate,
+          true
+        );
+        if (rescueAction.respawnPose) {
+          this.controller.reset(rescueAction.respawnPose);
+          this.camera.snapTo(this.controller.getState());
+          this.audio?.playWallBump();
+        }
       }
 
       // Update HUD Lap Counter & Timer
@@ -469,12 +527,12 @@ export class RickshawRaceEngine {
       this.hud?.setWrongWay(lapState.wrongWay);
 
       // Update Minimap & Track Debug Visualizer
-      this.minimap?.render(currState.x, currState.z, currState.rotation);
+      this.minimap?.render(currState.x, currState.z, currState.rotation, rivalBlips);
       this.trackDebugOverlay?.update(
         currState.x,
         currState.y,
         currState.z,
-        this.trackRuntime.lapTracker.getNextGateIndex(),
+        lapTracker.getNextGateIndex(),
         lapState.currentLap,
         currState.surface
       );
@@ -520,23 +578,32 @@ export class RickshawRaceEngine {
 
     this.stateMachine?.finish();
     const totalTimeMs = performance.now() - this.startTime;
+    const standings = this.session?.getStandings();
+    const playerRank = this.session ? this.session.rankingSystem.getKartRank('moon_walker') : 1;
 
     this.resultsScreen = new RaceResults({
       trackName: this.trackRuntime.meta.name,
       totalTimeMs,
       splits: lapState.splits,
       bestLapMs: lapState.bestLapMs,
+      finishPlace: playerRank,
+      standings,
+      driverProfiles: this.driverProfilesMap,
       onRetry: () => {
         this.resultsScreen = null;
-        const slot1 = this.trackRuntime!.definition.startGrid[0];
-        this.controller?.reset({
-          x: slot1.x,
-          y: slot1.y,
-          z: slot1.z,
-          rotation: slot1.rotation
-        });
-        this.trackRuntime!.lapTracker.startRace();
-        this.controller?.countdown.start();
+        if (this.session) {
+          this.session.startRace();
+        } else {
+          const slot1 = this.trackRuntime!.definition.startGrid[0];
+          this.controller?.reset({
+            x: slot1.x,
+            y: slot1.y,
+            z: slot1.z,
+            rotation: slot1.rotation
+          });
+          this.trackRuntime!.lapTracker.startRace();
+          this.controller?.countdown.start();
+        }
         this.camera?.snapTo(this.controller!.getState());
       },
       onExit: () => {
@@ -560,7 +627,10 @@ export class RickshawRaceEngine {
     const distanceTravelled = this.controller
       ? this.controller.getState().distanceTravelled
       : 0;
-    const lapState = this.trackRuntime?.lapTracker.getState();
+    const lapState = this.session
+      ? this.session.getPlayerKart().lapTracker.getState()
+      : this.trackRuntime?.lapTracker.getState();
+    const finishPlace = this.session ? this.session.rankingSystem.getKartRank('moon_walker') : 1;
 
     const result: RaceResult = {
       completed: reason === 'finish' || reason === 'completed' || reason !== 'error',
@@ -571,7 +641,7 @@ export class RickshawRaceEngine {
       trackId: this.trackId,
       laps: lapState?.splits || [],
       bestLapMs: lapState?.bestLapMs || 0,
-      finishPlace: 1
+      finishPlace
     };
 
     // Dispose all resources
@@ -682,6 +752,19 @@ export class RickshawRaceEngine {
       this.renderer.dispose();
       this.renderer = null;
     }
+
+    if (this.rivalRenderer) {
+      this.rivalRenderer.dispose();
+      this.rivalRenderer = null;
+    }
+
+    if (this.aiDebugOverlay) {
+      this.aiDebugOverlay.dispose();
+      this.aiDebugOverlay = null;
+    }
+
+    this.session = null;
+    this.driverProfilesMap.clear();
 
     if (this.camera) {
       this.camera.dispose();

@@ -1,6 +1,7 @@
 // src/scenes/minigames/race/ui/RaceHud.ts - DOM HUD overlay, countdown display & mobile touch controls
 import { RaceInput } from '../input/RaceInput';
-import { KartState, CountdownState } from '../../../../types/race.types';
+import { KartState, CountdownState, DriverProfile } from '../../../../types/race.types';
+import { StandingEntry } from '../core/RankingSystem';
 
 export class RaceHud {
   private container: HTMLDivElement;
@@ -18,6 +19,10 @@ export class RaceHud {
   private lapText: HTMLDivElement;
   private timerText: HTMLDivElement;
   private wrongWayBanner: HTMLDivElement;
+  private positionBadge: HTMLDivElement;
+  private standingsLadder: HTMLDivElement;
+  private finalLapBanner: HTMLDivElement;
+  private finalLapTriggered = false;
 
   constructor(parent: HTMLElement, input: RaceInput, onExit: () => void) {
     this.input = input;
@@ -70,9 +75,26 @@ export class RaceHud {
     titleCard.appendChild(this.titleText);
     const badge = document.createElement('span');
     badge.style.cssText = 'font-size: 10px; background: #2563eb; color: white; padding: 2px 6px; border-radius: 4px;';
-    badge.textContent = 'M3 RACE';
+    badge.textContent = 'M4 GP';
     titleCard.appendChild(badge);
     topBar.appendChild(titleCard);
+
+    // Position Badge
+    this.positionBadge = document.createElement('div');
+    this.positionBadge.id = 'race-position-badge';
+    this.positionBadge.style.cssText = `
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid #ca8a04;
+      border-radius: 8px;
+      padding: 6px 14px;
+      color: #fef08a;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    `;
+    this.positionBadge.textContent = '1st / 1';
+    topBar.appendChild(this.positionBadge);
 
     // Lap & Timer Card
     const raceProgressCard = document.createElement('div');
@@ -147,6 +169,54 @@ export class RaceHud {
     });
     topBar.appendChild(this.exitButton);
     this.container.appendChild(topBar);
+
+    // Standings Ladder (Side panel)
+    this.standingsLadder = document.createElement('div');
+    this.standingsLadder.id = 'race-standings-ladder';
+    this.standingsLadder.style.cssText = `
+      position: absolute;
+      top: 76px;
+      right: 20px;
+      width: 175px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 8px;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      pointer-events: none;
+      z-index: 1040;
+    `;
+    this.container.appendChild(this.standingsLadder);
+
+    // Final Lap Banner
+    this.finalLapBanner = document.createElement('div');
+    this.finalLapBanner.id = 'race-final-lap-banner';
+    this.finalLapBanner.style.cssText = `
+      position: absolute;
+      top: 38%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.6);
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.95), rgba(185, 28, 28, 0.95));
+      border: 3px solid #fef08a;
+      border-radius: 12px;
+      padding: 16px 36px;
+      color: #ffffff;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+      box-shadow: 0 8px 32px rgba(220, 38, 38, 0.6);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease-out, transform 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 2000;
+      text-align: center;
+    `;
+    this.finalLapBanner.innerHTML = `🏁 FINAL LAP! 🏁<div style="font-size: 13px; font-weight: 700; color: #fef08a; letter-spacing: 1px; margin-top: 4px;">SPEED BOOST UNLOCKED</div>`;
+    this.container.appendChild(this.finalLapBanner);
 
     // 2. Countdown & Center Announcer Overlay
     this.countdownOverlay = document.createElement('div');
@@ -417,6 +487,102 @@ export class RaceHud {
   setWrongWay(wrongWay: boolean): void {
     if (this.wrongWayBanner) {
       this.wrongWayBanner.style.display = wrongWay ? 'block' : 'none';
+    }
+  }
+
+  showFinalLapBanner(): void {
+    if (this.finalLapTriggered || !this.finalLapBanner) return;
+    this.finalLapTriggered = true;
+
+    this.finalLapBanner.style.opacity = '1';
+    this.finalLapBanner.style.transform = 'translate(-50%, -50%) scale(1.05)';
+
+    setTimeout(() => {
+      if (this.finalLapBanner) {
+        this.finalLapBanner.style.opacity = '0';
+        this.finalLapBanner.style.transform = 'translate(-50%, -50%) scale(0.6)';
+      }
+    }, 2500);
+  }
+
+  setStandings(
+    standings: ReadonlyArray<StandingEntry>,
+    playerKartId: string,
+    driverMap: Map<string, DriverProfile>
+  ): void {
+    const totalCount = standings.length;
+    const playerEntry = standings.find((s) => s.kartId === playerKartId);
+    const playerRank = playerEntry ? playerEntry.rank : 1;
+
+    // Suffix (1st, 2nd, 3rd, 4th, ...)
+    const suffixes = ['th', 'st', 'nd', 'rd'];
+    const v = playerRank % 100;
+    const suffix = suffixes[(v - 20) % 10] || suffixes[v] || suffixes[0];
+
+    if (this.positionBadge) {
+      this.positionBadge.textContent = `${playerRank}${suffix} / ${totalCount}`;
+      if (playerRank === 1) {
+        this.positionBadge.style.borderColor = '#facc15';
+        this.positionBadge.style.color = '#fef08a';
+      } else if (playerRank === 2) {
+        this.positionBadge.style.borderColor = '#94a3b8';
+        this.positionBadge.style.color = '#f8fafc';
+      } else if (playerRank === 3) {
+        this.positionBadge.style.borderColor = '#b45309';
+        this.positionBadge.style.color = '#fed7aa';
+      } else {
+        this.positionBadge.style.borderColor = '#334155';
+        this.positionBadge.style.color = '#94a3b8';
+      }
+    }
+
+    // Standings Ladder
+    if (this.standingsLadder) {
+      if (totalCount <= 1) {
+        this.standingsLadder.style.display = 'none';
+        return;
+      }
+
+      this.standingsLadder.style.display = 'flex';
+      this.standingsLadder.innerHTML = '';
+
+      for (const entry of standings) {
+        const isPlayer = entry.kartId === playerKartId;
+        const driver = driverMap.get(entry.kartId);
+        const name = driver ? driver.name : entry.kartId;
+        const color = driver ? driver.kartColor : '#64748b';
+
+        const row = document.createElement('div');
+        row.style.cssText = `
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 11px;
+          padding: 2px 4px;
+          border-radius: 4px;
+          background: ${isPlayer ? 'rgba(37, 99, 235, 0.45)' : 'rgba(0, 0, 0, 0.2)'};
+          border-left: 3px solid ${color};
+          color: ${isPlayer ? '#93c5fd' : '#e2e8f0'};
+          font-weight: ${isPlayer ? '800' : '600'};
+        `;
+
+        const leftCol = document.createElement('div');
+        leftCol.style.cssText = 'display: flex; gap: 4px; align-items: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 115px;';
+        leftCol.innerHTML = `<span style="color: #94a3b8; font-size: 10px; width: 14px;">${entry.rank}.</span><span>${name}</span>`;
+
+        const rightCol = document.createElement('div');
+        rightCol.style.cssText = 'font-size: 10px; font-family: monospace; color: #38bdf8;';
+        if (entry.rank === 1) {
+          rightCol.textContent = 'LEAD';
+          rightCol.style.color = '#facc15';
+        } else {
+          rightCol.textContent = `+${entry.gapToLeaderSec.toFixed(1)}s`;
+        }
+
+        row.appendChild(leftCol);
+        row.appendChild(rightCol);
+        this.standingsLadder.appendChild(row);
+      }
     }
   }
 

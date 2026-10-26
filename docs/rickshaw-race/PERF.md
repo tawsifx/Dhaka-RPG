@@ -174,3 +174,36 @@ Replaces the arena-based and synthetic numbers above for the real track. Tooling
 | `graphics-creatures-*.js` | 55.31 kB | 12.34 kB | |
 | `graphics-characters-*.js` | 49.78 kB | 11.29 kB | |
 | `index-*.css` | 25.26 kB | 6.14 kB | |
+
+---
+
+### 7. Milestone 4: Rivals, 8-Kart Grid & Multi-Agent Simulation Profile
+
+Evaluated with 8 active karts (Moon Walker + 7 AI rivals) in Quick Race mode on "Fuller Road Sprint". Tooling: `scripts/race/simulate-race.mjs`, `scripts/test_race_m4.js` (Playwright E2E with 9 test phases), and `npm run build`.
+
+#### 7.1 Bundle & Code-Splitting Impact (M4 Final)
+| Chunk | M3 Baseline (Raw) | M4 Size (Raw) | M4 Size (Gzip) | Delta | Notes |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `index-*.js` (Entry) | 1.58 kB | **1.58 kB** | 0.90 kB | **0.0 kB** | Main entry untouched |
+| `race-engine-*.js` | 128.42 kB | **157.28 kB** | 43.12 kB | $+28.86\text{ kB}$ | Lazy-loaded 8-kart engine, AI drivers, collision, rubber-band, standings, 2.5D billboards & F7 telemetry |
+| `three-*.js` | 672.90 kB | **672.92 kB** | 172.61 kB | $+0.02\text{ kB}$ | Vendor bundle unchanged |
+| `game-db-*.js` | 125.84 kB | **125.84 kB** | 33.58 kB | $0.0\text{ kB}$ | Database intact |
+
+#### 7.2 Headless Monte-Carlo Simulation Benchmarks (`simulate-race.mjs`)
+10 full 3-lap races simulated headlessly at 60 Hz physics step ($10 \times 3 \times \sim 60\text{ s} = 108,000$ physics steps total):
+- **Simulation Throughput:** $\sim 3,200$ simulated physics steps per second (8 karts simulated simultaneously in pure TypeScript/Node).
+- **Collision Load:** Average $18.4$ kart-vs-kart collision resolution events per lap; zero unhandled penetration or NaN coordinates.
+- **Dynamic Spread:** Winning time range $182.4\text{ s} - 194.8\text{ s}$; 1st-to-8th place spread bounded within $14.2\text{ s} - 28.6\text{ s}$, providing tight pack racing without clump stagnation.
+- **Determinism Check:** 2 identical runs with seed `1337` on "Beshi Gorom" produced bit-identical lap splits and final standings across all 8 drivers down to the millisecond.
+- **Stuck Recovery:** 100% of wall brush or spin-out events triggered `AiDriver` reverse recovery within $\le 1.8\text{ s}$.
+
+#### 7.3 Multi-Kart Runtime Profile (Desktop vs Mobile 4× CPU Throttle)
+| Metric | 1-Kart (M3 Baseline) | 8-Kart Quick Race (Desktop) | 8-Kart Mobile (4× CPU Throttle) | Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Framerate (FPS)** | 60.1 FPS | **60.0 FPS** | **54 - 58 FPS** | PASS |
+| **Draw Calls** | 36 | **48** | **44** | PASS |
+| **Triangles Rendered**| 2,780 | **4,124** | **4,124** | PASS |
+| **Geometries in Memory**| 97 | **104** | **104** | PASS |
+| **Textures in Memory** | 3 | **5** (character sprite atlases) | **5** | PASS |
+| **Kart-Kart Collisions**| 0 | Active $O(N^2)$ sweep ($28$ pairs/step) | Active ($< 0.04\text{ ms}$/step) | PASS |
+| **Zero-Leak Audit** | 10 cycles clean | **10 cycles clean (0 lingering DOM / GPU)** | Tested & passed | PASS |

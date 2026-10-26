@@ -69,11 +69,11 @@ dhaka-date-rpg/
 │   │   ├── mcp-inventory.md         # MCP tooling map
 │   │   ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
 │   │   └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
-│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1–M3)
+│   └── rickshaw-race/               # 3D Rickshaw Race ("Tring-Tring Grand Prix") Engineering Dossier (M1–M4)
 │       ├── 00-audit.md              # Codebase integration points, lifecycle & bundle impact audit
 │       ├── 01-research.md           # Mario Kart & SuperTuxKart kinematics equations & formulas
 │       ├── 02-design.md             # System architecture & pure subsystem decomposition specs
-│       ├── DECISIONS.md             # Canonical Architectural Decision Records (ADR 001–013)
+│       ├── DECISIONS.md             # Canonical Architectural Decision Records (ADR 001–022)
 │       ├── PROGRESS.md              # Master M1-M8 roadmap and milestone tracking
 │       ├── PERF.md                  # Benchmark report (FPS, bundle delta, 10-cycle leak tests, instanced pools, 4x CPU throttle)
 │       ├── ASSETS.md                # Asset provenance & classification audit matrix
@@ -92,7 +92,8 @@ dhaka-date-rpg/
 │   ├── race/                        # 3D Rickshaw Race pure math, loop & track tests
 │   │   ├── race_m1.test.ts          # KartController, FixedStepLoop, RaceResult tests (20 tests)
 │   │   ├── race_m2.test.ts          # Drift, 3-tier mini-turbo, boost priority, surfaces, air & countdown (51 tests)
-│   │   └── race_m3.test.ts          # BVH ground query, 3D collision, spline, laps, rescue, autopilot (46 tests)
+│   │   ├── race_m3.test.ts          # BVH ground query, 3D collision, spline, laps, rescue, autopilot (46 tests)
+│   │   └── race_m4.test.ts          # Rivals, AI pathing, multi-kart collisions, ranking & rubberband (36 tests)
 │   └── npc/                         # Living-World NPC Engine unit & integration tests
 │       ├── resolver.test.ts         # Pure deterministic schedule resolver (20 tests)
 │       ├── navigator.test.ts        # In-house A* terrain cost & door pathfinding (8 tests)
@@ -348,6 +349,22 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **Rescue (`RescueSystem`)**: kill plane (`y < −10`) or 3.5 s of throttle-held standstill → respawn behind the last gate with invulnerability.
 - **UI**: `RaceMinimap` (canvas radar from track data), `RaceLoadingScreen`, `RaceResults` (total time, lap splits, best-lap star, Race Again/Exit), `TrackDebugOverlay` (**F6**).
 - **Tooling**: `npm run race:validate` (schema, budgets, grid/gates on ground, headless autopilot 3-lap run), `npm run test:race:m3`, `__race` additions (`getStats`, `start(trackId)`, `teleport`, `triggerRescue`, `engine`, `TrackAutopilot`). The M2 analytic arena stays available via `?race-arena` / `__race.start('arena')` as a permanent regression bed.
+
+#### Milestone 4 — Rivals, 8-Kart Grid, AI Drivers & Race Flow (ADRs 018–022)
+- **8-Kart Start Grid & Roster (`src/config/drivers.race.db.ts`, ADR 018):** 8-driver roster featuring Moon Walker (player) and 7 distinct AI rivals (Ahona, Rakin, Mehjabin, Iman, Anamika, Apshora, Mama). Each driver has custom body/canopy colors, unique weight categories (Light, Balanced, Heavy), handling (2.4–3.2 rad/s), skill rating ($0.65 - 0.95$), aggression ($0.20 - 0.85$), driftiness, mistake rates, and shortcut affinity.
+- **Difficulty Tiers:** 3 selectable difficulty levels:
+  - *Gorom Cha (Easy / 50cc feel):* Top speed $23.0\text{ m/s}$, relaxed AI line tracking, $0\%$ shortcut usage.
+  - *Beshi Gorom (Normal / 100cc feel):* Top speed $26.0\text{ m/s}$, sharp apex tracking, occasional shortcut usage ($30\%$).
+  - *Naga Jhal (Hard / 150cc feel):* Top speed $28.0\text{ m/s}$, tight apex drift lines, aggressive shortcut usage ($70\%$).
+- **Pure AI Driver Kinematics (`src/scenes/minigames/race/ai/AiDriver.ts`, ADR 019):** Pure pursuit path tracking over offline-generated racing line (`build-racing-line.mjs`) with dynamic lookahead ($L = 6.0 + 0.45 \times \text{speed}$). AI drivers anticipate sharp bends ($|E| > 0.45\text{ rad}$) and apply progressive braking, initiate powerslides through designated drift zones, and trigger reverse recovery upon prolonged wall contact ($\ge 1.2\text{ s}$). Driven 100% through the same `KartController` and abstract `RaceActionInput` as human players (Fairness Invariant).
+- **Multi-Kart Collision System (`src/scenes/minigames/race/core/KartCollisionSystem.ts`, ADR 020):** Circle-circle elastic collision resolution ($e = 0.35$) with mass ratio displacement ($m_1 / (m_1 + m_2)$). Includes rear-end impact speed scrub ($12\%$), drift cancellation on violent crashes ($> 10\text{ m/s}$ relative velocity), and vertical separation filter ($|\Delta y| > 2.0\text{m}$) preventing false collisions on flyover bridges and underpasses.
+- **Ranking System & Bounded Rubber-Banding (`RankingSystem.ts`, `RubberBand.ts`, ADR 021):**
+  - *Monotonic Progress Key:* `lap * 100,000 + gateIndex * 1,000 + (1 - gateProgress)`. Courtyard shortcut gates share group IDs to ensure fair, monotonically increasing ranking progress without artificial position jumps.
+  - *Mario Kart Points:* Points awarded per finish position (1st: 15, 2nd: 12, 3rd: 10, 4th: 8, 5th: 6, 6th: 4, 7th: 2, 8th: 1).
+  - *Bounded Rubber-Band:* Subtle speed modifier strictly bounded between $[0.94, 1.06]$ ($\pm 6\%$) based on gap to player. **Always 1.0 (zero assist) for the player**.
+- **2.5D Billboard Drivers & Rival Presentation (`BillboardDriver.ts`, `RivalKartRenderer.ts`, ADR 022):** Authentic 2.5D pixel art characters mounted inside 3D rickshaws. Billboard drivers sample existing character spritesheets (`moon_walker`, `npc_walker1`, `npc_walker3`, `npc_iman`, `npc_anamika`, etc.) with dynamic 4-directional row switching (front, back, left, right) relative to chase camera yaw. Projected screen-space HTML name tags follow rival karts.
+- **Race Flow & HUD Upgrades:** Pre-Race Setup Panel (`RacePreRacePanel.ts`) for mode/difficulty selection, live position badge (`1st / 8`), 8-driver standings ladder with gap intervals, animated "FINAL LAP!" banner, multi-blip radar minimap with distinctive driver colors, and post-race Podium finish modal (`RaceResults.ts`).
+- **Telemetry & Tooling:** F7 AI Telemetry Overlay (`AiDebugOverlay.ts`) with live 8-kart tabular metrics and 3D racing line visualization, headless Monte-Carlo balancing simulator (`npm run race:simulate`), 36 new unit tests (`npm test`), and comprehensive Playwright verification (`npm run test:race:m4`).
 
 ---
 
@@ -1213,11 +1230,13 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Essential Scripts (`package.json`)
 - `npm run dev`: Launch local Vite development server on `http://localhost:3000/`.
 - `npm run build`: Execute production Vite build to `dist/`.
-- `npm run test`: Run the full Vitest test suite (`tests/` directory, 223/223 tests across 20 suites).
+- `npm run test`: Run the full Vitest test suite (`tests/` directory, 259/259 tests across 21 suites).
 - `npm run test:race:m1`: Run Playwright E2E verification test suite for Three.js 3D race spike (state preservation, driving telemetry, memory leak cycles, mobile touch).
 - `npm run test:race:m2`: Run Playwright E2E verification test suite for M2 kart feel (drift sparks, 3-tier mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
 - `npm run test:race:m3`: Run Playwright E2E verification test suite for M3 track pipeline (lazy loading, countdown, minimap, flyover bridge elevation, ramp jump, lantern rescue, 3 full laps, finish modal splits, 10-cycle zero-leak audit).
+- `npm run test:race:m4`: Run Playwright E2E verification test suite for M4 rivals (8-kart grid, AI drivers, multi-kart collisions, ranking standings, rubber-band, podium finish, 10-cycle zero-leak audit).
 - `npm run race:validate`: Run CLI track data, geometry, and headless autopilot 3-lap simulation validator.
+- `npm run race:simulate`: Run headless 8-kart Monte-Carlo race simulation harness across difficulty tiers with determinism and spread validation.
 - `npm run race:build`: Offline track builder compiling spline, prop instances, collision geometry, and `track.json`.
 - `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
@@ -1233,14 +1252,16 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 ### Verification Checklist Before Commits
 1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
 2. Run `npm run typecheck` — zero TypeScript errors.
-3. Run `npm run test` — all Vitest suites pass (223/223 tests across 20 suites).
+3. Run `npm run test` — all Vitest suites pass (259/259 tests across 21 suites).
 4. Run `npm run test:race:m1` — Playwright end-to-end 3D race spike verified with zero leaks and 100% state preservation.
 5. Run `npm run test:race:m2` — Playwright end-to-end 3D race M2 feel test verified (drift sparks, mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
 6. Run `npm run test:race:m3` — Playwright end-to-end 3D race M3 track pipeline verified (flyover bridge, ramp, rescue, 3 laps, results modal, 10-cycle zero-leak audit).
-7. Run `npm run race:validate` — 3 full laps simulated with 100% checkpoint passing.
-8. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
-9. Run `npm run build` — bundle compiles cleanly with no missing assets.
-10. Deploy to Cloudflare Pages (`npm run deploy:cf`) and Vercel (`npx vercel --prod --yes`).
+7. Run `npm run test:race:m4` — Playwright end-to-end 3D race M4 rivals verified (8-kart grid, AI drivers, collision resolution, position badge, standings ladder, podium finish, 10-cycle zero-leak audit).
+8. Run `npm run race:validate` — 3 full laps simulated with 100% checkpoint passing.
+9. Run `npm run race:simulate` — headless Monte-Carlo race simulation passing with valid spread and determinism.
+10. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
+11. Run `npm run build` — bundle compiles cleanly with no missing assets.
+12. Deploy to Cloudflare Pages (`npm run deploy:cf`) and Vercel (`npx vercel --prod --yes`).
 
 ### 10.20 Modular Filesystem Architecture & Subsystem Decomposition (v4.0.0 Overhaul)
 To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.ts`), the filesystem architecture was restructured into dedicated, single-responsibility engine subsystems with idiomatic barrel exports:
@@ -1251,6 +1272,7 @@ src/
 ├── main.ts                      # Slim application bootloader (58 lines)
 ├── types/                       # Core TypeScript definitions (rpg, npc, stardew, race + index.ts)
 ├── config/                      # Configuration, manifest, & databases + index.ts
+│   └── drivers.race.db.ts       # 8-driver roster (Moon Walker + 7 rivals), stats, colors, difficulty tiers
 ├── state/                       # Reactive state machines (DateState, RPGStats, SaveManager + index.ts)
 ├── audio/                       # SFX & Procedural audio (SoundEngine + index.ts)
 ├── graphics/                    # Procedural & External asset adapters + index.ts
@@ -1265,13 +1287,14 @@ src/
     │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
     │   ├── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
     │   └── race/                # Three.js 3D Rickshaw Race ("Tring-Tring Grand Prix")
-    │       ├── core/            # Pure physics, kinematics, drift, boost, surfaces, air, BvhGroundQuery, BvhCollisionWorld
+    │       ├── ai/              # Pure AI drivers (AiDriver), avoidance sensors, rubber-band & seeded PRNG (AiRng)
+    │       ├── core/            # KartController, KartCollisionSystem, RaceSession, RankingSystem, BvhGroundQuery, BvhCollisionWorld
     │       ├── track/           # TrackSpline, LapTracker, RaceStateMachine, RescueSystem, TrackLoader, TrackValidator, TrackAutopilot
-    │       ├── render/          # Three.js renderer, chase camera, arena builder, kart visuals, effects
+    │       ├── render/          # Three.js renderer, chase camera, arena builder, kart visuals, BillboardDriver, RivalKartRenderer
     │       ├── audio/           # Sample-based CC0 engine/skid audio loop & procedural fallbacks
     │       ├── input/           # Action-map inputs (keyboard, gamepad API, touch)
-    │       ├── ui/              # DOM HUD, speedometer, minimap radar canvas, loading screen, results modal
-    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, F6 track debug overlay, replay recorder
+    │       ├── ui/              # DOM HUD, speedometer, minimap radar, loading screen, pre-race panel, results modal
+    │       ├── debug/           # F4 telemetry HUD, F5 live tuning drawer, F6 track debug overlay, F7 AI overlay, replay recorder
     │       ├── RickshawRaceEngine.ts # Master lifecycle coordinator (enter, loop, exit, dispose)
     │       └── index.ts         # Clean barrel export
     ├── world/                   # Architectural & world builders + index.ts

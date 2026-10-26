@@ -271,6 +271,49 @@ export interface SplinePoint {
   bankRad?: number;
 }
 
+export interface RacingLinePoint {
+  x: number;
+  y: number;
+  z: number;
+  targetSpeed: number;
+  idealDriftState: 'none' | 'drift_left' | 'drift_right';
+  lateralOffset: number;
+  distanceAlongSpline?: number;
+}
+
+export interface TrackShortcut {
+  id: string;
+  name: string;
+  entranceGateId: number;
+  exitGateId: number;
+  requiresBoost: boolean;
+  requiresHop: boolean;
+  timeSavingSec: number;
+  path?: SplinePoint[];
+}
+
+export type RaceDifficultyTier = 'gorom_cha' | 'beshi_gorom' | 'naga_jhal';
+
+export interface DriverPersonality {
+  skill: number; // 0.0 to 1.0 (racing line precision, apex clipping)
+  aggression: number; // 0.0 to 1.0 (bump tolerance, overtaking tightness)
+  driftiness: number; // 0.0 to 1.0 (tendency to hop/drift around curves)
+  mistakeRate: number; // mistakes per lap (0.0 to 1.0)
+  shortcutAffinity: number; // 0.0 to 1.0 (willingness to take risky shortcuts)
+}
+
+export interface DriverProfile {
+  id: string;
+  name: string;
+  kartColor: string;
+  accentColor: string;
+  spriteKey: string;
+  weightClass: 'light' | 'medium' | 'heavy';
+  stats: KartStats;
+  personality: DriverPersonality;
+  quote?: string;
+}
+
 export interface TrackDefinition {
   id: string;
   name: string;
@@ -285,7 +328,8 @@ export interface TrackDefinition {
   ramps?: Array<{ id: string; x: number; y: number; z: number; width: number; length: number; height: number; rotation: number }>;
   hazards?: Array<{ id: string; type: 'mud' | 'puddle'; x: number; y: number; z: number; radius: number }>;
   itemBoxSpawns?: Array<{ id: string; x: number; y: number; z: number }>;
-  aiRacingLine?: SplinePoint[];
+  aiRacingLine?: RacingLinePoint[];
+  shortcuts?: TrackShortcut[];
   killPlanes?: Array<{ y: number }>;
   killPlaneY?: number;
   minimapBounds: { minX: number; maxX: number; minZ: number; maxZ: number };

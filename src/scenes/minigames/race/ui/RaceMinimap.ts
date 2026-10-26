@@ -89,7 +89,12 @@ export class RaceMinimap {
     return { x: canvasX, y: canvasY };
   }
 
-  render(kartX: number, kartZ: number, kartRotation: number): void {
+  render(
+    kartX: number,
+    kartZ: number,
+    kartRotation: number,
+    rivals?: Array<{ x: number; z: number; color?: string }>
+  ): void {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, this.width, this.height);
 
@@ -122,7 +127,22 @@ export class RaceMinimap {
     ctx.arc(finish.x, finish.y, 4, 0, Math.PI * 2);
     ctx.fill();
 
-    // 4. Draw Player Kart Blip (Green dot with heading notch)
+    // 4. Draw Rival Karts Blips (Small colored dots)
+    if (rivals) {
+      for (const rival of rivals) {
+        const rPos = this.worldToCanvas(rival.x, rival.z);
+        ctx.save();
+        ctx.fillStyle = rival.color || '#ef4444';
+        ctx.shadowColor = rival.color || '#ef4444';
+        ctx.shadowBlur = 4;
+        ctx.beginPath();
+        ctx.arc(rPos.x, rPos.y, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    // 5. Draw Player Kart Blip (Green dot with heading notch)
     const kartPos = this.worldToCanvas(kartX, kartZ);
 
     ctx.save();

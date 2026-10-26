@@ -10,19 +10,19 @@ export class PlaceholderKart {
   private geometries: THREE.BufferGeometry[] = [];
   private materials: THREE.Material[] = [];
 
-  constructor() {
+  constructor(bodyColor: number | string = 0x15803d, canopyColor: number | string = 0xf59e0b) {
     this.group = new THREE.Group();
     this.bodyGroup = new THREE.Group();
     this.group.add(this.bodyGroup);
 
     // Materials - Dhaka rickshaw color theme: Emerald Green body, Golden Yellow canopy, Crimson accents, Dark Rubber wheels
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x15803d, // Emerald green
+      color: bodyColor,
       roughness: 0.35,
       metalness: 0.15
     });
     const canopyMat = new THREE.MeshStandardMaterial({
-      color: 0xf59e0b, // Amber gold hood canopy
+      color: canopyColor,
       roughness: 0.6,
       metalness: 0.05
     });
