@@ -53,3 +53,13 @@ Portions of the item probabilities, AI item evaluation heuristics, and projectil
   - `src/items/flyable.cpp`: Projectile flight constants, wall bounce mechanics, and homing kite tracking.
   - `src/karts/controller/skidding_ai.cpp`: AI item usage decision logic, forward targeting cone angle/distance thresholds, and defensive rear-firing checks (ported into `src/scenes/minigames/race/ai/ItemBrain.ts`).
   - `src/animations/explosion_animation.cpp`: Hit reaction pitch tumble and speed scrub constants (ported into `src/scenes/minigames/race/core/HitReaction.ts`).
+
+---
+
+## 4. Totoro 3D Reference Model (Ghibli Drivers)
+
+The 3D model for Totoro (`public/wii/totoro/model.dae`, `tools/character-pipeline/totoro_ref.glb`) is based on open-source community 3D references:
+
+- **Upstream Repository**: `https://github.com/aaaa1597/react-r3f-tutorial016` (`public/models/Totoro.glb`)
+- **Download Pipeline**: Acquired via multi-channel parallel download manager (`scripts/lib/parallel-download.mjs`).
+- **Processing**: Posed in Blender for kart seating (arms rotated to wheel rim, feet forward into footwell, reclined torso, seat contact origin at `Y = 0.00`), optimized into a single manifold static mesh, UV-mapped to `totoro_all.png`, and exported to Collada `.dae`.

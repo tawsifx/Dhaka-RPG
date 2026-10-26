@@ -14,5 +14,6 @@ tools/*
 !tools/character-pipeline/
 tools/character-pipeline/__pycache__/
 tools/character-pipeline/*.blend1
+tools/character-pipeline/*.glb
 .cache
 .cache/**

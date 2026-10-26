@@ -33,6 +33,16 @@ def create_totoro_atlas(output_path):
     # Inner Ear zone: [0, 400, 150, 512]
     draw.rectangle([0, 400, 150, 512], fill=PINK_INNER_EAR)
 
+    # Leaf Hat zone: [350, 400, 512, 512]
+    LEAF_GREEN = (72, 148, 56, 255)
+    LEAF_DARK = (48, 102, 38, 255)
+    LEAF_VEIN = (95, 175, 75, 255)
+    draw.rectangle([350, 400, 512, 512], fill=LEAF_GREEN)
+    # Leaf veins
+    for y in range(410, 510, 12):
+        draw.line([(355, y), (505, y)], fill=LEAF_VEIN, width=2)
+    draw.line([(430, 400), (430, 512)], fill=LEAF_DARK, width=4)
+
     # 2. Cream Belly (Top-Right 512x512: [512, 0, 1024, 512])
     draw.rectangle([512, 0, 1024, 512], fill=CREAM_BELLY)
     for i in range(16):

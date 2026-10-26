@@ -54,7 +54,8 @@ def render_character_angles(char_name, blend_file, tex_path, out_img):
     # In Blender: Z is up, Y is forward (driver faces +Y), X is right
     # Front-right 3/4: X > 0, Y > 0
     center_z = 70.0 if "totoro" in char_name else 60.0
-    cam_obj.location = (110.0, 160.0, center_z + 30.0)
+    cam_y = -160.0 if "totoro" in char_name else 160.0
+    cam_obj.location = (110.0, cam_y, center_z + 30.0)
     
     # Track to driver center
     track = cam_obj.constraints.new(type='TRACK_TO')
