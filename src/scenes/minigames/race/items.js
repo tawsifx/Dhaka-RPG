@@ -28,7 +28,7 @@ const SND_DROP = [1, 0x12], SND_FIRE = [1, 0x04], SND_KNOCK = [1, 0x53], SND_CRA
   SND_THUNDER = [1, 0x13], SND_THUNDER_LOOP = [5, 0x0c];
 // driver voices, bank 2, characterId * 0x10 + n: 0 throw, 1 boost / star, 3 spun out (add_spinout_effect), 6 laugh at
 // a victim, 8 star ended (func_800CA730)
-const CHAR_ID = { mario: 0, luigi: 1, yoshi: 2, toad: 3, donkeykong: 4, wario: 5, peach: 6, bowser: 7 };
+const CHAR_ID = { satsuki: 0, mario: 0, luigi: 1, yoshi: 2, toad: 3, totoro: 4, donkeykong: 4, wario: 5, peach: 6, bowser: 7 };
 const V_THROW = 0, V_BOOST = 1, V_SPUN = 3, V_HURT = 5, V_LAUGH = 6, V_STAR_END = 8;
 const SND_EXPLOSION = [1, 0x05];   // SOUND_ACTION_EXPLOSION
 // what each hit does (Kart TUMBLE): green shell LOW_TUMBLE_TRIGGER, red / blue shell HIGH_TUMBLE_TRIGGER, star kart
@@ -686,7 +686,7 @@ export class Items {
         case 'banana':
           // a CPU behind a first-place human throws it 30 path points ahead of them once within range (DK 40, Peach 4, else 10)
           if (human && kart.crossings > 0 && rank > order.indexOf(human) && order.indexOf(human) === 0) {
-            const range = { donkeykong: 40, peach: 4 }[kart.mesh.userData.character] ?? 10, gap = at(human) - at(kart);
+            const range = { totoro: 40, donkeykong: 40, peach: 4 }[kart.mesh.userData.character] ?? 10, gap = at(human) - at(kart);
             if (gap >= -2 && gap <= range) {
               this.drop(kart, 'banana', { s: (human.s + 30 / pts * L) % L, d: 0 });
               st.uses++; st.timer = 0; st.branch = 'wait';

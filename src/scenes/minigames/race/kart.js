@@ -15,7 +15,7 @@ const TOP_SPEED = [
   [310, 310, 314, 314, 310, 310, 314, 310],
   [245, 245, 245, 245, 245, 245, 245, 245],
 ];
-const CHARACTER_ID = { mario: 0, luigi: 1, yoshi: 2, toad: 3, donkeykong: 4, wario: 5, peach: 6, bowser: 7 };
+const CHARACTER_ID = { satsuki: 0, mario: 0, luigi: 1, yoshi: 2, toad: 3, totoro: 4, donkeykong: 4, wario: 5, peach: 6, bowser: 7 };
 // Top velocity is the drive force currentSpeed^2 / 25 over the drag 0.12 * kartFriction (5800), so it scales with
 // the square of gTopSpeedTable: 320 -> 5.885 units/frame (= MAX_SPEED), 290 -> 4.83 (50cc is 82% of 150cc).
 const V_TOP = 320 * 320 / 25 / (0.12 * 5800);
@@ -279,7 +279,7 @@ function measureWheelGaps(character, image) {
   return wheels;
 }
 
-export function buildKartMesh(character = 'mario') {
+export function buildKartMesh(character = 'satsuki') {
   const g = new THREE.Group();
   let wheels = wheelGaps.get(character) ?? null;
   // the sprite draws nothing until the atlas has loaded (alphaTest on an empty texture): the shadow waits for it too
@@ -390,7 +390,7 @@ export function buildKartMesh(character = 'mario') {
 }
 
 export class Kart {
-  constructor(track, { color, s, d, isPlayer = false, skill = 1, name = 'Racer', character = 'mario', spawn = null, speedScale = 1, cc = 2 }) {
+  constructor(track, { color, s, d, isPlayer = false, skill = 1, name = 'Racer', character = 'satsuki', spawn = null, speedScale = 1, cc = 2 }) {
     this.track = track; this.isPlayer = isPlayer; this.skill = skill; this.name = name; this.character = character; this.speedScale = speedScale; this.cc = cc;
     this.s = s; this.psi = 0; this.phi = 0; this.v = 0;
     // inside the walls from the first ground lookup: a grid spot past the road's edge (Frappe Snowland's bridge)

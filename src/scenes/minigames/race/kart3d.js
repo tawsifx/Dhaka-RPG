@@ -36,6 +36,8 @@ const CHARS = {
   donkeykong: { cls: 'large', body: 'body_dk.png', seat: [0.13, -0.02] },
   wario: { cls: 'large', body: 'body_wr.png', seat: [0.115, -0.12] },
   bowser: { cls: 'large', body: 'body_kp.png', eyeRepeat: 1, seat: [0.15, 0.06] },
+  satsuki: { cls: 'medium', body: 'body_satsuki.png', eyeRepeat: 1, seat: [0.06, -0.10] },
+  totoro: { cls: 'large', body: 'body_totoro.png', eyeRepeat: 1, seat: [0.14, 0.04] },
 };
 
 const cache = new Map();

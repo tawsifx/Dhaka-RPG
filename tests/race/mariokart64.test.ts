@@ -32,10 +32,14 @@ describe('MarioKart64JS Core Subsystem Tests', () => {
   });
 
   it('calculates correct CC engine speed scales across drivers', () => {
+    expect(ccSpeedScale(CC_INDEX[150], 'satsuki')).toBe(1);
+    expect(ccSpeedScale(CC_INDEX[50], 'satsuki')).toBeCloseTo((290 / 320) ** 2, 6);
+    expect(ccSpeedScale(CC_INDEX[150], 'totoro')).toBe(ccSpeedScale(CC_INDEX[150], 'donkeykong'));
     expect(ccSpeedScale(CC_INDEX[150], 'mario')).toBe(1);
     expect(ccSpeedScale(CC_INDEX[50], 'mario')).toBeCloseTo((290 / 320) ** 2, 6);
     expect(ccSpeedScale(CC_INDEX[150], 'yoshi')).toBeGreaterThan(1);
     expect(ccSpeedScale(CC_INDEX[150], 'unknown')).toBe(1);
+    expect(ccSpeedScale(CC_BATTLE, 'satsuki')).toBeCloseTo((245 / 320) ** 2, 6);
     expect(ccSpeedScale(CC_BATTLE, 'mario')).toBeCloseTo((245 / 320) ** 2, 6);
   });
 

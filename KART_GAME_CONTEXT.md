@@ -106,20 +106,22 @@ All 16 Grand Prix courses and 4 Battle Arenas are defined in [`src/scenes/miniga
 
 ## 5. Driver Roster & Weight Categories
 
-Defined in [`src/scenes/minigames/race/kart.js`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/kart.js) and [`kart3d.js`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/kart3d.js):
+Defined in [`src/scenes/minigames/race/kart.js`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/kart.js), [`kart3d.js`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/kart3d.js), and [`main.js`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/main.js):
 
-| Driver | Weight Class | Chassis / Model | Top Speed | Handling / Acceleration |
-| :--- | :--- | :--- | :--- | :--- |
-| **Toad** | `small` | `kart/small/` (`body_ko.png`) | Moderate | Ultra-responsive turning, rapid initial acceleration |
-| **Peach** | `medium` | `kart/medium/` (`body_pc.png`) | Balanced | High acceleration, smooth drift arcs |
-| **Yoshi** | `medium` | `kart/medium/` (`body_ys.png`) | High | Quick acceleration, off-road recovery bonus |
-| **Mario** | `medium` | `kart/medium/` (`body_mr.png`) | Balanced | Standard benchmark across speed, mass, and grip |
-| **Luigi** | `medium` | `kart/medium/` (`body_lg.png`) | Balanced | Agile steering with balanced top speed |
-| **Wario** | `large` | `kart/large/` (`body_wr.png`) | High | Heavy mass, pushes lighter karts on contact |
-| **Donkey Kong** | `large` | `kart/large/` (`body_dk.png`) | High | High top speed, strong momentum, wide frame |
-| **Bowser** | `large` | `kart/large/` (`body_kp.png`) | Highest | Maximum top speed, highest mass, slow start recovery |
+| Driver | Weight Class | Chassis / Model | Top Speed | Handling / Acceleration | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Satsuki Kusakabe** | `medium` | `kart/medium/` (`body_satsuki.png`) | Balanced | Benchmark balanced stats (inherits Mario's stats, 119.41 cm) | **Active (Primary)** |
+| **Totoro** | `large` | `kart/large/` (`body_totoro.png`) | High | High top speed, strong momentum, wide frame (inherits DK's stats, 145.26 cm) | **Active (Primary)** |
+| **Luigi** | `medium` | `kart/medium/` (`body_lg.png`) | Balanced | Agile steering with balanced top speed | Active |
+| **Peach** | `medium` | `kart/medium/` (`body_pc.png`) | Balanced | High acceleration, smooth drift arcs | Active |
+| **Toad** | `small` | `kart/small/` (`body_ko.png`) | Moderate | Ultra-responsive turning, rapid initial acceleration | Active |
+| **Yoshi** | `medium` | `kart/medium/` (`body_ys.png`) | High | Quick acceleration, off-road recovery bonus | Active |
+| **Wario** | `large` | `kart/large/` (`body_wr.png`) | High | Heavy mass, pushes lighter karts on contact | Active |
+| **Bowser** | `large` | `kart/large/` (`body_kp.png`) | Highest | Maximum top speed, highest mass, slow start recovery | Active |
+| *Mario* | `medium` | `kart/medium/` (`body_mr.png`) | Balanced | Preserved in `CHARS` and assets for seamless rollback | *Rollback Reserve* |
+| *Donkey Kong* | `large` | `kart/large/` (`body_dk.png`) | High | Preserved in `CHARS` and assets for seamless rollback | *Rollback Reserve* |
 
-*(For extending the roster with **Satsuki** and **Totoro**, see [§10](#10-extending-the-roster-satsuki--totoro) and [`docs/mariokart64/CHARACTER_MODELING_SPEC.md`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/docs/mariokart64/CHARACTER_MODELING_SPEC.md)).*
+*(Driver 3D pipeline tools, blend files, and reproducible scripts are located in `tools/character-pipeline/`).*
 
 ---
 

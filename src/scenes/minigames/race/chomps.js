@@ -33,7 +33,7 @@ const RAD = Math.PI / 32768;
 const f32 = Math.fround;
 const s16 = v => ((v & 0xFFFF) ^ 0x8000) - 0x8000;
 const atan2s = (x, z) => s16(Math.round(Math.atan2(x, z) / RAD));
-const BBOX = { donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
+const BBOX = { totoro: 6, donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
 const HIDDEN = 0, NEAR = 1, FAR = 2;
 const _m = new THREE.Matrix4(), _n = new THREE.Matrix3(), _v = new THREE.Vector3(), _c = new THREE.Color();
 const _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler();

@@ -40,7 +40,7 @@ const scene = new THREE.Scene();
 const params = new URLSearchParams(location.search);
 const trackId = params.get('track');
 const playerChar = [params.get('char'), localStorage.getItem('mk64char')]   // an unknown id (?char=dk) left no player kart
-  .find(c => ['mario', 'luigi', 'peach', 'toad', 'yoshi', 'donkeykong', 'wario', 'bowser'].includes(c)) || 'mario';
+  .find(c => ['satsuki', 'totoro', 'mario', 'luigi', 'peach', 'toad', 'yoshi', 'donkeykong', 'wario', 'bowser'].includes(c)) || 'satsuki';
 const trackDef = TRACKS.find(t => t.id === trackId) || null;   // null -> show the track menu
 const battle = !!(trackDef && trackDef.battle);   // battle arena: balloons, no laps (rules below)
 // Engine class from the GAME SELECT cc rows (?cc=50|100|150|extra, gCCSelection); links without one race 150cc.
@@ -241,8 +241,8 @@ const physicsDebug = new PhysicsDebug(scene, track);   // P / ?physics: walls an
 if (params.has('physics') || params.get('showphysics') === 'true') physicsDebug.toggle(true);
 
 const PALETTE = [0xe63946, 0x2a9d8f, 0xf49ac2, 0x3a86ff, 0x70c83c, 0x98633b, 0xf4cd30, 0xe78d32];
-const names = ['Mario', 'Luigi', 'Peach', 'Toad', 'Yoshi', 'Donkey Kong', 'Wario', 'Bowser'];
-const characters = ['mario', 'luigi', 'peach', 'toad', 'yoshi', 'donkeykong', 'wario', 'bowser'];
+const names = ['Satsuki', 'Luigi', 'Peach', 'Toad', 'Yoshi', 'Totoro', 'Wario', 'Bowser'];
+const characters = ['satsuki', 'luigi', 'peach', 'toad', 'yoshi', 'totoro', 'wario', 'bowser'];
 let karts = [], player, raceTime = 0, state = 'countdown', finishOrder = [];
 let lapTimes = [], lapStart = 0, lapsDone = -1;   // the player's lap splits (time trial records)
 
@@ -356,16 +356,16 @@ function countdownLight(light) {
 // 90% of top speed without it set START_SPINOUT_TRIGGER (cleared once they fall to 70%). At GO the boost is a mushroom
 // (apply_triggers -> func_8002A704, voice n 1) and the spinout an early-start spin (func_8008F104, voice n 3).
 // Assumption: the player's start sequence runs at Lakitu's 60 Hz object tick (gRaceFrameCounter counts those).
-const START_ACCEL = { mario: [2, 2, 2, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4], yoshi: [2, 2, 2.5, 2.6, 2.6, 2, 1.5, 0.8, 0.8, 0.8],
-  donkeykong: [2, 2, 2, 1.6, 1, 1, 1, 1.8, 1.8, 1.2] };
-Object.assign(START_ACCEL, { luigi: START_ACCEL.mario, toad: START_ACCEL.yoshi, peach: START_ACCEL.yoshi, wario: START_ACCEL.donkeykong, bowser: START_ACCEL.donkeykong });
+const START_ACCEL = { satsuki: [2, 2, 2, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4], mario: [2, 2, 2, 1.6, 1.4, 1.2, 1, 0.8, 0.6, 0.4], yoshi: [2, 2, 2.5, 2.6, 2.6, 2, 1.5, 0.8, 0.8, 0.8],
+  totoro: [2, 2, 2, 1.6, 1, 1, 1, 1.8, 1.8, 1.2], donkeykong: [2, 2, 2, 1.6, 1, 1, 1, 1.8, 1.8, 1.2] };
+Object.assign(START_ACCEL, { luigi: START_ACCEL.satsuki, toad: START_ACCEL.yoshi, peach: START_ACCEL.yoshi, wario: START_ACCEL.totoro, bowser: START_ACCEL.totoro });
 let revs = null;
 function startCountdown() {
   revs = { rev: 0, held: false, ready: null, boost: false, spin: false, acc: 0 };
   lakitu.startCountdown(countdownLight);
 }
 function revEngine(dt, inp) {
-  const r = revs, top = 320 * Math.sqrt(ccSpeedScale(engine, playerChar)), accel = START_ACCEL[playerChar] || START_ACCEL.mario;
+  const r = revs, top = 320 * Math.sqrt(ccSpeedScale(engine, playerChar)), accel = START_ACCEL[playerChar] || START_ACCEL.satsuki;
   for (r.acc += dt * 60; r.acc >= 1; r.acc--) {
     const a = inp.throttle > 0;
     if (r.ready !== null) r.ready++;
@@ -718,9 +718,9 @@ function courseStep(now) {
 // D_JPAD = id+4); id = index+1 into sCharacterGridOrder MARIO LUIGI PEACH TOAD YOSHI DK WARIO BOWSER.
 // Portrait origins D_800E7108 (menu_items.c:114): x 24/93/162/231, y 63 (top row) / 145 (bottom row);
 // 64x64 face at (x,y), 64x12 name plate at (x,y+64), P1 border 64x64 over the face.
-const CHAR_ORDER = ['mario', 'luigi', 'peach', 'toad', 'yoshi', 'donkeykong', 'wario', 'bowser'];
+const CHAR_ORDER = ['satsuki', 'luigi', 'peach', 'toad', 'yoshi', 'totoro', 'wario', 'bowser'];
 const CHAR_POS = [[24, 63], [93, 63], [162, 63], [231, 63], [24, 145], [93, 145], [162, 145], [231, 145]];
-const NAMES = { mario: 'Mario', luigi: 'Luigi', peach: 'Peach', toad: 'Toad', yoshi: 'Yoshi', donkeykong: 'D. Kong', wario: 'Wario', bowser: 'Bowser' };
+const NAMES = { satsuki: 'Satsuki', mario: 'Mario', luigi: 'Luigi', peach: 'Peach', toad: 'Toad', yoshi: 'Yoshi', totoro: 'Totoro', donkeykong: 'D. Kong', wario: 'Wario', bowser: 'Bowser' };
 // MkAnimation frame tables, decoded from textures.c D_02006708..: frame index = face_XX
 const ANIM = {
   base: { frames: [0], rate: 50 },                       // D_02006708 [00@0x32]
@@ -844,7 +844,7 @@ function updateCharClasses() {
   $('charOk').classList.toggle('closed', !okMode);
 }
 // characterId (include/defines.h MARIO..BOWSER) for the pick voice
-const CHAR_ID = { mario: 0, luigi: 1, yoshi: 2, toad: 3, donkeykong: 4, wario: 5, peach: 6, bowser: 7 };
+const CHAR_ID = { satsuki: 0, mario: 0, luigi: 1, yoshi: 2, toad: 3, totoro: 4, donkeykong: 4, wario: 5, peach: 6, bowser: 7 };
 function pickChar(slot) {
   charSel = slot;
   okMode = true;   // single player: every pick leads to OK (menus.c:1543)

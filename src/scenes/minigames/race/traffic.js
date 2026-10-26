@@ -29,7 +29,7 @@ const TICK = 1 / 60;
 const S = NATIVE_SCALE;
 const RAD = Math.PI / 32768;
 const NUM = 7, FAR = 9000000;
-const BBOX = { donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
+const BBOX = { totoro: 6, donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
 // kind: [models per level of detail, start offset, scale]
 const KINDS = [
   ['truck', 0, 1], ['bus', 75, 1], ['tanker', 50, 1], ['car', 25, 0.1],

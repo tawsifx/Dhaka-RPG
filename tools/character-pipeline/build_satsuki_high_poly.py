@@ -142,7 +142,7 @@ def build_satsuki_high_fidelity():
     bmesh.ops.delete(bm, geom=verts_to_remove, context='VERTS')
     bm.to_mesh(hair_cap.data)
     bm.free()
-    assign_cylindrical_uvs(hair_cap.data, (0.52, 0.52, 0.98, 0.80))
+    assign_cylindrical_uvs(hair_cap.data, (0.52, 0.24, 0.98, 0.48))
     parts.append(hair_cap)
 
     # Front Layered Bangs (5 stylized curved lock clumps across forehead above eyes)
@@ -159,7 +159,7 @@ def build_satsuki_high_fidelity():
         bang.name = f"satsuki_bang_{idx}"
         bang.rotation_euler = (math.radians(35), math.radians(rot_y), 0)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        assign_box_uvs(bang.data, (0.52, 0.52, 0.98, 0.80))
+        assign_box_uvs(bang.data, (0.52, 0.24, 0.98, 0.48))
         parts.append(bang)
 
     # Side Locks (Hair framing cheeks and ears)
@@ -169,7 +169,7 @@ def build_satsuki_high_fidelity():
         lock.name = f"satsuki_sidelock_{side}"
         lock.rotation_euler = (math.radians(-10), math.radians(side * -14), math.radians(side * 8))
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        assign_box_uvs(lock.data, (0.52, 0.52, 0.98, 0.80))
+        assign_box_uvs(lock.data, (0.52, 0.24, 0.98, 0.48))
         parts.append(lock)
 
     # 5. High-Detail Arms & Posed Hands gripping the 24 cm steering wheel
@@ -240,8 +240,8 @@ def build_satsuki_high_fidelity():
         shin.name = f"satsuki_shin_{side}"
         shin.rotation_euler = (math.radians(28), 0, 0)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        # White socks: U [0.52, 0.75], V [0.80, 0.98]
-        assign_cylindrical_uvs(shin.data, (0.52, 0.80, 0.75, 0.98))
+        # White socks: U [0.52, 0.74], V [0.02, 0.20]
+        assign_cylindrical_uvs(shin.data, (0.52, 0.02, 0.74, 0.20))
         parts.append(shin)
 
         # Sock Cuff (folded ring)
@@ -250,7 +250,7 @@ def build_satsuki_high_fidelity():
         cuff.name = f"satsuki_cuff_{side}"
         cuff.rotation_euler = (math.radians(28), 0, 0)
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-        assign_box_uvs(cuff.data, (0.52, 0.80, 0.75, 0.98))
+        assign_box_uvs(cuff.data, (0.52, 0.02, 0.74, 0.20))
         parts.append(cuff)
 
         # Canvas Loafers with Sole Trim
@@ -259,7 +259,7 @@ def build_satsuki_high_fidelity():
         shoe.name = f"satsuki_shoe_{side}"
         shoe.scale = (0.85, 1.55, 0.65)
         bpy.ops.object.transform_apply(scale=True)
-        assign_box_uvs(shoe.data, (0.75, 0.80, 0.98, 0.98))
+        assign_box_uvs(shoe.data, (0.76, 0.02, 0.98, 0.20))
         parts.append(shoe)
 
     # 7. Join all parts into single mesh

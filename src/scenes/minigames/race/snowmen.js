@@ -27,7 +27,7 @@ const RAD = Math.PI / 32768;
 const f32 = Math.fround;
 const s16 = v => ((v + 0x8000) & 0xFFFF) - 0x8000;
 const rand = n => Math.floor(Math.random() * n);   // random_int
-const BBOX = { donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
+const BBOX = { totoro: 6, donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
 const MAX_PUFFS = 128;   // gObjectParticle2_SIZE
 const _v = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler();
 

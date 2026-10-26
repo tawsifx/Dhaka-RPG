@@ -13,7 +13,7 @@ const SPEED = 14;   // scene units / s the road scrolls under the karts
 // [character, x, z, yaw (rad, + turns the nose to the camera's right)]; scene +z is towards the camera. Placed so
 // each kart's screen box matches its driver's box in background_blue_sky.png (to within ~10 of 320x240 pixels).
 const GRID = [
-  ['mario', 2.23, -7.9, -0.15],
+  ['satsuki', 2.23, -7.9, -0.15],
   ['wario', -2.96, -9.8, 0.55],
   ['bowser', 0.02, -16.33, 0.12],
   ['peach', 5.47, -11.59, -0.25],

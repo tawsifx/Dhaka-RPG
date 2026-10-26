@@ -43,7 +43,7 @@ const FAR = 9000000, WHEELS = 1440000, CROSSING_FAR = 4000000;
 const CROSSING_AT = [0.42299348, 0.72017354];
 // half width / half length / height of each car's hit box (model units)
 const BOX = { engine: [20, 58, 66], tender: [16, 26, 40], car: [16, 47, 52] };
-const BBOX = { donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
+const BBOX = { totoro: 6, donkeykong: 6, bowser: 6 };   // gKartBoundingBoxSizeTable: 5.5, DK and Bowser 6
 
 const _p = new THREE.Vector3();
 // x/z distance squared from this camera to the actor (distance_if_visible without its view-cone test)
