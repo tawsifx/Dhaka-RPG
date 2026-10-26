@@ -554,4 +554,57 @@ describe('M4: 8-Kart Race Session Orchestrator', () => {
       expect(Number.isNaN(s.speed)).toBe(false);
     }
   });
+
+  it('guarantees player kart physics are strictly identical across all difficulty tiers (Part A2)', () => {
+    const track = createMockTrack();
+    const tiers = ['gorom_cha', 'beshi_gorom', 'naga_jhal'] as const;
+
+    const sessions = tiers.map((tier) =>
+      new RaceSession({
+        track,
+        mode: 'quick_race',
+        difficulty: tier,
+        seed: 42
+      })
+    );
+
+    // Initial stats must match DEFAULT_PLAYER_DRIVER
+    for (const session of sessions) {
+      const player = session.getPlayerKart();
+      expect(player.driver.stats.topSpeed).toBe(28.0);
+      expect(player.driver.stats.acceleration).toBe(17.5);
+      expect(player.driver.stats.handling).toBe(2.8);
+      expect(player.driver.stats.weight).toBe(1.0);
+    }
+
+    // Step physics forward 60 frames with full acceleration and steering
+    for (let f = 0; f < 60; f++) {
+      const input = {
+        throttle: 1.0,
+        brake: 0.0,
+        steer: 0.4,
+        drift: f > 30,
+        lookBehind: false,
+        bell: false,
+        trick: false
+      };
+      for (const session of sessions) {
+        session.step(1 / 60, input);
+      }
+    }
+
+    // Player state must be bit-identical across all three difficulty tiers
+    const s0 = sessions[0].getPlayerKart().controller.getState();
+    const s1 = sessions[1].getPlayerKart().controller.getState();
+    const s2 = sessions[2].getPlayerKart().controller.getState();
+
+    expect(s0.speed).toBe(s1.speed);
+    expect(s1.speed).toBe(s2.speed);
+    expect(s0.x).toBe(s1.x);
+    expect(s1.x).toBe(s2.x);
+    expect(s0.z).toBe(s1.z);
+    expect(s1.z).toBe(s2.z);
+    expect(s0.rotation).toBe(s1.rotation);
+    expect(s1.rotation).toBe(s2.rotation);
+  });
 });

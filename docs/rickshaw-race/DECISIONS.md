@@ -362,4 +362,18 @@
 - **Consequences:**  
   Charming retro aesthetic, lightweight WebGL overhead, zero procedural art generation, and seamless integration with overworld sprites.
 
+---
+
+### ADR 023: Player Physics Independence Across Difficulty Tiers (M3.5 Part A2)
+
+- **Context:**  
+  The three race difficulty tiers (*Gorom Cha*, *Beshi Gorom*, and *Naga Jhal*) specify scaled pace and characteristics (analogous to 50cc, 100cc, and 150cc in Mario Kart). We must guarantee that player kart physics remain bit-for-bit invariant regardless of selected difficulty.
+- **Decision:**  
+  1. `RaceSession` instantiates player `KartController` strictly with `DEFAULT_PLAYER_DRIVER.stats` (`topSpeed: 28.0 m/s`, `acceleration: 17.5 m/s²`, `handling: 2.8 rad/s`, `weight: 1.0`).
+  2. Difficulty multipliers (`speedMultiplier`, `accelMultiplier`, `skillMultiplier`, `maxDriftTier`, `mistakeMultiplier`, `reactionLatencySec`) are passed exclusively to `AiDriver` instances.
+  3. Unit test added in `tests/race/race_m4.test.ts` verifying player state (position, velocity, rotation, drift mechanics) is bit-identical across all three difficulty tiers over continuous simulated input sequences.
+- **Consequences:**  
+  Guaranteed fairness: player control feel is never secretly throttled or artificially sped up. Difficulty strictly tunes rival competitiveness.
+
+
 
