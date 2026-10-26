@@ -586,8 +586,8 @@ function optionKey(code, enter, back) {
     drawOption(); return;
   }
   optMsg = '';
-  if (code === 'ArrowUp' && optSel > 0) { optSel--; snd('move'); }
-  else if (code === 'ArrowDown' && optSel < OPT_ROWS.length - 1) { optSel++; snd('move'); }
+  if ((code === 'ArrowUp' || code === 'KeyW') && optSel > 0) { optSel--; snd('move'); }
+  else if ((code === 'ArrowDown' || code === 'KeyS') && optSel < OPT_ROWS.length - 1) { optSel++; snd('move'); }
   else if (back) { enterGameSelect(); snd('back'); return; }
   else if (enter) {
     if (optSel === 0) { enterGameSelect(); snd('back'); return; }
@@ -627,7 +627,14 @@ function drawData() {
 function dataKey(code, enter, back) {
   if (dataCourse) { if (enter || back) { dataCourse = false; snd('back'); drawData(); } return; }
   // data_menu_act: down/up inside a cup column (index % 4), right/left across cups (index / 4)
-  const move = { ArrowDown: dataSel % 4 !== 3 ? 1 : 0, ArrowUp: dataSel % 4 !== 0 ? -1 : 0, ArrowRight: dataSel < 12 ? 4 : 0, ArrowLeft: dataSel >= 4 ? -4 : 0 }[code];
+  const isDown = code === 'ArrowDown' || code === 'KeyS';
+  const isUp = code === 'ArrowUp' || code === 'KeyW';
+  const isRight = code === 'ArrowRight' || code === 'KeyD';
+  const isLeft = code === 'ArrowLeft' || code === 'KeyA';
+  const move = isDown ? (dataSel % 4 !== 3 ? 1 : 0) :
+               isUp ? (dataSel % 4 !== 0 ? -1 : 0) :
+               isRight ? (dataSel < 12 ? 4 : 0) :
+               isLeft ? (dataSel >= 4 ? -4 : 0) : 0;
   if (move) { dataSel += move; snd('move'); drawData(); }
   else if (enter) { dataCourse = true; snd('okClicked'); drawData(); }
   else if (back) { enterGameSelect(); snd('back'); }
@@ -899,71 +906,79 @@ if (!trackDef) {
 titleEl.addEventListener('click', enterMenus);
 addEventListener('keydown', e => {
   if (!trackDef) {
-    if (atTitle() && (e.code === 'Enter' || e.code === 'Space' || e.code === 'NumpadEnter')) { e.preventDefault(); enterMenus(); return; }
+    const isLeft = e.code === 'ArrowLeft' || e.code === 'KeyA';
+    const isRight = e.code === 'ArrowRight' || e.code === 'KeyD';
+    const isUp = e.code === 'ArrowUp' || e.code === 'KeyW';
+    const isDown = e.code === 'ArrowDown' || e.code === 'KeyS';
+    const enter = e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space' || e.code === 'KeyE';
+    const back = e.code === 'Escape' || e.code === 'Backspace';
+
+    if (atTitle() && enter) { e.preventDefault(); enterMenus(); return; }
+
     if (curScreen === charEl) {
       // player_select_menu_act: left/right stay inside the row (ids 1-4 / 5-8), up/down swap rows
       const col = charCursor % 4, row = charCursor >> 2;
-      const move = { ArrowLeft: col > 0 ? -1 : 0, ArrowRight: col < 3 ? 1 : 0, ArrowUp: row > 0 ? -4 : 0, ArrowDown: row < 1 ? 4 : 0 }[e.code];
+      const move = isLeft ? (col > 0 ? -1 : 0) :
+                   isRight ? (col < 3 ? 1 : 0) :
+                   isUp ? (row > 0 ? -4 : 0) :
+                   isDown ? (row < 1 ? 4 : 0) : undefined;
       if (move !== undefined) {
         e.preventDefault();
         if (!okMode && move) { charCursor += move; updateCharClasses(); snd('move'); }
         return;
       }
-      if (e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space') {
+      if (enter) {
         e.preventDefault();
         if (okMode) confirmChar(); else pickChar(charCursor);
         return;
       }
-      if (e.code === 'Escape' || e.code === 'Backspace') { e.preventDefault(); backFromChar(); return; }
+      if (back) { e.preventDefault(); backFromChar(); return; }
       return;
     }
+
     if (curScreen === gameEl) {
       // main_menu_act: MAIN_MENU_PLAYER_SELECT left/right over the columns, A picks; MAIN_MENU_MODE_SELECT up/down the rows
-      const enter = e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space';
-      const back = e.code === 'Escape' || e.code === 'Backspace';
-      if (e.code.startsWith('Arrow') || enter || back) e.preventDefault();
-      if (e.code === 'KeyL' && !e.repeat) { enterOption(); return; }   // L_TRIG -> MAIN_MENU_OPTION (from any game select step)
+      if (isLeft || isRight || isUp || isDown || enter || back) e.preventDefault();
+      if (e.code === 'KeyL' && !e.repeat) { enterOption(); return; }   // L_TRIG -> MAIN_MENU_OPTION
       if (e.code === 'KeyR' && !e.repeat) { enterData(); return; }     // R_TRIG -> MAIN_MENU_DATA
       if (gameMode === 'player') {
-        if (e.code === 'ArrowLeft' && pcount > 0) { pcount--; snd('move'); }
-        else if (e.code === 'ArrowRight' && pcount < 3) { pcount++; snd('move'); }
+        if (isLeft && pcount > 0) { pcount--; snd('move'); }
+        else if (isRight && pcount < 3) { pcount++; snd('move'); }
         else if (enter) { gameMode = 'mode'; pmode = 0; snd('select'); updateGameSelect(); }
         else if (back) { backToTitle(); snd('back'); }
       } else if (gameMode === 'mode') {
-        if (e.code === 'ArrowUp' && pmode > 0) { pmode--; snd('move'); }
-        else if (e.code === 'ArrowDown' && pmode < PMODES[pcount].length - 1) { pmode++; snd('move'); }
+        if (isUp && pmode > 0) { pmode--; snd('move'); }
+        else if (isDown && pmode < PMODES[pcount].length - 1) { pmode++; snd('move'); }
         else if (enter) pickMode();
         else if (back) { gameMode = 'player'; snd('back'); updateGameSelect(); }
       } else {   // MAIN_MENU_MODE_SUB_SELECT: up/down the cc rows, B back to the modes
-        if (e.code === 'ArrowUp' && ccSel > 0) { ccSel--; snd('move'); updateGameSelect(); }
-        else if (e.code === 'ArrowDown' && ccSel < CC_ROWS.length - 1) { ccSel++; snd('move'); updateGameSelect(); }
+        if (isUp && ccSel > 0) { ccSel--; snd('move'); updateGameSelect(); }
+        else if (isDown && ccSel < CC_ROWS.length - 1) { ccSel++; snd('move'); updateGameSelect(); }
         else if (enter) pickCc();
         else if (back) { gameMode = 'mode'; snd('back'); updateGameSelect(); }
       }
       return;
     }
+
     if (curScreen === optEl || curScreen === dataEl) {
-      const enter = e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space';
-      const back = e.code === 'Escape' || e.code === 'Backspace';
-      if (e.code.startsWith('Arrow') || enter || back) e.preventDefault();
+      if (isLeft || isRight || isUp || isDown || enter || back) e.preventDefault();
       (curScreen === optEl ? optionKey : dataKey)(e.code, enter, back);
       return;
     }
+
     if (curScreen === menuEl) {
       // SUB_MENU_MAP_SELECT_CUP: left/right cup; _COURSE: up/down course; _OK: A starts, B steps back
-      const enter = e.code === 'Enter' || e.code === 'NumpadEnter' || e.code === 'Space';
-      const back = e.code === 'Escape' || e.code === 'Backspace';
-      if (e.code.startsWith('Arrow') || enter || back) e.preventDefault();
+      if (isLeft || isRight || isUp || isDown || enter || back) e.preventDefault();
       if (courseMode === 'cup') {
-        if (e.code === 'ArrowLeft' && cupSel > 0) { cupSel--; cupMode('cup'); snd('move'); }
-        else if (e.code === 'ArrowRight' && cupSel < 3) { cupSel++; cupMode('cup'); snd('move'); }
+        if (isLeft && cupSel > 0) { cupSel--; cupMode('cup'); snd('move'); }
+        else if (isRight && cupSel < 3) { cupSel++; cupMode('cup'); snd('move'); }
         else if (enter) { cupMode('course'); snd('select'); }
         else if (back) { enterGameSelect(); snd('back'); }
       } else if (courseMode === 'course') {
-        if (e.code === 'ArrowUp' && courseIdx > 0) { courseIdx--; cupMode('course'); snd('move'); }
-        else if (e.code === 'ArrowDown' && courseIdx < 3) { courseIdx++; cupMode('course'); snd('move'); }
+        if (isUp && courseIdx > 0) { courseIdx--; cupMode('course'); snd('move'); }
+        else if (isDown && courseIdx < 3) { courseIdx++; cupMode('course'); snd('move'); }
         else if (enter) { cupMode('ok'); snd('select'); }
-        else if (back) { if (cupSel === 4) enterGameSelect(); else cupMode('cup'); snd('back'); }   // battle: B returns to the main menu
+        else if (back) { if (cupSel === 4) enterGameSelect(); else cupMode('cup'); snd('back'); }
       } else {
         if (enter) { snd('okClicked'); enterChar(cupCourses(cupSel)[courseIdx].id); }
         else if (back) { cupMode('course'); snd('back'); }
@@ -1117,8 +1132,8 @@ function puppetStep(k, now) {
 }
 function useItem() { sendItem(items.use(player, karts)); }
 // item button let go: a held banana / fake box / shell leaves (stick up throws a banana ahead, stick down sends a green
-// shell back; on the keyboard Down / S holds the stick down)
-function releaseItem(stickY = (keys.ArrowDown || keys.KeyS) ? -80 : 0) { if (player) sendItem(items.release(player, karts, stickY)); }
+// shell back; on the keyboard W / Up throws ahead, S / Down drops back)
+function releaseItem(stickY = (keys.ArrowUp || keys.KeyW) ? 80 : (keys.ArrowDown || keys.KeyS) ? -80 : 0) { if (player) sendItem(items.release(player, karts, stickY)); }
 function sendItem(item, k = player) {   // what was fired: the other games replay it with items.fire
   const id = k.cpu ? k.netId : undefined;
   if (online && item) net.send(battle ? { t: 'item', id, item, x: k.x, z: k.z, h: k.h, y: k.y } : { t: 'item', id, item, s: k.s, d: k.d });
@@ -1193,34 +1208,61 @@ if (online) {
 
 // input
 const keys = {};
+
+// Standard PC racing key categorization
+const isDriftKey = code => code === 'Space' || code === 'ShiftLeft' || code === 'ShiftRight' || code === 'KeyZ';
+const isItemKey = code => code === 'KeyE' || code === 'KeyQ' || code === 'KeyF' || code === 'KeyX' || code === 'ControlLeft' || code === 'ControlRight' || code === 'AltLeft';
+const isRestartKey = code => code === 'KeyR' || code === 'Backspace' || code === 'Delete';
+
 addEventListener('keydown', e => {
   keys[e.code] = true;
   if (trackDef) audio.start();   // menu: no engine hum (audio.update never runs there, so it droned)
-  // Mac "delete" is Backspace, forward-delete is Delete; L/R are kept for the menu's L OPTION / R DATA
-  if ((e.code === 'Backspace' || e.code === 'Delete') && trackDef && !online) { e.preventDefault(); setup(); }
-  // M in a race goes back to the course menu with the same players / mode / cc; on the menus it goes to the title
-  if (e.code === 'KeyM') location.search = trackDef ? `?menu=course&from=${trackDef.id}&mode=${raceMode}${ccParam ? `&cc=${ccParam}` : ''}${PLAYERS_WANTED ? `&players=${PLAYERS_WANTED}` : ''}` : '';
+
+  // Standard PC Restart: R (or Backspace / Delete)
+  if (isRestartKey(e.code) && trackDef && !online) {
+    e.preventDefault();
+    setup();
+    return;
+  }
+
+  // Standard PC Menu / Exit: Escape (or M)
+  if ((e.code === 'Escape' || e.code === 'KeyM') && trackDef) {
+    location.search = `?menu=course&from=${trackDef.id}&mode=${raceMode}${ccParam ? `&cc=${ccParam}` : ''}${PLAYERS_WANTED ? `&players=${PLAYERS_WANTED}` : ''}`;
+    return;
+  }
+  if (e.code === 'KeyM' && !trackDef) {
+    location.search = '';
+    return;
+  }
+
   if (e.code === 'KeyN') audio.toggleMusic();
   if (e.code === 'KeyG') { HD.cyclePreset(); showRes(); }
   if (e.code === 'KeyJ' && !e.repeat) showRes(togglePhysics());   // jump mode Jumps / Glue, saved
   if (e.code === 'KeyP' && !e.repeat && trackDef) showRes(physicsDebug.toggle() ? 'PHYSICS BODIES ON' : 'PHYSICS BODIES OFF');
-  // 3: Wii 3D kart test (src/kart3d.js) on every kart (each its own character's Standard Kart) with shadow-map
-  // shadows on the course and the Wii Lakitu (src/lakitu3d.js) for the referees, back to the sprites on the next press.
-  // On the title it also turns the 3D title on and sets 4x; races then start in 3D until 3 turns it off (mk64wii3d).
+
+  // 3: Wii 3D kart test
   if (e.code === 'Digit3' && !e.repeat && !trackDef && [titleEl, gameEl, menuEl, charEl].includes(curScreen)) {
     const on = !title3d;
     toggleTitle3D();
     if (on) { localStorage.setItem('mk64wii3d', '1'); HD.setPreset('4x'); } else localStorage.removeItem('mk64wii3d');
   }
   if (e.code === 'Digit3' && !e.repeat && player) setWii3D(!player.model);
-  // Q is a second item button that holds the stick up on release: a held banana is thrown ahead (gamepad: stick up)
-  if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyE' || e.code === 'KeyQ') && !e.repeat && state !== 'countdown' && player) useItem();
+
+  // Standard PC Item trigger: E / Q / F / X / Ctrl / Alt
+  if (isItemKey(e.code) && !e.repeat && state !== 'countdown' && player) {
+    useItem();
+  }
+
   if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
 });
+
 addEventListener('keyup', e => {
   keys[e.code] = false;
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.code === 'KeyE') releaseItem();
-  if (e.code === 'KeyQ') releaseItem(80);   // N64 rawStickY at full tilt up
+  if (isItemKey(e.code)) {
+    // If Q or holding W/Up, tilt forward (+80); if holding S/Down, tilt backward (-80)
+    const stickY = (e.code === 'KeyQ' || keys.ArrowUp || keys.KeyW) ? 80 : (keys.ArrowDown || keys.KeyS) ? -80 : 0;
+    releaseItem(stickY);
+  }
 });
 // gamepad: A/RT gas, B/LT brake, LB/RB drift, X/Y item, Start restart, stick or d-pad steers
 let padItemHeld = false, padStartHeld = false;
@@ -1244,7 +1286,7 @@ function playerInput() {
     throttle: (keys.ArrowUp || keys.KeyW) ? 1 : 0,
     brake: (keys.ArrowDown || keys.KeyS) ? 1 : 0,
     steer: (r ? 1 : 0) - (l ? 1 : 0),
-    drift: !!keys.Space,
+    drift: !!(keys.Space || keys.ShiftLeft || keys.ShiftRight || keys.KeyZ),
   };
   const p = pollPad();
   const inp = !p ? kb : {

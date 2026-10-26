@@ -208,19 +208,21 @@ A dedicated step-by-step engineering specification for importing Studio Ghibli c
 
 ## 11. Controls & Action-Map
 
-| Action | Keyboard | Gamepad (Standard) | Mobile / Touch |
+| Action | Keyboard (Standard PC) | Gamepad (Standard) | Mobile / Touch |
 | :--- | :--- | :--- | :--- |
 | **Accelerate** | `W` / `ArrowUp` | Button `A` / Right Trigger | On-screen gas pedal |
 | **Brake / Reverse** | `S` / `ArrowDown` | Button `B` / Left Trigger | On-screen brake pedal |
-| **Steering** | `A` / `D` or `Left` / `Right` | Left Thumbstick (horizontal) | On-screen left/right arrows |
-| **Hop / Drift** | `Space` | Button `LB` / `RB` | On-screen drift icon |
-| **Use Item** | `Shift` / `E` | Button `X` | On-screen item icon |
-| **Throw Item Forward**| `Q` (Banana/Shell) | Left Stick Up + Button `X` | Hold up + Item |
+| **Steering** | `A` / `D` or `ArrowLeft` / `ArrowRight` | Left Thumbstick (horizontal) | On-screen left/right arrows |
+| **Hop / Drift** | `Space` / `Shift` / `Z` | Button `LB` / `RB` | On-screen drift icon |
+| **Use Item** | `E` / `Ctrl` / `X` / `F` | Button `X` / `Y` | On-screen item icon |
+| **Throw Item Ahead**| Hold `W` / `Up` + release Item, or `Q` | Left Stick Up + Button `X` | Hold up + Item |
+| **Drop Item Behind**| Hold `S` / `Down` + release Item | Left Stick Down + Button `X` | Hold down + Item |
+| **Restart Race** | `R` / `Delete` / `Backspace` | Button `Start` | Restart button |
+| **Pause / Course Menu**| `Escape` / `M` | Button `Start` / `Back` | Menu button |
+| **Toggle Music** | `N` | — | Settings menu |
 | **Toggle Wii 3D Karts**| Key `3` | — | Settings menu |
 | **Cycle Resolution** | Key `G` | — | Settings menu |
 | **Toggle Physics Mode**| Key `J` (Jumps / Glue) | — | Settings menu |
-| **Course Menu** | Key `M` | Button `Y` | Menu button |
-| **Restart Race** | `Delete` / `Backspace` | Button `Start` | Restart button |
 | **Exit to RPG** | `Escape` / Top-right button | Button `Back` / `Select` | Top-right `✕ Close Race` |
 
 ---
