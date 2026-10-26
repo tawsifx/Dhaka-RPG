@@ -41,15 +41,22 @@
 
 ---
 
-### 4. Fuller Road Sprint Track Art & External Dressing
-- **SuperTuxKart Track Models & Textures:**
-  - **Flyover Elevated Bridge:** `public/assets/race/stk/models/stk_bridge.glb` & embedded flyover geometry, converted from STK Zen Garden `bridge_LOD50.spm` and `JapanwoodBridge.jpg`. License: CC-BY-SA 3.0 (SuperTuxKart Team).
-  - **Roadside Traffic Vehicles:** `public/assets/race/stk/models/stk_traffic_car.glb`, converted from STK Candela City `car_traffic.spm` and `stk_lowPolyCars_a.png`. License: CC-BY-SA 3.0.
+### 4. Fuller Road Sprint Track Art & External Candela City Architecture
+- **SuperTuxKart Candela City Complete Environment & Monuments:**
+  - **Candela City 3D Metropolis (`candela_city_track.spm` / `candela_city_track.glb`):** Full urban circuit geometry, modern architectural facades, neoclassical pavilions, waterfront arches, and skyline surrounding Fuller Road Sprint. Converted from STK `tracks/candela_city/candela_city_track.spm`. License: CC-BY-SA 3.0 / GNU GPL v3+ (SuperTuxKart Team).
+  - **Start/Finish Arch Gantry & Neon Patterns:** `public/assets/race/stk/models/stk_start_sign.glb`, converted from STK `tracks/candela_city/start_sign.spm` and `start_sign_pattern.spm`.
+  - **Mechanical Clocktower Monument:** `public/assets/race/stk/models/stk_clockwork.glb`, converted from STK `tracks/candela_city/clockWork_a.spm` and `clockWork_b.spm`.
+  - **Glass Observation Elevator Tower:** `public/assets/race/stk/models/stk_elevator.glb`, converted from STK `tracks/candela_city/elevator_a1.spm`.
+  - **Caracalla Urban Waterfall Monument:** `public/assets/race/stk/models/stk_waterfall.glb`, converted from STK `tracks/candela_city/caracalla_waterfall.spm`.
+  - **Monorail Transit System:** `public/assets/race/stk/models/stk_toy_train.glb`, converted from STK `tracks/candela_city/toy_train.spm`.
+  - **Aerial Transport Gondola:** `public/assets/race/stk/models/stk_gondola.glb`, converted from STK `tracks/candela_city/gondola.spm`.
+  - **Roadside Traffic Vehicles:** `public/assets/race/stk/models/stk_traffic_car.glb`, converted from STK `tracks/candela_city/car_traffic.spm`.
+  - **Flyover Elevated Bridge:** `public/assets/race/stk/models/stk_bridge.glb`, converted from STK Zen Garden `bridge_LOD50.spm`.
   - **Road Asphalt Texture:** `public/assets/race/stk/textures/road.jpg`, sourced from STK Zen Garden `blackRoad.jpg`. Applied with wrapping repeat ($4 \times 40$) to `visual_road`.
   - **Sidewalk Brick Texture:** `public/assets/race/stk/textures/sidewalk.jpg`, sourced from STK Hacienda `hacienda_ground.jpg`. Applied with wrapping repeat ($2 \times 40$) to `visual_sidewalks`.
   - **Skybox Background:** `public/assets/race/stk/textures/sky.png`, sourced from STK Candela City `sky.png`.
   - **Scenery Props:** Converted from STK library models: Modern Street Lamps (`lamp.glb`), Red Lanterns (`lantern.glb`), Park Benches (`bench.glb`), Krishnachura Trees (`krishnachura_tree.glb`), Fitch Barrels (`barrel.glb`), Bushes (`bush.glb`), and Barrier Posts (`post.glb`).
-- **Dhaka Landmark Kitbashes:** Procedural architectural facades for Curzon Hall red-brick arcades, TSC Rotunda & Green Dome, and Shaheed Minar monument. All gameplay collision and centerline geometry strictly locked (`gameplay.lock.json`).
+- **Zero Procedural Visual Primitives:** All previous procedural landmark primitives (Curzon boxes/cones, start arch boxes, TSC cylinders/spheres, Shaheed Minar columns) have been completely removed and replaced by authentic SuperTuxKart 3D architectural assets. All gameplay collision and centerline geometry strictly locked (`gameplay.lock.json`).
 
 ### 5. Rival Driver Billboards (M4)
 - Rival and player billboards sample the project's own existing character sheets (`public/assets/sprites/characters/*.png`; credits remain those recorded for the overworld characters in `GAME_CONTEXT.md` §12). No new art was added. Missing/unusable sheets fall back to a tinted name-tag marker.

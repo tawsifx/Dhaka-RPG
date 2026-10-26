@@ -336,7 +336,8 @@ function downloadChunk(url, fd, start, end, { etag, lastModified, timeout, onDat
   return new Promise((resolve, reject) => {
     const headers = {
       Range: `bytes=${start}-${end}`,
-      'User-Agent': 'DhakaRPG-Downloader/1.0'
+      'User-Agent': 'DhakaRPG-Downloader/1.0',
+      Connection: 'close'
     };
     if (etag) headers['If-Range'] = etag;
     else if (lastModified) headers['If-Range'] = lastModified;
@@ -349,11 +350,19 @@ function downloadChunk(url, fd, start, end, { etag, lastModified, timeout, onDat
         }
 
         let writeOffset = start;
+        let resolved = false;
+
         res.on('data', (buf) => {
           try {
             fs.writeSync(fd, buf, 0, buf.length, writeOffset);
             writeOffset += buf.length;
             if (onData) onData(buf.length);
+
+            if (writeOffset === end + 1 && !resolved) {
+              resolved = true;
+              res.destroy();
+              resolve();
+            }
           } catch (writeErr) {
             res.destroy();
             reject(writeErr);
@@ -361,13 +370,16 @@ function downloadChunk(url, fd, start, end, { etag, lastModified, timeout, onDat
         });
 
         res.on('end', () => {
+          if (resolved) return;
           if (writeOffset !== end + 1) {
             return reject(new Error(`Chunk length mismatch: got ${writeOffset - start}, expected ${end - start + 1}`));
           }
           resolve();
         });
 
-        res.on('error', reject);
+        res.on('error', (err) => {
+          if (!resolved) reject(err);
+        });
       })
       .catch(reject);
   });

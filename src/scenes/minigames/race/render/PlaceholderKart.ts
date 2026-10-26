@@ -230,6 +230,13 @@ export class PlaceholderKart {
 
       this.bodyGroup.add(gltf.scene);
       this.stkModel = gltf.scene;
+
+      // Load authentic STK red lantern for rescue (replacing procedural sphere)
+      loader.load('/assets/race/stk/models/lantern.glb', (lanternGltf) => {
+        this.lanternMesh.visible = false;
+        lanternGltf.scene.scale.set(0.65, 0.65, 0.65);
+        this.rescueLantern.add(lanternGltf.scene);
+      });
     } catch (err) {
       console.warn(`[PlaceholderKart] Failed to load external STK kart model ${modelUrl}:`, err);
     }

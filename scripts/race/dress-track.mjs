@@ -274,135 +274,145 @@ const railMesh = new THREE.Mesh(railGeom, matBarrierRail);
 railMesh.name = 'visual_guardrails';
 visualScene.add(railMesh);
 
-// 5. Flyover Structural Pillars
-console.log('🌉 Adding Flyover bridge support piers...');
-const flyoverPillars = new THREE.Group();
-flyoverPillars.name = 'visual_flyover_piers';
-[-35, -15, 15, 35].forEach((px) => {
-  const pier = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.6, 6.2, 12), matFlyoverPier);
-  pier.position.set(px, 3.1, 115);
-  flyoverPillars.add(pier);
-});
-visualScene.add(flyoverPillars);
+// 5. SuperTuxKart Candela City Metropolis & Architectural Monuments
+console.log('🏙️ Importing whole Candela City track and architectural monuments...');
 
-// 5b. SuperTuxKart Flyover Arched Bridge Mesh (from Zen Garden bridge_LOD50.spm)
-const bridgeSpmPath = path.resolve('.cache/stk-assets/tracks/zengarden/bridge_LOD50.spm');
-if (fs.existsSync(bridgeSpmPath)) {
-  console.log('🌉 Integrating authentic STK Zen Garden bridge model onto flyover...');
-  const bridgeBuf = fs.readFileSync(bridgeSpmPath);
-  const bridgeSpm = readSPM(bridgeBuf, { transformCoordinates: true });
-  const bridgeGeoms = spmToBufferGeometries(bridgeSpm);
-  const stkBridgeGroup = new THREE.Group();
-  stkBridgeGroup.name = 'visual_stk_flyover_bridge';
+// Helper to unpack and mount STK SPM models into visual scene
+function mountSpmModel(spmRelativePath, name, scale = 1, pos = [0, 0, 0], rot = [0, 0, 0], tintColor = null) {
+  const fullPath = path.resolve('.cache/stk-assets', spmRelativePath);
+  if (!fs.existsSync(fullPath)) {
+    console.warn(`  ⚠️ Missing SPM model: ${fullPath}`);
+    return null;
+  }
+  const buf = fs.readFileSync(fullPath);
+  const spm = readSPM(buf, { transformCoordinates: true });
+  const geoms = spmToBufferGeometries(spm);
+  const grp = new THREE.Group();
+  grp.name = name;
 
-  for (const bg of bridgeGeoms) {
-    const isRedWood = bg.materialName.toLowerCase().includes('red');
-    const isFloor = bg.materialName.toLowerCase().includes('bridge');
-    const bMat = new THREE.MeshStandardMaterial({
-      name: bg.materialName,
-      color: isRedWood ? 0xb71c1c : (isFloor ? 0x4e342e : 0x795548),
+  for (const g of geoms) {
+    const matProps = {
+      name: g.materialName,
       roughness: 0.75,
-      metalness: 0.1
-    });
-    const bMesh = new THREE.Mesh(bg.geometry, bMat);
-    bMesh.rotation.x = -Math.PI / 2;
-    stkBridgeGroup.add(bMesh);
+      metalness: 0.15
+    };
+    if (tintColor) {
+      matProps.color = new THREE.Color(tintColor);
+    }
+    const mat = new THREE.MeshStandardMaterial(matProps);
+    const mesh = new THREE.Mesh(g.geometry, mat);
+    grp.add(mesh);
   }
 
-  // Position spanning the elevated flyover section
-  stkBridgeGroup.position.set(-15, 3.2, 115);
-  stkBridgeGroup.scale.set(1.1, 1.1, 1.1);
-  visualScene.add(stkBridgeGroup);
+  grp.scale.set(scale, scale, scale);
+  grp.position.set(pos[0], pos[1], pos[2]);
+  grp.rotation.set(rot[0], rot[1], rot[2]);
+  visualScene.add(grp);
+  return grp;
 }
 
-// 6. Kitbashed Dhaka Landmarks
-console.log('🏛️ Kitbashing Dhaka Landmarks: Curzon Hall, TSC Rotunda, Shaheed Minar...');
+// 5a. Mount the entire SuperTuxKart Candela City 3D Track & Architectural Environment
+mountSpmModel(
+  'tracks/candela_city/candela_city_track.spm',
+  'candela_city_world_architecture',
+  1.0,
+  [0, -1.0, 0],
+  [0, 0, 0]
+);
 
-// Landmark A: Curzon Hall Mughal-Gothic Red-Brick Pavilion (around z: -40 to z: -100)
-const curzonGroup = new THREE.Group();
-curzonGroup.name = 'landmark_curzon_hall';
-for (let cz = -30; cz >= -110; cz -= 25) {
-  // West Arcade Wing
-  const colW = new THREE.Mesh(new THREE.BoxGeometry(3.5, 12.0, 3.5), matCurzonBrick);
-  colW.position.set(-18.0, 6.0, cz);
-  const domeW = new THREE.Mesh(new THREE.ConeGeometry(2.5, 3.5, 8), matCurzonWhite);
-  domeW.position.set(-18.0, 13.5, cz);
-  curzonGroup.add(colW, domeW);
+// 5b. SuperTuxKart Flyover Arched Bridge (Zen Garden bridge_LOD50.spm)
+const flyoverBridge = mountSpmModel(
+  'tracks/zengarden/bridge_LOD50.spm',
+  'visual_stk_flyover_bridge',
+  1.1,
+  [-15, 3.2, 115],
+  [-Math.PI / 2, 0, 0]
+);
 
-  // East Arcade Wing
-  const colE = new THREE.Mesh(new THREE.BoxGeometry(3.5, 12.0, 3.5), matCurzonBrick);
-  colE.position.set(18.0, 6.0, cz);
-  const domeE = new THREE.Mesh(new THREE.ConeGeometry(2.5, 3.5, 8), matCurzonWhite);
-  domeE.position.set(18.0, 13.5, cz);
-  curzonGroup.add(colE, domeE);
-}
-visualScene.add(curzonGroup);
+// 5c. Flyover Bridge Support Columns (Asian wood/stone posts from STK library)
+[-35, -15, 15, 35].forEach((px, idx) => {
+  mountSpmModel(
+    'library/stklib_asianWoodPost_a/stklib_asianWoodPost_a_main.spm',
+    `visual_flyover_post_${idx}`,
+    2.5,
+    [px, 0, 115],
+    [0, 0, 0]
+  );
+});
 
-// Landmark B: Start/Finish Gantry Arch at z = 0 with bilingual banner
-const archGroup = new THREE.Group();
-archGroup.name = 'landmark_start_finish_arch';
-const archBeam = new THREE.Mesh(new THREE.BoxGeometry(26.0, 3.0, 2.5), matCurzonBrick);
-archBeam.position.set(0, 10.5, 0);
+// 6. External SuperTuxKart Architectural Monuments (replacing procedural landmark blocks)
+console.log('🏛️ Placing authentic Candela City monuments: Start Arch Gantry, Clocktower, Observation Tower, Waterfall & Monorail...');
 
-const bannerSign = new THREE.Mesh(new THREE.BoxGeometry(18.0, 1.8, 0.4), matBanner);
-bannerSign.position.set(0, 10.5, 1.4); // Facing approaching karts
+// Landmark A: Candela City Start/Finish Line Gantry & Neon Patterns (replaces procedural box arch)
+mountSpmModel(
+  'tracks/candela_city/start_sign.spm',
+  'candela_start_gantry_arch',
+  3.2,
+  [0, 9.5, 0],
+  [0, 0, 0]
+);
+mountSpmModel(
+  'tracks/candela_city/start_sign_pattern.spm',
+  'candela_start_sign_neon_pattern',
+  3.2,
+  [0, 9.5, 0.2],
+  [0, 0, 0]
+);
 
-const pLeft = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.5, 11.0, 8), matCurzonBrick);
-pLeft.position.set(-12.0, 5.5, 0);
-const pRight = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.5, 11.0, 8), matCurzonBrick);
-pRight.position.set(12.0, 5.5, 0);
+// Landmark B: Candela City Clockwork Mechanical Monument (replaces procedural TSC Rotunda)
+mountSpmModel(
+  'tracks/candela_city/clockWork_a.spm',
+  'candela_clocktower_monument_a',
+  2.0,
+  [230, 2.5, -180],
+  [0, 0, 0]
+);
+mountSpmModel(
+  'tracks/candela_city/clockWork_b.spm',
+  'candela_clocktower_monument_b',
+  2.0,
+  [230, 6.0, -180],
+  [0, Math.PI / 4, 0]
+);
 
-archGroup.add(archBeam, bannerSign, pLeft, pRight);
-visualScene.add(archGroup);
+// Landmark C: Candela City Glass Observation Tower / Elevator (replaces procedural cylinder)
+mountSpmModel(
+  'tracks/candela_city/elevator_a1.spm',
+  'candela_observation_elevator',
+  1.6,
+  [225, 0, -165],
+  [0, -Math.PI / 3, 0]
+);
 
-// Landmark C: TSC Rotunda & Green Dome (Hairpin apex at x: 230, z: -180)
-const tscGroup = new THREE.Group();
-tscGroup.name = 'landmark_tsc_rotunda';
-const tscBase = new THREE.Mesh(new THREE.CylinderGeometry(14.0, 14.0, 3.0, 24), matFlyoverPier);
-tscBase.position.set(230, 1.5, -180);
-const tscDome = new THREE.Mesh(new THREE.SphereGeometry(14.0, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), matTscGreen);
-tscDome.position.set(230, 3.0, -180);
+// Landmark D: Candela City Caracalla Waterfall Monument (replaces procedural Shaheed Minar)
+mountSpmModel(
+  'tracks/candela_city/caracalla_waterfall.spm',
+  'candela_caracalla_waterfall_monument',
+  2.2,
+  [145, 0, 18],
+  [0, 0, 0]
+);
 
-// White columns around rotunda perimeter
-for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
-  const cx = 230 + Math.cos(a) * 12.0;
-  const cz = -180 + Math.sin(a) * 12.0;
-  const col = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 6.0, 8), matCurzonWhite);
-  col.position.set(cx, 4.5, cz);
-  tscGroup.add(col);
-}
-tscGroup.add(tscBase, tscDome);
-visualScene.add(tscGroup);
+// Landmark E: Candela City Monorail / Toy Train Transit (replaces procedural blocks)
+mountSpmModel(
+  'tracks/candela_city/toy_train.spm',
+  'candela_monorail_transit_car',
+  2.0,
+  [145, 1.2, 35],
+  [0, Math.PI / 2, 0]
+);
 
-// Landmark D: Shaheed Minar (Central tilted monument and red sun at x: 145, z: 20)
-const shaheedGroup = new THREE.Group();
-shaheedGroup.name = 'landmark_shaheed_minar';
-const monumentBase = new THREE.Mesh(new THREE.BoxGeometry(20.0, 1.5, 15.0), matFlyoverPier);
-monumentBase.position.set(145, 0.75, 20);
+// Landmark F: Candela City Aerial Transport Gondola
+mountSpmModel(
+  'tracks/candela_city/gondola.spm',
+  'candela_aerial_gondola',
+  1.8,
+  [-18.0, 14.0, -70],
+  [0, 0, 0]
+);
 
-// Central tilted column
-const mainCol = new THREE.Mesh(new THREE.BoxGeometry(2.5, 16.0, 1.0), matShaheedWhite);
-mainCol.position.set(145, 8.5, 18);
-mainCol.rotation.x = -0.15; // Iconic forward lean
-
-// Side columns
-const leftCol = new THREE.Mesh(new THREE.BoxGeometry(1.8, 12.0, 0.8), matShaheedWhite);
-leftCol.position.set(139, 6.5, 19);
-leftCol.rotation.x = -0.15;
-const rightCol = new THREE.Mesh(new THREE.BoxGeometry(1.8, 12.0, 0.8), matShaheedWhite);
-rightCol.position.set(151, 6.5, 19);
-rightCol.rotation.x = -0.15;
-
-// Red Sun disc behind the columns
-const redSun = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 0.4, 32), matShaheedRedSun);
-redSun.position.set(145, 9.5, 16.5);
-redSun.rotation.x = Math.PI / 2;
-
-shaheedGroup.add(monumentBase, mainCol, leftCol, rightCol, redSun);
-visualScene.add(shaheedGroup);
-
-// 7. Visual Petal Boost Pads (Overlaying gameplay boost pads)
-console.log('⚡ Placing glowing visual petal boost pad overlays...');
+// 7. Visual Boost Pads (Candela City start pattern chevron overlays)
+console.log('⚡ Placing authentic visual boost pad overlays...');
 for (const pad of (trackData.boostPads || [])) {
   const padMesh = new THREE.Mesh(new THREE.PlaneGeometry(pad.width || 4.5, pad.length || 7.0), matPetalPad);
   padMesh.rotation.x = -Math.PI / 2;
