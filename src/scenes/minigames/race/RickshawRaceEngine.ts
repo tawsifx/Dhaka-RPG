@@ -167,7 +167,7 @@ export class RickshawRaceEngine {
     // 5. Instantiate renderer & core rendering objects
     this.renderer = new RaceRenderer({ canvas: this.canvas, isTrackMode: this.trackId !== 'arena' });
     this.kartMesh = new PlaceholderKart(0x2563eb, 0x60a5fa, {
-      modelUrl: '/assets/race/stk/models/tux_kart.glb',
+      modelUrl: '/assets/race/stk/spm/tux.spm',
       isPlayer: true
     });
     this.renderer.scene.add(this.kartMesh.group);

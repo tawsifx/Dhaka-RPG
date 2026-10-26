@@ -74,14 +74,24 @@ const matRoad = new THREE.MeshStandardMaterial({
   name: 'mat_road_asphalt'
 });
 const matCurbRed = new THREE.MeshStandardMaterial({
-  color: 0xd32f2f,
-  roughness: 0.7,
+  color: 0xef4444,
+  roughness: 0.6,
   name: 'mat_curb_red'
 });
 const matCurbWhite = new THREE.MeshStandardMaterial({
-  color: 0xf5f5f5,
-  roughness: 0.7,
+  color: 0xf8fafc,
+  roughness: 0.6,
   name: 'mat_curb_white'
+});
+const matRoadLineWhite = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  roughness: 0.4,
+  name: 'mat_road_line_white'
+});
+const matStartChecker = new THREE.MeshStandardMaterial({
+  color: 0xffffff,
+  roughness: 0.3,
+  name: 'mat_start_checker'
 });
 const matSidewalk = new THREE.MeshStandardMaterial({
   color: 0x8d6e63, // Dhaka reddish-brown brick
@@ -253,12 +263,142 @@ const roadMesh = new THREE.Mesh(roadGeom, matRoad);
 roadMesh.name = 'visual_road';
 visualScene.add(roadMesh);
 
+// 4b. Generate Road Surface Markings: White Dashed Centerline & Solid Edge Lines
+console.log('🛣️ Generating crisp painted road markings (dashed centerline & solid edge stripes)...');
+const centerLineGeom = new THREE.BufferGeometry();
+const centerLinePositions = [];
+const centerLineIndices = [];
+
+const edgeLineGeom = new THREE.BufferGeometry();
+const edgeLinePositions = [];
+const edgeLineIndices = [];
+
+const dashLength = 3.8;
+const gapLength = 2.4;
+const cycle = dashLength + gapLength;
+let currentDist = 0;
+
+for (let i = 0; i < SAMPLES; i++) {
+  const t0 = i / SAMPLES;
+  const t1 = (i + 1) / SAMPLES;
+  const pt0 = spline.getPoint(t0);
+  const pt1 = spline.getPoint(t1);
+  const tan0 = spline.getTangent(t0);
+  const tan1 = spline.getTangent(t1);
+
+  const segDist = Math.hypot(pt1.x - pt0.x, pt1.y - pt0.y, pt1.z - pt0.z);
+  const inDash = (currentDist % cycle) < dashLength;
+  currentDist += segDist;
+
+  const nx0 = -tan0.z / (Math.hypot(tan0.x, tan0.z) || 1);
+  const nz0 = tan0.x / (Math.hypot(tan0.x, tan0.z) || 1);
+  const nx1 = -tan1.z / (Math.hypot(tan1.x, tan1.z) || 1);
+  const nz1 = tan1.x / (Math.hypot(tan1.x, tan1.z) || 1);
+
+  const halfLineWidth = 0.18;
+  const edgeOffset = (roadWidth * 0.5) - 0.45;
+  const edgeLineWidth = 0.22;
+
+  // Solid outer edge lines (left and right)
+  const baseEdgeL = edgeLinePositions.length / 3;
+  edgeLinePositions.push(pt0.x - nx0 * edgeOffset, pt0.y + 0.035, pt0.z - nz0 * edgeOffset);
+  edgeLinePositions.push(pt0.x - nx0 * (edgeOffset - edgeLineWidth), pt0.y + 0.035, pt0.z - nz0 * (edgeOffset - edgeLineWidth));
+  edgeLinePositions.push(pt1.x - nx1 * edgeOffset, pt1.y + 0.035, pt1.z - nz1 * edgeOffset);
+  edgeLinePositions.push(pt1.x - nx1 * (edgeOffset - edgeLineWidth), pt1.y + 0.035, pt1.z - nz1 * (edgeOffset - edgeLineWidth));
+  edgeLineIndices.push(baseEdgeL, baseEdgeL + 1, baseEdgeL + 2);
+  edgeLineIndices.push(baseEdgeL + 1, baseEdgeL + 3, baseEdgeL + 2);
+
+  const baseEdgeR = edgeLinePositions.length / 3;
+  edgeLinePositions.push(pt0.x + nx0 * (edgeOffset - edgeLineWidth), pt0.y + 0.035, pt0.z + nz0 * (edgeOffset - edgeLineWidth));
+  edgeLinePositions.push(pt0.x + nx0 * edgeOffset, pt0.y + 0.035, pt0.z + nz0 * edgeOffset);
+  edgeLinePositions.push(pt1.x + nx1 * (edgeOffset - edgeLineWidth), pt1.y + 0.035, pt1.z + nz1 * (edgeOffset - edgeLineWidth));
+  edgeLinePositions.push(pt1.x + nx1 * edgeOffset, pt1.y + 0.035, pt1.z + nz1 * edgeOffset);
+  edgeLineIndices.push(baseEdgeR, baseEdgeR + 1, baseEdgeR + 2);
+  edgeLineIndices.push(baseEdgeR + 1, baseEdgeR + 3, baseEdgeR + 2);
+
+  // Dashed centerline
+  if (inDash) {
+    const baseCenter = centerLinePositions.length / 3;
+    centerLinePositions.push(pt0.x - nx0 * halfLineWidth, pt0.y + 0.035, pt0.z - nz0 * halfLineWidth);
+    centerLinePositions.push(pt0.x + nx0 * halfLineWidth, pt0.y + 0.035, pt0.z + nz0 * halfLineWidth);
+    centerLinePositions.push(pt1.x - nx1 * halfLineWidth, pt1.y + 0.035, pt1.z - nz1 * halfLineWidth);
+    centerLinePositions.push(pt1.x + nx1 * halfLineWidth, pt1.y + 0.035, pt1.z + nz1 * halfLineWidth);
+    centerLineIndices.push(baseCenter, baseCenter + 1, baseCenter + 2);
+    centerLineIndices.push(baseCenter + 1, baseCenter + 3, baseCenter + 2);
+  }
+}
+
+centerLineGeom.setAttribute('position', new THREE.Float32BufferAttribute(centerLinePositions, 3));
+centerLineGeom.setIndex(centerLineIndices);
+centerLineGeom.computeVertexNormals();
+const centerLineMesh = new THREE.Mesh(centerLineGeom, matRoadLineWhite);
+centerLineMesh.name = 'visual_centerline';
+visualScene.add(centerLineMesh);
+
+edgeLineGeom.setAttribute('position', new THREE.Float32BufferAttribute(edgeLinePositions, 3));
+edgeLineGeom.setIndex(edgeLineIndices);
+edgeLineGeom.computeVertexNormals();
+const edgeLineMesh = new THREE.Mesh(edgeLineGeom, matRoadLineWhite);
+edgeLineMesh.name = 'visual_edgelines';
+visualScene.add(edgeLineMesh);
+
+// 4c. High-contrast alternating red and white curbs
+const curbRedIndices = [];
+const curbWhiteIndices = [];
+let curbDist = 0;
+for (let i = 0; i < SAMPLES; i++) {
+  const t0 = i / SAMPLES;
+  const t1 = (i + 1) / SAMPLES;
+  const p0 = spline.getPoint(t0);
+  const p1 = spline.getPoint(t1);
+  const segLen = Math.hypot(p1.x - p0.x, p1.y - p0.y, p1.z - p0.z);
+  curbDist += segLen;
+  const isRed = (Math.floor(curbDist / 3.0) % 2) === 0;
+  const targetIndices = isRed ? curbRedIndices : curbWhiteIndices;
+
+  const baseC = i * 4;
+  targetIndices.push(baseC, baseC + 1, baseC + 4);
+  targetIndices.push(baseC + 1, baseC + 5, baseC + 4);
+  targetIndices.push(baseC + 2, baseC + 3, baseC + 6);
+  targetIndices.push(baseC + 3, baseC + 7, baseC + 6);
+}
+
 curbGeom.setAttribute('position', new THREE.Float32BufferAttribute(curbPositions, 3));
-curbGeom.setIndex(curbIndices);
+curbGeom.setIndex(curbRedIndices);
 curbGeom.computeVertexNormals();
-const curbMesh = new THREE.Mesh(curbGeom, matCurbRed);
-curbMesh.name = 'visual_curbs';
-visualScene.add(curbMesh);
+const curbMeshRed = new THREE.Mesh(curbGeom, matCurbRed);
+curbMeshRed.name = 'visual_curbs_red';
+visualScene.add(curbMeshRed);
+
+const curbWhiteGeom = curbGeom.clone();
+curbWhiteGeom.setIndex(curbWhiteIndices);
+const curbMeshWhite = new THREE.Mesh(curbWhiteGeom, matCurbWhite);
+curbMeshWhite.name = 'visual_curbs_white';
+visualScene.add(curbMeshWhite);
+
+// 4d. Start / Finish Line Checkered Banner on track
+const startCheckGeom = new THREE.BufferGeometry();
+const startCheckPositions = [];
+const startCheckIndices = [];
+const sPt = spline.getPoint(0);
+const sTan = spline.getTangent(0);
+const sNx = -sTan.z / (Math.hypot(sTan.x, sTan.z) || 1);
+const sNz = sTan.x / (Math.hypot(sTan.x, sTan.z) || 1);
+const startW = roadWidth * 0.5 - 0.4;
+const checkLen = 2.0;
+
+const startBase = 0;
+startCheckPositions.push(sPt.x - sNx * startW, sPt.y + 0.04, sPt.z - sNz * startW);
+startCheckPositions.push(sPt.x + sNx * startW, sPt.y + 0.04, sPt.z + sNz * startW);
+startCheckPositions.push(sPt.x - sNx * startW + sTan.x * checkLen, sPt.y + 0.04, sPt.z - sNz * startW + sTan.z * checkLen);
+startCheckPositions.push(sPt.x + sNx * startW + sTan.x * checkLen, sPt.y + 0.04, sPt.z + sNz * startW + sTan.z * checkLen);
+startCheckIndices.push(0, 1, 2, 1, 3, 2);
+startCheckGeom.setAttribute('position', new THREE.Float32BufferAttribute(startCheckPositions, 3));
+startCheckGeom.setIndex(startCheckIndices);
+startCheckGeom.computeVertexNormals();
+const startCheckMesh = new THREE.Mesh(startCheckGeom, matStartChecker);
+startCheckMesh.name = 'visual_start_checker';
+visualScene.add(startCheckMesh);
 
 sidewalkGeom.setAttribute('position', new THREE.Float32BufferAttribute(sidewalkPositions, 3));
 sidewalkGeom.setIndex(sidewalkIndices);
@@ -278,7 +418,7 @@ visualScene.add(railMesh);
 console.log('🏙️ Importing whole Candela City track and architectural monuments...');
 
 // Helper to unpack and mount STK SPM models into visual scene
-function mountSpmModel(spmRelativePath, name, scale = 1, pos = [0, 0, 0], rot = [0, 0, 0], tintColor = null) {
+function mountSpmModel(spmRelativePath, name, scale = 1, pos = [0, 0, 0], rot = [0, 0, 0], tintColor = null, excludeMaterials = []) {
   const fullPath = path.resolve('.cache/stk-assets', spmRelativePath);
   if (!fs.existsSync(fullPath)) {
     console.warn(`  ⚠️ Missing SPM model: ${fullPath}`);
@@ -291,6 +431,9 @@ function mountSpmModel(spmRelativePath, name, scale = 1, pos = [0, 0, 0], rot = 
   grp.name = name;
 
   for (const g of geoms) {
+    if (excludeMaterials.includes(g.materialName)) {
+      continue;
+    }
     const matProps = {
       name: g.materialName,
       roughness: 0.75,
@@ -311,51 +454,33 @@ function mountSpmModel(spmRelativePath, name, scale = 1, pos = [0, 0, 0], rot = 
   return grp;
 }
 
-// 5a. Mount the entire SuperTuxKart Candela City 3D Track & Architectural Environment
+// 5a. Mount Candela City 3D Architectural Environment (excluding overhead highway slabs that clip the sky)
 mountSpmModel(
   'tracks/candela_city/candela_city_track.spm',
   'candela_city_world_architecture',
   1.0,
   [0, -1.0, 0],
-  [0, 0, 0]
+  [0, 0, 0],
+  null,
+  ['stk_darkGrayMetal_a.png', 'stk_generic_ironA.png', 'stk_greyMetal_a.png', 'stk_generic_runway_a.png']
 );
-
-// 5b. SuperTuxKart Flyover Arched Bridge (Zen Garden bridge_LOD50.spm)
-const flyoverBridge = mountSpmModel(
-  'tracks/zengarden/bridge_LOD50.spm',
-  'visual_stk_flyover_bridge',
-  1.1,
-  [-15, 3.2, 115],
-  [-Math.PI / 2, 0, 0]
-);
-
-// 5c. Flyover Bridge Support Columns (Asian wood/stone posts from STK library)
-[-35, -15, 15, 35].forEach((px, idx) => {
-  mountSpmModel(
-    'library/stklib_asianWoodPost_a/stklib_asianWoodPost_a_main.spm',
-    `visual_flyover_post_${idx}`,
-    2.5,
-    [px, 0, 115],
-    [0, 0, 0]
-  );
-});
 
 // 6. External SuperTuxKart Architectural Monuments (replacing procedural landmark blocks)
 console.log('🏛️ Placing authentic Candela City monuments: Start Arch Gantry, Clocktower, Observation Tower, Waterfall & Monorail...');
 
-// Landmark A: Candela City Start/Finish Line Gantry & Neon Patterns (replaces procedural box arch)
+// Landmark A: Candela City Start/Finish Line Gantry & Neon Patterns directly above the start line (z = 28)
 mountSpmModel(
   'tracks/candela_city/start_sign.spm',
   'candela_start_gantry_arch',
-  3.2,
-  [0, 9.5, 0],
+  2.8,
+  [0, 8.5, 28],
   [0, 0, 0]
 );
 mountSpmModel(
   'tracks/candela_city/start_sign_pattern.spm',
   'candela_start_sign_neon_pattern',
-  3.2,
-  [0, 9.5, 0.2],
+  2.8,
+  [0, 8.5, 28.2],
   [0, 0, 0]
 );
 
@@ -520,11 +645,11 @@ for (let i = 5; i < SAMPLES; i += 12) {
   });
 });
 
-// F. Hanging Festive Lanterns strung under the Start Arch
+// F. Hanging Festive Lanterns strung under the Start Arch (z = 28)
 for (let lx = -9; lx <= 9; lx += 3) {
   props.push({
     model: 'lantern',
-    position: [lx, 9.2, 0],
+    position: [lx, 8.2, 28],
     rotation: [0, 0, 0],
     scale: [1.2, 1.2, 1.2]
   });

@@ -43,35 +43,45 @@ export class RaceRenderer {
 
     this.scene = new THREE.Scene();
 
-    // Dhaka sky color & distance fog
-    const skyColor = 0xbfe3f7; // Warm Dhaka campus afternoon sky
-    this.scene.background = new THREE.Color(skyColor);
-    this.scene.fog = new THREE.FogExp2(skyColor, 0.008);
+    // Dhaka & SuperTuxKart Atmospheric Sky & Distance Fog
+    this.scene.background = new THREE.Color(0x1a1a2e);
+    this.scene.fog = new THREE.FogExp2(0x1c1c32, 0.0018); // Light fog: allows distant monuments, bridges, and city skyline to remain crisp
 
-    // Load authentic SuperTuxKart sky texture
+    // 0. 360° Sky Dome using authentic SuperTuxKart Candela City sky textures
     if (typeof window !== 'undefined') {
       const texLoader = new THREE.TextureLoader();
-      texLoader.load('/assets/race/stk/textures/sky.png', (skyTex) => {
-        skyTex.mapping = THREE.EquirectangularReflectionMapping;
-        this.scene.background = skyTex;
+      texLoader.load('/assets/race/stk/textures/sky-side.png', (skyTex) => {
+        skyTex.wrapS = THREE.RepeatWrapping;
+        skyTex.wrapT = THREE.ClampToEdgeWrapping;
+        skyTex.repeat.set(4, 1);
+        const skyGeo = new THREE.CylinderGeometry(580, 580, 320, 32, 1, true);
+        const skyMat = new THREE.MeshBasicMaterial({
+          map: skyTex,
+          side: THREE.BackSide,
+          depthWrite: false
+        });
+        const skyMesh = new THREE.Mesh(skyGeo, skyMat);
+        skyMesh.position.y = 80;
+        skyMesh.name = 'stk_skydome';
+        this.scene.add(skyMesh);
       });
     }
 
     // 1. Lighting
-    this.ambientLight = new THREE.AmbientLight(0xfff7ed, 0.70);
+    this.ambientLight = new THREE.AmbientLight(0xfff1e6, 0.85);
     this.scene.add(this.ambientLight);
 
-    this.hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0x166534, 0.45);
+    this.hemiLight = new THREE.HemisphereLight(0xe2e8f0, 0x1e293b, 0.55);
     this.scene.add(this.hemiLight);
 
-    this.dirLight = new THREE.DirectionalLight(0xffedd5, 1.45);
-    this.dirLight.position.set(40, 60, 30);
+    this.dirLight = new THREE.DirectionalLight(0xffedd5, 1.65);
+    this.dirLight.position.set(45, 70, 35);
     this.dirLight.castShadow = true;
     this.dirLight.shadow.mapSize.width = 1024;
     this.dirLight.shadow.mapSize.height = 1024;
     this.dirLight.shadow.camera.near = 10;
-    this.dirLight.shadow.camera.far = 180;
-    const d = 45;
+    this.dirLight.shadow.camera.far = 200;
+    const d = 50;
     this.dirLight.shadow.camera.left = -d;
     this.dirLight.shadow.camera.right = d;
     this.dirLight.shadow.camera.top = d;

@@ -39,8 +39,8 @@ export class RivalKartRenderer {
     for (let i = 0; i < rivalProfiles.length; i++) {
       const profile = rivalProfiles[i];
       const modelUrl = i % 2 === 0
-        ? '/assets/race/stk/models/wilber_kart.glb'
-        : '/assets/race/stk/models/tux_kart.glb';
+        ? '/assets/race/stk/spm/wilber.spm'
+        : '/assets/race/stk/spm/tux.spm';
 
       const kart = new PlaceholderKart(profile.kartColor, profile.accentColor, {
         modelUrl,

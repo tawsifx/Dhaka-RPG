@@ -53,11 +53,11 @@ export const DEFAULT_KART_CONFIG: Readonly<KartConfig> = Object.freeze({
 });
 
 export const DEFAULT_CAMERA_CONFIG: Readonly<ChaseCameraConfig> = Object.freeze({
-  distance: 6.2, // Offset distance behind the kart
-  height: 2.8, // Elevation above the ground plane
-  lookAhead: 3.8, // Distance ahead of the kart the camera focuses on
-  positionLag: 8.5, // Exponential smoothing rate for camera position
-  rotationLag: 6.5, // Exponential smoothing rate for camera orientation
+  distance: 5.0, // Offset distance behind the kart (brings player kart into crisp dynamic focus)
+  height: 2.1, // Elevation above the ground plane
+  lookAhead: 3.5, // Distance ahead of the kart the camera focuses on
+  positionLag: 9.0, // Exponential smoothing rate for camera position
+  rotationLag: 7.0, // Exponential smoothing rate for camera orientation
   baseFov: 60, // Standard field of view (degrees)
   maxFovKick: 12.0, // Dynamic FOV expansion at top speed and boost
   driftSwayFactor: 0.40, // Camera lateral lean opposite drift slip angle

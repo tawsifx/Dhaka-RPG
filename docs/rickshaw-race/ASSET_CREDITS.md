@@ -7,11 +7,13 @@
 
 ---
 
-### 1. 3D Kart Models & Materials
-- **SuperTuxKart 3D Kart Models:** Converted from authentic SuperTuxKart binary `.spm` assets into standard glTF binary `.glb` via `scripts/race/stk/convert-mesh.mjs` and loaded dynamically in `PlaceholderKart.ts`:
-  - `public/assets/race/stk/models/tux_kart.glb` — Sourced from STK `karts/tux/tux.spm` and textures (`tuxkart.png`, `tux_body.png`, `engine.png`, `wheel.png`). License: GNU GPL v3+ / CC-BY-SA 3.0 (SuperTuxKart Development Team). Used by player (Tux mascot chassis).
-  - `public/assets/race/stk/models/wilber_kart.glb` — Sourced from STK `karts/wilber/wilber.spm` and textures (`wilber_diffuse_1.png`, `wilber_diffuse_2.png`). License: GNU GPL v3+ / CC-BY-SA 3.0. Used by AI rivals with color customization tinting.
-  - Procedural 3-wheel rickshaw primitives in `PlaceholderKart.ts` retained as synchronous fallback for Node/Vitest headless testing environments.
+### 1. 3D Kart Models & In-Engine SPM Runtime Loader
+- **SuperTuxKart SPM Native Loader (`SPMLoader.ts`):** Direct Three.js binary parser for native SuperTuxKart `.spm` models at runtime, eliminating mandatory pre-conversion to glTF:
+  - `public/assets/race/stk/spm/tux.spm` — STK Tux mascot kart and textures. License: GNU GPL v3+ / CC-BY-SA 3.0.
+  - `public/assets/race/stk/spm/wilber.spm` — STK Wilber mascot kart and textures. License: GNU GPL v3+ / CC-BY-SA 3.0.
+  - `public/assets/race/stk/spm/lantern.spm` — STK Chinese red lantern for kart rescue carrier. License: CC-BY-SA 3.0.
+  - `public/assets/race/stk/spm/*.spm` — Library props (lamps, benches, trees, bushes, barrels, start gantry, clockwork, waterfall, monorail, gondola, traffic cars).
+  - Synchronous procedural rickshaw fallback retained in `PlaceholderKart.ts` for headless test runners.
 
 ---
 

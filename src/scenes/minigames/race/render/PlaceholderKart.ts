@@ -1,6 +1,7 @@
-// src/scenes/minigames/race/render/PlaceholderKart.ts - 3D Kart with authentic SuperTuxKart GLB models and procedural fallback
+// src/scenes/minigames/race/render/PlaceholderKart.ts - 3D Kart with direct SuperTuxKart SPM & GLB loading
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { SPMLoader } from '../stk/SPMLoader';
 import { KartState } from '../../../../types/race.types';
 
 export interface KartRenderOptions {
@@ -24,6 +25,7 @@ export class PlaceholderKart {
   private lanternMesh: THREE.Mesh;
   private stkModel: THREE.Group | null = null;
   private stkWheels: THREE.Mesh[] = [];
+  private groundShadow: THREE.Mesh | null = null;
 
   constructor(
     bodyColor: number | string = 0x15803d,
@@ -178,65 +180,113 @@ export class PlaceholderKart {
     this.geometries.push(lanternGeo);
     this.materials.push(lanternMat);
 
-    // Asynchronously load external SuperTuxKart 3D model if specified
+    // 8. Ground Contact Shadow Decal Plane
+    if (typeof document !== 'undefined') {
+      const shadowGeo = new THREE.PlaneGeometry(1.8, 2.4);
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        const grad = ctx.createRadialGradient(32, 32, 6, 32, 32, 30);
+        grad.addColorStop(0, 'rgba(0, 0, 0, 0.65)');
+        grad.addColorStop(0.4, 'rgba(0, 0, 0, 0.35)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 64, 64);
+      }
+      const shadowTex = new THREE.CanvasTexture(canvas);
+      this.loadedTextures.push(shadowTex);
+      const shadowMat = new THREE.MeshBasicMaterial({
+        map: shadowTex,
+        transparent: true,
+        depthWrite: false
+      });
+      this.materials.push(shadowMat);
+      this.geometries.push(shadowGeo);
+      this.groundShadow = new THREE.Mesh(shadowGeo, shadowMat);
+      this.groundShadow.rotation.x = -Math.PI / 2;
+      this.groundShadow.position.set(0, 0.04, 0);
+      this.group.add(this.groundShadow);
+    }
+
+    // Asynchronously load external SuperTuxKart 3D model if specified (SPM or GLB)
     if (options?.modelUrl && typeof window !== 'undefined') {
       this.loadStkModel(options.modelUrl, options.tintColor);
     }
   }
 
   /**
-   * Loads an authentic SuperTuxKart GLB model, attaches textures, and replaces procedural shapes.
+   * Loads an authentic SuperTuxKart model directly via SPMLoader or GLTFLoader.
    */
   async loadStkModel(modelUrl: string, tintColor?: number | string): Promise<void> {
     try {
-      const loader = new GLTFLoader();
-      const gltf = await loader.loadAsync(modelUrl);
-      const texLoader = new THREE.TextureLoader();
+      let modelGroup: THREE.Group;
 
-      gltf.scene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.castShadow = true;
-          child.receiveShadow = true;
-
-          const mat = child.material as THREE.MeshStandardMaterial;
-          if (mat && mat.name) {
-            // Bind authentic STK diffuse texture
-            const texName = mat.name;
-            const tex = texLoader.load(`/assets/race/stk/textures/${texName}`);
-            mat.map = tex;
-            mat.needsUpdate = true;
-            this.loadedTextures.push(tex);
-
-            // Apply rival color tint to kart bodywork
-            if (tintColor && (texName.includes('tuxkart') || texName.includes('diffuse_1') || texName.includes('body'))) {
-              mat.color = new THREE.Color(tintColor);
+      if (modelUrl.endsWith('.spm')) {
+        const spmLoader = new SPMLoader();
+        modelGroup = await spmLoader.loadSpm(modelUrl, { tintColor });
+        modelGroup.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            if (child.name.toLowerCase().includes('wheel')) {
+              this.stkWheels.push(child);
             }
           }
+        });
+      } else {
+        const loader = new GLTFLoader();
+        const gltf = await loader.loadAsync(modelUrl);
+        const texLoader = new THREE.TextureLoader();
 
-          if (child.name.toLowerCase().includes('wheel') || mat?.name?.toLowerCase().includes('wheel')) {
-            this.stkWheels.push(child);
+        gltf.scene.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+
+            const mat = child.material as THREE.MeshStandardMaterial;
+            if (mat && mat.name) {
+              const texName = mat.name;
+              const tex = texLoader.load(`/assets/race/stk/textures/${texName}`);
+              mat.map = tex;
+              mat.needsUpdate = true;
+              this.loadedTextures.push(tex);
+
+              if (tintColor && (texName.includes('tuxkart') || texName.includes('diffuse_1') || texName.includes('body'))) {
+                mat.color = new THREE.Color(tintColor);
+              }
+            }
+
+            if (child.name.toLowerCase().includes('wheel') || mat?.name?.toLowerCase().includes('wheel')) {
+              this.stkWheels.push(child);
+            }
           }
-        }
-      });
+        });
+        modelGroup = gltf.scene;
+      }
 
-      // Hide procedural box primitives
+      // Hide procedural box primitives once authentic STK model is ready
       for (const m of this.proceduralMeshes) {
         m.visible = false;
       }
 
-      // Scale model to match kart collision box
-      gltf.scene.scale.set(1.25, 1.25, 1.25);
-      gltf.scene.position.set(0, 0.05, 0);
+      // Scale model to match kart collision size
+      modelGroup.scale.set(1.45, 1.45, 1.45);
+      modelGroup.position.set(0, 0.05, 0);
 
-      this.bodyGroup.add(gltf.scene);
-      this.stkModel = gltf.scene;
+      this.bodyGroup.add(modelGroup);
+      this.stkModel = modelGroup;
 
       // Load authentic STK red lantern for rescue (replacing procedural sphere)
-      loader.load('/assets/race/stk/models/lantern.glb', (lanternGltf) => {
-        this.lanternMesh.visible = false;
-        lanternGltf.scene.scale.set(0.65, 0.65, 0.65);
-        this.rescueLantern.add(lanternGltf.scene);
-      });
+      if (typeof window !== 'undefined') {
+        const spmLoader = new SPMLoader();
+        spmLoader.load('/assets/race/stk/spm/lantern.spm', (lanternGroup) => {
+          this.lanternMesh.visible = false;
+          lanternGroup.scale.set(0.65, 0.65, 0.65);
+          this.rescueLantern.add(lanternGroup);
+        });
+      }
     } catch (err) {
       console.warn(`[PlaceholderKart] Failed to load external STK kart model ${modelUrl}:`, err);
     }
