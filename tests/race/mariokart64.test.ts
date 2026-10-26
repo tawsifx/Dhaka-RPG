@@ -10,7 +10,7 @@ import {
   pickRivals
 } from '../../src/scenes/minigames/race/kart.js';
 import { ITEM_LABELS } from '../../src/scenes/minigames/race/items.js';
-import { RickshawRaceEngine } from '../../src/scenes/minigames/race/RickshawRaceEngine';
+import { TotoroKartEngine, RickshawRaceEngine } from '../../src/scenes/minigames/race';
 
 describe('MarioKart64JS Core Subsystem Tests', () => {
   it('defines all 16 Grand Prix circuits and 4 battle arenas', () => {
@@ -79,10 +79,10 @@ describe('MarioKart64JS Core Subsystem Tests', () => {
     expect(ITEM_LABELS['mushroom']).toBe('MUSHROOM');
   });
 
-  it('RickshawRaceEngine exports launch and exit lifecycle hooks', () => {
-    expect(RickshawRaceEngine).toBeDefined();
-    expect(typeof RickshawRaceEngine.launch).toBe('function');
-    expect(typeof RickshawRaceEngine.exit).toBe('function');
+  it('TotoroKartEngine exports launch and exit lifecycle hooks', () => {
+    expect(TotoroKartEngine).toBeDefined();
+    expect(typeof TotoroKartEngine.launch).toBe('function');
+    expect(typeof TotoroKartEngine.exit).toBe('function');
 
     const dummyScene = {
       scene: { pause: () => {}, resume: () => {} },
@@ -90,7 +90,8 @@ describe('MarioKart64JS Core Subsystem Tests', () => {
       sound: { pauseAll: () => {}, resumeAll: () => {} }
     };
 
-    const engine = new RickshawRaceEngine(dummyScene);
-    expect(engine).toBeInstanceOf(RickshawRaceEngine);
+    const engine = new TotoroKartEngine(dummyScene);
+    expect(engine).toBeInstanceOf(TotoroKartEngine);
+    expect(RickshawRaceEngine).toBe(TotoroKartEngine);
   });
 });

@@ -1,7 +1,3 @@
-// src/scenes/minigames/race/index.ts - Barrel export for MarioKart64JS
-export { RickshawRaceEngine } from './RickshawRaceEngine';
-export type { RaceResult } from './RickshawRaceEngine';
-export * from './track.js';
-export * from './kart.js';
-export * from './items.js';
-export * from './audio.js';
+// src/scenes/minigames/race/index.ts - Totoro Kart Subsystem Entry Point
+export { TotoroKartEngine, RickshawRaceEngine } from './TotoroKartEngine';
+export type { RaceResult } from './TotoroKartEngine';

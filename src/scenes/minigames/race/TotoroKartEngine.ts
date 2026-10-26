@@ -1,4 +1,4 @@
-// src/scenes/minigames/race/RickshawRaceEngine.ts - Totoro Kart Bridge & Lifecycle Orchestrator for Dhaka RPG
+// src/scenes/minigames/race/TotoroKartEngine.ts - Totoro Kart Bridge & Lifecycle Orchestrator for Dhaka RPG
 
 export interface RaceResult {
   reason: 'finished' | 'user' | 'error';
@@ -7,7 +7,7 @@ export interface RaceResult {
   lapsCompleted?: number;
 }
 
-export class RickshawRaceEngine {
+export class TotoroKartEngine {
   private static activeIframeContainer: HTMLDivElement | null = null;
   private static resolveActiveRace: ((res: RaceResult) => void) | null = null;
 
@@ -78,14 +78,14 @@ export class RickshawRaceEngine {
       exitBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.5)';
 
       const closeHandler = () => {
-        RickshawRaceEngine.exit('user', scene);
+        TotoroKartEngine.exit('user', scene);
       };
 
       exitBtn.onclick = closeHandler;
       topBar.appendChild(exitBtn);
       container.appendChild(topBar);
 
-      // MarioKart64 iframe
+      // Totoro Kart iframe
       const iframe = document.createElement('iframe');
       const raceUrl = trackId ? `/race.html?track=${encodeURIComponent(trackId)}` : '/race.html';
       iframe.src = raceUrl;
@@ -149,10 +149,13 @@ export class RickshawRaceEngine {
   }
 
   start(): Promise<RaceResult> {
-    return RickshawRaceEngine.launch(this.scene);
+    return TotoroKartEngine.launch(this.scene);
   }
 
-  exit(reason: 'finished' | 'user' | 'error' = 'user'): void {
-    RickshawRaceEngine.exit(reason, this.scene);
+  destroy(reason: 'finished' | 'user' | 'error' = 'user'): void {
+    TotoroKartEngine.exit(reason, this.scene);
   }
 }
+
+// Backward-compatible alias
+export const RickshawRaceEngine = TotoroKartEngine;

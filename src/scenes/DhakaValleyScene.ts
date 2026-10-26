@@ -200,10 +200,10 @@ export class DhakaValleyScene extends Phaser.Scene {
     (window as any).RPGStats = RPGStats;
     (window as any).CombatSystem = CombatSystem;
     (window as any).UI = UI;
-    (window as any).__startRace = () => this.startRickshawRace();
+    (window as any).__startRace = () => this.startTotoroKart();
     if (typeof window !== 'undefined' && !(window as any).__race) {
       (window as any).__race = {
-        start: () => this.startRickshawRace(),
+        start: () => this.startTotoroKart(),
         isActive: () => false,
         exit: () => {},
         toggleOverlay: () => {},
@@ -3616,7 +3616,7 @@ export class DhakaValleyScene extends Phaser.Scene {
           {
             label: '🏁 Race — Grand Prix (Totoro Kart)',
             onPick: () => {
-              this.startRickshawRace();
+              this.startTotoroKart();
             }
           }
         ]
@@ -3624,16 +3624,21 @@ export class DhakaValleyScene extends Phaser.Scene {
     ]);
   }
 
-  async startRickshawRace() {
+  async startTotoroKart() {
     try {
-      const { RickshawRaceEngine } = await import('./minigames/race/RickshawRaceEngine');
-      const result = await RickshawRaceEngine.launch(this);
+      const { TotoroKartEngine } = await import('./minigames/race/TotoroKartEngine');
+      const result = await TotoroKartEngine.launch(this);
       console.log('🏁 [Race] Completed with result:', result);
       return result;
     } catch (err) {
-      console.error('Failed to launch RickshawRaceEngine:', err);
+      console.error('Failed to launch TotoroKartEngine:', err);
       return null;
     }
+  }
+
+  // Alias for backward compatibility
+  async startRickshawRace() {
+    return this.startTotoroKart();
   }
 
   startRickshawTour() {

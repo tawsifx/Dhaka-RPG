@@ -36,7 +36,7 @@ The 3D kart racing minigame in this project is powered by **Totoro Kart** (forme
   1. `"🛺 Grand Rickshaw Tour (Sightseeing)"`: 2D automated scenic tour across Dhaka Valley.
   2. `"🏁 Race — Grand Prix (Totoro Kart)"`: Launches the 3D kart racing engine.
 
-### 2.2 In-Game Overlay Lifecycle ([`RickshawRaceEngine.ts`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/RickshawRaceEngine.ts))
+### 2.2 In-Game Overlay Lifecycle ([`TotoroKartEngine.ts`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/TotoroKartEngine.ts))
 When launched from the RPG:
 1. **State Freezing:**
    - Pauses the Phaser 2D scene: `scene.scene.pause()`.
@@ -259,7 +259,7 @@ dhaka-date-rpg/
 │   │   ├── train.js, traffic.js, piranha.js, thwomp.js, snowmen.js,
 │   │   ├── penguins.js, chomps.js, crabs.js, hedgehogs.js, yoshi-egg.js,
 │   │   └── balloon.js, ferry.js, foliage.js, neon.js, props.js, flag.js
-│   ├── RickshawRaceEngine.ts    # Bridge & lifecycle coordinator for DhakaValleyScene
+│   ├── TotoroKartEngine.ts      # Bridge & lifecycle coordinator for DhakaValleyScene
 │   └── index.ts                 # Clean barrel export
 ├── public/                      # Static Game Assets
 │   ├── mk64/                    # Authentic N64 course models, textures, sounds, items

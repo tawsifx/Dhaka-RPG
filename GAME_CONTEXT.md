@@ -89,7 +89,7 @@ dhaka-date-rpg/
 ├── tests/
 │   ├── stats.test.ts                # RPG combat & stats formulas
 │   ├── farming.test.ts              # Stardew farming simulation & seasons
-│   ├── race/                        # 3D Rickshaw Race pure math, loop & track tests
+│   ├── race/                        # 3D Totoro Kart lifecycle & subsystem tests
 │   │   ├── race_m1.test.ts          # KartController, FixedStepLoop, RaceResult tests (20 tests)
 │   │   ├── race_m2.test.ts          # Drift, 3-tier mini-turbo, boost priority, surfaces, air & countdown (51 tests)
 │   │   ├── race_m3.test.ts          # BVH ground query, 3D collision, spline, laps, rescue, autopilot (46 tests)
@@ -129,7 +129,7 @@ dhaka-date-rpg/
     │       ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
     │       ├── LakeBoatEngine.ts     # Lantern Rowboat Simulation
     │       └── race/                # Three.js 3D Racing Engine (MarioKart64JS)
-    │           ├── RickshawRaceEngine.ts  # Lifecycle orchestrator (enter/run/exit/dispose)
+    │           ├── TotoroKartEngine.ts    # Lifecycle orchestrator (enter/run/exit/dispose)
     │           ├── core/KartController.ts # Pure arcade kart kinematics math
     │           ├── core/FixedStepLoop.ts  # 60Hz fixed-timestep accumulator & interpolation
     │           ├── render/RaceRenderer.ts # WebGL2 renderer, lighting, ground plane, fog & cleanup
@@ -307,14 +307,14 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 │ • 3D Mode: Press '3' to toggle Wii 3D karts & dynamic cast│
 │ • Items: Bananas, green/red/blue shells, thunderbolt, etc.│
 │ • Audio: Web Audio music sequencing & original voice clips│
-│ • Integration: RickshawRaceEngine.launch() & /race.html    │
+│ • Integration: TotoroKartEngine.launch() & /race.html       │
 │ • State: Pauses Phaser scene & audio cleanly while active │
 └───────────────────────────────────────────────────────────┘
 ```
 
 #### Architecture & Milestone 2 Gameplay Feel Systems
 - **Dedicated `<canvas>` Overlay Architecture (ADR 001):** Three.js 0.186.1 renders onto a dedicated canvas (`#race-canvas-overlay`) mounted inside `#race-container` directly on top of the Phaser canvas. This isolates WebGL2 contexts and prevents conflicts with Phaser's 2D batching pipeline.
-- **Lazy-Loaded Chunks (ADR 003):** Configured via Vite Rolldown code-splitting groups (`three` and `race-engine`). Dynamic `import('./minigames/race/RickshawRaceEngine')` ensures **zero initial bundle growth** (`index.js` remains 1.58 kB).
+- **Lazy-Loaded Chunks (ADR 003):** Configured via Vite Rolldown code-splitting groups (`three` and `race-engine`). Dynamic `import('./minigames/race/TotoroKartEngine')` ensures **zero initial bundle growth** (`index.js` remains 1.58 kB).
 - **Overworld State Freezing (ADR 002):** Upon entry, `DhakaValleyScene.scene.pause()` and `TimeCalendarSystem.setPaused(true)` are engaged. Moon Walker's coordinates, Totoro's follower trail, in-game calendar time, weather conditions, and living-world NPC schedules remain 100% frozen. Upon pressing Esc or tapping Exit, the 3D overlay is removed, resources are disposed, overworld BGM restores smoothly, and Phaser resumes execution with zero temporal drift.
 - **Drift System & Mini-Turbo (ADR 005 & 006):**
   - *Hop-to-Drift:* Pressing drift (`Shift`, `K`, gamepad shoulder, or touch drift button) while steering initiates a 0.22m vertical hop (`0.16s`) and locks the steering direction sign.
@@ -1329,7 +1329,7 @@ src/
     │       ├── kart3d.js        # Wii 3D Standard Kart & driver mesh assembler
     │       ├── items.js         # Authentic N64 item system, boxes, projectile logic
     │       ├── audio.js         # Web Audio synthesizer sequencing & driver voice clips
-    │       ├── RickshawRaceEngine.ts # Master lifecycle coordinator (enter, loop, exit, dispose)
+    │       ├── TotoroKartEngine.ts      # Master lifecycle coordinator (enter, loop, exit, dispose)
     │       └── index.ts         # Clean barrel export
     ├── world/                   # Architectural & world builders + index.ts
     │   ├── InteriorBuilder.ts   # Curzon Hall & Green Meadows Farmhouse interiors
