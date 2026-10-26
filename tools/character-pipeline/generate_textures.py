@@ -12,41 +12,57 @@ def create_totoro_atlas(output_path):
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # Palette
-    GREY_MAIN = (125, 132, 138, 255)
-    GREY_DARK = (92, 98, 104, 255)
-    CREAM_BELLY = (242, 238, 222, 255)
-    CHEVRON_GREY = (110, 116, 122, 255)
-    EYE_WHITE = (250, 250, 250, 255)
-    EYE_BLACK = (20, 20, 22, 255)
-    NOSE_BLACK = (35, 35, 38, 255)
-    CLAW_DARK = (45, 45, 48, 255)
-    PINK_INNER_EAR = (175, 155, 155, 255)
+    # Palette - Studio Ghibli Vibrant Totoro Colors
+    FUR_MAIN = (93, 134, 153, 255)       # Rich, saturated Ghibli slate blue-grey
+    FUR_DARK = (60, 92, 108, 255)        # Deep forest slate shadow
+    FUR_LIGHT = (120, 165, 185, 255)     # Sky highlight sheen
+    CREAM_BELLY = (255, 252, 238, 255)   # Luminous warm sunny cream
+    CHEVRON_GREY = (42, 76, 92, 255)     # Crisp dark teal-slate chevrons
+    EYE_WHITE = (255, 255, 255, 255)
+    EYE_BLACK = (18, 18, 22, 255)
+    NOSE_BLACK = (30, 32, 38, 255)
+    CLAW_DARK = (38, 42, 48, 255)
+    PINK_INNER_EAR = (235, 168, 182, 255)# Warm anime rose pink
 
-    # 1. Base Grey Fur (Top-Left 512x512)
-    draw.rectangle([0, 0, 512, 512], fill=GREY_MAIN)
+    # 1. Base Slate Blue-Grey Fur (Top-Left 512x512)
+    draw.rectangle([0, 0, 512, 512], fill=FUR_MAIN)
     for y in range(512):
-        shade = int(12 * math.sin(y / 512 * math.pi))
-        c = (GREY_MAIN[0] - shade, GREY_MAIN[1] - shade, GREY_MAIN[2] - shade, 255)
+        t = y / 512.0
+        shade = int(18 * math.sin(t * math.pi))
+        highlight = int(14 * math.cos(t * math.pi * 0.5))
+        c = (
+            max(0, min(255, FUR_MAIN[0] - shade + highlight)),
+            max(0, min(255, FUR_MAIN[1] - shade + highlight)),
+            max(0, min(255, FUR_MAIN[2] - shade + highlight)),
+            255
+        )
         draw.line([(0, y), (511, y)], fill=c)
+
+    # Soft fur texture stipples
+    for x in range(20, 490, 24):
+        for y in range(20, 380, 24):
+            draw.line([(x, y), (x + 6, y + 8)], fill=FUR_LIGHT, width=1)
 
     # Inner Ear zone: [0, 400, 150, 512]
     draw.rectangle([0, 400, 150, 512], fill=PINK_INNER_EAR)
+    # Ear depth shading
+    for y in range(410, 505, 8):
+        draw.line([(10, y), (140, y)], fill=(220, 150, 165, 255), width=2)
 
-    # Leaf Hat zone: [350, 400, 512, 512]
-    LEAF_GREEN = (72, 148, 56, 255)
-    LEAF_DARK = (48, 102, 38, 255)
-    LEAF_VEIN = (95, 175, 75, 255)
+    # Leaf Hat zone: [350, 400, 512, 512] - Vibrant Emerald Green
+    LEAF_GREEN = (38, 195, 95, 255)
+    LEAF_DARK = (24, 130, 65, 255)
+    LEAF_VEIN = (85, 240, 135, 255)
     draw.rectangle([350, 400, 512, 512], fill=LEAF_GREEN)
     # Leaf veins
-    for y in range(410, 510, 12):
+    for y in range(410, 510, 10):
         draw.line([(355, y), (505, y)], fill=LEAF_VEIN, width=2)
-    draw.line([(430, 400), (430, 512)], fill=LEAF_DARK, width=4)
+    draw.line([(430, 400), (430, 512)], fill=LEAF_DARK, width=5)
 
     # 2. Cream Belly (Top-Right 512x512: [512, 0, 1024, 512])
     draw.rectangle([512, 0, 1024, 512], fill=CREAM_BELLY)
     for i in range(16):
-        draw.rectangle([512 + i, i, 1024 - i, 512 - i], outline=(230 - i, 225 - i, 210 - i, 255))
+        draw.rectangle([512 + i, i, 1024 - i, 512 - i], outline=(245 - i, 238 - i, 215 - i, 255))
     
     # Chevrons
     def draw_chevron(cx, cy, scale=1.0):
@@ -69,15 +85,15 @@ def create_totoro_atlas(output_path):
     draw_chevron(946, 220, 1.1)
 
     # 3. Face Zone (Bottom-Left: [0, 512, 512, 1024])
-    draw.rectangle([0, 512, 512, 1024], fill=GREY_MAIN)
+    draw.rectangle([0, 512, 512, 1024], fill=FUR_MAIN)
     for cx in [170, 342]:
-        draw.ellipse([cx - 48, 680 - 48, cx + 48, 680 + 48], fill=EYE_WHITE, outline=GREY_DARK, width=3)
+        draw.ellipse([cx - 48, 680 - 48, cx + 48, 680 + 48], fill=EYE_WHITE, outline=FUR_DARK, width=3)
         draw.ellipse([cx - 16, 680 - 16, cx + 16, 680 + 16], fill=EYE_BLACK)
         draw.ellipse([cx - 6, 680 - 10, cx + 2, 680 - 2], fill=(255, 255, 255, 255))
 
     draw.polygon([(242, 722), (270, 722), (256, 742)], fill=NOSE_BLACK)
 
-    whisker_color = (40, 42, 45, 230)
+    whisker_color = (35, 48, 56, 240)
     for side, base_x in [(-1, 100), (1, 412)]:
         for dy, angle in [(-18, -10), (0, 0), (18, 10)]:
             x1 = base_x
@@ -86,15 +102,15 @@ def create_totoro_atlas(output_path):
             y2 = y1 + angle
             draw.line([(x1, y1), (x2, y2)], fill=whisker_color, width=4)
 
-    draw.arc([190, 750, 322, 820], start=20, end=160, fill=(50, 52, 55, 255), width=4)
+    draw.arc([190, 750, 322, 820], start=20, end=160, fill=(40, 55, 65, 255), width=4)
 
     # 4. Details Zone (Bottom-Right: [512, 512, 1024, 1024])
-    draw.rectangle([512, 512, 1024, 1024], fill=GREY_DARK)
+    draw.rectangle([512, 512, 1024, 1024], fill=FUR_DARK)
     draw.rectangle([512, 512, 768, 768], fill=CLAW_DARK)
     for x in range(520, 760, 40):
-        draw.polygon([(x, 520), (x + 20, 520), (x + 10, 560)], fill=(20, 20, 22, 255))
+        draw.polygon([(x, 520), (x + 20, 520), (x + 10, 560)], fill=(18, 18, 22, 255))
 
-    draw.rectangle([768, 512, 1024, 768], fill=(60, 64, 68, 255))
+    draw.rectangle([768, 512, 1024, 768], fill=(45, 68, 80, 255))
 
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     img.save(output_path, format='PNG')
@@ -286,13 +302,18 @@ def create_kart_liveries():
         for y in range(h):
             for x in range(w):
                 r, g, b, a = pixels[x, y]
-                lum = int(0.299 * r + 0.587 * g + 0.114 * b)
-                tr = int(lum * 0.55 + 25)
-                tg = int(lum * 0.72 + 35)
-                tb = int(lum * 0.75 + 40)
-                pixels[x, y] = (tr, tg, tb, a)
+                # DK Brown body panels -> Vibrant Ghibli Forest Teal / Emerald
+                if r > 35 and g < r * 0.85 and b < g * 0.7:
+                    val = min(1.4, max(0.4, r / 90.0))
+                    tr = int(min(255, 20 + val * 25))
+                    tg = int(min(255, 120 + val * 75))
+                    tb = int(min(255, 105 + val * 70))
+                    pixels[x, y] = (tr, tg, tb, a)
+                # DK Red accents -> Sunny Warm Butter Gold
+                elif r > 180 and g < 60 and b < 60:
+                    pixels[x, y] = (255, 215, 45, a)
         src_img.save(large_dst, format='PNG')
-        print(f"Created Totoro kart livery: {large_dst}")
+        print(f"Created vibrant Totoro kart livery: {large_dst}")
 
 
 if __name__ == '__main__':

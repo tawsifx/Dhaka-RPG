@@ -236,12 +236,14 @@ def build_totoro_from_reference():
     for name in ["Nose", "Feet"]:
         obj = bpy.data.objects.get(name)
         if obj:
-            assign_uv_rect(obj.data, 0.52, 0.52, 0.75, 0.75)
+            # Claws/Dark details zone in bottom right (Blender V in [0.05, 0.35])
+            assign_uv_rect(obj.data, 0.52, 0.05, 0.75, 0.35)
 
     for name in ["Leaf hat", "Stalk"]:
         obj = bpy.data.objects.get(name)
         if obj:
-            assign_uv_rect(obj.data, 0.35, 0.40, 0.50, 0.50)
+            # Vibrant emerald leaf zone (Blender V in [0.50, 0.61], U in [0.35, 0.50])
+            assign_uv_rect(obj.data, 0.35, 0.50, 0.50, 0.61)
 
     # 5. Join all mesh parts into single cohesive Totoro mesh
     bpy.ops.object.select_all(action='DESELECT')
