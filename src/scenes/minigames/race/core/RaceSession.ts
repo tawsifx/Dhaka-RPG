@@ -590,6 +590,22 @@ export class RaceSession {
     }
   }
 
+  reset(): void {
+    this.raceTimeMs = 0;
+    this.isStarted = false;
+    this.isFinished = false;
+    this.worldItems?.clear();
+    this.itemBoxSystem?.reset();
+    this.hazardSystem?.reset();
+    for (const k of this.karts) {
+      k.heldItem = null;
+      k.rouletteTimerSec = 0;
+      k.shieldRemainingSec = 0;
+      k.hitReaction.recover(0);
+      k.finished = false;
+    }
+  }
+
   getHazardSystem(): HazardSystem | undefined {
     return this.hazardSystem;
   }

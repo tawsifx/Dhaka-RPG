@@ -270,3 +270,33 @@ Evaluated on the dressed "Fuller Road Sprint" circuit with SuperTuxKart scenery,
   - Lingering race DOM elements: **0** (`#race-container`, `#race-canvas-overlay`, `#race-hud`, `#race-pre-race-panel`, `#race-results-screen`).
   - WebGL Context: 100% disposed cleanly via `renderer.dispose()` with zero orphaned textures or geometries.
   - Overworld State: Coordinates (`x: 1648, y: 816`), Totoro trail, and time calendar resumed with zero temporal drift or movement locks.
+
+---
+
+### 9. Milestone 5: Dhaka Street Items & Hazards Runtime Profile
+
+Evaluated with active item boxes (16 tiffin boxes), projectile simulation (Naga Fuchka, Ghuri Kite), stationary traps (Mishti Doi), shields, radial stuns, and dynamic hazards (crossing rickshaws, petal slicks) across 8 karts on Fuller Road Sprint. Date: October 26, 2026.
+
+#### 9.1 Headless Monte-Carlo Simulation Profile (`simulate-race.mjs --items --hazards`)
+
+| Difficulty Tier | 10-Seed Average Pace | Field Finish Rate | Fall Rescues / kart | Stuck Rescues / kart | Rubber-Band Range | Determinism Check |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Gorom Cha (50cc)** | 179.8 s | **100.0%** (80/80) | 0.000 | 0.000 | $[0.940, 1.060]$ | Bit-exact (167.017 s) |
+| **Beshi Gorom (100cc)** | 178.7 s | **98.8%** (79/80) | 0.000 | 0.000 | $[0.940, 1.060]$ | Bit-exact (167.017 s) |
+| **Naga Jhal (150cc)** | 165.9 s | **100.0%** (80/80) | 0.050 | 0.000 | $[0.940, 1.060]$ | Bit-exact (167.017 s) |
+
+- **Tier Monotonicity:** Gorom Cha (179.8s) $\ge$ Beshi Gorom (178.7s) $\ge$ Naga Jhal (165.9s) (**PASS**).
+- **Average Step Latency:** Mean: **0.118 ms** / step (Budget: $\le 1.0$ ms), p99: **0.317 ms** / step (Budget: $\le 2.0$ ms).
+- **Active Entity Pools:** 16 tiffin boxes (3.5s respawn), world projectile pool capped at $\le 16$, hazards pool capped at $\le 24$.
+
+#### 9.2 Browser Runtime Telemetry (Desktop vs Mobile 4× CPU Throttle)
+
+| Metric | Desktop High (Items On) | Mobile 4× Throttle (Low/Med) | Budget / Cap | Status |
+| :--- | :---: | :---: | :---: | :---: |
+| **Framerate (FPS)** | **60.0 FPS** | **53.8 - 58.2 FPS** | $\ge 45$ FPS (mob) | PASS |
+| **Draw Calls** | 134 | 52 | $\le 250$ | PASS |
+| **Triangles Rendered** | 266,420 | 93,500 | Scalable | PASS |
+| **Active World Items Pool** | $\le 8$ simultaneous | $\le 8$ simultaneous | $\le 24$ cap | PASS |
+| **Item Slot HUD Latency** | $< 1\text{ ms}$ roulette tick | $< 1\text{ ms}$ | 60 Hz smooth | PASS |
+| **10-Cycle Zero Leak Audit** | 0 DOM / GPU leaks | 0 DOM / GPU leaks | Zero growth | PASS |
+

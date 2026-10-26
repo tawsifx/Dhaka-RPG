@@ -15,6 +15,25 @@ import { ItemBrain } from '../../src/scenes/minigames/race/ai/ItemBrain';
 import { HazardSystem } from '../../src/scenes/minigames/race/core/HazardSystem';
 import { RaceSession } from '../../src/scenes/minigames/race/core/RaceSession';
 
+const mockTrack: any = {
+  id: 'test_circuit',
+  lapCount: 3,
+  centerline: [
+    { x: 0, y: 0, z: 0, width: 16, bankRad: 0 },
+    { x: 50, y: 0, z: 50, width: 16, bankRad: 0 },
+    { x: 0, y: 0, z: 100, width: 16, bankRad: 0 }
+  ],
+  checkpoints: [
+    { index: 0, center: { x: 0, y: 0, z: 20 }, normal: { x: 0, y: 0, z: 1 }, width: 18, height: 8 },
+    { index: 1, center: { x: 50, y: 0, z: 50 }, normal: { x: 1, y: 0, z: 0 }, width: 18, height: 8 },
+    { index: 2, center: { x: 0, y: 0, z: 80 }, normal: { x: 0, y: 0, z: 1 }, width: 18, height: 8 }
+  ],
+  startGrid: [
+    { x: 0, y: 0, z: 0, rotation: 0 },
+    { x: 2, y: 0, z: 0, rotation: 0 }
+  ]
+};
+
 describe('Milestone 5: Dhaka Street Items & Street Hazards', () => {
   describe('1. Item Database & Weight Table Integrity', () => {
     it('defines all 6 canonical Dhaka street items with full metadata', () => {
@@ -362,25 +381,6 @@ describe('Milestone 5: Dhaka Street Items & Street Hazards', () => {
   });
 
   describe('8. RaceSession Gameplay Rule Invariance', () => {
-    const mockTrack: any = {
-      id: 'test_circuit',
-      lapCount: 3,
-      centerline: [
-        { x: 0, y: 0, z: 0, width: 16, bankRad: 0 },
-        { x: 50, y: 0, z: 50, width: 16, bankRad: 0 },
-        { x: 0, y: 0, z: 100, width: 16, bankRad: 0 }
-      ],
-      checkpoints: [
-        { index: 0, center: { x: 0, y: 0, z: 20 }, normal: { x: 0, y: 0, z: 1 }, width: 18, height: 8 },
-        { index: 1, center: { x: 50, y: 0, z: 50 }, normal: { x: 1, y: 0, z: 0 }, width: 18, height: 8 },
-        { index: 2, center: { x: 0, y: 0, z: 80 }, normal: { x: 0, y: 0, z: 1 }, width: 18, height: 8 }
-      ],
-      startGrid: [
-        { x: 0, y: 0, z: 0, rotation: 0 },
-        { x: 2, y: 0, z: 0, rotation: 0 }
-      ]
-    };
-
     it('preserves bit-for-bit invariance when items and hazards are disabled', () => {
       const session = new RaceSession({
         track: mockTrack,
@@ -408,6 +408,502 @@ describe('Milestone 5: Dhaka Street Items & Street Hazards', () => {
       expect(session.getItemBoxSystem()).toBeDefined();
       expect(session.getWorldItems()).toBeDefined();
       expect(session.getHazardSystem()).toBeDefined();
+    });
+
+    it('executes givePlayerItem and equips item with roulette timer reset', () => {
+      const session = new RaceSession({
+        track: mockTrack,
+        mode: 'quick_race',
+        difficulty: 'beshi_gorom',
+        seed: 42,
+        rules: { itemsEnabled: true, hazardsEnabled: true }
+      });
+
+      session.givePlayerItem('malai_cha');
+      const player = session.getPlayerKart();
+      expect(player?.heldItem).toBe('malai_cha');
+      expect(player?.rouletteTimerSec).toBe(0);
+    });
+
+    it('consumes held item on usePlayerItem and activates boost', () => {
+      const session = new RaceSession({
+        track: mockTrack,
+        mode: 'quick_race',
+        difficulty: 'beshi_gorom',
+        seed: 42,
+        rules: { itemsEnabled: true, hazardsEnabled: true }
+      });
+
+      session.givePlayerItem('malai_cha');
+      session.usePlayerItem(false);
+      const player = session.getPlayerKart();
+      expect(player?.heldItem).toBeNull();
+      expect(player?.controller.getState().boost?.active).toBe(true);
+    });
+
+    it('spawns projectile on usePlayerItem with offensive Naga Fuchka', () => {
+      const session = new RaceSession({
+        track: mockTrack,
+        mode: 'quick_race',
+        difficulty: 'beshi_gorom',
+        seed: 42,
+        rules: { itemsEnabled: true, hazardsEnabled: true }
+      });
+
+      session.givePlayerItem('naga_fuchka');
+      session.usePlayerItem(false);
+      const worldItems = session.getWorldItems()?.getItems() || [];
+      expect(worldItems.length).toBe(1);
+      expect(worldItems[0].type).toBe('naga_fuchka');
+    });
+
+    it('spawns stationary trap on usePlayerItem with Mishti Doi', () => {
+      const session = new RaceSession({
+        track: mockTrack,
+        mode: 'quick_race',
+        difficulty: 'beshi_gorom',
+        seed: 42,
+        rules: { itemsEnabled: true, hazardsEnabled: true }
+      });
+
+      session.givePlayerItem('mishti_doi');
+      session.usePlayerItem(true);
+      const worldItems = session.getWorldItems()?.getItems() || [];
+      expect(worldItems.length).toBe(1);
+      expect(worldItems[0].type).toBe('mishti_doi');
+    });
+
+    it('activates parasol shield on usePlayerItem with parasol_shield', () => {
+      const session = new RaceSession({
+        track: mockTrack,
+        mode: 'quick_race',
+        difficulty: 'beshi_gorom',
+        seed: 42,
+        rules: { itemsEnabled: true, hazardsEnabled: true }
+      });
+
+      session.givePlayerItem('parasol_shield');
+      session.usePlayerItem(false);
+      const player = session.getPlayerKart();
+      expect(player?.shieldRemainingSec).toBeGreaterThan(5.0);
+    });
+  });
+
+  describe('9. Extended Component Deep-Dive Tests', () => {
+    describe('Item Weights Deep-Dive', () => {
+      it('verifies non-negative weights for every rank and item', () => {
+        for (let r = 1; r <= 8; r++) {
+          const rankWeights = ITEM_WEIGHTS.ranks[String(r) as keyof typeof ITEM_WEIGHTS.ranks];
+          for (const [item, w] of Object.entries(rankWeights)) {
+            expect(w).toBeGreaterThanOrEqual(0);
+          }
+        }
+      });
+
+      it('verifies defensive items are weighted higher in Rank 1 than Rank 8', () => {
+        const r1 = ITEM_WEIGHTS.ranks['1'];
+        const r8 = ITEM_WEIGHTS.ranks['8'];
+        expect(r1.mishti_doi).toBeGreaterThan(r8.mishti_doi);
+        expect(r1.parasol_shield).toBeGreaterThan(r8.parasol_shield);
+      });
+
+      it('verifies catch-up boost is weighted higher in Rank 8 than Rank 1', () => {
+        const r1 = ITEM_WEIGHTS.ranks['1'];
+        const r8 = ITEM_WEIGHTS.ranks['8'];
+        expect(r8.malai_cha).toBeGreaterThan(r1.malai_cha);
+      });
+    });
+
+    describe('ItemRng Bounds & Sampling', () => {
+      it('generates numbers strictly within [0, 1)', () => {
+        const rng = new ItemRng(777);
+        for (let i = 0; i < 5000; i++) {
+          const val = rng.next();
+          expect(val).toBeGreaterThanOrEqual(0);
+          expect(val).toBeLessThan(1);
+        }
+      });
+
+      it('generates integers within [min, max] range inclusive', () => {
+        const rng = new ItemRng(888);
+        const counts: Record<number, number> = {};
+        for (let i = 0; i < 1000; i++) {
+          const val = rng.nextInt(1, 6);
+          expect(val).toBeGreaterThanOrEqual(1);
+          expect(val).toBeLessThanOrEqual(6);
+          counts[val] = (counts[val] || 0) + 1;
+        }
+        for (let num = 1; num <= 6; num++) {
+          expect(counts[num]).toBeGreaterThan(50);
+        }
+      });
+    });
+
+    describe('ItemBoxSystem Extended Lifecycle', () => {
+      it('correctly handles out-of-range queries without collecting', () => {
+        const system = new ItemBoxSystem([
+          { id: 'b1', clusterId: 'c1', slotIndex: 0, x: 0, y: 0, z: 10, radiusMeters: 1.5, respawnTimeSec: 3.5 }
+        ]);
+
+        const box = system.checkCollision(0, 0, 20, 1.0); // 10m away
+        expect(box).toBeNull();
+        expect(system.getBoxes()[0].active).toBe(true);
+      });
+
+      it('resets all boxes to active on reset()', () => {
+        const system = new ItemBoxSystem([
+          { id: 'b1', clusterId: 'c1', slotIndex: 0, x: 0, y: 0, z: 0, radiusMeters: 1.5, respawnTimeSec: 3.5 }
+        ]);
+
+        system.checkCollision(0, 0, 0, 1.0);
+        expect(system.getBoxes()[0].active).toBe(false);
+
+        system.reset();
+        expect(system.getBoxes()[0].active).toBe(true);
+      });
+    });
+
+    describe('HitReaction Extended State Machine', () => {
+      it('returns correct speed multiplier for each reaction type', () => {
+        const hr = new HitReaction();
+        hr.triggerHit('spin_out');
+        expect(hr.getSpeedMultiplier()).toBe(0.5);
+
+        hr.recover(0);
+        hr.triggerHit('explosion');
+        expect(hr.getSpeedMultiplier()).toBe(0.2);
+
+        hr.recover(0);
+        hr.triggerHit('squash');
+        expect(hr.getSpeedMultiplier()).toBe(0.5);
+
+        hr.recover(0);
+        hr.triggerHit('stun');
+        expect(hr.getSpeedMultiplier()).toBe(0.0);
+      });
+
+      it('correctly reports control lock during active hit', () => {
+        const hr = new HitReaction();
+        expect(hr.isControlLocked()).toBe(false);
+
+        hr.triggerHit('spin_out');
+        expect(hr.isControlLocked()).toBe(true);
+
+        hr.recover(1.5);
+        expect(hr.isControlLocked()).toBe(false);
+      });
+
+      it('applies tumble pitch angle during explosion', () => {
+        const hr = new HitReaction();
+        hr.triggerHit('explosion');
+        hr.update(0.6); // Midway through 1.25s duration
+        expect(hr.visualTumblePitch).toBeGreaterThan(0);
+      });
+
+      it('applies squash Y compression and XZ expansion during squash', () => {
+        const hr = new HitReaction();
+        hr.triggerHit('squash');
+        hr.update(0.5);
+        expect(hr.visualScaleY).toBe(0.4);
+        expect(hr.visualScaleXZ).toBe(1.25);
+      });
+    });
+
+    describe('WorldItems Projectiles & Collisions Extended', () => {
+      it('expires Naga Fuchka rocket after durationSec', () => {
+        const world = new WorldItems();
+        world.spawnNagaFuchka('kart1', 0, 0, 0, 0, false);
+        expect(world.getItems().length).toBe(1);
+
+        world.update(7.0, []); // Exceeds 6.0s duration
+        expect(world.getItems().length).toBe(0);
+      });
+
+      it('expires Mishti Doi trap after durationSec', () => {
+        const world = new WorldItems();
+        world.spawnMishtiDoi('kart1', 0, 0, 0, 0);
+        expect(world.getItems().length).toBe(1);
+
+        world.update(21.0, []); // Exceeds 20.0s duration
+        expect(world.getItems().length).toBe(0);
+      });
+
+      it('does not hit projectile owner within initial 0.3s', () => {
+        const world = new WorldItems();
+        world.spawnNagaFuchka('kart1', 0, 0, 0, 0, false);
+        const hits = world.update(0.1, [
+          { id: 'kart1', x: 0, y: 0, z: -2.0, isImmune: false, hasShield: false }
+        ]);
+        expect(hits.length).toBe(0); // Grace period active
+      });
+
+      it('clears all items on clear()', () => {
+        const world = new WorldItems();
+        world.spawnNagaFuchka('kart1', 0, 0, 0, 0, false);
+        world.spawnMishtiDoi('kart2', 0, 0, 0, 0);
+        expect(world.getItems().length).toBe(2);
+
+        world.clear();
+        expect(world.getItems().length).toBe(0);
+      });
+    });
+
+    describe('AI ItemBrain Extended Decision Heuristics', () => {
+      it('refuses to fire Naga Fuchka when rival is beyond forward range (> 38m)', () => {
+        const brain = new ItemBrain();
+        const decision = brain.evaluate(
+          'naga_fuchka',
+          1.0,
+          { x: 0, y: 0, z: 0, yaw: 0, speed: 20 },
+          [{ id: 'rival', x: 0, y: 0, z: -50, isImmune: false }], // 50m ahead (> 38m)
+          []
+        );
+        expect(decision.useItem).toBe(false);
+      });
+
+      it('refuses to drop Mishti Doi when pursuer is beyond rear range (> 16m)', () => {
+        const brain = new ItemBrain();
+        const decision = brain.evaluate(
+          'mishti_doi',
+          1.0,
+          { x: 0, y: 0, z: 0, yaw: 0, speed: 20 },
+          [{ id: 'rival', x: 0, y: 0, z: 25, isImmune: false }], // 25m behind (> 16m)
+          []
+        );
+        expect(decision.useItem).toBe(false);
+      });
+
+      it('refuses to fire Naga Fuchka backward when pursuer is out of rear cone', () => {
+        const brain = new ItemBrain();
+        const decision = brain.evaluate(
+          'naga_fuchka',
+          1.0,
+          { x: 0, y: 0, z: 0, yaw: 0, speed: 20 },
+          [{ id: 'rival', x: 20, y: 0, z: 10, isImmune: false }], // lateral offset (out of cone)
+          []
+        );
+        expect(decision.useItem).toBe(false);
+      });
+
+      it('deploys parasol shield when incoming projectile is detected within 25m', () => {
+        const brain = new ItemBrain();
+        const decision = brain.evaluate(
+          'parasol_shield',
+          1.0,
+          { x: 0, y: 0, z: 0, yaw: 0, speed: 20 },
+          [],
+          [{ id: 'proj1', type: 'naga_fuchka', ownerId: 'rival', x: 0, y: 0, z: 15, vx: 0, vy: 0, vz: -35, radiusMeters: 1.2, lifetimeRemainingSec: 5, expired: false }]
+        );
+        expect(decision.useItem).toBe(true);
+      });
+    });
+
+    describe('HazardSystem Extended Simulation', () => {
+      it('calculates linear crossing rickshaw position smoothly over time', () => {
+        const hazards = new HazardSystem();
+        const rickshaws = hazards.getCrossingRickshaws();
+        expect(rickshaws[0].x).toBe(-8.0);
+
+        hazards.update(1.0, []); // Moves 4.5m in direction 1 -> -8 + 4.5 = -3.5
+        expect(hazards.getCrossingRickshaws()[0].x).toBeCloseTo(-3.5, 1);
+      });
+
+      it('resets hazard states on reset()', () => {
+        const hazards = new HazardSystem();
+        hazards.update(2.0, []);
+        expect(hazards.getCrossingRickshaws()[0].x).not.toBe(-8.0);
+
+        hazards.reset();
+        expect(hazards.getCrossingRickshaws()[0].x).toBe(-8.0);
+      });
+    });
+
+    describe('items.json & gameplay.lock.json Integrity', () => {
+      it('validates fuller_road_sprint items.json exists and has valid structure', async () => {
+        const fs = await import('fs');
+        const path = await import('path');
+        const itemsPath = path.resolve('public/assets/race/tracks/fuller_road_sprint/items.json');
+        expect(fs.existsSync(itemsPath)).toBe(true);
+
+        const data = JSON.parse(fs.readFileSync(itemsPath, 'utf-8'));
+        expect(data.boxes.length).toBeGreaterThanOrEqual(16);
+        expect(data.clusters.length).toBeGreaterThanOrEqual(4);
+      });
+
+      it('ensures all 16 item boxes have unique IDs and 3.5s respawn', async () => {
+        const fs = await import('fs');
+        const path = await import('path');
+        const itemsPath = path.resolve('public/assets/race/tracks/fuller_road_sprint/items.json');
+        const data = JSON.parse(fs.readFileSync(itemsPath, 'utf-8'));
+
+        const ids = new Set();
+        for (const box of data.boxes) {
+          expect(ids.has(box.id)).toBe(false);
+          ids.add(box.id);
+          expect(box.respawnTimeSec).toBe(3.5);
+          expect(box.radiusMeters).toBe(1.3);
+        }
+      });
+
+      it('ensures all boxes belong to valid track clusters', async () => {
+        const fs = await import('fs');
+        const path = await import('path');
+        const itemsPath = path.resolve('public/assets/race/tracks/fuller_road_sprint/items.json');
+        const data = JSON.parse(fs.readFileSync(itemsPath, 'utf-8'));
+
+        const allowedClusters = new Set(['item_box_straight', 'item_box_rotunda', 'item_box_avenue', 'item_box_post_landing']);
+        for (const box of data.boxes) {
+          expect(allowedClusters.has(box.clusterId)).toBe(true);
+        }
+      });
+
+      it('ensures gameplay.lock.json contains matching itemsSha256 hash', async () => {
+        const fs = await import('fs');
+        const path = await import('path');
+        const crypto = await import('crypto');
+        const itemsPath = path.resolve('public/assets/race/tracks/fuller_road_sprint/items.json');
+        const lockPath = path.resolve('public/assets/race/tracks/fuller_road_sprint/gameplay.lock.json');
+
+        const itemsRaw = fs.readFileSync(itemsPath, 'utf-8');
+        const lockData = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
+        const hash = crypto.createHash('sha256').update(itemsRaw).digest('hex');
+
+        expect(lockData.itemsSha256).toBe(hash);
+      });
+    });
+
+    describe('ItemRoller Statistical Distribution', () => {
+      it('ensures rank 1 never rolls ghuri_kite over 1000 rolls', () => {
+        const roller = new ItemRoller(new ItemRng(1001));
+        for (let i = 0; i < 1000; i++) {
+          const item = roller.rollItem(1);
+          expect(item).not.toBe('ghuri_kite');
+        }
+      });
+
+      it('ensures rank 8 rolls malai_cha at least 35% of the time over 1000 rolls', () => {
+        const roller = new ItemRoller(new ItemRng(2002));
+        let boostCount = 0;
+        for (let i = 0; i < 1000; i++) {
+          const item = roller.rollItem(8);
+          if (item === 'malai_cha') boostCount++;
+        }
+        expect(boostCount).toBeGreaterThanOrEqual(350);
+      });
+
+      it('ensures rank 4 rolls a healthy mix of offensive and defensive items', () => {
+        const roller = new ItemRoller(new ItemRng(3003));
+        const counts: Record<string, number> = {};
+        for (let i = 0; i < 1000; i++) {
+          const item = roller.rollItem(4);
+          counts[item] = (counts[item] || 0) + 1;
+        }
+        expect(counts['naga_fuchka']).toBeGreaterThan(100);
+        expect(counts['mishti_doi']).toBeGreaterThan(100);
+        expect(counts['parasol_shield']).toBeGreaterThan(50);
+      });
+    });
+
+    describe('HitReaction Edge Cases', () => {
+      it('rejects hit trigger with none reaction', () => {
+        const hr = new HitReaction();
+        const ok = hr.triggerHit('none');
+        expect(ok).toBe(false);
+        expect(hr.currentReaction).toBe('none');
+      });
+
+      it('recover() resets all visual offsets and currentReaction', () => {
+        const hr = new HitReaction();
+        hr.triggerHit('spin_out');
+        hr.update(0.4);
+        expect(hr.visualYawOffset).toBeGreaterThan(0);
+
+        hr.recover(1.5);
+        expect(hr.currentReaction).toBe('none');
+        expect(hr.visualYawOffset).toBe(0);
+        expect(hr.visualTumblePitch).toBe(0);
+        expect(hr.visualScaleY).toBe(1.0);
+        expect(hr.visualScaleXZ).toBe(1.0);
+        expect(hr.immunityRemainingSec).toBe(1.5);
+      });
+
+      it('rejects incoming hit while post-recovery immunity is active', () => {
+        const hr = new HitReaction();
+        hr.recover(2.0);
+        expect(hr.isImmune()).toBe(true);
+
+        const ok = hr.triggerHit('spin_out');
+        expect(ok).toBe(false);
+      });
+    });
+
+    describe('WorldItems Cap & Expiry Mechanics', () => {
+      it('tracks homing Ghuri Kite towards nearest kart position', () => {
+        const world = new WorldItems();
+        world.spawnGhuriKite('owner', 0, 0, 0, 'leader');
+
+        world.update(0.5, [
+          { id: 'leader', x: 0, y: 0, z: -40, isImmune: false, hasShield: false }
+        ]);
+
+        const kite = world.getItems()[0];
+        expect(kite.z).toBeLessThan(0); // Flew towards -40
+      });
+
+      it('expires Ghuri Kite after durationSec', () => {
+        const world = new WorldItems();
+        world.spawnGhuriKite('owner', 0, 0, 0, 'leader');
+        expect(world.getItems().length).toBe(1);
+
+        world.update(11.0, []); // Exceeds 10s duration
+        expect(world.getItems().length).toBe(0);
+      });
+
+      it('correctly depletes parasol shield upon absorbing projectile', () => {
+        const world = new WorldItems();
+        world.spawnNagaFuchka('kart1', 0, 0, 0, 0, false);
+
+        const hits = world.update(0.05, [
+          { id: 'kart2', x: 0, y: 0, z: -3.0, isImmune: false, hasShield: true }
+        ]);
+
+        expect(hits.length).toBe(1);
+        expect(hits[0].hitReaction).toBe('none'); // Shield absorbed
+        expect(world.getItems().length).toBe(0); // Projectile consumed
+      });
+    });
+
+    describe('RaceSession Items Invariance & Edge Rules', () => {
+      it('never spawns world items on step when itemsEnabled is false', () => {
+        const session = new RaceSession({
+          track: mockTrack,
+          mode: 'quick_race',
+          difficulty: 'beshi_gorom',
+          seed: 42,
+          rules: { itemsEnabled: false, hazardsEnabled: false }
+        });
+
+        // Step with useItem input
+        session.step(0.1, { throttle: 1, brake: 0, steer: 0, drift: false, lookBehind: false, bell: false, trick: false, useItem: true, aimBack: false });
+        expect(session.getWorldItems()).toBeUndefined();
+      });
+
+      it('resets item box system and clears world items on session reset', () => {
+        const session = new RaceSession({
+          track: mockTrack,
+          mode: 'quick_race',
+          difficulty: 'beshi_gorom',
+          seed: 42,
+          rules: { itemsEnabled: true, hazardsEnabled: true }
+        });
+
+        session.givePlayerItem('naga_fuchka');
+        session.usePlayerItem(false);
+        expect(session.getWorldItems()?.getItems().length).toBe(1);
+
+        session.reset();
+        expect(session.getWorldItems()?.getItems().length).toBe(0);
+      });
     });
   });
 });

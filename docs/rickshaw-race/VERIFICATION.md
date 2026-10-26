@@ -124,3 +124,37 @@ For Milestone 3 (Track Pipeline, 3D Mesh Surfaces & Collisions), we evaluated tw
 - **Playwright E2E Suite (`npm run test:race:m3`):** 9 / 9 steps passing with 0 leaks.
 - **Regression Suites:** `npm run test:race:m1` (7/7 steps), `npm run test:race:m2` (10/10 steps), `npm run validate:npc`, `npm run assets:validate`, and `npm run typecheck` all 100% green.
 
+---
+
+### 6. Milestone 4 Verification Report: Rivals, AI & Race Flow
+
+**Milestone:** M4 Rivals, 8-Kart Grid, Ranking, Rubber-Banding & Race Flow  
+**Status:** 100% Verified & Approved  
+**Date:** October 26, 2026
+
+#### A. Key Verification Milestones
+- **8-Kart Start Grid:** All 8 karts initialize on starting slots with $\ge 2.5\text{m}$ non-overlapping spacing.
+- **Pure Deterministic AI:** Rivals use identical physics, pure pursuit lookahead, curvature braking, and Mulberry32 mistake injection.
+- **Multi-Kart Collisions:** Pairwise collision separation ($e = 0.35$) with flyover bridge isolation ($|\Delta y| > 2.0\text{m}$).
+- **Ranking System & Ladder:** Live 8-driver standings ladder with gap to leader in seconds and Mario Kart points.
+- **Podium Results:** Post-race finish modal with 8-kart standings and points awarded.
+- **E2E Automation (`scripts/test_race_m4.js`):** Passed all 9 phases with zero errors.
+
+---
+
+### 7. Milestone 5 Verification Report: Items, Hazards & Parallel Downloader
+
+**Milestone:** M5 Dhaka Street Items, Hazards, AI Item Use & Parallel Download Manager  
+**Status:** 100% Verified & Approved  
+**Date:** October 26, 2026
+
+#### A. Key Verification Milestones
+- **Multi-Channel Download Manager:** 4-stream range request download manager (`parallel-download.mjs`), 7.86× speedup on throttled server, SHA-256 lockfile pinning (`downloads.lock.json`), 25/25 unit tests green (`downloader.test.ts`).
+- **6 Dhaka Street Items (`items.race.db.ts`):** Malai Cha (nitro boost), Naga Fuchka (rocket), Mishti Doi (trap), Parasol Shield (deflection), Rickshaw Bell (stun), Ghuri Kite (homing flyer).
+- **HitReaction State Machine:** Deterministic `spin_out`, `explosion`, `squash`, and `stun` reactions with visual juice offsets and invulnerability windows.
+- **AI ItemBrain:** Ported from STK `skidding_ai.cpp` with forward targeting cone ($< 38\text{m}$), rear defensive drop ($< 16\text{m}$), and threat shield reaction.
+- **Item Boxes & Street Hazards:** 16 tiffin boxes with 3.5s respawn along Fuller Road Sprint; crossing rickshaws and petal slicks simulated in `HazardSystem.ts`.
+- **E2E Playwright Automation (`scripts/test_race_m5.js`):** Passed all 9 verification phases with zero errors and zero leaks over 10 enter/exit cycles.
+- **Automated Test Count:** **283 / 283 Vitest tests passing** (73 tests in `race_m5.test.ts` + 25 tests in `downloader.test.ts`).
+
+

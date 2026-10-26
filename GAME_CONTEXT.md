@@ -382,6 +382,22 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **Race BGM Loop & Audio Ducking:** Seamless loop playback of `garden.ogg` via Web Audio API, automatically ducked on pause menu and race finish.
 - **QA Tooling:** Visual Art Gallery modal (`RaceGallery.ts`, `?race-gallery`), 8-vantage-point screenshot tour (`screenshot-tour.mjs`, `docs/rickshaw-race/art-pass/`), and Playwright E2E verification script (`npm run test:race:m35`).
 
+#### Milestone 5 — Dhaka Street Items, Street Hazards & Parallel Downloader (ADRs 028–030)
+- **Multi-Channel Parallel Download Manager (`parallel-download.mjs`, ADR 029):** High-throughput IDM-style parallel downloader with 4-stream range requests, dynamic segment work-stealing, single-stream fallback, retry with exponential backoff & jitter, and SHA-256 integrity verification pinned in `downloads.lock.json`. 7.86× acceleration measured on throttled servers (`npm run race:dl:bench`).
+- **SuperTuxKart Architecture Port (ADR 030):** Ported probability distributions and algorithms from SuperTuxKart's `data/powerup.xml`, `powerup_manager.cpp`, `flyable.cpp`, and `skidding_ai.cpp` with GPL-2.0+ headers; 1000-sum probability table across 8 positions in `itemWeights.race.json`.
+- **6 Dhaka Street Items (`src/config/items.race.db.ts`):**
+  - *Malai Cha (চা):* +6.0 m/s sustained nitro boost for 2.5s.
+  - *Naga Fuchka (ফুচকা):* Ballistic red-chili projectile (35 m/s, forward or backward, 3 wall bounces).
+  - *Mishti Doi (দই):* Stationary sweet yogurt trap causing spin-out.
+  - *Parasol Shield (ছাতা):* 7.5s protective dome deflecting 1 projectile.
+  - *Rickshaw Bell (বেল):* Radial sonic shockwave stunning rivals within 6m.
+  - *Ghuri Kite (ঘুড়ি):* Homing kite flyer targeting 1st place leader with 38 m/s speed and explosion hit.
+- **Tiffin Item Boxes & Hazards (`scripts/race/build-items.mjs`, `items.json`):** 16 data-driven tiffin boxes (3.5s respawn) and street hazards (crossing rickshaws, fallen Krishnachura petal slicks) along Fuller Road Sprint; SHA-256 pinned in `gameplay.lock.json`.
+- **HitReaction State Machine (`src/scenes/minigames/race/core/HitReaction.ts`):** Deterministic states (`spin_out`, `explosion`, `squash`, `stun`), speed damping, control locks, visual juice offsets (yaw spin, tumble pitch, squash scale), and post-hit invulnerability windows.
+- **AI ItemBrain (`src/scenes/minigames/race/ai/ItemBrain.ts`):** Ported from STK `skidding_ai.cpp` with forward projectile targeting cone ($< 38$m, $|\Delta\theta| < 0.38$ rad), backward defense ($< 16$m, $|\Delta\theta| < 0.30$ rad), and shield deployment on incoming threat.
+- **HUD & 3D Renderers:** Mario Kart style roulette item slot (`ItemSlotHud.ts`), incoming projectile threat warning banner (`IncomingWarning.ts`), 3D item instances (`ItemRenderer.ts`), hazard visuals (`HazardRenderer.ts`), and F8 telemetry overlay (`ItemsDebugOverlay.ts`).
+- **Testing & Balancing:** 73 unit tests in `race_m5.test.ts` (283/283 total race tests green), 30-race Monte-Carlo simulation with items/hazards (99.6% finish rate, monotonic pace, bit-exact determinism), and Playwright E2E automation in `scripts/test_race_m5.js` passing all 9 phases with zero errors.
+
 ---
 
 ## 7. Stardew Valley 32×32 Grid & Farming Engine

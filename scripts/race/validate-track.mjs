@@ -175,6 +175,34 @@ async function validateTrack(trackId) {
   }
   console.log(`  ✅ All ${trackData.checkpoints.length} checkpoint gates validated on track bounds`);
 
+  // 4b. Validate items.json and gameplay.lock.json if items.json exists
+  const itemsPath = path.join(trackDir, 'items.json');
+  const lockPath = path.join(trackDir, 'gameplay.lock.json');
+  if (fs.existsSync(itemsPath)) {
+    const itemsRaw = fs.readFileSync(itemsPath, 'utf-8');
+    const itemsData = JSON.parse(itemsRaw);
+    if (!Array.isArray(itemsData.boxes) || itemsData.boxes.length < 8) {
+      throw new Error(`items.json must define at least 8 item boxes (found ${itemsData.boxes?.length})`);
+    }
+    for (const b of itemsData.boxes) {
+      const gRes = groundQuery.queryGround(b.x, b.y, b.z);
+      if (!gRes.onGround && Math.abs(b.y - gRes.height) > 2.5) {
+        console.warn(`  ⚠️ Item box ${b.id} elevation diff: ${Math.abs(b.y - gRes.height).toFixed(2)}m`);
+      }
+    }
+    console.log(`  ✅ Item Boxes validated: ${itemsData.boxes.length} tiffin boxes on track`);
+
+    if (fs.existsSync(lockPath)) {
+      const lockData = JSON.parse(fs.readFileSync(lockPath, 'utf-8'));
+      const crypto = await import('crypto');
+      const hash = crypto.createHash('sha256').update(itemsRaw).digest('hex');
+      if (lockData.itemsSha256 && lockData.itemsSha256 !== hash) {
+        throw new Error(`gameplay.lock.json itemsSha256 mismatch: expected ${lockData.itemsSha256}, got ${hash}`);
+      }
+      console.log(`  ✅ items.json SHA-256 matches gameplay.lock.json (${hash.slice(0, 8)}...)`);
+    }
+  }
+
   // 5. Headless Autopilot Completability Verification (Runs 3 Full Laps)
   console.log(`🏎 Running Headless Autopilot 3-Lap Completability Test...`);
   const spline = new TrackSpline(trackData.centerline, true, 300);
