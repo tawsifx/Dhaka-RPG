@@ -1,10 +1,8 @@
 // scripts/race/stk/fetch-stk.mjs - Automated acquisition of candidate SuperTuxKart assets
 import fs from 'fs';
 import path from 'path';
-import { execFile } from 'child_process';
-import { promisify } from 'util';
+import { downloadFile } from '../../lib/parallel-download.mjs';
 
-const execFileAsync = promisify(execFile);
 const CACHE_DIR = path.resolve('.cache/stk-assets');
 const SVN_BASE = 'https://svn.code.sf.net/p/supertuxkart/code/stk-assets';
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/supertuxkart/stk-code/master/data';
@@ -83,27 +81,21 @@ export const STK_FETCH_MANIFEST = [
   { source: `${SVN_BASE}/music/licenses.txt`, dest: 'music/licenses.txt' }
 ];
 
-async function downloadFileWithCurl(url, destPath) {
+async function downloadItem(url, destPath) {
   const fullPath = path.join(CACHE_DIR, destPath);
   if (fs.existsSync(fullPath) && fs.statSync(fullPath).size > 0) {
     console.log(`  [CACHED] ${destPath}`);
     return;
   }
 
-  fs.mkdirSync(path.dirname(fullPath), { recursive: true });
   console.log(`  [DOWNLOADING] ${destPath}`);
-
   try {
-    await execFileAsync('curl', [
-      '-s',
-      '-L',
-      '--fail',
-      '-A', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
-      '--max-time', '30',
-      '-o', fullPath,
-      url
-    ]);
-    const size = fs.statSync(fullPath).size;
+    const res = await downloadFile(url, fullPath, {
+      concurrency: 2,
+      retries: 2,
+      timeout: 20000
+    });
+    const size = fs.statSync(res.path).size;
     console.log(`  ✅ Done: ${destPath} (${(size / 1024).toFixed(1)} kB)`);
   } catch (err) {
     console.warn(`  ⚠️ Failed to download ${destPath}:`, err.message);
@@ -120,7 +112,7 @@ export async function fetchStkAssets() {
   const CONCURRENCY = 4;
   for (let i = 0; i < STK_FETCH_MANIFEST.length; i += CONCURRENCY) {
     const chunk = STK_FETCH_MANIFEST.slice(i, i + CONCURRENCY);
-    await Promise.all(chunk.map((item) => downloadFileWithCurl(item.source, item.dest)));
+    await Promise.all(chunk.map((item) => downloadItem(item.source, item.dest)));
   }
 
   console.log(`\n✅ STK Asset Fetch complete! Total items checked: ${STK_FETCH_MANIFEST.length}`);
