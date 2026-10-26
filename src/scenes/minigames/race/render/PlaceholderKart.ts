@@ -1,6 +1,13 @@
-// src/scenes/minigames/race/render/PlaceholderKart.ts - Labeled placeholder 3-wheel rickshaw kart with M2 visual juice (slip, lean, pitch, hop & trick spin)
+// src/scenes/minigames/race/render/PlaceholderKart.ts - 3D Kart with authentic SuperTuxKart GLB models and procedural fallback
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { KartState } from '../../../../types/race.types';
+
+export interface KartRenderOptions {
+  modelUrl?: string;
+  tintColor?: number | string;
+  isPlayer?: boolean;
+}
 
 export class PlaceholderKart {
   readonly group: THREE.Group;
@@ -10,11 +17,19 @@ export class PlaceholderKart {
   private bodyGroup: THREE.Group;
   private frontWheelPivot: THREE.Group;
   private wheels: THREE.Mesh[] = [];
+  private proceduralMeshes: THREE.Mesh[] = [];
   private geometries: THREE.BufferGeometry[] = [];
   private materials: THREE.Material[] = [];
+  private loadedTextures: THREE.Texture[] = [];
   private lanternMesh: THREE.Mesh;
+  private stkModel: THREE.Group | null = null;
+  private stkWheels: THREE.Mesh[] = [];
 
-  constructor(bodyColor: number | string = 0x15803d, canopyColor: number | string = 0xf59e0b) {
+  constructor(
+    bodyColor: number | string = 0x15803d,
+    canopyColor: number | string = 0xf59e0b,
+    options?: KartRenderOptions
+  ) {
     this.group = new THREE.Group();
     this.bodyGroup = new THREE.Group();
     this.group.add(this.bodyGroup);
@@ -69,6 +84,7 @@ export class PlaceholderKart {
     chassisMesh.receiveShadow = true;
     this.bodyGroup.add(chassisMesh);
     this.geometries.push(chassisGeo);
+    this.proceduralMeshes.push(chassisMesh);
 
     // 2. Rickshaw Hood Canopy (Arch on top of back carriage)
     const hoodGeo = new THREE.BoxGeometry(1.15, 0.6, 0.9);
@@ -77,6 +93,7 @@ export class PlaceholderKart {
     hoodMesh.castShadow = true;
     this.bodyGroup.add(hoodMesh);
     this.geometries.push(hoodGeo);
+    this.proceduralMeshes.push(hoodMesh);
 
     // 3. Passenger Seat Bench
     const seatGeo = new THREE.BoxGeometry(1.0, 0.2, 0.4);
@@ -84,6 +101,7 @@ export class PlaceholderKart {
     seatMesh.position.set(0, 0.65, 0.35);
     this.bodyGroup.add(seatMesh);
     this.geometries.push(seatGeo);
+    this.proceduralMeshes.push(seatMesh);
 
     // 4. Front Cycle Frame Bar connecting to front wheel
     const frameGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.2, 8);
@@ -93,6 +111,7 @@ export class PlaceholderKart {
     frameMesh.castShadow = true;
     this.bodyGroup.add(frameMesh);
     this.geometries.push(frameGeo);
+    this.proceduralMeshes.push(frameMesh);
 
     // 5. Handlebar & Bell
     const handlebarGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.8, 8);
@@ -101,6 +120,7 @@ export class PlaceholderKart {
     handlebarMesh.position.set(0, 0.85, -0.75);
     this.bodyGroup.add(handlebarMesh);
     this.geometries.push(handlebarGeo);
+    this.proceduralMeshes.push(handlebarMesh);
 
     const bellGeo = new THREE.SphereGeometry(0.06, 8, 8);
     const bellMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.9, roughness: 0.1 });
@@ -109,6 +129,7 @@ export class PlaceholderKart {
     this.bodyGroup.add(bellMesh);
     this.geometries.push(bellGeo);
     this.materials.push(bellMat);
+    this.proceduralMeshes.push(bellMesh);
 
     // 6. Wheels (Classic 3-Wheel Cycle Rickshaw: 1 Front Center, 2 Rear Sides)
     const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.12, 16);
@@ -124,6 +145,7 @@ export class PlaceholderKart {
     this.frontWheelPivot.add(frontWheel);
     this.wheels.push(frontWheel);
     this.group.add(this.frontWheelPivot);
+    this.proceduralMeshes.push(frontWheel);
 
     // Rear Left Wheel
     const rearLeftWheel = new THREE.Mesh(wheelGeo, wheelMat);
@@ -132,6 +154,7 @@ export class PlaceholderKart {
     rearLeftWheel.castShadow = true;
     this.group.add(rearLeftWheel);
     this.wheels.push(rearLeftWheel);
+    this.proceduralMeshes.push(rearLeftWheel);
 
     // Rear Right Wheel
     const rearRightWheel = new THREE.Mesh(wheelGeo, wheelMat);
@@ -140,6 +163,7 @@ export class PlaceholderKart {
     rearRightWheel.castShadow = true;
     this.group.add(rearRightWheel);
     this.wheels.push(rearRightWheel);
+    this.proceduralMeshes.push(rearRightWheel);
 
     // 7. Lantern Mesh (Swinging STK-style Red Lantern for Rescue)
     const lanternGeo = new THREE.SphereGeometry(0.18, 12, 12);
@@ -153,6 +177,62 @@ export class PlaceholderKart {
     this.rescueLantern.add(this.lanternMesh);
     this.geometries.push(lanternGeo);
     this.materials.push(lanternMat);
+
+    // Asynchronously load external SuperTuxKart 3D model if specified
+    if (options?.modelUrl && typeof window !== 'undefined') {
+      this.loadStkModel(options.modelUrl, options.tintColor);
+    }
+  }
+
+  /**
+   * Loads an authentic SuperTuxKart GLB model, attaches textures, and replaces procedural shapes.
+   */
+  async loadStkModel(modelUrl: string, tintColor?: number | string): Promise<void> {
+    try {
+      const loader = new GLTFLoader();
+      const gltf = await loader.loadAsync(modelUrl);
+      const texLoader = new THREE.TextureLoader();
+
+      gltf.scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+
+          const mat = child.material as THREE.MeshStandardMaterial;
+          if (mat && mat.name) {
+            // Bind authentic STK diffuse texture
+            const texName = mat.name;
+            const tex = texLoader.load(`/assets/race/stk/textures/${texName}`);
+            mat.map = tex;
+            mat.needsUpdate = true;
+            this.loadedTextures.push(tex);
+
+            // Apply rival color tint to kart bodywork
+            if (tintColor && (texName.includes('tuxkart') || texName.includes('diffuse_1') || texName.includes('body'))) {
+              mat.color = new THREE.Color(tintColor);
+            }
+          }
+
+          if (child.name.toLowerCase().includes('wheel') || mat?.name?.toLowerCase().includes('wheel')) {
+            this.stkWheels.push(child);
+          }
+        }
+      });
+
+      // Hide procedural box primitives
+      for (const m of this.proceduralMeshes) {
+        m.visible = false;
+      }
+
+      // Scale model to match kart collision box
+      gltf.scene.scale.set(1.25, 1.25, 1.25);
+      gltf.scene.position.set(0, 0.05, 0);
+
+      this.bodyGroup.add(gltf.scene);
+      this.stkModel = gltf.scene;
+    } catch (err) {
+      console.warn(`[PlaceholderKart] Failed to load external STK kart model ${modelUrl}:`, err);
+    }
   }
 
   /**
@@ -193,9 +273,30 @@ export class PlaceholderKart {
     for (const w of this.wheels) {
       w.rotation.x = wheelRotation;
     }
+    for (const sw of this.stkWheels) {
+      sw.rotation.x = wheelRotation;
+    }
   }
 
   dispose(): void {
+    for (const tex of this.loadedTextures) {
+      tex.dispose();
+    }
+    this.loadedTextures = [];
+
+    if (this.stkModel) {
+      this.stkModel.traverse((c) => {
+        if (c instanceof THREE.Mesh) {
+          c.geometry?.dispose();
+          if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose());
+          else c.material?.dispose();
+        }
+      });
+      this.bodyGroup.remove(this.stkModel);
+      this.stkModel = null;
+    }
+    this.stkWheels = [];
+
     for (const geo of this.geometries) {
       geo.dispose();
     }
@@ -205,6 +306,7 @@ export class PlaceholderKart {
     this.geometries = [];
     this.materials = [];
     this.wheels = [];
+    this.proceduralMeshes = [];
     while (this.group.children.length > 0) {
       this.group.remove(this.group.children[0]);
     }

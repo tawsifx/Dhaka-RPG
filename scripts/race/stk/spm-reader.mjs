@@ -58,6 +58,7 @@ export function readSPM(buffer, options = { transformCoordinates: true }) {
 
   const typeByte = buf[2];
   const meshType = typeByte & 7; // 0=SPMS, 1=SPMA, 2=SPMN
+  const isSkinned = (meshType === 1);
   const version = typeByte >> 3; // usually 1
   const flags = buf[3];
   const hasNormals = (flags & 1) !== 0;
@@ -103,6 +104,10 @@ export function readSPM(buffer, options = { transformCoordinates: true }) {
       const indexCount = view.getUint32(offset, true); offset += 4;
       const matId = view.getUint16(offset, true); offset += 2;
 
+      const mat = materials[matId] || { tex1: true, tex2: false };
+      const uvOne = Boolean(mat.tex1);
+      const uvTwo = Boolean(mat.tex2);
+
       const positions = new Float32Array(vertexCount * 3);
       const normals = hasNormals ? new Float32Array(vertexCount * 3) : null;
       const uvs = new Float32Array(vertexCount * 2);
@@ -146,20 +151,29 @@ export function readSPM(buffer, options = { transformCoordinates: true }) {
           }
         }
 
-        // UV Float16
-        const uRaw = view.getUint16(offset, true); offset += 2;
-        const vRaw = view.getUint16(offset, true); offset += 2;
-        const u = decodeFloat16(uRaw);
-        let vCoord = decodeFloat16(vRaw);
-        if (options.transformCoordinates) {
-          // Flip V for glTF/Three.js convention
-          vCoord = 1.0 - vCoord;
-        }
-        uvs[v * 2 + 0] = u;
-        uvs[v * 2 + 1] = vCoord;
+        if (uvOne) {
+          // UV Float16
+          const uRaw = view.getUint16(offset, true); offset += 2;
+          const vRaw = view.getUint16(offset, true); offset += 2;
+          const u = decodeFloat16(uRaw);
+          let vCoord = decodeFloat16(vRaw);
+          if (options.transformCoordinates) {
+            // Flip V for glTF/Three.js convention
+            vCoord = 1.0 - vCoord;
+          }
+          uvs[v * 2 + 0] = u;
+          uvs[v * 2 + 1] = vCoord;
 
-        if (hasTangents) {
-          offset += 4; // Skip packed tangent
+          if (uvTwo) {
+            offset += 4; // Second UV set
+          }
+          if (hasTangents) {
+            offset += 4; // Skip packed tangent
+          }
+        }
+
+        if (isSkinned) {
+          offset += 16; // Skip skeletal joint indices and weights
         }
       }
 

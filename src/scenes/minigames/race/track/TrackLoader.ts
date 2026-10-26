@@ -86,7 +86,57 @@ export class TrackLoader {
     const collisionGroup = collisionGltf.scene;
     collisionGroup.visible = false; // Hide collision debug mesh by default
 
+    // 4b. Dress visual track meshes with SuperTuxKart textures
+    const loadedTextures: THREE.Texture[] = [];
+    if (typeof window !== 'undefined') {
+      const texLoader = new THREE.TextureLoader();
+
+      // Road asphalt texture from STK Zen Garden
+      const roadMesh = visualGroup.getObjectByName('visual_road') as THREE.Mesh;
+      if (roadMesh && roadMesh.material instanceof THREE.MeshStandardMaterial) {
+        const roadTex = texLoader.load('/assets/race/stk/textures/road.jpg');
+        roadTex.wrapS = THREE.RepeatWrapping;
+        roadTex.wrapT = THREE.RepeatWrapping;
+        roadTex.repeat.set(4, 40);
+        roadMesh.material.map = roadTex;
+        roadMesh.material.roughness = 0.85;
+        roadMesh.material.needsUpdate = true;
+        loadedTextures.push(roadTex);
+      }
+
+      // Sidewalk brick texture from STK Hacienda
+      const sidewalkMesh = visualGroup.getObjectByName('visual_sidewalks') as THREE.Mesh;
+      if (sidewalkMesh && sidewalkMesh.material instanceof THREE.MeshStandardMaterial) {
+        const sideTex = texLoader.load('/assets/race/stk/textures/sidewalk.jpg');
+        sideTex.wrapS = THREE.RepeatWrapping;
+        sideTex.wrapT = THREE.RepeatWrapping;
+        sideTex.repeat.set(2, 40);
+        sidewalkMesh.material.map = sideTex;
+        sidewalkMesh.material.roughness = 0.9;
+        sidewalkMesh.material.needsUpdate = true;
+        loadedTextures.push(sideTex);
+      }
+
+      // Bridge textures from STK Zen Garden
+      visualGroup.traverse((child) => {
+        if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
+          const matName = child.material.name;
+          if (matName === 'JapanwoodBridge.jpg' || matName === 'japanRedWood.png' || matName === 'stktex_generic_WoodA.png') {
+            const bridgeTex = texLoader.load(`/assets/race/stk/textures/${matName.endsWith('.jpg') ? matName : 'JapanwoodBridge.jpg'}`);
+            bridgeTex.wrapS = THREE.RepeatWrapping;
+            bridgeTex.wrapT = THREE.RepeatWrapping;
+            child.material.map = bridgeTex;
+            child.material.needsUpdate = true;
+            loadedTextures.push(bridgeTex);
+          }
+        }
+      });
+    }
+
     const dispose = () => {
+      loadedTextures.forEach((t) => t.dispose());
+      loadedTextures.length = 0;
+
       // Dispose visual group
       visualGroup.traverse((child) => {
         if (child instanceof THREE.Mesh) {

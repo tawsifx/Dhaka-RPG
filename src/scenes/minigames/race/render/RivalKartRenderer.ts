@@ -36,8 +36,16 @@ export class RivalKartRenderer {
     `;
     this.container.appendChild(this.nameTagsContainer);
 
-    for (const profile of rivalProfiles) {
-      const kart = new PlaceholderKart(profile.kartColor, profile.accentColor);
+    for (let i = 0; i < rivalProfiles.length; i++) {
+      const profile = rivalProfiles[i];
+      const modelUrl = i % 2 === 0
+        ? '/assets/race/stk/models/wilber_kart.glb'
+        : '/assets/race/stk/models/tux_kart.glb';
+
+      const kart = new PlaceholderKart(profile.kartColor, profile.accentColor, {
+        modelUrl,
+        tintColor: profile.kartColor
+      });
       const billboard = new BillboardDriver(profile.spriteKey, profile.kartColor);
       kart.group.add(billboard.group);
       this.group.add(kart.group);

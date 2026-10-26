@@ -48,6 +48,15 @@ export class RaceRenderer {
     this.scene.background = new THREE.Color(skyColor);
     this.scene.fog = new THREE.FogExp2(skyColor, 0.008);
 
+    // Load authentic SuperTuxKart sky texture
+    if (typeof window !== 'undefined') {
+      const texLoader = new THREE.TextureLoader();
+      texLoader.load('/assets/race/stk/textures/sky.png', (skyTex) => {
+        skyTex.mapping = THREE.EquirectangularReflectionMapping;
+        this.scene.background = skyTex;
+      });
+    }
+
     // 1. Lighting
     this.ambientLight = new THREE.AmbientLight(0xfff7ed, 0.70);
     this.scene.add(this.ambientLight);

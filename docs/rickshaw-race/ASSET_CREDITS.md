@@ -7,15 +7,11 @@
 
 ---
 
-### 1. 3D Meshes & Procedural Geometry
-- **Rickshaw Kart Chassis:** Custom procedural Three.js hierarchy modeled in `PlaceholderKart.ts` conforming to the project's external-asset fallback convention.
-  - Emerald Green chassis body (`#15803d`)
-  - Amber Gold passenger hood canopy (`#f59e0b`)
-  - Crimson padded seat bench (`#b91c1c`)
-  - Dark Steel cycle frame & handlebar (`#1e293b`)
-  - Yellow Rickshaw Bell (`#facc15`)
-  - 3-Wheel rubber tires with chrome spoke pivots
-- **Arena Track & Terrain:** Built procedurally in `ArenaBuilder.ts` using native Three.js buffer geometries (`PlaneGeometry`, `RingGeometry`, `CircleGeometry`, `BoxGeometry`, `ConeGeometry`).
+### 1. 3D Kart Models & Materials
+- **SuperTuxKart 3D Kart Models:** Converted from authentic SuperTuxKart binary `.spm` assets into standard glTF binary `.glb` via `scripts/race/stk/convert-mesh.mjs` and loaded dynamically in `PlaceholderKart.ts`:
+  - `public/assets/race/stk/models/tux_kart.glb` — Sourced from STK `karts/tux/tux.spm` and textures (`tuxkart.png`, `tux_body.png`, `engine.png`, `wheel.png`). License: GNU GPL v3+ / CC-BY-SA 3.0 (SuperTuxKart Development Team). Used by player (Tux mascot chassis).
+  - `public/assets/race/stk/models/wilber_kart.glb` — Sourced from STK `karts/wilber/wilber.spm` and textures (`wilber_diffuse_1.png`, `wilber_diffuse_2.png`). License: GNU GPL v3+ / CC-BY-SA 3.0. Used by AI rivals with color customization tinting.
+  - Procedural 3-wheel rickshaw primitives in `PlaceholderKart.ts` retained as synchronous fallback for Node/Vitest headless testing environments.
 
 ---
 
@@ -45,8 +41,15 @@
 
 ---
 
-### 4. Fuller Road Sprint Track Art (M3, audited in M4 A2)
-- **All track visuals are procedural** (`scripts/race/build-track.mjs`, in-house, MIT): road ribbon, Curzon Hall pillars/kiosk domes, TSC rotunda, Krishnachura trees, flyover piers, petal pads. **No third-party asset is used in `visual.glb` or `collision.glb`.** See `ASSETS.md` §3 and ADR 017 for the remediation plan.
+### 4. Fuller Road Sprint Track Art & External Dressing
+- **SuperTuxKart Track Models & Textures:**
+  - **Flyover Elevated Bridge:** `public/assets/race/stk/models/stk_bridge.glb` & embedded flyover geometry, converted from STK Zen Garden `bridge_LOD50.spm` and `JapanwoodBridge.jpg`. License: CC-BY-SA 3.0 (SuperTuxKart Team).
+  - **Roadside Traffic Vehicles:** `public/assets/race/stk/models/stk_traffic_car.glb`, converted from STK Candela City `car_traffic.spm` and `stk_lowPolyCars_a.png`. License: CC-BY-SA 3.0.
+  - **Road Asphalt Texture:** `public/assets/race/stk/textures/road.jpg`, sourced from STK Zen Garden `blackRoad.jpg`. Applied with wrapping repeat ($4 \times 40$) to `visual_road`.
+  - **Sidewalk Brick Texture:** `public/assets/race/stk/textures/sidewalk.jpg`, sourced from STK Hacienda `hacienda_ground.jpg`. Applied with wrapping repeat ($2 \times 40$) to `visual_sidewalks`.
+  - **Skybox Background:** `public/assets/race/stk/textures/sky.png`, sourced from STK Candela City `sky.png`.
+  - **Scenery Props:** Converted from STK library models: Modern Street Lamps (`lamp.glb`), Red Lanterns (`lantern.glb`), Park Benches (`bench.glb`), Krishnachura Trees (`krishnachura_tree.glb`), Fitch Barrels (`barrel.glb`), Bushes (`bush.glb`), and Barrier Posts (`post.glb`).
+- **Dhaka Landmark Kitbashes:** Procedural architectural facades for Curzon Hall red-brick arcades, TSC Rotunda & Green Dome, and Shaheed Minar monument. All gameplay collision and centerline geometry strictly locked (`gameplay.lock.json`).
 
 ### 5. Rival Driver Billboards (M4)
 - Rival and player billboards sample the project's own existing character sheets (`public/assets/sprites/characters/*.png`; credits remain those recorded for the overworld characters in `GAME_CONTEXT.md` §12). No new art was added. Missing/unusable sheets fall back to a tinted name-tag marker.

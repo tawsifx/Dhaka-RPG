@@ -80,6 +80,15 @@ export class PropInstancer {
         ? meshTemplate.material[0].clone()
         : meshTemplate.material.clone();
 
+      if (typeof window !== 'undefined' && baseMat instanceof THREE.MeshStandardMaterial) {
+        const matName = baseMat.name;
+        if (matName && !baseMat.map) {
+          const texLoader = new THREE.TextureLoader();
+          baseMat.map = texLoader.load(`/assets/race/stk/textures/${matName}`);
+          baseMat.needsUpdate = true;
+        }
+      }
+
       this.geometries.push(baseGeo);
       this.materials.push(baseMat);
 
@@ -117,6 +126,9 @@ export class PropInstancer {
     this.geometries.length = 0;
 
     for (const m of this.materials) {
+      if (m instanceof THREE.MeshStandardMaterial && m.map) {
+        m.map.dispose();
+      }
       m.dispose();
     }
     this.materials.length = 0;

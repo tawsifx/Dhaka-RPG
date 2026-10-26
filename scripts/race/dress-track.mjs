@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import * as THREE from 'three';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { TrackSpline } from '../../src/scenes/minigames/race/track/TrackSpline.ts';
+import { readSPM, spmToBufferGeometries } from './stk/spm-reader.mjs';
 
 // Polyfill FileReader for GLTFExporter in Node
 if (typeof globalThis.FileReader === 'undefined') {
@@ -284,6 +285,36 @@ flyoverPillars.name = 'visual_flyover_piers';
 });
 visualScene.add(flyoverPillars);
 
+// 5b. SuperTuxKart Flyover Arched Bridge Mesh (from Zen Garden bridge_LOD50.spm)
+const bridgeSpmPath = path.resolve('.cache/stk-assets/tracks/zengarden/bridge_LOD50.spm');
+if (fs.existsSync(bridgeSpmPath)) {
+  console.log('🌉 Integrating authentic STK Zen Garden bridge model onto flyover...');
+  const bridgeBuf = fs.readFileSync(bridgeSpmPath);
+  const bridgeSpm = readSPM(bridgeBuf, { transformCoordinates: true });
+  const bridgeGeoms = spmToBufferGeometries(bridgeSpm);
+  const stkBridgeGroup = new THREE.Group();
+  stkBridgeGroup.name = 'visual_stk_flyover_bridge';
+
+  for (const bg of bridgeGeoms) {
+    const isRedWood = bg.materialName.toLowerCase().includes('red');
+    const isFloor = bg.materialName.toLowerCase().includes('bridge');
+    const bMat = new THREE.MeshStandardMaterial({
+      name: bg.materialName,
+      color: isRedWood ? 0xb71c1c : (isFloor ? 0x4e342e : 0x795548),
+      roughness: 0.75,
+      metalness: 0.1
+    });
+    const bMesh = new THREE.Mesh(bg.geometry, bMat);
+    bMesh.rotation.x = -Math.PI / 2;
+    stkBridgeGroup.add(bMesh);
+  }
+
+  // Position spanning the elevated flyover section
+  stkBridgeGroup.position.set(-15, 3.2, 115);
+  stkBridgeGroup.scale.set(1.1, 1.1, 1.1);
+  visualScene.add(stkBridgeGroup);
+}
+
 // 6. Kitbashed Dhaka Landmarks
 console.log('🏛️ Kitbashing Dhaka Landmarks: Curzon Hall, TSC Rotunda, Shaheed Minar...');
 
@@ -486,6 +517,32 @@ for (let lx = -9; lx <= 9; lx += 3) {
     position: [lx, 9.2, 0],
     rotation: [0, 0, 0],
     scale: [1.2, 1.2, 1.2]
+  });
+}
+
+// G. Authentic STK Traffic Cars (from Candela City car_traffic.spm) parked roadside
+const trafficCars = [
+  // Curzon Hall parking & entrance
+  { pos: [-24, 0, -45], rotY: 0.3 },
+  { pos: [-24, 0, -75], rotY: -0.2 },
+  { pos: [24, 0, -55], rotY: 2.9 },
+  // TSC Rotunda perimeter parking
+  { pos: [215, 0, -195], rotY: 1.2 },
+  { pos: [245, 0, -165], rotY: 2.4 },
+  // Shaheed Minar plaza edge
+  { pos: [130, 0, 35], rotY: -1.5 },
+  { pos: [160, 0, 35], rotY: 1.6 },
+  // Krishnachura Avenue curbside
+  { pos: [55, 0, 140], rotY: 0.8 },
+  { pos: [-40, 0, 75], rotY: -2.1 }
+];
+
+for (const car of trafficCars) {
+  props.push({
+    model: 'stk_traffic_car',
+    position: car.pos,
+    rotation: [0, car.rotY, 0],
+    scale: [1.3, 1.3, 1.3]
   });
 }
 
