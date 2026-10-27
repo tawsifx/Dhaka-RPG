@@ -62,7 +62,11 @@ let autopilot = params.has('autopilot');
 // Link settings, applied and saved like their keys: ?3d=3d|2d (3), ?graphics=240|480|960|native (G: 240 = 1x N64
 // textures, 480 = 2x, 960 = 4x), ?jump=jump|glue (J), ?showphysics=true|false (P, below)
 const URL_GRAPHICS = { 240: '1x', 480: '2x', 960: '4x', native: 'native' };
-if (params.has('3d')) { if (['3d', 'true', '1', 'on'].includes(params.get('3d'))) localStorage.setItem('mk64wii3d', '1'); else localStorage.removeItem('mk64wii3d'); }
+if (params.has('3d')) {
+  if (['3d', 'true', '1', 'on'].includes(params.get('3d'))) localStorage.setItem('mk64wii3d', '1');
+  else if (['0', 'false', 'off', '2d'].includes(params.get('3d'))) localStorage.setItem('mk64wii3d', '0');
+}
+const is3DEnabled = () => localStorage.getItem('mk64wii3d') !== '0' && localStorage.getItem('mk64wii3d') !== 'false';
 if (URL_GRAPHICS[params.get('graphics')]) HD.setPreset(URL_GRAPHICS[params.get('graphics')]);
 if (['jump', 'jumps', 'glue'].includes(params.get('jump'))) { PHYSICS.glue = params.get('jump') === 'glue'; localStorage.setItem('kartPhysics', PHYSICS.glue ? 'glue' : 'jumps'); }
 const th = (trackDef || TRACKS[0]).theme;
@@ -285,11 +289,11 @@ function setup(count = battle ? 4 : 8) {   // count: karts on the grid (8 for 1P
   // func_8005995C: a time trial hands player 1 a mushroom twice more once it is used, i.e. three mushrooms
   if (timeTrial) items.give(player, 'triple_mushroom');
   startCountdown();
-  if (localStorage.getItem('mk64wii3d')) setWii3D(true);
+  if (is3DEnabled()) setWii3D(true);
 }
 // Wii 3D karts + Lakitu (key 3) on / off; the choice is saved so later races start the same way
 function setWii3D(on) {
-  if (on) localStorage.setItem('mk64wii3d', '1'); else localStorage.removeItem('mk64wii3d');
+  if (on) localStorage.setItem('mk64wii3d', '1'); else localStorage.setItem('mk64wii3d', '0');
   if (!on) { for (const k of karts) k.set3D(null); track.setShadowCatchers(false); lakitu.set3D(null); showRes('KART: MK64 SPRITE'); return; }
   // the sprites (and their blob shadows) stay hidden while the models load, so a 3D race never shows them first
   for (const k of karts) if (!k.model) { k.mesh.children.find(c => c.isSprite).visible = false; k.mesh.userData.setBlob(false); }
@@ -866,7 +870,8 @@ function confirmChar() {
   localStorage.setItem('mk64char', c);
   snd('okClicked');
   leaving = true;   // let SOUND_MENU_OK_CLICKED play before the page reloads into the race
-  setTimeout(() => { location.search = `?track=${selCourse}&char=${c}&cc=${CC_ROWS[ccSel].replace('cc', '')}&mode=${PMODES[pcount][pmode]}${pcount ? `&players=${pcount + 1}` : ''}`; }, 500);
+  const mode3d = is3DEnabled() ? '1' : '0';
+  setTimeout(() => { location.search = `?track=${selCourse}&char=${c}&cc=${CC_ROWS[ccSel].replace('cc', '')}&mode=${PMODES[pcount][pmode]}${pcount ? `&players=${pcount + 1}` : ''}&3d=${mode3d}`; }, 500);
 }
 function backFromChar() {
   snd('back');
@@ -1062,7 +1067,7 @@ function setupOnline() {
   banner.textContent = '';
   items.reset();
   startCountdown();
-  if (localStorage.getItem('mk64wii3d')) setWii3D(true);
+  if (is3DEnabled()) setWii3D(true);
 }
 function sendPose() {
   sendKartPose(player);
@@ -1227,7 +1232,8 @@ addEventListener('keydown', e => {
 
   // Standard PC Menu / Exit: Escape (or M)
   if ((e.code === 'Escape' || e.code === 'KeyM') && trackDef) {
-    location.search = `?menu=course&from=${trackDef.id}&mode=${raceMode}${ccParam ? `&cc=${ccParam}` : ''}${PLAYERS_WANTED ? `&players=${PLAYERS_WANTED}` : ''}`;
+    const mode3d = is3DEnabled() ? '1' : '0';
+    location.search = `?menu=course&from=${trackDef.id}&mode=${raceMode}${ccParam ? `&cc=${ccParam}` : ''}${PLAYERS_WANTED ? `&players=${PLAYERS_WANTED}` : ''}&3d=${mode3d}`;
     return;
   }
   if (e.code === 'KeyM' && !trackDef) {
@@ -1244,7 +1250,7 @@ addEventListener('keydown', e => {
   if (e.code === 'Digit3' && !e.repeat && !trackDef && [titleEl, gameEl, menuEl, charEl].includes(curScreen)) {
     const on = !title3d;
     toggleTitle3D();
-    if (on) { localStorage.setItem('mk64wii3d', '1'); HD.setPreset('4x'); } else localStorage.removeItem('mk64wii3d');
+    if (on) { localStorage.setItem('mk64wii3d', '1'); HD.setPreset('4x'); } else localStorage.setItem('mk64wii3d', '0');
   }
   if (e.code === 'Digit3' && !e.repeat && player) setWii3D(!player.model);
 

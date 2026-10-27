@@ -1,60 +1,95 @@
 import json
 from PIL import Image
 
+import json
+from PIL import Image
+
 def build_2d_karts():
-    # 1. Satsuki: recolor Mario (1344x1024)
+    # 1. Satsuki: transform Mario into genuine Satsuki (1344x1024, 21x16 grid of 64x64 cells)
     mario = Image.open('public/mk64/karts/mario.png').convert('RGBA')
-    sat_data = []
-    for r, g, b, a in mario.getdata():
-        if a > 30:
-            # Mario Red (Hat & Shirt) -> Yellow shirt / orange skirt
-            if r > 100 and g < 75 and b < 75:
-                # Top half (hat/head) is black hair, middle is yellow shirt
-                # Since we don't have per-pixel Y easily in flat data, let's map red:
-                # If bright red: make bright yellow/orange
-                factor = r / 255.0
-                sat_data.append((int(245 * factor), int(190 * factor), int(35 * factor), a))
-            # Mario Blue Overalls -> Bright Orange
-            elif b > 80 and r < 80:
-                factor = b / 255.0
-                sat_data.append((int(235 * factor), int(96 * factor), int(32 * factor), a))
-            # Mario Brown mustache / hair -> Jet black
-            elif r < 100 and g < 70 and b < 50:
-                sat_data.append((int(r * 0.3), int(g * 0.3), int(b * 0.3), a))
+    width, height = mario.size
+    mario_pixels = mario.load()
+    sat_img = Image.new('RGBA', (width, height))
+    sat_pixels = sat_img.load()
+
+    for y in range(height):
+        cy = y % 64
+        for x in range(width):
+            r, g, b, a = mario_pixels[x, y]
+            if a <= 30:
+                sat_pixels[x, y] = (r, g, b, a)
+                continue
+
+            # Head region (hair and face)
+            if cy <= 27:
+                # Mario Red Hat -> Satsuki Jet Black Hair
+                if r > 90 and g < 75 and b < 75:
+                    factor = r / 255.0
+                    sat_pixels[x, y] = (int(25 * factor), int(25 * factor), int(32 * factor), a)
+                # Mario Brown Mustache / Sideburns -> Fair Skin (eliminate mustache)
+                elif r < 120 and g < 85 and b < 70 and cy >= 19:
+                    sat_pixels[x, y] = (245, 198, 172, a)
+                else:
+                    sat_pixels[x, y] = (r, g, b, a)
+            # Torso region (Satsuki's iconic yellow shirt)
+            elif cy <= 43:
+                # Mario Red Shirt -> Bright Sunny Yellow
+                if r > 90 and g < 80 and b < 80:
+                    factor = r / 255.0
+                    sat_pixels[x, y] = (int(252 * factor), int(220 * factor), int(42 * factor), a)
+                # Overalls straps -> Vibrant Orange
+                elif b > 75 and r < 85:
+                    factor = b / 255.0
+                    sat_pixels[x, y] = (int(240 * factor), int(105 * factor), int(30 * factor), a)
+                else:
+                    sat_pixels[x, y] = (r, g, b, a)
+            # Lower body / overalls (Satsuki's orange pinafore / skirt)
             else:
-                sat_data.append((r, g, b, a))
-        else:
-            sat_data.append((r, g, b, a))
-            
-    satsuki_img = Image.new('RGBA', mario.size)
-    satsuki_img.putdata(sat_data)
-    satsuki_img.save('public/mk64/karts/satsuki.png')
+                if b > 75 and r < 85:
+                    factor = b / 255.0
+                    sat_pixels[x, y] = (int(238 * factor), int(100 * factor), int(28 * factor), a)
+                elif r > 95 and g < 80 and b < 80:
+                    factor = r / 255.0
+                    sat_pixels[x, y] = (int(252 * factor), int(218 * factor), int(40 * factor), a)
+                else:
+                    sat_pixels[x, y] = (r, g, b, a)
+
+    sat_img.save('public/mk64/karts/satsuki.png')
     print("Created public/mk64/karts/satsuki.png")
 
-    # 2. Totoro: recolor Donkey Kong (1344x1024)
+    # 2. Totoro: transform Donkey Kong into genuine Totoro (1344x1024)
     dk = Image.open('public/mk64/karts/donkeykong.png').convert('RGBA')
-    tot_data = []
-    for r, g, b, a in dk.getdata():
-        if a > 30:
-            # DK Red Tie -> Leaf green
-            if r > 120 and g < 50 and b < 50:
-                tot_data.append((int(45 * (r/255)), int(160 * (r/255)), int(55 * (r/255)), a))
-            # DK Chest / Muzzle (light tan) -> Cream white belly
-            elif r > 130 and g > 100 and b > 70 and r - b < 70:
-                tot_data.append((int(r * 1.05), int(g * 1.05), int(b * 1.15), a))
-            # DK Brown Fur -> Forest Grey
-            elif r > 40 and g < 80:
-                # Desaturate to neutral / cool slate grey
+    dk_pixels = dk.load()
+    tot_img = Image.new('RGBA', (width, height))
+    tot_pixels = tot_img.load()
+
+    for y in range(height):
+        cy = y % 64
+        for x in range(width):
+            r, g, b, a = dk_pixels[x, y]
+            if a <= 30:
+                tot_pixels[x, y] = (r, g, b, a)
+                continue
+
+            # DK Red Tie -> Totoro Cream White Belly
+            if r > 115 and g < 60 and b < 60:
+                tot_pixels[x, y] = (248, 244, 234, a)
+            # DK Chest / Muzzle (light tan)
+            elif r > 120 and g > 90 and b > 65 and r - b < 75:
+                if cy < 25:
+                    # Head / muzzle area -> Slate Grey face
+                    tot_pixels[x, y] = (110, 120, 130, a)
+                else:
+                    # Chest / belly -> Cream White Belly
+                    tot_pixels[x, y] = (248, 244, 234, a)
+            # DK Brown Fur -> Ghibli Slate Grey Fur
+            elif r > 35 and g < 85:
                 lum = int(0.299 * r + 0.587 * g + 0.114 * b)
-                tot_data.append((int(lum * 1.0), int(lum * 1.05), int(lum * 1.1), a))
+                tot_pixels[x, y] = (int(lum * 0.95), int(lum * 1.05), int(lum * 1.15), a)
             else:
-                tot_data.append((r, g, b, a))
-        else:
-            tot_data.append((r, g, b, a))
-            
-    totoro_img = Image.new('RGBA', dk.size)
-    totoro_img.putdata(tot_data)
-    totoro_img.save('public/mk64/karts/totoro.png')
+                tot_pixels[x, y] = (r, g, b, a)
+
+    tot_img.save('public/mk64/karts/totoro.png')
     print("Created public/mk64/karts/totoro.png")
 
     # 3. Update manifest.json
@@ -73,6 +108,9 @@ def build_2d_karts():
     with open(manifest_path, 'w') as f:
         json.dump(manifest, f, indent=2)
     print("Updated public/mk64/karts/manifest.json")
+
+if __name__ == '__main__':
+    build_2d_karts()
 
 if __name__ == '__main__':
     build_2d_karts()

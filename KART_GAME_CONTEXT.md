@@ -15,8 +15,8 @@ The 3D kart racing minigame in this project is powered by **Totoro Kart** (forme
 │ • Core Runtime: Three.js 0.186.1 (WebGLRenderer, PCF Shadows, Stencil) │
 │ • Resolution / CAS Sharpening: 1× (240p), 2× (480p), 4× (960p), Native │
 │ • Dual Kart Presentation:                                              │
-│     - Retro 2.5D Billboard Sprites (authentic N64 64×64 texture atlas) │
-│     - Wii 3D Standard Karts (toggle via '3' key or ?3d=3d URL flag)    │
+│     - Wii 3D Standard Karts (Default; Satsuki & Totoro 3D high-poly)   │
+│     - Retro 2.5D Billboard Sprites (toggle via '3' key or ?3d=0)       │
 │ • Courses: All 16 Grand Prix circuits across 4 cups + 4 Battle Arenas   │
 │ • Drivers: 8 classic drivers across Small, Medium, Large weight classes│
 │ • Item Engine: Full 15-item inventory with authentic roulette RNG      │
@@ -168,8 +168,8 @@ Defined in [`src/scenes/minigames/race/kart.js`](file:///Users/tawsifx/Desktop/d
 ## 8. Visual & Rendering Pipeline
 
 1. **Dual Character Representation:**
-   * **Retro 2.5D Mode (Default):** Pre-rendered 64×64 billboard sprites sampled dynamically based on the viewing angle of the chase camera (`kartSpriteFrame`).
-   * **Wii 3D Mode:** Pressing `3` replaces all driver sprites with 3D Collada (`.dae`) models, adds real-time PCF shadow-map projection onto track surfaces, dynamic front tire steering lock (`0.45 rad`), and velocity-based wheel spin.
+   * **Wii 3D Mode (Default):** High-fidelity 3D Collada (`.dae`) models for all drivers (including custom Ghibli drivers Satsuki Kusakabe and Totoro), real-time PCF shadow-map projection onto track surfaces, dynamic front tire steering lock (`0.45 rad`), and velocity-based wheel spin. Enabled by default across all 16 Grand Prix circuits and 4 Battle Arenas (`?3d=1`), with seamless persistence.
+   * **Retro 2.5D Mode:** Pre-rendered 64×64 billboard sprites sampled dynamically based on the viewing angle of the chase camera (`kartSpriteFrame`), toggleable via key `3`. Satsuki and Totoro feature dedicated Ghibli pixel-art sprites (no Mario or Donkey Kong sprite artifacts).
 2. **Resolution & Sharpness Presets (Key `G`):**
    * `1x` (240p): Authentic pixelated N64 texture sampling.
    * `2x` (480p): Contrast Adaptive Sharpening (CAS) applied via [`src/scenes/minigames/race/sharpen.js`](file:///Users/tawsifx/Desktop/dhaka-date-rpg/src/scenes/minigames/race/sharpen.js).

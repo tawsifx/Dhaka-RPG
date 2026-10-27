@@ -87,7 +87,7 @@ export class TotoroKartEngine {
 
       // Totoro Kart iframe
       const iframe = document.createElement('iframe');
-      const raceUrl = trackId ? `/race.html?track=${encodeURIComponent(trackId)}` : '/race.html';
+      const raceUrl = trackId ? `/race.html?track=${encodeURIComponent(trackId)}&3d=1` : '/race.html?3d=1';
       iframe.src = raceUrl;
       iframe.style.width = '100%';
       iframe.style.height = '100%';

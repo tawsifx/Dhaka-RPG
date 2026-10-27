@@ -94,4 +94,17 @@ describe('MarioKart64JS Core Subsystem Tests', () => {
     expect(engine).toBeInstanceOf(TotoroKartEngine);
     expect(RickshawRaceEngine).toBe(TotoroKartEngine);
   });
+
+  it('supports Satsuki and Totoro across battle arenas and Grand Prix circuits', () => {
+    const battleArenaIds = ['big-donut', 'block-fort', 'double-deck', 'skyscraper'];
+    for (const arenaId of battleArenaIds) {
+      const arena = TRACKS.find((t: any) => t.id === arenaId);
+      expect(arena).toBeDefined();
+      expect(arena?.battle).toBe(true);
+    }
+
+    // Verify Satsuki and Totoro engine scales
+    expect(ccSpeedScale(CC_BATTLE, 'satsuki')).toBeGreaterThan(0);
+    expect(ccSpeedScale(CC_BATTLE, 'totoro')).toBeGreaterThan(0);
+  });
 });

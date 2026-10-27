@@ -9,7 +9,7 @@ import './style.css';
 
 // Instant standalone 3D race redirect if URL contains ?race or #race
 if (typeof window !== 'undefined' && (window.location.search.includes('race') || window.location.hash.includes('race'))) {
-  window.location.href = '/race.html';
+  window.location.href = '/race.html?3d=1';
 }
 
 initTitleSlideshow();
