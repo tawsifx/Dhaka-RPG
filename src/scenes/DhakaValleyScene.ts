@@ -27,8 +27,7 @@ import { FarmingSystem } from '../systems/FarmingSystem';
 import { AtmosphereSystem } from '../systems/AtmosphereSystem';
 import { PlayerBehaviors } from '../systems/player/PlayerBehaviors';
 import { OpeningDialogueSystem } from '../systems/OpeningDialogueSystem';
-import { RickshawTourEngine, StargazingEngine, LakeBoatEngine } from './minigames';
-import { TotoroKartEngine } from './minigames/race/TotoroKartEngine';
+import { RickshawTourEngine, StargazingEngine, LakeBoatEngine, TotoroKartEngine } from './minigames';
 import { MinimapRenderer, InteriorBuilder } from './world';
 import { CampusRomanceQuests } from './quests';
 

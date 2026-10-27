@@ -7,3 +7,5 @@ export * from './graphics';
 export * from './systems';
 export * from './ui';
 export * from './scenes';
+export * from './debug';
+

@@ -38,6 +38,8 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 
 ## 2. Technical Architecture & Stack
 
+*(For the dedicated modular subsystem architecture guide, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`KART_GAME_CONTEXT.md`](KART_GAME_CONTEXT.md)).*
+
 | Layer | Technology | Details |
 | :--- | :--- | :--- |
 | **Game Engine** | [Phaser 3.87.0](https://phaser.io/) | Canvas/WebGL 2D renderer, Arcade Physics, Custom Y-sorting, Multi-camera system |
@@ -55,114 +57,177 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 ```
 dhaka-date-rpg/
 ├── GAME_CONTEXT.md                  # Universal Master Game Specification (THIS FILE)
-├── index.html                       # Application entry point with responsive retro UI HUD
+├── KART_GAME_CONTEXT.md             # Complete Totoro Kart (3D Three.js) Technical Manual & Architecture
+├── AGENTS.md                        # Development, testing, deployment, and security rules
+├── ASSET_CREDITS.md                 # Technical asset provenance & CC0/external credits
+├── ASSET_GUIDE.md                   # Complete visual art and audio reference guide
+├── ASSET_SHOPPING_LIST.md           # External 3D art acquisition backlog & specs
+├── index.html                       # 2D RPG entry point with responsive retro UI HUD
+├── race.html                        # Totoro Kart standalone 3D canvas harness
 ├── package.json                     # Node dependencies, scripts, and build targets
 ├── tsconfig.json                    # TypeScript compiler options
-├── vite.config.ts                   # Vite bundler configuration
+├── vite.config.ts                   # Vite bundler configuration (Rolldown code-splitting)
+├── vercel.json                      # Vercel deployment & immutable cache header rules
 ├── docs/
-│   ├── npc-engine/                  # Living-World NPC Engine engineering dossier & visual proofs
-│   │   ├── 00-audit.md              # Current-state codebase audit & frame costs
-│   │   ├── 01-research.md           # Stardew Valley & Pokémon HGSS reverse-engineering dossier
-│   │   ├── 02-design.md             # Complete architectural design spec & FSM diagrams
-│   │   ├── DECISIONS.md             # Architectural Decision Records (ADR 001–007)
-│   │   ├── PROGRESS.md              # Master progress & milestone checklist (M1–M10)
-│   │   ├── mcp-inventory.md         # MCP tooling map
-│   │   ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
-│   │   └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
-│   └── mariokart64/                 # MarioKart64JS 3D Racing Subsystem Documentation
-│       ├── 00-audit.md              # Codebase integration points, lifecycle & bundle impact audit
-│       ├── 01-research.md           # Mario Kart & SuperTuxKart kinematics equations & formulas
-│       ├── 02-design.md             # System architecture & pure subsystem decomposition specs
-│       ├── DECISIONS.md             # Canonical Architectural Decision Records (ADR 001–022)
-│       ├── PROGRESS.md              # Master M1-M8 roadmap and milestone tracking
-│       ├── PERF.md                  # Benchmark report (FPS, bundle delta, 10-cycle leak tests, instanced pools, 4x CPU throttle)
-│       ├── ASSETS.md                # Asset provenance & classification audit matrix
-│       ├── ASSET_CREDITS.md         # Technical asset provenance & CC0 sample credits
-│       ├── ASSET_SHOPPING_LIST.md   # 3D Art Acquisition Backlog & Specs
-│       └── VERIFICATION.md          # Visual proofs, feel checklist (a-h) & test execution logs
+│   ├── mariokart64/                 # Totoro Kart 3D Racing Subsystem Documentation
+│   │   ├── CHARACTER_MODELING_SPEC.md # 3D Driver modeling pipeline (Satsuki, Totoro)
+│   │   └── README.md                # MarioKart64JS engine overview & controls
+│   └── npc-engine/                  # Living-World NPC Engine engineering dossier & visual proofs
+│       ├── 00-audit.md              # Current-state codebase audit & frame costs
+│       ├── 01-research.md           # Stardew Valley & Pokémon HGSS reverse-engineering dossier
+│       ├── 02-design.md             # Complete architectural design spec & FSM diagrams
+│       ├── DECISIONS.md             # Architectural Decision Records (ADR 001–007)
+│       ├── PROGRESS.md              # Master progress & milestone checklist (M1–M10)
+│       ├── mcp-inventory.md         # MCP tooling map
+│       ├── PERF.md                  # 60 FPS performance benchmark & CPU profiling
+│       └── VERIFICATION.md          # Multi-scenario browser verification log with visual proofs
 ├── public/                          # Static public assets
-│   ├── assets/
-│   │   ├── audio/                   # Compressed BGM tracks & 16-channel SFX
-│   │   ├── race/audio/              # External CC0 vehicle & race audio samples (Kenney)
-│   │   ├── sprites/characters/      # Normalized external character & companion spritesheets
-│   │   └── tilesets/                # Normalized external tileset sheets (16x16 and 32x32)
+│   ├── _headers                     # Cloudflare Pages immutable caching headers
+│   └── assets/
+│       ├── audio/                   # Compressed BGM tracks & 16-channel SFX
+│       ├── race/audio/              # External CC0 vehicle & race audio samples
+│       ├── sprites/characters/      # Normalized external character & companion spritesheets
+│       └── tilesets/                # Normalized external tileset sheets (16x16 and 32x32)
 ├── tests/
-│   ├── stats.test.ts                # RPG combat & stats formulas
-│   ├── farming.test.ts              # Stardew farming simulation & seasons
+│   ├── combat/
+│   │   ├── assets_validation.test.ts # Combat weapon & sprite asset specification validator
+│   │   └── attacks.test.ts          # Attack formulas, cooldowns, and hitbox verifications
+│   ├── npc/                         # Living-World NPC Engine unit & integration tests
+│   │   ├── mover.test.ts            # Stepping controller, facing, freeze/restore (8 tests)
+│   │   ├── nadia_movement.test.ts   # NPC route integration test
+│   │   ├── navigator.test.ts        # In-house A* terrain cost & door pathfinding (8 tests)
+│   │   ├── offscreen.test.ts        # Pure discrete offscreen analytic placement (3 tests)
+│   │   ├── phulwali_movement.test.ts # NPC movement integration test
+│   │   ├── resolver.test.ts         # Pure deterministic schedule resolver (20 tests)
+│   │   ├── roaming.test.ts          # Idle wandering & boundary checks
+│   │   ├── tania_movement.test.ts   # Multi-hop route integration test
+│   │   └── validator.test.ts        # CLI validator for all 38 NPC definitions (1 test)
 │   ├── race/                        # 3D Totoro Kart lifecycle & subsystem tests
-│   │   ├── race_m1.test.ts          # KartController, FixedStepLoop, RaceResult tests (20 tests)
-│   │   ├── race_m2.test.ts          # Drift, 3-tier mini-turbo, boost priority, surfaces, air & countdown (51 tests)
-│   │   ├── race_m3.test.ts          # BVH ground query, 3D collision, spline, laps, rescue, autopilot (46 tests)
-│   │   └── race_m4.test.ts          # Rivals, AI pathing, multi-kart collisions, ranking & rubberband (36 tests)
-│   └── npc/                         # Living-World NPC Engine unit & integration tests
-│       ├── resolver.test.ts         # Pure deterministic schedule resolver (20 tests)
-│       ├── navigator.test.ts        # In-house A* terrain cost & door pathfinding (8 tests)
-│       ├── mover.test.ts            # Stepping controller, facing, freeze/restore (8 tests)
-│       ├── offscreen.test.ts        # Pure discrete offscreen analytic placement (3 tests)
-│       └── validator.test.ts        # CLI validator for all 38 NPC definitions (1 test)
+│   │   └── mariokart64.test.ts      # Kart kinematics, drift, surfaces, and engine tests
+│   ├── database_index.test.ts       # In-memory O(1) index & search test suite
+│   ├── farming.test.ts              # Stardew farming simulation & seasons
+│   ├── opening_dialogue.test.ts     # Bengali/English dialogue tree validator
+│   ├── player_behaviors.test.ts     # Player state machine & combo verifications
+│   ├── sound_engine.test.ts         # Dual-channel Web Audio BGM crossfader tests
+│   └── stats.test.ts                # RPG combat & stats formulas
 └── src/
+    ├── index.ts                     # Root master barrel export (types, config, state, audio, graphics, systems, ui, scenes, debug)
+    ├── main.ts                      # Slim application bootloader & Phaser Game instance
+    ├── style.css                    # Retro styling, CRT scanline effects, HUD layout
+    ├── vite-env.d.ts                # Vite client type definitions
     ├── audio/
-    │   └── SoundEngine.ts           # Web Audio synthesizer, BGM crossfader, SFX pool & ducking
+    │   ├── SoundEngine.ts           # Web Audio synthesizer, BGM crossfader, SFX pool & ducking
+    │   └── index.ts                 # Audio subsystem barrel export
     ├── config/
     │   ├── assetSpecs.manifest.ts   # AI-readable asset requirements manifest
+    │   ├── attacks.db.ts            # Weapon attack stats, hitboxes, frame timings
     │   ├── constants.ts             # World dimensions, coordinate anchors, tile constants
     │   ├── crops.db.ts              # Seasonal crops, growth stages, yields, sell values
+    │   ├── databaseIndex.ts         # O(1) in-memory index engine for fast queries
     │   ├── items.db.ts              # Weapons, armor, keepsakes, food, materials database
     │   ├── npcSchedules.db.ts       # Declarative schedules & variants for all 38 NPCs
-    │   ├── race.config.ts           # 3D kart kinematics, chase camera & simulation tuning constants
+    │   ├── openingDialogues.db.ts   # Opening story dialogue trees
     │   ├── recipes.db.ts            # Crafting recipes & material requirements
-    │   └── worlds.db.ts             # 6 Realms + Curzon Interior + Farmhouse definitions
+    │   ├── tracks.db.ts             # 3D Race tracks & proving ground registry
+    │   ├── worlds.db.ts             # 6 Realms + Curzon Interior + Farmhouse definitions
+    │   └── index.ts                 # Config subsystem barrel export
     ├── debug/
-    │   └── NpcDebugOverlay.ts       # F3 HUD overlay, route polylines, and window.__npc API
+    │   ├── NpcDebugOverlay.ts       # F3 HUD overlay, route polylines, and window.__npc API
+    │   └── index.ts                 # Debug subsystem barrel export
     ├── graphics/
     │   ├── CharacterSpriteGenerator.ts # Procedural pixel art character generator
     │   ├── CreatureSpriteGenerator.ts  # Procedural bosses, enemies, and farm animals
     │   ├── ExternalAssetAdapter.ts     # Universal external asset normalizer & 2x upscaler
     │   ├── GroundTileGenerator.ts      # 32x32 terrain, autotile bitmasks, water textures
     │   ├── LandmarkGenerator.ts        # Heritage buildings, stalls, rickshaws, props
-    │   └── TextureGenerator.ts         # Central procedural texture builder
-    ├── main.ts                      # Phaser game bootstrap & window lifecycle
+    │   ├── TextureGenerator.ts         # Central procedural texture builder
+    │   └── index.ts                 # Graphics subsystem barrel export
     ├── scenes/
     │   ├── DhakaValleyScene.ts      # Core scene coordinating rendering, dialogue, input & world state
-    │   └── minigames/               # Minigame simulation engines
-    │       ├── RickshawTourEngine.ts # 2D Grand Dhaka Rickshaw Tour
-    │       ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
-    │       ├── LakeBoatEngine.ts     # Lantern Rowboat Simulation
-    │       └── race/                # Three.js 3D Racing Engine (MarioKart64JS)
-    │           ├── TotoroKartEngine.ts    # Lifecycle orchestrator (enter/run/exit/dispose)
-    │           ├── core/KartController.ts # Pure arcade kart kinematics math
-    │           ├── core/FixedStepLoop.ts  # 60Hz fixed-timestep accumulator & interpolation
-    │           ├── render/RaceRenderer.ts # WebGL2 renderer, lighting, ground plane, fog & cleanup
-    │           ├── render/ChaseCamera.ts  # Spring-arm camera with speed-dependent dynamic FOV
-    │           ├── render/PlaceholderKart.ts # 3-wheel Dhaka painted cycle rickshaw kart mesh
-    │           ├── input/RaceInput.ts     # Keyboard, touch & gamepad input polling
-    │           ├── ui/RaceHud.ts          # DOM HUD (speedometer, bell hint, exit button, touch)
-    │           ├── debug/RaceDebugOverlay.ts # F4 telemetry overlay & window.__race API
-    │           └── index.ts               # Subsystem barrel export
+    │   ├── minigames/               # Minigame simulation engines
+    │   │   ├── LakeBoatEngine.ts     # Lantern Rowboat Simulation
+    │   │   ├── RickshawTourEngine.ts # 2D Grand Dhaka Rickshaw Tour
+    │   │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
+    │   │   ├── race/                # Three.js 3D Racing Engine (MarioKart64JS)
+    │   │   │   ├── TotoroKartEngine.ts # Bridge & lifecycle orchestrator (iframe harness & event bus)
+    │   │   │   ├── audio.js         # Web Audio synthesizer sequencing & driver voice clips
+    │   │   │   ├── balloon.js       # Battle arena balloon physics & hit mechanics
+    │   │   │   ├── chomps.js        # Chain Chomp track hazard logic
+    │   │   │   ├── crabs.js         # Beach crab animation & collision logic
+    │   │   │   ├── ferry.js         # Moving ferry boat track hazard
+    │   │   │   ├── flag.js          # Dynamic cloth/flag vertex simulation
+    │   │   │   ├── foliage.js       # Tree and shrub billboarding & LOD
+    │   │   │   ├── hd.js            # High-resolution geometry enhancement
+    │   │   │   ├── hedgehogs.js     # Track wildlife entities
+    │   │   │   ├── items.js         # Authentic N64 item system, boxes, projectile logic
+    │   │   │   ├── kart.js          # Kart kinematics, collision response, rivals, physics
+    │   │   │   ├── kart3d.js        # Wii 3D Standard Kart & driver mesh assembler
+    │   │   │   ├── lakitu.js        # Lakitu lap counter, reverse warning, and rescue
+    │   │   │   ├── lakitu3d.js      # 3D Lakitu mesh and fishing rod rig
+    │   │   │   ├── m64-worklet.js   # Low-latency Web Audio AudioWorklet processor
+    │   │   │   ├── m64.js           # Low-level N64 audio sequencing decoder
+    │   │   │   ├── main.js          # Core MarioKart64JS game loop, views, camera, controls
+    │   │   │   ├── neon.js          # Candela City dynamic neon lighting shaders
+    │   │   │   ├── net.js           # Multi-kart state synchronization
+    │   │   │   ├── penguins.js      # Sherbet Land sliding penguin hazards
+    │   │   │   ├── physics-debug.js # Real-time collision mesh wireframe visualizer
+    │   │   │   ├── piranha.js       # Piranha Plant bite attack hazard logic
+    │   │   │   ├── props.js         # Road signs, lampposts, grandstands, fences
+    │   │   │   ├── sections.js      # Track spatial subdivision & culling
+    │   │   │   ├── sharpen.js       # WebGL contrast & sharpening post-processing
+    │   │   │   ├── smoke.js         # Drift smoke & exhaust particle system
+    │   │   │   ├── snowmen.js       # Frappe Snowland exploding snowman obstacles
+    │   │   │   ├── thwomp.js        # Bowser Castle crushing Thwomp hazards
+    │   │   │   ├── title3d.js       # Studio Ghibli 3D CGI menu background scene
+    │   │   │   ├── track.js         # 16 GP circuits + 4 battle arenas geometry loader
+    │   │   │   ├── traffic.js       # Toad's Turnpike moving cars, trucks, and buses
+    │   │   │   ├── train.js         # Kalimari Desert steam locomotive & train cars
+    │   │   │   ├── yoshi-egg.js     # Rolling Yoshi Valley giant egg hazard
+    │   │   │   └── index.ts         # Totoro Kart subsystem barrel export
+    │   │   └── index.ts             # Minigames subsystem barrel export
+    │   ├── quests/
+    │   │   ├── CampusRomanceQuests.ts # Narrative romance quest saga orchestrators
+    │   │   └── index.ts             # Quests subsystem barrel export
+    │   ├── world/
+    │   │   ├── InteriorBuilder.ts   # Curzon Hall & Green Meadows Farmhouse interiors
+    │   │   ├── MinimapRenderer.ts   # Real-time multi-world radar minimap canvas renderer
+    │   │   └── index.ts             # World subsystem barrel export
+    │   └── index.ts                 # Scenes subsystem barrel export
     ├── state/
     │   ├── DateState.ts             # Romance affection, quest stages, inventory, world state
     │   ├── RPGStats.ts              # Combat stats (HP/SP/XP/Level/ATK/DEF), level curve
-    │   └── SaveManager.ts           # LocalStorage serialization & cloud save engine
+    │   ├── SaveManager.ts           # LocalStorage serialization & cloud save engine
+    │   └── index.ts                 # State subsystem barrel export
     ├── systems/
     │   ├── AtmosphereSystem.ts      # Real-time color grading, shadows, weather lighting
     │   ├── CombatSystem.ts          # Hitbox calculations, combos, dashes, cooldowns
     │   ├── FarmingSystem.ts         # 32x32 grid tilling, watering, crop growth simulation
+    │   ├── OpeningDialogueSystem.ts # Character introduction and opening sequence logic
     │   ├── ScheduleSystem.ts        # Living-world orchestrator, active entity lifecycle & dispatcher
     │   ├── TimeCalendarSystem.ts    # Day/Night clock, 5 Bengal seasons, event bus emitter
     │   ├── WeatherSystem.ts         # Rain particles, puddles, lightning, wind gusts
-    │   └── npc/                     # Specialized living-world NPC subsystems
-    │       ├── NpcBehaviors.ts      # Seeded PRNG idle selection, activity badges & emotes
-    │       ├── NpcMover.ts          # Smooth tile-stepping controller & interaction freezing
-    │       ├── NpcNavigator.ts      # In-house A* pathfinding with terrain-cost weights
-    │       ├── OffscreenSimulator.ts# O(1) analytic placement across maps and time jumps
-    │       └── ScheduleResolver.ts  # Pure deterministic schedule & variant evaluator
+    │   ├── npc/                     # Specialized living-world NPC subsystems
+    │   │   ├── NpcBehaviors.ts      # Seeded PRNG idle selection, activity badges & emotes
+    │   │   ├── NpcMover.ts          # Smooth tile-stepping controller & interaction freezing
+    │   │   ├── NpcNavigator.ts      # In-house A* pathfinding with terrain-cost weights
+    │   │   ├── OffscreenSimulator.ts# O(1) analytic placement across maps and time jumps
+    │   │   ├── ScheduleResolver.ts  # Pure deterministic schedule & variant evaluator
+    │   │   └── index.ts             # NPC subsystems barrel export
+    │   ├── player/                  # Player locomotion and animation subsystems
+    │   │   ├── PlayerBehaviors.ts   # Directional facing, combo animations, tool swings
+    │   │   └── index.ts             # Player subsystems barrel export
+    │   └── index.ts                 # Systems subsystem barrel export
     ├── types/
     │   ├── npc.types.ts             # Strict living-world schedule & navigation interfaces
-    │   ├── race.types.ts            # 3D race, kart kinematics, camera & telemetry interfaces
+    │   ├── race.types.ts            # 3D race, track metadata, and race result interfaces
     │   ├── rpg.types.ts             # Combat, stats, items, recipes, dialog interfaces
-    │   └── stardew.types.ts         # 32x32 grid, farming, crops, calendar interfaces
+    │   ├── stardew.types.ts         # 32x32 grid, farming, crops, calendar interfaces
+    │   └── index.ts                 # Types subsystem barrel export
     └── ui/
-        └── UIController.ts          # DOM HUD controller (Bag, Craft, Dialogue, Quests, Stats)
+        ├── MobileSupport.ts         # PWA touch controls, fullscreen toggles, orientation
+        ├── TitleSlideshow.ts        # Cinematic title screen background rotator
+        ├── UIController.ts          # DOM HUD controller (Bag, Craft, Dialogue, Quests, Stats)
+        └── index.ts                 # UI subsystem barrel export
 ```
 
 ---
@@ -1302,40 +1367,97 @@ To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.
 
 ```
 src/
-├── index.ts                     # Root library barrel export (re-exports types, config, state, audio, graphics, systems, ui, scenes)
-├── main.ts                      # Slim application bootloader (58 lines)
-├── types/                       # Core TypeScript definitions (rpg, npc, stardew, race + index.ts)
-├── config/                      # Configuration, manifest, & databases + index.ts
-│   ├── drivers.race.db.ts       # 8-driver roster (Moon Walker + 7 rivals), stats, colors, difficulty tiers
-│   ├── items.race.db.ts         # 6 Dhaka street items (Malai Cha, Naga Fuchka, Mishti Doi, Parasol, Bell, Ghuri Kite)
-│   └── itemWeights.race.json    # 1000-sum probability distribution across 8 positions (ported from SuperTuxKart)
-├── state/                       # Reactive state machines (DateState, RPGStats, SaveManager + index.ts)
-├── audio/                       # SFX & Procedural audio (SoundEngine + index.ts)
-├── graphics/                    # Procedural & External asset adapters + index.ts
-├── systems/                     # Core simulation engines (Combat, Atmosphere, Weather, Farming, Dialogue, NPC + index.ts)
-│   ├── npc/                     # A* Navigator, Mover, Resolver, Behaviors + index.ts
-│   └── player/                  # Player combo & locomotion state machines + index.ts
-├── ui/                          # HUD, MobileSupport, TitleSlideshow + index.ts
-└── scenes/                      # Scene orchestration & subsystems + index.ts
+├── index.ts                     # Root library barrel export (re-exports types, config, state, audio, graphics, systems, ui, scenes, debug)
+├── main.ts                      # Slim application bootloader & Phaser Game instance (58 lines)
+├── style.css                    # Retro scanlines, CRT filter, UI HUD positioning
+├── vite-env.d.ts                # Vite client type declarations
+├── types/                       # Core TypeScript definitions + index.ts barrel
+│   ├── rpg.types.ts             # Items, crafting, spawns, dialog interfaces
+│   ├── npc.types.ts             # Stardew/HGSS living-world schedule & navigation contracts
+│   ├── stardew.types.ts         # Farming, tile grid, crops, calendar contracts
+│   ├── race.types.ts            # 3D race, track metadata, and race result interfaces
+│   └── index.ts                 # Clean barrel export for all project types
+├── config/                      # Configuration, manifest, & databases + index.ts barrel
+│   ├── constants.ts             # World coordinates, map dimensions, tile sizes, speeds
+│   ├── items.db.ts              # Items, weapons, equipment, food, keepsakes database
+│   ├── crops.db.ts              # 5 Bengal seasons crop database & yields
+│   ├── recipes.db.ts            # Crafting recipes & material requirements
+│   ├── worlds.db.ts             # 8 playable environments layout & spawn metadata
+│   ├── attacks.db.ts            # Action combat attack frames, hitboxes, and cooldowns
+│   ├── npcSchedules.db.ts       # Schedules & routine variants for all 38 NPCs
+│   ├── openingDialogues.db.ts   # Narrative introduction dialogue trees
+│   ├── tracks.db.ts             # 3D Totoro Kart tracks & proving ground registry
+│   ├── assetSpecs.manifest.ts   # Declarative external asset audit manifest
+│   ├── databaseIndex.ts         # O(1) in-memory secondary index engine
+│   └── index.ts                 # Clean barrel export for configuration & databases
+├── state/                       # Reactive state machines + index.ts barrel
+│   ├── DateState.ts             # Narrative romance flags, affection, inventory state
+│   ├── RPGStats.ts              # HP, SP, XP, Level, ATK, DEF, level progression curve
+│   ├── SaveManager.ts           # IndexedDB & LocalStorage persistent state engine
+│   └── index.ts                 # Clean barrel export for state management
+├── audio/                       # Web Audio & SFX pipelines + index.ts barrel
+│   ├── SoundEngine.ts           # 400ms cross-fading BGM, pooled SFX & dynamic ducking
+│   └── index.ts                 # Clean barrel export for audio subsystem
+├── graphics/                    # Procedural & External asset adapters + index.ts barrel
+│   ├── CharacterSpriteGenerator.ts # External sprite adapter & procedural fallback
+│   ├── CreatureSpriteGenerator.ts  # Bosses, fauna, and farm livestock renderer
+│   ├── ExternalAssetAdapter.ts     # 2x nearest-neighbor upscaling & defringing
+│   ├── GroundTileGenerator.ts      # 32x32 autotiling bitmasks & terrain textures
+│   ├── LandmarkGenerator.ts        # Dhaka cultural monuments & rickshaws
+│   ├── TextureGenerator.ts         # Runtime composite procedural texture atlas builder
+│   └── index.ts                 # Clean barrel export for graphics subsystem
+├── debug/                       # Real-time diagnostic overlays + index.ts barrel
+│   ├── NpcDebugOverlay.ts       # F3 diagnostic HUD & window.__npc console API
+│   └── index.ts                 # Clean barrel export for debug subsystem
+├── systems/                     # Core simulation engines + index.ts barrel
+│   ├── CombatSystem.ts          # Action combat, combo chains, cooldowns
+│   ├── FarmingSystem.ts         # Grid tilling, watering, multi-stage crop growth
+│   ├── AtmosphereSystem.ts      # Real-time day/night color grading & ambient shadows
+│   ├── WeatherSystem.ts         # Dynamic precipitation, lightning, wind
+│   ├── TimeCalendarSystem.ts    # Real-time calendar clock & seasonal progression
+│   ├── ScheduleSystem.ts        # Living-world NPC tick dispatcher & entity manager
+│   ├── OpeningDialogueSystem.ts # Bengali/English intro sequence coordinator
+│   ├── npc/                     # Specialized living-world NPC subsystems + index.ts
+│   │   ├── ScheduleResolver.ts  # Pure deterministic schedule evaluator
+│   │   ├── NpcNavigator.ts      # In-house A* terrain cost & door pathfinding
+│   │   ├── NpcMover.ts          # Smooth tile-stepping controller & interaction freeze
+│   │   ├── NpcBehaviors.ts      # PRNG idle activities, badges & emotion bubbles
+│   │   ├── OffscreenSimulator.ts# Discrete analytic placement for offscreen NPCs
+│   │   └── index.ts             # NPC subsystems barrel export
+│   ├── player/                  # Player locomotion & behavior state machine + index.ts
+│   │   ├── PlayerBehaviors.ts   # 8-directional movement, swing & harvest anims
+│   │   └── index.ts             # Player subsystems barrel export
+│   └── index.ts                 # Clean barrel export for simulation systems
+├── ui/                          # HUD & Mobile Integration + index.ts barrel
+│   ├── UIController.ts          # DOM HUD (Inventory, Crafting, Quests, Stats, Dialog)
+│   ├── TitleSlideshow.ts        # Cinematic title screen background cycle
+│   ├── MobileSupport.ts         # PWA touch controls, orientation locks, fullscreen
+│   └── index.ts                 # Clean barrel export for UI subsystem
+└── scenes/                      # Scene orchestration & subsystems + index.ts barrel
     ├── DhakaValleyScene.ts      # Decomposed scene coordinator (~4,690 lines)
     ├── minigames/               # Specialized minigame simulation engines + index.ts
     │   ├── RickshawTourEngine.ts # Grand Dhaka Rickshaw Tour "Tring-Tring Rush"
     │   ├── StargazingEngine.ts   # Dhanmondi Lake Observatory & Constellation Cutscene
     │   ├── LakeBoatEngine.ts     # Lantern Rowboat & Sky Lanterns Simulation
-    │   └── race/                # Three.js 3D Racing Engine (MarioKart64JS)
-    │       ├── main.js          # Core MarioKart64JS game loop, views, camera, controls
-    │       ├── track.js         # 16 GP circuits + 4 battle arenas loader and geometry
-    │       ├── kart.js          # Kart kinematics, collision response, rivals, physics
-    │       ├── kart3d.js        # Wii 3D Standard Kart & driver mesh assembler
-    │       ├── items.js         # Authentic N64 item system, boxes, projectile logic
-    │       ├── audio.js         # Web Audio synthesizer sequencing & driver voice clips
-    │       ├── TotoroKartEngine.ts      # Master lifecycle coordinator (enter, loop, exit, dispose)
-    │       └── index.ts         # Clean barrel export
-    ├── world/                   # Architectural & world builders + index.ts
+    │   ├── race/                # Three.js 3D Racing Engine (MarioKart64JS / Totoro Kart)
+    │   │   ├── TotoroKartEngine.ts # Master lifecycle coordinator & iframe bridge
+    │   │   ├── main.js          # Core MarioKart64JS game loop, views, camera, controls
+    │   │   ├── track.js         # 16 GP circuits + 4 battle arenas loader & geometry
+    │   │   ├── kart.js          # Kart kinematics, collision response, rivals, physics
+    │   │   ├── kart3d.js        # Wii 3D Standard Kart & driver mesh assembler
+    │   │   ├── items.js         # Authentic N64 item system, boxes, projectile logic
+    │   │   ├── audio.js         # Web Audio synthesizer sequencing & driver voice clips
+    │   │   ├── title3d.js       # Studio Ghibli 3D CGI menu background scene
+    │   │   └── index.ts         # Clean barrel export
+    │   └── index.ts             # Clean barrel export for minigames subsystem
+    ├── world/                   # Architectural & world builders + index.ts barrel
     │   ├── InteriorBuilder.ts   # Curzon Hall & Green Meadows Farmhouse interiors
-    │   └── MinimapRenderer.ts   # Real-time multi-world radar minimap canvas renderer
-    └── quests/                  # Narrative romance quest saga orchestrators + index.ts
-        └── CampusRomanceQuests.ts # Ahona & Rakin, Mehjabin & Iman, Apshora & Anamika sagas
+    │   ├── MinimapRenderer.ts   # Real-time multi-world radar minimap canvas renderer
+    │   └── index.ts             # Clean barrel export for world builders
+    ├── quests/                  # Narrative romance quest saga orchestrators + index.ts barrel
+    │   ├── CampusRomanceQuests.ts # Ahona & Rakin, Mehjabin & Iman, Apshora & Anamika sagas
+    │   └── index.ts             # Clean barrel export for quests subsystem
+    └── index.ts                 # Clean barrel export for scenes subsystem
 ```
 
 All subsystems are independently testable and maintain 100% backward compatibility with Vite Rolldown code-splitting and asset pipelines.

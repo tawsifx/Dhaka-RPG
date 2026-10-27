@@ -7,5 +7,6 @@ export * from './worlds.db';
 export * from './attacks.db';
 export * from './npcSchedules.db';
 export * from './openingDialogues.db';
+export * from './tracks.db';
 export * from './assetSpecs.manifest';
 export * from './databaseIndex';

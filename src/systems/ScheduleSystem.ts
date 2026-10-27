@@ -4,7 +4,7 @@ import { SoundEngine } from '../audio/SoundEngine';
 import { GameDB } from '../config/databaseIndex';
 import { NPC_SCHEDULES_DB } from '../config/npcSchedules.db';
 import { WORLDS_DB } from '../config/worlds.db';
-import { NpcDebugOverlay } from '../debug/NpcDebugOverlay';
+import { NpcDebugOverlay } from '../debug';
 import { DateState } from '../state/DateState';
 import { RPGStats } from '../state/RPGStats';
 import { GridTile, MapId, NpcScheduleDef, ScheduleContext, tileToPx } from '../types/npc.types';
