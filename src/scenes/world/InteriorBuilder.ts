@@ -1,12 +1,17 @@
 // src/scenes/world/InteriorBuilder.ts - Curzon Hall & Green Meadows Farmhouse Architectural Builder
 import { SoundEngine } from '../../audio/SoundEngine';
 import { UIController as UI } from '../../ui/UIController';
+import { DateState } from '../../state/DateState';
 import {
   CURZON_INTERIOR_WIDTH,
   CURZON_INTERIOR_HEIGHT,
   FARMHOUSE_WIDTH,
-  FARMHOUSE_HEIGHT
+  FARMHOUSE_HEIGHT,
+  ARCADE_INTERIOR_WIDTH,
+  ARCADE_INTERIOR_HEIGHT
 } from '../../config/constants';
+import { ArcadeSlotManager } from '../../systems/arcade/ArcadeSlotManager';
+import { ArcadeCutscenes } from '../quests/ArcadeCutscenes';
 
 export class InteriorBuilder {
   /**
@@ -515,5 +520,254 @@ export class InteriorBuilder {
       scene.scheduleSystem.initWorldNpcs('farmhouse');
     }
     UI.updateQuestText();
+  }
+
+  /**
+   * Constructs Dhaka Cyber Arcade Interior:
+   * Modular 6-slot arcade cabinet engine, prize crane claw machine, vintage token dispenser,
+   * Manager Shanto counter, and ambient neon lighting.
+   */
+  static buildArcadeInterior(scene: any, spawnPos?: { x: number; y: number }): void {
+    if (scene.dhakaTilemap) {
+      try {
+        if (scene.dhakaTilemap.map) scene.dhakaTilemap.map.destroy();
+      } catch (e) {}
+      scene.dhakaTilemap = null;
+    }
+    scene.children.removeAll(true);
+    if (scene.obstacles) scene.obstacles.clear(true, true);
+    scene.interactables = [];
+    scene.wanderers = [];
+    scene.enemies = [];
+    scene.lampGlows = [];
+    scene.activeBoss = null;
+    UI.setBossHUD(false);
+
+    SoundEngine.setTheme('dhaka');
+    const minLabel = document.getElementById('minimap-world-label');
+    if (minLabel) minLabel.textContent = 'Dhaka Cyber Arcade 🕹️';
+
+    const MAP_W = ARCADE_INTERIOR_WIDTH, MAP_H = ARCADE_INTERIOR_HEIGHT;
+    scene.currentMapW = MAP_W;
+    scene.currentMapH = MAP_H;
+    scene.physics.world.setBounds(0, 0, MAP_W, MAP_H);
+    scene.obstacles = scene.physics.add.staticGroup();
+
+    const blockRect = (x: number, y: number, w: number, h: number) => {
+      const zone = scene.add.zone(x, y, w, h);
+      scene.physics.add.existing(zone, true);
+      scene.obstacles.add(zone);
+    };
+
+    const addLandmark = (x: number, y: number, tex: string, w: number, h: number) => {
+      const sp = scene.add.sprite(x, y, tex).setOrigin(0.5, 1).setDepth(y);
+      if (w && h) blockRect(x, y - h / 2, w, h);
+      return sp;
+    };
+
+    const registerInteract = (x: number, y: number, tex: string | null, name: string, radius: number, onInteract: () => void) => {
+      const sp = tex ? scene.add.sprite(x, y, tex).setOrigin(0.5, 1).setDepth(y) : null;
+      if (sp && tex && tex.startsWith('npc-')) {
+        scene.tweens.add({
+          targets: sp,
+          scaleY: { from: 1, to: 1.025 },
+          duration: 1600 + Math.random() * 400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut'
+        });
+      }
+      const badgeY = sp ? y - sp.height - 8 : y - 58;
+      const badge = scene.add.text(x, badgeY, '💬 ' + name, {
+        fontFamily: "'Rajdhani', 'Outfit', sans-serif",
+        fontSize: '12px',
+        fontStyle: 'bold',
+        backgroundColor: 'rgba(15, 12, 38, 0.90)',
+        color: '#38bdf8',
+        stroke: '#050314',
+        strokeThickness: 3,
+        padding: { x: 7, y: 3 },
+        shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 3, fill: true }
+      }).setOrigin(0.5, 1).setDepth(2100).setVisible(false);
+
+      const entry = { x, y, radius, onInteract, badge, name };
+      scene.interactables.push(entry);
+      return entry;
+    };
+
+    // 1. Flooring: Obsidian Cyber Tile Base
+    scene.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 'tile-arcade-floor').setDepth(0);
+
+    // 2. Retro 90s Laser Carpet Runners
+    scene.add.tileSprite(640, 530, 96, 540, 'tile-arcade-carpet').setDepth(1);
+    scene.add.tileSprite(384, 460, 480, 64, 'tile-arcade-carpet').setDepth(1);
+    scene.add.tileSprite(896, 460, 480, 64, 'tile-arcade-carpet').setDepth(1);
+    scene.add.tileSprite(640, 780, 280, 64, 'tile-arcade-carpet').setDepth(1);
+
+    // 3. Walls & Physics Colliders
+    scene.add.tileSprite(640, 110, MAP_W, 64, 'tile-arcade-wall').setDepth(110);
+    blockRect(640, 75, MAP_W, 90);
+    scene.add.tileSprite(16, MAP_H / 2, 32, MAP_H, 'tile-arcade-wall').setDepth(MAP_H / 2);
+    blockRect(16, MAP_H / 2, 32, MAP_H);
+    scene.add.tileSprite(MAP_W - 16, MAP_H / 2, 32, MAP_H, 'tile-arcade-wall').setDepth(MAP_H / 2);
+    blockRect(MAP_W - 16, MAP_H / 2, 32, MAP_H);
+
+    // Bottom Wall with central opening for double exit doors
+    scene.add.tileSprite(270, 868, 540, 64, 'tile-arcade-wall').setDepth(868);
+    blockRect(270, 878, 540, 44);
+    scene.add.tileSprite(1010, 868, 540, 64, 'tile-arcade-wall').setDepth(868);
+    blockRect(1010, 878, 540, 44);
+    blockRect(640, 895, 120, 20);
+
+    // Double Exit Doors
+    scene.add.sprite(640, 864, 'prop-arcade-exit-door').setOrigin(0.5, 1).setDepth(864);
+    registerInteract(640, 840, null, 'Exit to Dhaka Valley 🚪', 95, () => scene.exitArcade());
+
+    // 4. Neon Wall Signs
+    scene.add.sprite(640, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
+    scene.add.sprite(320, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
+    scene.add.sprite(960, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
+
+    // 5. Arcade Game Slots (Architecture Ready - Handled by ArcadeSlotManager)
+    // Slot 1: Grand Championship DX
+    addLandmark(640, 288, 'prop-arcade-cab-deluxe', 120, 48);
+    registerInteract(640, 290, null, 'Slot #1: Grand Championship DX 🕹️', 85, () => {
+      ArcadeSlotManager.interactWithSlot('slot_grand_championship', scene);
+    });
+
+    // Slot 2: Retro Upright Pixel Cabinet A
+    addLandmark(280, 352, 'prop-arcade-cab-upright-a', 60, 40);
+    registerInteract(280, 354, null, 'Slot #2: Pixel Arcade A 🕹️', 80, () => {
+      ArcadeSlotManager.interactWithSlot('slot_retro_pixel_a', scene);
+    });
+
+    // Slot 3: Strike Clash DX Fighting Cab
+    addLandmark(400, 352, 'prop-arcade-cab-upright-b', 60, 40);
+    registerInteract(400, 354, null, 'Slot #3: Super Strike DX ⚔️', 80, () => {
+      ArcadeSlotManager.interactWithSlot('slot_fighting_clash', scene);
+    });
+
+    // Slot 4: Tabletop Glass Cocktail Table Lounge
+    addLandmark(640, 560, 'prop-arcade-cab-cocktail', 90, 44);
+    scene.add.sprite(588, 560, 'prop-arcade-stool').setOrigin(0.5, 1).setDepth(560);
+    scene.add.sprite(692, 560, 'prop-arcade-stool').setOrigin(0.5, 1).setDepth(560);
+    registerInteract(640, 562, null, 'Slot #4: Glass Cocktail Lounge 🍸', 80, () => {
+      ArcadeSlotManager.interactWithSlot('slot_cocktail_table', scene);
+    });
+
+    // Slot 5: Dance Beat Mania Rhythm Zone
+    addLandmark(880, 352, 'prop-arcade-cab-dance', 76, 44);
+    registerInteract(880, 354, null, 'Slot #5: Dance Mania Stage 💃', 80, () => {
+      ArcadeSlotManager.interactWithSlot('slot_rhythm_beat', scene);
+    });
+
+    // Slot 6: Twin Cockpit Force-Feedback Racing
+    addLandmark(1040, 352, 'prop-arcade-cab-racing', 108, 48);
+    registerInteract(1040, 354, null, 'Slot #6: Dhaka Cyber Speed 🏎️', 85, () => {
+      ArcadeSlotManager.interactWithSlot('slot_racing_twin', scene);
+    });
+
+    // 6. Arcade Attractions: Token Machine & Claw Machine
+    // Token Dispenser
+    addLandmark(760, 720, 'prop-arcade-token-dispenser', 36, 32);
+    registerInteract(760, 722, null, 'Token Exchange Dispenser 🪙', 75, () => {
+      ArcadeCutscenes.playTokenDispenser(scene);
+    });
+
+    // Prize Claw Crane Machine
+    addLandmark(860, 720, 'prop-arcade-claw', 60, 40);
+    registerInteract(860, 722, null, 'Lucky Neon Claw Machine 🧸', 80, () => {
+      ArcadeCutscenes.playClawMachineCutscene(scene, 860, 720);
+    });
+
+    // 7. Manager Shanto Counter & Station
+    blockRect(480, 720, 60, 32);
+    registerInteract(520, 724, 'npc-shanto-0', 'Manager Shanto (Arcade Master)', 90, () => {
+      SoundEngine.select();
+      UI.startDialogue([
+        {
+          speaker: 'Manager Shanto',
+          portrait: '🕹️',
+          text: 'Hey there, champions! Welcome to Dhaka Cyber Arcade. Every single machine here is powered by modular software slots.'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: 'Can we play games on them, Manager Shanto?'
+        },
+        {
+          speaker: 'Manager Shanto',
+          portrait: '🕹️',
+          text: 'The architecture is fully built and ready! As soon as Moon Walker registers a custom mini-game via ArcadeSlotManager, the cabinets come alive! In the meantime, feel free to inspect their diagnostics or test your skills on the Lucky Claw Crane!'
+        }
+      ]);
+    });
+
+    // 8. Dynamic Neon Lighting Halos
+    [
+      [640, 260, 0x00ffff, 90, 0.22],
+      [280, 320, 0x00ffff, 70, 0.18],
+      [400, 320, 0xff0055, 70, 0.18],
+      [640, 540, 0xfde047, 80, 0.18],
+      [880, 320, 0xff007f, 75, 0.20],
+      [1040, 320, 0x00f0ff, 85, 0.22],
+      [860, 680, 0xf43f5e, 70, 0.20],
+      [760, 680, 0xf59e0b, 60, 0.16]
+    ].forEach(([lx, ly, col, rad, alpha]) => {
+      const glow = scene.add.circle(lx, ly, rad, col, alpha).setDepth(ly + 1);
+      scene.lampGlows.push(glow);
+      scene.tweens.add({
+        targets: glow,
+        alpha: { from: alpha * 0.7, to: alpha * 1.3 },
+        duration: 1200 + Math.random() * 800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    });
+
+    // 9. Player & Totoro Spawn
+    const pSpawn = spawnPos || { x: 640, y: 800 };
+    scene.player = scene.physics.add.sprite(pSpawn.x, pSpawn.y, 'player-0').setOrigin(0.5, 1);
+    const pBoxW = 20, pBoxH = 14;
+    scene.player.body.setSize(pBoxW, pBoxH).setOffset((scene.player.width - pBoxW) / 2, scene.player.height - pBoxH);
+    scene.player.setCollideWorldBounds(true);
+    scene.physics.add.collider(scene.player, scene.obstacles);
+
+    const totoroPos = { x: pSpawn.x - 38, y: pSpawn.y };
+    scene.totoro = scene.add.sprite(totoroPos.x, totoroPos.y, 'totoro-0').setOrigin(0.5, 1).setDepth(totoroPos.y);
+    scene.totoroBadge = scene.add.text(totoroPos.x, totoroPos.y - 68, '♥ Totoro', {
+      fontFamily: 'Rajdhani', fontSize: '13px', fontStyle: 'bold',
+      backgroundColor: '#15803d', color: '#ffffff', padding: { x: 8, y: 3 },
+      stroke: '#052e16', strokeThickness: 2.5,
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
+    }).setOrigin(0.5, 1).setDepth(2100);
+    scene.trail = Array(16).fill({ x: scene.player.x, y: scene.player.y });
+
+    scene.interactPrompt = scene.add.text(0, 0, 'SPACE / TAP: Interact', {
+      fontFamily: 'Rajdhani', fontSize: '12px', fontStyle: 'bold',
+      backgroundColor: 'rgba(15, 12, 38, 0.95)', color: '#38bdf8', padding: { x: 8, y: 3 },
+      stroke: '#050314', strokeThickness: 1.5,
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, fill: true }
+    }).setOrigin(0.5, 1).setDepth(3000).setVisible(false);
+
+    scene.ambientOverlay = scene.add.rectangle(0, 0, MAP_W * 2, MAP_H * 2, 0x09071c, 0.15)
+      .setOrigin(0, 0).setDepth(2500);
+
+    scene.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
+    scene.cameras.main.setZoom(1.22);
+    scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
+
+    if (scene.scheduleSystem) {
+      scene.scheduleSystem.initWorldNpcs('arcade_interior');
+    }
+    UI.updateQuestText();
+
+    // Trigger First Interior Entrance Cutscene if not explored yet!
+    if (!DateState.arcadeInteriorExplored) {
+      scene.time.delayedCall(300, () => {
+        ArcadeCutscenes.playFirstInteriorCutscene(scene);
+      });
+    }
   }
 }

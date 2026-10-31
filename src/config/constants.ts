@@ -5,6 +5,12 @@ export const CURZON_K = 2.25;
 export const CURZON_X = 208;   // snapped map X (col 6 * 32 + 16)
 export const CURZON_Y = 1328;  // snapped map Y (row 41 * 32 + 16)
 
+/** Dhaka Cyber Arcade */
+export const ARCADE_X = 1312;  // snapped map X (col 41 * 32)
+export const ARCADE_Y = 704;   // snapped map Y (row 22 * 32)
+export const ARCADE_INTERIOR_WIDTH = 1280;
+export const ARCADE_INTERIOR_HEIGHT = 960;
+
 /** LocalStorage and save persistence key */
 export const SAVE_KEY = 'totoro_moonwalker_rpg_save_v2';
 

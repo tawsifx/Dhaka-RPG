@@ -13,12 +13,16 @@ import {
   CURZON_K,
   CURZON_X,
   CURZON_Y,
+  ARCADE_X,
+  ARCADE_Y,
   DHAKA_MAP_WIDTH,
   DHAKA_MAP_HEIGHT,
   CURZON_INTERIOR_WIDTH,
   CURZON_INTERIOR_HEIGHT,
   FARMHOUSE_WIDTH,
-  FARMHOUSE_HEIGHT
+  FARMHOUSE_HEIGHT,
+  ARCADE_INTERIOR_WIDTH,
+  ARCADE_INTERIOR_HEIGHT
 } from '../config/constants';
 import { CombatSystem } from '../systems/CombatSystem';
 import { ScheduleSystem } from '../systems/ScheduleSystem';
@@ -29,7 +33,7 @@ import { PlayerBehaviors } from '../systems/player/PlayerBehaviors';
 import { OpeningDialogueSystem } from '../systems/OpeningDialogueSystem';
 import { RickshawTourEngine, StargazingEngine, LakeBoatEngine, TotoroKartEngine } from './minigames';
 import { MinimapRenderer, InteriorBuilder } from './world';
-import { CampusRomanceQuests } from './quests';
+import { CampusRomanceQuests, ArcadeCutscenes } from './quests';
 
 export class DhakaValleyScene extends Phaser.Scene {
   [key: string]: any;
@@ -139,6 +143,18 @@ export class DhakaValleyScene extends Phaser.Scene {
       key: 'anim-fuchkacart',
       frames: [{ key: 'prop-fuchkacart-0' }, { key: 'prop-fuchkacart-1' }],
       frameRate: 3.2,
+      repeat: -1
+    });
+
+    this.anims.create({
+      key: 'anim-arcade',
+      frames: [
+        { key: 'prop-arcade-0' },
+        { key: 'prop-arcade-1' },
+        { key: 'prop-arcade-2' },
+        { key: 'prop-arcade-3' }
+      ],
+      frameRate: 6,
       repeat: -1
     });
 
@@ -692,6 +708,10 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.buildFarmhouse(spawnPos);
       return;
     }
+    if (worldId === 'arcade_interior') {
+      this.buildArcadeInterior(spawnPos);
+      return;
+    }
 
     if (this.dhakaTilemap) {
       try {
@@ -735,6 +755,7 @@ export class DhakaValleyScene extends Phaser.Scene {
       else if (tex.startsWith('prop-bookstall')) sp.play('anim-bookstall');
       else if (tex.startsWith('prop-fuchkacart')) sp.play('anim-fuchkacart');
       else if (tex.startsWith('prop-doicart')) sp.play('anim-doicart');
+      else if (tex.startsWith('prop-arcade')) sp.play('anim-arcade');
       else if (tex === 'prop-fountain') {
         // Dynamic fountain water pulsing
         this.tweens.add({
@@ -850,6 +871,7 @@ export class DhakaValleyScene extends Phaser.Scene {
         else if (tex.startsWith('prop-bookstall')) sp.play('anim-bookstall');
         else if (tex.startsWith('prop-fuchkacart')) sp.play('anim-fuchkacart');
         else if (tex.startsWith('prop-doicart')) sp.play('anim-doicart');
+        else if (tex.startsWith('prop-arcade')) sp.play('anim-arcade');
         else if (tex.startsWith('npc-')) {
           // Stationary interactable NPC: rhythmic breathing so they are alive & dynamic
           this.tweens.add({
@@ -1158,8 +1180,11 @@ export class DhakaValleyScene extends Phaser.Scene {
       addLandmark(1072, 816, 'prop-fountain', 88, 42);
 
       // Ramna Promenade — Well-Separated Flower Cart & Park Bench Garden Sanctuaries
-      this.flowerCartSprite = addLandmark(1216, 512, 'prop-flowercart-0', 180, 52);
-      this.ramnaBench = this.add.sprite(1472, 464, 'prop-bench').setOrigin(0.5, 1).setDepth(464);
+      this.flowerCartSprite = addLandmark(1184, 448, 'prop-flowercart-0', 180, 52);
+      this.ramnaBench = this.add.sprite(1520, 448, 'prop-bench').setOrigin(0.5, 1).setDepth(448);
+
+      // Dhaka Cyber Arcade — Flagship Entertainment Complex
+      this.arcadeSprite = addLandmark(ARCADE_X, ARCADE_Y, 'prop-arcade-0', 188, 56);
 
       // Fuller Road Food Bazaar
       addLandmark(1584, 240, 'prop-fuchkacart', 180, 52);
@@ -1179,7 +1204,7 @@ export class DhakaValleyScene extends Phaser.Scene {
       // Streetlamps & Halos (32x32 Snapped)
       [
         [400, 752], [624, 752], [944, 752], [1168, 752], [1456, 752],
-        [400, 1360], [1216, 464], [1472, 432], [1552, 1264], [1872, 1296]
+        [400, 1360], [1184, 416], [1520, 416], [1552, 1264], [1872, 1296]
       ].forEach(([lx, ly]) => {
         this.add.sprite(lx, ly, 'prop-lamp').setOrigin(0.5, 1).setDepth(ly);
         const glow = this.add.circle(lx, ly - 68, 68, 0xfde68a, 0).setDepth(ly + 1);
@@ -1194,8 +1219,10 @@ export class DhakaValleyScene extends Phaser.Scene {
 
         this.atmosphere.registerLight(272, 260, 68, 0xfde68a, 0.7); // Tea stall
         this.atmosphere.registerLight(1072, 240, 68, 0xfde68a, 0.65); // Book stall
-        this.atmosphere.registerLight(1216, 496, 64, 0xfbcfe8, 0.65); // Flower cart
-        this.atmosphere.registerLight(1472, 436, 64, 0xfde68a, 0.65); // Ramna bench
+        this.atmosphere.registerLight(1184, 432, 64, 0xfbcfe8, 0.65); // Flower cart
+        this.atmosphere.registerLight(1520, 416, 64, 0xfde68a, 0.65); // Ramna bench
+        this.atmosphere.registerLight(ARCADE_X, ARCADE_Y - 40, 80, 0x00ffff, 0.85); // Cyber Arcade Neon Cyan
+        this.atmosphere.registerLight(ARCADE_X, ARCADE_Y - 20, 70, 0xff007f, 0.75); // Cyber Arcade Neon Pink
         this.atmosphere.registerLight(1584, 240, 68, 0xfde68a, 0.7); // Fuchka cart
         this.atmosphere.registerLight(1744, 240, 68, 0xfde68a, 0.7); // Mishti doi
         this.atmosphere.registerLight(2032, 1352, 60, 0xfef08a, 0.85); // Lake rowboat lantern
@@ -1204,7 +1231,7 @@ export class DhakaValleyScene extends Phaser.Scene {
 
         [
           [400, 752], [624, 752], [944, 752], [1168, 752], [1456, 752],
-          [400, 1360], [1216, 464], [1472, 432], [1552, 1264], [1872, 1296]
+          [400, 1360], [1184, 416], [1520, 416], [1552, 1264], [1872, 1296]
         ].forEach(([lx, ly]) => {
           this.atmosphere.registerLight(lx, ly - 50, 64, 0xfde68a, 0.6);
         });
@@ -1227,8 +1254,9 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.add.text(208, 528, 'CHARUKOLA FINE ARTS 🎨', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1072, 80, 'NILKHET BOOK LANE 📚', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1072, 720, 'MINTU ROAD FOUNTAIN PLAZA ⛲', shopSignStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1472, 396, 'RAMNA PARK BENCH 🌸', shopSignStyle).setOrigin(0.5).setDepth(2000);
-      this.add.text(1216, 412, 'PHULWALI FLOWER CART 🌼', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1520, 396, 'RAMNA PARK BENCH 🌸', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(1184, 380, 'PHULWALI FLOWER CART 🌼', shopSignStyle).setOrigin(0.5).setDepth(2000);
+      this.add.text(ARCADE_X, ARCADE_Y - 96, 'DHAKA CYBER ARCADE 🕹️', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1664, 80, "FULLER ROAD FOOD BAZAAR 🥙🍮", shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1648, 752, 'DHAKA RICKSHAW STAND 🛺', shopSignStyle).setOrigin(0.5).setDepth(2000);
       this.add.text(1776, 1200, 'DHANMONDI LAKE PIER & TELESCOPE 🔭', shopSignStyle).setOrigin(0.5).setDepth(2000);
@@ -1284,13 +1312,14 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.add.circle(736, 1536, 14, 0xfef08a, 0.35).setDepth(1529);
 
       registerInteract(CURZON_X, CURZON_Y + 12, null, 'Enter Curzon Hall 🏛️', 92, () => this.enterCurzonHall());
+      registerInteract(ARCADE_X, ARCADE_Y + 12, null, 'Enter Dhaka Cyber Arcade 🕹️', 95, () => this.enterArcade());
       registerInteract(736, 1536, null, 'Visit Green Meadows Farmhouse 🏡', 85, () => this.enterFarmhouse());
       if (!this.scheduleSystem) {
         registerInteract(272, 304, 'npc-tea-0', 'Tong-er Mama (Cha)', 105, () => this.interactTeaStall());
         registerInteract(400, 304, 'npc-guitar-0', 'TSC Acoustic Singer', 90, () => this.interactGuitarist());
         registerInteract(240, 752, 'npc-artist-0', 'Charukola Clay Art', 85, () => this.interactCharukola());
         registerInteract(1072, 272, 'npc-books-0', 'Nilkhet Boiwala', 105, () => this.interactBookStall());
-        registerInteract(1216, 544, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
+        registerInteract(1184, 480, 'npc-phulwali-0', 'Phulwali (Beli Gajra)', 85, () => this.interactFlowerCart());
         registerInteract(1584, 272, 'npc-fuchka-0', "Mama's Naga Fuchka", 105, () => this.interactFuchkaCart());
         registerInteract(1744, 272, 'npc-doi-0', 'Pabnar Mishti Doi', 105, () => this.interactDoiCart());
       }
@@ -1314,9 +1343,9 @@ export class DhakaValleyScene extends Phaser.Scene {
         this.scheduleSystem.initWorldNpcs('dhaka');
       } else {
         // Ahona, Apshora & Rakin Setup
-        // Placed at Krishnachura Avenue Gateway (x: 480, y: 1056) or Shaded Ramna Park Bench (x: 1472, y: 464)
-        const ahonaPos = DateState.bulliesDefeated ? { x: 1452, y: 468 } : { x: 480, y: 1056 };
-        let apshoraPos = DateState.bulliesDefeated ? { x: 1496, y: 468 } : { x: 516, y: 1056 };
+        // Placed at Krishnachura Avenue Gateway (x: 480, y: 1056) or Shaded Ramna Park Bench (x: 1520, y: 448)
+        const ahonaPos = DateState.bulliesDefeated ? { x: 1500, y: 452 } : { x: 480, y: 1056 };
+        let apshoraPos = DateState.bulliesDefeated ? { x: 1544, y: 452 } : { x: 516, y: 1056 };
         if (DateState.apshoraQuestStage >= 2 && DateState.apshoraQuestStage < 4) {
           apshoraPos = { x: 320, y: 785 };
         } else if (DateState.apshoraQuestStage >= 4) {
@@ -3743,6 +3772,30 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   buildCurzonInterior(spawnPos?: { x: number; y: number }) {
     InteriorBuilder.buildCurzonInterior(this, spawnPos);
+  }
+
+  /* ================= Dhaka Cyber Arcade System ================= */
+  enterArcade() {
+    if (this.isTransitioning || this.cutsceneLocked) return;
+    if (!DateState.arcadeDiscovered) {
+      ArcadeCutscenes.playArcadeDiscoveryCutscene(this, () => {
+        SoundEngine.portalWarp();
+        this.transitionToWorld('arcade_interior', { x: 640, y: 800 });
+      });
+      return;
+    }
+    SoundEngine.portalWarp();
+    this.transitionToWorld('arcade_interior', { x: 640, y: 800 });
+  }
+
+  exitArcade() {
+    if (this.isTransitioning || this.cutsceneLocked) return;
+    SoundEngine.portalWarp();
+    this.transitionToWorld('dhaka', { x: ARCADE_X, y: ARCADE_Y + 54 });
+  }
+
+  buildArcadeInterior(spawnPos?: { x: number; y: number }) {
+    InteriorBuilder.buildArcadeInterior(this, spawnPos);
   }
 
   /* ─────────────────────────────────────────────────────────────────────────

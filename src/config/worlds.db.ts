@@ -3,7 +3,7 @@
 import { SoundEngine } from '../audio/SoundEngine';
 import { DateState } from '../state/DateState';
 import { UI } from '../ui/UIController';
-import { CURZON_X, CURZON_Y } from './constants';
+import { CURZON_X, CURZON_Y, ARCADE_X, ARCADE_Y } from './constants';
 
 export const WORLDS_DB: Record<string, any> = {
   dhaka: {
@@ -374,6 +374,21 @@ export const WORLDS_DB: Record<string, any> = {
     petalColor: 0xffe066,
     isActivity: true,
     returnPos: { x: 752, y: 1456 }
+  },
+  arcade_interior: {
+    id: 'arcade_interior',
+    name: 'Dhaka Cyber Arcade 🕹️',
+    subtitle: 'Retro Cabinets, Rhythm Stages & Claw Machines',
+    theme: 'arcade',
+    groundTex: 'tile-arcade-floor',
+    pathTex: 'tile-arcade-carpet',
+    waterTex: 'tile-water',
+    treeTex: 'prop-indoor-fern',
+    bgColor: '#0f0c1b',
+    minimapColor: '#1e113a',
+    petalColor: 0x00ffff,
+    isInterior: true,
+    returnPos: { x: ARCADE_X, y: ARCADE_Y + 48 }
   }
 };
 

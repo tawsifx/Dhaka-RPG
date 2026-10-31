@@ -49,6 +49,19 @@ export const KNOWN_DOOR_LINKS: DoorLink[] = [
     toMap: 'dhaka',
     toTile: { col: 23, row: 48 }
   },
+  // Dhaka Cyber Arcade Door
+  {
+    fromMap: 'dhaka',
+    fromTile: { col: 41, row: 22 }, // ARCADE_X: 1312, ARCADE_Y: 704
+    toMap: 'arcade_interior',
+    toTile: { col: 20, row: 26 }   // South Door: 640, 840
+  },
+  {
+    fromMap: 'arcade_interior',
+    fromTile: { col: 20, row: 26 },
+    toMap: 'dhaka',
+    toTile: { col: 41, row: 22 }
+  },
   // Forest Realm Portal
   {
     fromMap: 'dhaka',

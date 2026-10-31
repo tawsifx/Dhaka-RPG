@@ -24,6 +24,10 @@ export const DateState: any = {
   rickshawBest: 0,
   hearts: 0,
   farmhouseExplored: false,
+  arcadeDiscovered: false,
+  arcadeInteriorExplored: false,
+  arcadeTokens: 5,
+  arcadeClawWon: false,
   cowMilked: false,
   eggCollected: false,
   goatPetted: false,
@@ -63,7 +67,7 @@ export const DateState: any = {
     umbrella_blade: 1,
     yellow_raincoat: 1
   },
-  unlockedWorlds: ['dhaka', 'farmhouse'],
+  unlockedWorlds: ['dhaka', 'farmhouse', 'arcade_interior'],
   defeatedBosses: [],
   sideQuests: {
     sq_cat_fish: false,

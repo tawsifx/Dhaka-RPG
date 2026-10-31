@@ -232,13 +232,13 @@ dhaka-date-rpg/
 
 ---
 
-## 3. World Map Directory (8 Playable Environments)
+## 3. World Map Directory (9 Playable Environments)
 
-The game features **8 fully realized playable maps**. Outdoor realms use an **80 × 60 tile (2560 × 1920 px)** Stardew/HGSS layout; interior and pastoral farmstead maps use a **40 × 30 tile (1280 × 960 px)** layout.
+The game features **9 fully realized playable maps**. Outdoor realms use an **80 × 60 tile (2560 × 1920 px)** Stardew/HGSS layout; interior and pastoral farmstead maps use a **40 × 30 tile (1280 × 960 px)** layout.
 
 | Map ID | Display Name & Subtitle | Size (Tiles & Px) | Atmosphere / Theme | Key Landmarks & Features |
 | :--- | :--- | :--- | :--- | :--- |
-| `dhaka` | **Dhaka Valley**<br>*Curzon Hall, TSC, Nilkhet & Dhanmondi Lake* | 80 × 60<br>(2560 × 1920) | Lush green, warm sunshine, falling Krishnachura petals | Curzon Hall facade, TSC Tea Stall, Nilkhet Boiwala, Charukola Art Studio, Mintu Rd Fountain Plaza, Rickshaw Tour, Dhanmondi Lake Pier & Stargazing Telescope, Realm Portal. |
+| `dhaka` | **Dhaka Valley**<br>*Curzon Hall, TSC, Nilkhet, Arcade & Dhanmondi Lake* | 80 × 60<br>(2560 × 1920) | Lush green, warm sunshine, falling Krishnachura petals | Curzon Hall facade, TSC Tea Stall, Nilkhet Boiwala, Charukola Art Studio, Dhaka Cyber Arcade exterior (animated neon marquee), Mintu Rd Fountain Plaza, Rickshaw Tour, Dhanmondi Lake Pier & Stargazing Telescope, Realm Portal. |
 | `forest` | **Whispering Emerald Forest**<br>*Ancient Spirit Groves & Briar Sanctuary* | 80 × 60<br>(2560 × 1920) | Deep moss green, luminous cyan bioluminescence | Ancient Spirit Altar, North Banyan Tree (Ananya Ghost), Southwest Marsh (Kofil Chacha), Northeast Ruins (Prof. Shamsher), Sylvan Briar Stag Boss Arena. |
 | `sunken` | **Sunken Kingdom**<br>*Coral Temples, Tidepools & Lost Relics* | 80 × 60<br>(2560 × 1920) | Azure cyan, underwater caustic rays, tide ripples | Coral Pillars, Tidekeeper Marina Shrine, Luminous Coral Tidepools, Abyssal Coral Leviathan Caldera. |
 | `ember` | **Emberfall Highlands**<br>*Obsidian Forges, Lava Bridges & Dragon Territory* | 80 × 60<br>(2560 × 1920) | Volcanic amber-orange, magma embers, obsidian rock | Basalt lava bridges, Master Blacksmith Kael's Forge, Volcanic Ore veins, Ignis the Magma Drake Caldera. |
@@ -246,6 +246,7 @@ The game features **8 fully realized playable maps**. Outdoor realms use an **80
 | `astral` | **The Astral Realm**<br>*Floating Celestial Sanctuary & Nexus of Memory* | 80 × 60<br>(2560 × 1920) | Deep cosmic violet, floating stardust, golden nebula | Celestial Chronicler Dais, Memory Anchor Pedestals, Chrono-Fracture Archon Final Arena. |
 | `curzon_interior` | **Curzon Hall: Faculty of Science**<br>*Auditorium, Bose Quantum Lab & Herbarium* | 40 × 30<br>(1280 × 960) | Teak parquet flooring, velvet runners, brass chandeliers | Central Mathematics Dais (Prof. Motahar Hossain), Bose Quantum Lab (Prof. Satyendra & Faiza), Botanical Herbarium & Chemistry Lab (Prof. Sultana, Dr. Kabir, Tanvir). |
 | `farmhouse` | **Green Meadows Farmhouse**<br>*Chacha Rafiq’s Pastoral Sanctuary & Animal Pastures* | 40 × 30<br>(1280 × 960) | Pastoral meadow, rural fences, duckling pond, sunflowers | Chacha Rafiq's Barn & Silo, 32×32 Tilled Crop Plots, Cow Pasture (Shuravi), Goat Pen (Kalu), Hen Coop (Tuntuni), Duckling Pond (Piku). |
+| `arcade_interior` | **Dhaka Cyber Arcade**<br>*Retro Cabinets, Rhythm Stages & Claw Machines* | 40 × 30<br>(1280 × 960) | Obsidian cyber floor, 90s geometric laser carpet, neon halos | Modular 6-Slot Arcade Architecture, Grand Championship DX, Upright Pixel A & Strike DX, Tabletop Cocktail Cab, Dance Mania Stage, Twin-Cockpit Racer, Lucky Claw Crane, Brass Token Dispenser, Manager Shanto. |
 
 ---
 
@@ -344,7 +345,8 @@ The romance progression is measured through **Affection Hearts (0–100%)**, tra
 | **Mama's Naga Fuchka** | Curzon North (`x: 1584, y: 272`) | Street food tasting with crispy puris filled with spiced potato and fiery Naga chili tamarind water. | +15 Affection, grants `item_naga_fuchka`. |
 | **Nilkhet Old Book Hunt** | Nilkhet Lane (`x: 1072, y: 272`) | Browse dusty bookshelves for vintage poetry collections; discover pressed Krishnachura blossoms between yellowed pages. | +15 Affection, grants `book_poetry` keepsake. |
 | **Charukola Terracotta** | Charukola Wall (`x: 240, y: 752`) | Paint clay cups and terracotta ornaments together under the ancient banyan shade. | +18 Affection, grants `keepsake_painted_mug`. |
-| **Beli Gajra Garland** | Flower Cart (`x: 1216, y: 544`) | Purchase hand-strung fragrant white Beli flower garlands and tie them around the wrist or hair. | +14 Affection, grants `flower_beli_garland`. |
+| **Beli Gajra Garland** | Flower Cart (`x: 1184, y: 480`) | Purchase hand-strung fragrant white Beli flower garlands and tie them around the wrist or hair. | +14 Affection, grants `flower_beli_garland`. |
+| **Dhaka Cyber Arcade** | Fuller Road North (`x: 1312, y: 704`) | Step inside the retro neon gaming parlor featuring modular 6-slot arcade architecture, lucky claw crane, brass token dispenser, and arcade adda with Manager Shanto. | Unlocks arcade interior, rewards `arcade_token` currency and `plushie_totoro` keepsake (see §6.2). |
 | **Pabnar Mishti Doi** | Sweet Stall (`x: 1744, y: 272`) | Taste thick, creamy, caramelized sweet yogurt served in earthen pots. | +10 Affection, boosts stamina recovery. |
 | **Grand Rickshaw Tour** | Fuller Roadway (`x: 1648, y: 816`) | Board an intricately painted cycle rickshaw for an automated scenic tour across Fuller Road with rhythmic rickshaw bells (`rickshaw_bell.wav`). | +25 Affection, full stamina recovery, panorama view. |
 | **MarioKart64JS Grand Prix (3D)** | Fuller Roadway (`x: 1648, y: 816`) | Enter the 3D kart racing mini-game powered by Three.js MarioKart64JS with 16 Grand Prix circuits, 4 battle arenas, 8 classic drivers, items, and Wii 3D karts toggle. | Replaces previous rickshaw prototype with full MarioKart64JS engine (see §6.1). |
@@ -458,6 +460,85 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **AI ItemBrain (`src/scenes/minigames/race/ai/ItemBrain.ts`):** Ported from STK `skidding_ai.cpp` with forward projectile targeting cone ($< 38$m, $|\Delta\theta| < 0.38$ rad), backward defense ($< 16$m, $|\Delta\theta| < 0.30$ rad), and shield deployment on incoming threat.
 - **HUD & 3D Renderers:** Mario Kart style roulette item slot (`ItemSlotHud.ts`), incoming projectile threat warning banner (`IncomingWarning.ts`), 3D item instances (`ItemRenderer.ts`), hazard visuals (`HazardRenderer.ts`), and F8 telemetry overlay (`ItemsDebugOverlay.ts`).
 - **Testing & Balancing:** 73 unit tests in `race_m5.test.ts` (283/283 total race tests green), 30-race Monte-Carlo simulation with items/hazards (99.6% finish rate, monotonic pace, bit-exact determinism), and Playwright E2E automation in `scripts/test_race_m5.js` passing all 9 phases with zero errors.
+
+### 6.2 Dhaka Cyber Arcade Engine & Game Slot Architecture
+
+#### Overview & Lore
+The **Dhaka Cyber Arcade** (`arcade_interior`) is a premier retro entertainment destination situated on Fuller Road North (`x: 1312, y: 704`, Col 41, Row 22). It embodies the nostalgic Dhaka video-game parlor culture of the late 90s and 2000s, where university students and gamers gathered for coin-op fighting matches, rhythm dance battles, and high-speed driving simulators.
+
+#### Spatial Realignment & Decongestion in Dhaka Valley
+To provide a clean, uncluttered layout along Fuller Road, adjacent landmarks and props were realigned:
+- **Dhaka Cyber Arcade Exterior**: `x: 1312, y: 704` (animated 4-frame neon marquee sign, cyan/magenta sidewalk reflections).
+- **Phulwali Flower Cart**: Shifted to `x: 1184, y: 448` with streetlamp at `(1184, 416)` and light source at `(1184, 432)`.
+- **Ramna Park Bench**: Shifted to `x: 1520, y: 448` with streetlamp at `(1520, 416)` and light source at `(1520, 416)`.
+- **Dhaka Rickshaw Stand**: Stationed at `x: 1648, y: 816`.
+
+#### Modular Game Slot Architecture (`ArcadeSlotManager.ts`)
+The arcade's software architecture is engineered specifically to allow custom playable games to be hot-swapped or mounted into physical cabinet slots at any time without modifying core scene logic.
+
+Each cabinet is registered as an `ArcadeGameSlot`:
+```typescript
+export interface ArcadeGameSlot {
+  id: ArcadeSlotId;
+  name: string;
+  genre: string;
+  desc: string;
+  cabinetStyle: 'deluxe' | 'upright' | 'cocktail' | 'dance' | 'racing';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  spriteKey: string;
+  isInstalled: boolean;
+  creditsRequired: number;
+  author?: string;
+  version?: string;
+  launch?: (scene: any) => void;
+  onExit?: () => void;
+}
+```
+
+#### Pre-Configured Hardware Slots
+| Slot ID | Cabinet Style & Dimensions | Hardware Name & Theme | Default Standby State |
+| :--- | :--- | :--- | :--- |
+| `slot_grand_championship` | Deluxe Marquee (128×96 px) | **Slot #1: Grand Championship Cabinet**<br>*Flagship Tournament Dual CRT* | Standby. Plays BIOS v2.4 hardware diagnostic on inspect. |
+| `slot_retro_pixel_a` | Candy Upright (64×80 px) | **Slot #2: Retro Pixel Arcade A**<br>*8-Bit / 16-Bit Platformer / Brawler* | Standby. Microswitch & Sanwa stick calibration report. |
+| `slot_fighting_clash` | Upright Fighter (64×80 px) | **Slot #3: Super Battle Strike DX**<br>*2-Player Competitive Versus Fighter* | Standby. 6-button harness diagnostic report. |
+| `slot_cocktail_table` | Glass Tabletop (96×64 px) | **Slot #4: Tabletop Glass Cocktail Lounge**<br>*Sit-Down Strategy / Maze Action* | Standby. Top-down CRT cocktail table diagnostics. |
+| `slot_rhythm_beat` | Dance Stage (80×80 px) | **Slot #5: Beat Mania & Dance Pad Zone**<br>*Rhythm / Dance Stage Simulator* | Standby. 4-way pressure footpad diagnostic report. |
+| `slot_racing_twin` | Twin Cockpit (112×80 px) | **Slot #6: Dhaka Cyber Speed Twin-Cockpit**<br>*Force-Feedback Twin Racing Simulator* | Standby. Steering wheel & pedal calibration report. |
+
+#### Developer API: Registering New Playable Games
+Developers can plug playable games into any cabinet slot with a single invocation:
+```typescript
+ArcadeSlotManager.registerGame('slot_grand_championship', {
+  name: 'Dhaka Grand Prix 2D',
+  genre: 'Retro Top-Down Racer',
+  desc: 'High-octane retro racing across Dhaka avenues!',
+  creditsRequired: 2,
+  launch: (scene) => {
+    // Custom scene launch or mini-game modal trigger here
+  }
+});
+```
+
+#### Cinematic Narrative Cutscenes (`ArcadeCutscenes.ts`)
+1. **Arcade Exterior Discovery Cutscene (`playArcadeDiscoveryCutscene`)**:
+   - Triggers on first approach to the arcade exterior.
+   - Smooth camera pan up to the flashing chasing neon marquee.
+   - Totoro jumps with joy and discovers a velvet pouch of 5 brass Cyber Tokens (`DateState.arcadeTokens = 5`).
+2. **First Interior Entrance Cutscene (`playFirstInteriorCutscene`)**:
+   - Triggers when entering `arcade_interior` for the first time.
+   - Panoramic camera pan over obsidian cyber flooring and 90s geometric laser carpets.
+   - Welcome monologue from **Manager Shanto**, explaining the modular game slot architecture.
+3. **Hardware Diagnostic Cutscene (`playCabinetTestCutscene`)**:
+   - Triggers when inspecting an unpopulated slot.
+   - CRT flash animation, audio scan, and terminal BIOS diagnostic report displaying hardware specs and developer instructions.
+4. **Lucky Claw Crane Interactive Cutscene (`playClawMachineCutscene`)**:
+   - Spend 1 token to drop the mechanical crane arm.
+   - Rewards the rare keepsake **Neon Arcade Totoro Plushie** (`plushie_totoro`) and plushie sweets.
+5. **Vintage Brass Token Dispenser (`playTokenDispenser`)**:
+   - Interactive dialog to exchange 10 Taka for 5 brass tokens.
 
 ---
 

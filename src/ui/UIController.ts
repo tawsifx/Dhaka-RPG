@@ -190,6 +190,8 @@ export const UIController: any = (() => {
       q = '🏛️ [Curzon Hall] Greet the faculty chairs, explore the physics lab, and interact with the historic exhibits!';
     } else if (DateState.currentWorld === 'farmhouse') {
       q = '🏡 [Farmhouse] Feed the chickens, greet dairy cow Shuravi, pet the goats, and enjoy the countryside!';
+    } else if (DateState.currentWorld === 'arcade_interior') {
+      q = '🕹️ [Dhaka Cyber Arcade] Explore the neon gaming floor, test cabinet diagnostics, win prizes at the claw machine, or add custom games!';
     } else if (DateState.currentWorld !== 'dhaka') {
       const w = WORLDS_DB[DateState.currentWorld];
       if (w && w.bossSpec) {

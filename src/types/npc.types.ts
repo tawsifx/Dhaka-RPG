@@ -6,7 +6,7 @@ export type DayPhase = TimeOfDay; // 'dawn' | 'morning' | 'afternoon' | 'sunset'
 export type SeasonId = Season;    // 'spring' | 'summer' | 'monsoon' | 'autumn' | 'winter'
 export type WeatherId = WeatherType; // 'sunny' | 'breezy' | 'rainy' | 'monsoon' | 'storm' | 'foggy'
 export type DayOfWeek = 'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun';
-export type MapId = 'dhaka' | 'forest' | 'sunken' | 'ember' | 'frost' | 'astral' | 'curzon_interior' | 'farmhouse';
+export type MapId = 'dhaka' | 'forest' | 'sunken' | 'ember' | 'frost' | 'astral' | 'curzon_interior' | 'farmhouse' | 'arcade_interior';
 
 export type NpcState =
   | 'sleeping'

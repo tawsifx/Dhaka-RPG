@@ -1,7 +1,7 @@
 // src/scenes/world/MinimapRenderer.ts - Real-Time Minimap Canvas Rendering Engine
 import { DateState } from '../../state/DateState';
 import { WORLDS_DB } from '../../config/worlds.db';
-import { CURZON_X, CURZON_Y } from '../../config/constants';
+import { CURZON_X, CURZON_Y, ARCADE_X, ARCADE_Y } from '../../config/constants';
 
 export class MinimapRenderer {
   /**
@@ -137,9 +137,20 @@ export class MinimapRenderer {
 
       // Phulwali Flower Cart & Ramna Park Garden Bench
       ctx.fillStyle = '#ec4899'; // Flower Cart (festive pink)
-      ctx.fillRect(1196 * sx, 490 * sy, 40 * sx, 30 * sy);
+      ctx.fillRect(1164 * sx, 434 * sy, 40 * sx, 30 * sy);
       ctx.fillStyle = '#ca8a04'; // Ramna Bench (warm teak)
-      ctx.fillRect(1452 * sx, 450 * sy, 36 * sx, 18 * sy);
+      ctx.fillRect(1500 * sx, 438 * sy, 36 * sx, 18 * sy);
+
+      // Dhaka Cyber Arcade Complex (Fuller Road Boulevard)
+      ctx.fillStyle = '#1e113a'; // Midnight cyber purple plinth
+      ctx.fillRect((ARCADE_X - 90) * sx, (ARCADE_Y - 70) * sy, 180 * sx, 76 * sy);
+      ctx.strokeStyle = '#00ffff'; // Neon cyan border
+      ctx.lineWidth = 1;
+      ctx.strokeRect((ARCADE_X - 90) * sx, (ARCADE_Y - 70) * sy, 180 * sx, 76 * sy);
+      ctx.fillStyle = '#ff007f'; // Neon magenta joystick beacon
+      ctx.beginPath();
+      ctx.arc(ARCADE_X * sx, (ARCADE_Y - 40) * sy, 2.5, 0, Math.PI * 2);
+      ctx.fill();
 
       // Mintu Road Fountain Plaza Ring
       ctx.strokeStyle = '#0284c7';
@@ -213,6 +224,26 @@ export class MinimapRenderer {
       // Dais Platform
       ctx.fillStyle = '#7c2d12';
       ctx.fillRect(460 * sx, 190 * sy, 280 * sx, 70 * sy);
+    } else if (world === 'arcade_interior') {
+      // Obsidian Floor & Neon Laser Carpet Runners
+      ctx.fillStyle = '#1e113a';
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+      // Main Carpet Cross Promenades
+      ctx.fillStyle = '#0d0d26';
+      ctx.fillRect(592 * sx, 260 * sy, 96 * sx, 540 * sy);
+      ctx.fillRect(144 * sx, 432 * sy, 992 * sx, 64 * sy);
+      // Neon Cabinet Plinths
+      ctx.fillStyle = '#00ffff'; // Deluxe cab
+      ctx.fillRect(576 * sx, 240 * sy, 128 * sx, 48 * sy);
+      ctx.fillStyle = '#ff007f'; // Retro cabs west
+      ctx.fillRect(250 * sx, 312 * sy, 60 * sx, 40 * sy);
+      ctx.fillRect(370 * sx, 312 * sy, 60 * sx, 40 * sy);
+      ctx.fillStyle = '#ffea00'; // Rhythm & Racing east
+      ctx.fillRect(842 * sx, 312 * sy, 76 * sx, 44 * sy);
+      ctx.fillRect(986 * sx, 312 * sy, 108 * sx, 48 * sy);
+      // Cocktail table center
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillRect(595 * sx, 538 * sy, 90 * sx, 44 * sy);
     } else {
       // Expedition Realms (Worlds 2 to 6)
       ctx.fillStyle = '#d4b996';

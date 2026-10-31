@@ -1529,6 +1529,361 @@ export class CreatureSpriteGenerator {
       });
     });
 
+    // =========================================================================
+    // DHAKA CYBER ARCADE INTERIOR — TILES, CABINETS, STATIONS & STAFF
+    // =========================================================================
+
+    // 1. Cyber Obsidian Floor Tile with Neon Bevels (32x32)
+    makeTex('tile-arcade-floor', 32, 32, (ctx, w, h) => {
+      ctx.fillStyle = '#0a0815';
+      ctx.fillRect(0, 0, w, h);
+      ctx.fillStyle = '#120f24';
+      ctx.fillRect(1, 1, 30, 30);
+      // Subtle reflective sheen
+      ctx.fillStyle = '#191530';
+      ctx.fillRect(2, 2, 28, 28);
+      // Fine neon grid seams
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.12)';
+      ctx.fillRect(0, 0, 32, 1);
+      ctx.fillRect(0, 0, 1, 32);
+      ctx.fillStyle = 'rgba(255, 0, 128, 0.08)';
+      ctx.fillRect(31, 0, 1, 32);
+      ctx.fillRect(0, 31, 32, 1);
+      // High-tech corner dot
+      ctx.fillStyle = '#00ffff';
+      ctx.fillRect(0, 0, 1, 1);
+    });
+
+    // 2. Retro 90s Laser Arcade Carpet Runner (32x32)
+    makeTex('tile-arcade-carpet', 32, 32, (ctx, w, h) => {
+      // Midnight navy base
+      ctx.fillStyle = '#0d0d26';
+      ctx.fillRect(0, 0, w, h);
+      // Magenta geometric zigzag
+      ctx.strokeStyle = '#e01e8a'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, 8); ctx.lineTo(16, 24); ctx.lineTo(32, 8);
+      ctx.stroke();
+      // Cyan triangles
+      ctx.fillStyle = '#00d4ff';
+      ctx.beginPath();
+      ctx.moveTo(8, 0); ctx.lineTo(14, 8); ctx.lineTo(2, 8); ctx.closePath(); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(24, 24); ctx.lineTo(30, 32); ctx.lineTo(18, 32); ctx.closePath(); ctx.fill();
+      // Bright yellow starburst confetti dots
+      ctx.fillStyle = '#ffea00';
+      ctx.fillRect(6, 18, 2, 2);
+      ctx.fillRect(26, 6, 2, 2);
+      ctx.fillRect(16, 14, 2, 2);
+      // Electric purple borders
+      ctx.fillStyle = '#8a2be2';
+      ctx.fillRect(0, 0, 2, 32);
+      ctx.fillRect(30, 0, 2, 32);
+    });
+
+    // 3. Cyberpunk Acoustic Slate & Neon Conduit Wall (32x64)
+    makeTex('tile-arcade-wall', 32, 64, (ctx, w, h) => {
+      // Top 44px: Dark Acoustic Slate Panels
+      ctx.fillStyle = '#080612'; ctx.fillRect(0, 0, 32, 44);
+      ctx.fillStyle = '#110d22'; ctx.fillRect(1, 1, 30, 42);
+      // Acoustic horizontal grooves
+      ctx.fillStyle = '#06040d';
+      for (let y = 6; y < 44; y += 6) ctx.fillRect(2, y, 28, 2);
+      // Neon Conduit Pipe running horizontally
+      ctx.fillStyle = '#ff007f'; ctx.fillRect(0, 16, 32, 2); // Neon pink conduit
+      ctx.fillStyle = '#ff80bf'; ctx.fillRect(0, 16.5, 32, 1);
+      ctx.fillStyle = '#00f0ff'; ctx.fillRect(0, 30, 32, 2); // Neon cyan conduit
+      ctx.fillStyle = '#b3f7ff'; ctx.fillRect(0, 30.5, 32, 1);
+      // Vertical chrome brackets
+      ctx.fillStyle = '#475569'; ctx.fillRect(6, 14, 3, 20); ctx.fillRect(23, 14, 3, 20);
+      // Lower 20px: Brushed Titanium Plinth Kickplate
+      ctx.fillStyle = '#1e293b'; ctx.fillRect(0, 44, 32, 20);
+      ctx.fillStyle = '#334155'; ctx.fillRect(0, 44, 32, 2); // bevel highlight
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 62, 32, 2);
+    });
+
+    // 4. Grand Deluxe Championship Dual-Station Cabinet (128x96)
+    makeTex('prop-arcade-cab-deluxe', 128, 96, (ctx, w, h) => {
+      // Ground shadow
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.45)';
+      ctx.beginPath(); ctx.ellipse(64, 92, 60, 6, 0, 0, Math.PI * 2); ctx.fill();
+      // Outer Chassis (Dark Obsidian with Cyan Edge Trim)
+      ctx.fillStyle = '#090814'; ctx.fillRect(8, 6, 112, 86);
+      ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2; ctx.strokeRect(8, 6, 112, 86);
+      // Giant Backlit Marquee Header: "CHAMPIONSHIP DX"
+      ctx.fillStyle = '#181230'; ctx.fillRect(12, 10, 104, 22);
+      ctx.strokeStyle = '#ff007f'; ctx.lineWidth = 1.5; ctx.strokeRect(12, 10, 104, 22);
+      ctx.fillStyle = '#ffea00';
+      ctx.font = 'bold 8px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('★ CHAMPIONSHIP DX ★', 64, 24);
+      // Dual CRT Screen Bezels (Player 1 & Player 2)
+      // Screen 1 (Left)
+      ctx.fillStyle = '#050a18'; ctx.fillRect(16, 36, 44, 30);
+      ctx.fillStyle = '#00f0ff'; ctx.fillRect(18, 38, 40, 26);
+      ctx.fillStyle = '#050a18'; ctx.fillRect(20, 40, 36, 22); // Screen face
+      ctx.fillStyle = '#00ffff'; ctx.font = '6px monospace'; ctx.fillText('P1 READY', 38, 52);
+      // Screen 2 (Right)
+      ctx.fillStyle = '#180512'; ctx.fillRect(68, 36, 44, 30);
+      ctx.fillStyle = '#ff007f'; ctx.fillRect(70, 38, 40, 26);
+      ctx.fillStyle = '#180512'; ctx.fillRect(72, 40, 36, 22);
+      ctx.fillStyle = '#ff007f'; ctx.font = '6px monospace'; ctx.fillText('P2 READY', 90, 52);
+      // Slanted Control Dashboard with Dual Joysticks & Colorful Buttons
+      ctx.fillStyle = '#1e1b38'; ctx.fillRect(12, 70, 104, 16);
+      // P1 Controls
+      ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(28, 77, 3, 0, Math.PI * 2); ctx.fill(); // Stick
+      ['#ffff00', '#00ff00', '#00ffff'].forEach((c, i) => {
+        ctx.fillStyle = c; ctx.fillRect(36 + i * 6, 75, 4, 4);
+      });
+      // P2 Controls
+      ctx.fillStyle = '#0088ff'; ctx.beginPath(); ctx.arc(80, 77, 3, 0, Math.PI * 2); ctx.fill();
+      ['#ffff00', '#00ff00', '#00ffff'].forEach((c, i) => {
+        ctx.fillStyle = c; ctx.fillRect(88 + i * 6, 75, 4, 4);
+      });
+      // Lower Speaker Grille & Coin Doors
+      ctx.fillStyle = '#0a0915'; ctx.fillRect(16, 88, 96, 4);
+      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(34, 88, 8, 4); ctx.fillRect(86, 88, 8, 4); // Coin inserts
+    });
+
+    // 5. Retro Upright Candy Cabinet A (64x80)
+    makeTex('prop-arcade-cab-upright-a', 64, 80, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.40)';
+      ctx.beginPath(); ctx.ellipse(32, 76, 28, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // White / Turquoise Japanese Candy Cabinet Style
+      ctx.fillStyle = '#e2e8f0'; ctx.fillRect(6, 6, 52, 70);
+      ctx.fillStyle = '#06b6d4'; ctx.fillRect(6, 6, 5, 70); ctx.fillRect(53, 6, 5, 70); // Cyan side trim
+      // Marquee Header
+      ctx.fillStyle = '#0284c7'; ctx.fillRect(12, 8, 40, 14);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center'; ctx.fillText('PIXEL A', 32, 18);
+      // CRT Screen
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(12, 25, 40, 26);
+      ctx.fillStyle = '#22c55e'; ctx.font = '6px monospace'; ctx.fillText('PLAY', 32, 40);
+      // Control Panel
+      ctx.fillStyle = '#94a3b8'; ctx.fillRect(10, 53, 44, 12);
+      ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.arc(22, 59, 2.5, 0, Math.PI * 2); ctx.fill(); // joystick
+      ctx.fillStyle = '#facc15'; ctx.fillRect(32, 57, 4, 4);
+      ctx.fillStyle = '#3b82f6'; ctx.fillRect(38, 57, 4, 4);
+      // Coin door
+      ctx.fillStyle = '#334155'; ctx.fillRect(22, 68, 20, 8);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(30, 70, 4, 2);
+    });
+
+    // 6. Retro Upright Fighting Cabinet B (64x80)
+    makeTex('prop-arcade-cab-upright-b', 64, 80, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.40)';
+      ctx.beginPath(); ctx.ellipse(32, 76, 28, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // Jet Black with Crimson Fire Side Art
+      ctx.fillStyle = '#18181b'; ctx.fillRect(6, 6, 52, 70);
+      ctx.fillStyle = '#dc2626'; ctx.fillRect(6, 6, 5, 70); ctx.fillRect(53, 6, 5, 70);
+      // Marquee
+      ctx.fillStyle = '#991b1b'; ctx.fillRect(12, 8, 40, 14);
+      ctx.fillStyle = '#fef08a'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center'; ctx.fillText('STRIKE DX', 32, 18);
+      // CRT Screen
+      ctx.fillStyle = '#09090b'; ctx.fillRect(12, 25, 40, 26);
+      ctx.fillStyle = '#ef4444'; ctx.fillRect(16, 28, 14, 3); // P1 health bar
+      ctx.fillStyle = '#3b82f6'; ctx.fillRect(34, 28, 14, 3); // P2 health bar
+      ctx.fillStyle = '#ffffff'; ctx.font = '6px monospace'; ctx.fillText('VS', 32, 42);
+      // Dual Control deck
+      ctx.fillStyle = '#27272a'; ctx.fillRect(10, 53, 44, 12);
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(18, 59, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(38, 59, 2.5, 0, Math.PI * 2); ctx.fill();
+      // Coin door
+      ctx.fillStyle = '#09090b'; ctx.fillRect(22, 68, 20, 8);
+      ctx.fillStyle = '#fbbf24'; ctx.fillRect(30, 70, 4, 2);
+    });
+
+    // 7. Glass-Top Tabletop Cocktail Lounge Cabinet (96x64)
+    makeTex('prop-arcade-cab-cocktail', 96, 64, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.40)';
+      ctx.beginPath(); ctx.ellipse(48, 60, 44, 6, 0, 0, Math.PI * 2); ctx.fill();
+      // Woodgrain Pedestal Body
+      ctx.fillStyle = '#3e2723'; ctx.fillRect(16, 24, 64, 34);
+      // Smoked Tempered Glass Tabletop with Rounded Corners
+      ctx.fillStyle = '#1e293b'; ctx.fillRect(6, 10, 84, 22);
+      ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.strokeRect(6, 10, 84, 22);
+      // Recessed CRT Screen Visible Through Glass
+      ctx.fillStyle = '#050505'; ctx.fillRect(26, 12, 44, 18);
+      ctx.fillStyle = '#22c55e'; ctx.font = '6px monospace'; ctx.textAlign = 'center'; ctx.fillText('TABLE MAZE', 48, 24);
+      // P1 & P2 Side Control Wings
+      ctx.fillStyle = '#4e342e'; ctx.fillRect(4, 16, 10, 14); ctx.fillRect(82, 16, 10, 14);
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(9, 23, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(87, 23, 2, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // 8. Beat Mania & Dance Pad Zone Cabinet (80x80)
+    makeTex('prop-arcade-cab-dance', 80, 80, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.40)';
+      ctx.beginPath(); ctx.ellipse(40, 76, 36, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // Main Sound Tower Chassis
+      ctx.fillStyle = '#1e1138'; ctx.fillRect(14, 4, 52, 48);
+      // Top Equalizer Marquee
+      ctx.fillStyle = '#ff007f'; ctx.fillRect(18, 6, 44, 12);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center'; ctx.fillText('DANCE BEAT', 40, 15);
+      // Large Speaker Cones
+      ctx.fillStyle = '#0f0a1c';
+      ctx.beginPath(); ctx.arc(28, 30, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(52, 30, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#00ffff';
+      ctx.beginPath(); ctx.arc(28, 30, 3, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(52, 30, 3, 0, Math.PI * 2); ctx.fill();
+      // Dance Stage Platform (Metallic Footpad)
+      ctx.fillStyle = '#334155'; ctx.fillRect(8, 52, 64, 24);
+      ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 1.5; ctx.strokeRect(8, 52, 64, 24);
+      // 4 Directional Glow Arrows (Left, Up, Down, Right)
+      const arrows = [
+        { x: 18, y: 64, c: '#ff007f' },
+        { x: 32, y: 58, c: '#00ffff' },
+        { x: 48, y: 70, c: '#00ff88' },
+        { x: 62, y: 64, c: '#ffea00' }
+      ];
+      arrows.forEach(a => {
+        ctx.fillStyle = a.c;
+        ctx.fillRect(a.x - 4, a.y - 4, 8, 8);
+      });
+    });
+
+    // 9. Twin-Cockpit Force Feedback Racing Cabinet (112x80)
+    makeTex('prop-arcade-cab-racing', 112, 80, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.45)';
+      ctx.beginPath(); ctx.ellipse(56, 76, 52, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // Twin Dashboard & Display Shell (Red Car 1 & Blue Car 2)
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(8, 6, 96, 44);
+      // Marquee: "DHAKA SPEED"
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(16, 8, 80, 12);
+      ctx.fillStyle = '#000000'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center'; ctx.fillText('DHAKA DRIFT', 56, 17);
+      // Twin CRT Screens
+      ctx.fillStyle = '#1e3a8a'; ctx.fillRect(14, 22, 38, 22);
+      ctx.fillStyle = '#7f1d1d'; ctx.fillRect(60, 22, 38, 22);
+      // Steering Wheels & Dashboards
+      ctx.fillStyle = '#334155'; ctx.fillRect(10, 46, 44, 14); ctx.fillRect(58, 46, 44, 14);
+      // Left Wheel
+      ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(32, 53, 6, 0, Math.PI * 2); ctx.stroke();
+      // Right Wheel
+      ctx.beginPath(); ctx.arc(80, 53, 6, 0, Math.PI * 2); ctx.stroke();
+      // Lower Bucket Seats
+      ctx.fillStyle = '#dc2626'; ctx.fillRect(14, 60, 36, 16); // Red bucket seat
+      ctx.fillStyle = '#2563eb'; ctx.fillRect(62, 60, 36, 16); // Blue bucket seat
+    });
+
+    // 10. Neon Claw Machine Prize Crane (64x88)
+    makeTex('prop-arcade-claw', 64, 88, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.40)';
+      ctx.beginPath(); ctx.ellipse(32, 84, 28, 5, 0, 0, Math.PI * 2); ctx.fill();
+      // Outer Bright Magenta Frame
+      ctx.fillStyle = '#db2777'; ctx.fillRect(6, 6, 52, 78);
+      // Marquee Header
+      ctx.fillStyle = '#f43f5e'; ctx.fillRect(10, 8, 44, 14);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 6px monospace'; ctx.textAlign = 'center'; ctx.fillText('LUCKY CLAW', 32, 18);
+      // Glass Viewing Chamber
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.15)'; ctx.fillRect(10, 24, 44, 38);
+      ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1.5; ctx.strokeRect(10, 24, 44, 38);
+      // Mechanical Crane Arm & Claw Head
+      ctx.fillStyle = '#94a3b8'; ctx.fillRect(30, 24, 4, 16);
+      ctx.fillStyle = '#cbd5e1'; ctx.fillRect(28, 40, 8, 4);
+      // Pile of Cute Plushies Inside!
+      const plushColors = ['#a855f7', '#3b82f6', '#ec4899', '#22c55e', '#f59e0b'];
+      [
+        [16, 54], [24, 52], [32, 55], [40, 53], [48, 54],
+        [20, 58], [28, 57], [36, 58], [44, 57]
+      ].forEach(([px, py], i) => {
+        ctx.fillStyle = plushColors[i % plushColors.length];
+        ctx.beginPath(); ctx.arc(px, py, 4, 0, Math.PI * 2); ctx.fill();
+        // Mini ear tufts
+        ctx.fillRect(px - 3, py - 6, 2, 2); ctx.fillRect(px + 1, py - 6, 2, 2);
+      });
+      // Lower Prize Chute & Coin Slot
+      ctx.fillStyle = '#be185d'; ctx.fillRect(8, 64, 48, 18);
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(14, 68, 16, 12); // Prize drop opening
+      ctx.fillStyle = '#fbbf24'; ctx.fillRect(38, 70, 4, 2);   // Coin slot
+    });
+
+    // 11. Vintage Brass Token Dispenser (40x64)
+    makeTex('prop-arcade-token-dispenser', 40, 64, (ctx, w, h) => {
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.40)';
+      ctx.beginPath(); ctx.ellipse(20, 61, 18, 4, 0, 0, Math.PI * 2); ctx.fill();
+      // Heavy Steel Machine Body
+      ctx.fillStyle = '#334155'; ctx.fillRect(6, 6, 28, 54);
+      ctx.fillStyle = '#475569'; ctx.fillRect(8, 8, 24, 50);
+      // Brass Faceplate
+      ctx.fillStyle = '#b45309'; ctx.fillRect(10, 12, 20, 32);
+      ctx.fillStyle = '#f59e0b'; ctx.fillRect(11, 13, 18, 30);
+      // Header Text: "TOKENS"
+      ctx.fillStyle = '#78350f'; ctx.font = 'bold 5px monospace'; ctx.textAlign = 'center'; ctx.fillText('TOKENS', 20, 20);
+      // Note Acceptor Glowing Slot
+      ctx.fillStyle = '#22c55e'; ctx.fillRect(13, 24, 14, 3);
+      // Coin Hopper Cup at Bottom
+      ctx.fillStyle = '#0f172a'; ctx.fillRect(12, 48, 16, 8);
+      ctx.fillStyle = '#fef08a'; ctx.fillRect(16, 52, 8, 3); // shiny tokens inside tray!
+    });
+
+    // 12. Chrome Arcade Bar Stool (24x28)
+    makeTex('prop-arcade-stool', 24, 28, (ctx, w, h) => {
+      // Chrome Base & Pole
+      ctx.fillStyle = 'rgba(5, 3, 12, 0.35)';
+      ctx.beginPath(); ctx.ellipse(12, 26, 9, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#94a3b8'; ctx.fillRect(11, 10, 2, 14);
+      ctx.fillStyle = '#cbd5e1'; ctx.fillRect(7, 24, 10, 2);
+      // Round Red Vinyl Cushion
+      ctx.fillStyle = '#991b1b'; ctx.beginPath(); ctx.ellipse(12, 9, 10, 4.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#dc2626'; ctx.beginPath(); ctx.ellipse(12, 7.5, 9, 3.5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#f87171'; ctx.beginPath(); ctx.ellipse(10, 6.5, 4, 1.5, 0, 0, Math.PI * 2); ctx.fill();
+    });
+
+    // 13. Glowing Wall-Mounted Neon Pixel Sign (96x32)
+    makeTex('prop-arcade-neon-sign', 96, 32, (ctx, w, h) => {
+      ctx.fillStyle = '#0b091a'; ctx.fillRect(2, 2, 92, 28);
+      ctx.strokeStyle = '#ff007f'; ctx.lineWidth = 1.5; ctx.strokeRect(2, 2, 92, 28);
+      ctx.fillStyle = '#00ffff';
+      ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center'; ctx.fillText('CYBER LOUNGE', 48, 16);
+      ctx.fillStyle = '#ffea00';
+      ctx.font = '6px monospace'; ctx.fillText('READY PLAYER ONE', 48, 25);
+    });
+
+    // 14. Arcade Double Exit Doorways (76x84)
+    makeTex('prop-arcade-exit-door', 76, 84, (ctx, w, h) => {
+      // Cyber Indigo & Neon Trim Surround
+      ctx.fillStyle = '#110d22'; ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2; ctx.strokeRect(4, 4, 68, 76);
+      // Illuminated Green "EXIT" Sign Header
+      ctx.fillStyle = '#052e16'; ctx.fillRect(18, 8, 40, 14);
+      ctx.fillStyle = '#22c55e'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center'; ctx.fillText('EXIT ➔', 38, 18);
+      // Double Glass Doors
+      ctx.fillStyle = '#090814'; ctx.fillRect(10, 24, 56, 56);
+      ctx.fillStyle = 'rgba(0, 240, 255, 0.15)'; ctx.fillRect(12, 26, 25, 52); ctx.fillRect(39, 26, 25, 52);
+      // Chrome Push Bars
+      ctx.fillStyle = '#cbd5e1'; ctx.fillRect(14, 52, 21, 3); ctx.fillRect(41, 52, 21, 3);
+    });
+
+    // 15. Manager Shanto — Retro Vaporwave Arcade Technician (32x54)
+    [0, 1].forEach(frame => {
+      makeTex(`npc-shanto-${frame}`, 32, 54, (ctx, w, h) => {
+        const bob = frame === 1 ? -1 : 0;
+        ctx.fillStyle = 'rgba(10,5,5,0.30)';
+        ctx.beginPath(); ctx.ellipse(16, 52, 10, 2.5, 0, 0, Math.PI * 2); ctx.fill();
+        // Dark Denim Jeans & High-Top Sneakers
+        ctx.fillStyle = '#1e293b'; ctx.fillRect(11, 38, 4, 12); ctx.fillRect(17, 38, 4, 12);
+        ctx.fillStyle = '#ff007f'; ctx.fillRect(10, 49, 5, 3); ctx.fillRect(17, 49, 5, 3); // Pink sneakers
+        // Teal & Purple Windbreaker Jacket
+        ctx.fillStyle = '#0d9488'; ctx.fillRect(9, 22 + bob, 14, 18);
+        ctx.fillStyle = '#9333ea'; ctx.fillRect(9, 22 + bob, 4, 18); // Purple side stripe
+        // Headphones around neck
+        ctx.fillStyle = '#f59e0b'; ctx.fillRect(11, 19 + bob, 10, 3);
+        // Face & Hair
+        ctx.fillStyle = '#d49b6a'; ctx.fillRect(14, 15 + bob, 4, 5);
+        ctx.beginPath(); ctx.arc(16, 13 + bob, 6, 0, Math.PI * 2); ctx.fill();
+        // Cool backward cap / visor
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(11, 8 + bob, 10, 4);
+        ctx.fillRect(8, 10 + bob, 4, 2); // backward brim
+        // Eyes & Friendly smile
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(14, 12 + bob, 1.5, 1.5); ctx.fillRect(17, 12 + bob, 1.5, 1.5);
+        // Holding electronic diagnostic scanner / token
+        ctx.fillStyle = '#eab308'; ctx.beginPath(); ctx.arc(22, 28 + bob, 3, 0, Math.PI * 2); ctx.fill();
+      });
+    });
+
     // 18. Iman — Tall, Handsome Bengali Man in Tailored Silk Panjabi (36x62)
     [0, 1].forEach(frame => {
       const renderIman = (ctx: any, w: number, h: number) => {

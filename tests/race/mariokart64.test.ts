@@ -100,7 +100,7 @@ describe('MarioKart64JS Core Subsystem Tests', () => {
     for (const arenaId of battleArenaIds) {
       const arena = TRACKS.find((t: any) => t.id === arenaId);
       expect(arena).toBeDefined();
-      expect(arena?.battle).toBe(true);
+      expect((arena as any)?.battle).toBe(true);
     }
 
     // Verify Satsuki and Totoro engine scales

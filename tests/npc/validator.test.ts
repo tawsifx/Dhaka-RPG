@@ -19,7 +19,8 @@ describe('NPC Schedule Validator (npm run validate:npc)', () => {
     frost: { maxCols: 80, maxRows: 60 },
     astral: { maxCols: 80, maxRows: 60 },
     curzon_interior: { maxCols: 40, maxRows: 30 },
-    farmhouse: { maxCols: 40, maxRows: 30 }
+    farmhouse: { maxCols: 40, maxRows: 30 },
+    arcade_interior: { maxCols: 40, maxRows: 30 }
   };
 
   it('validates all 38 NPC schedules against world constraints', () => {

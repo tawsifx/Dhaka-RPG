@@ -2284,6 +2284,136 @@ export class LandmarkGenerator {
       ctx.beginPath(); ctx.arc(28, 14, 2, 0, Math.PI * 2); ctx.fill();
     });
 
+    // =========================================================================
+    // DHAKA CYBER ARCADE EXTERIOR BUILDING (216x152) — 4-Frame Animated Neon Marquee
+    // =========================================================================
+    const drawArcadeBuilding = (ctx: CanvasRenderingContext2D, frame: number) => {
+      const W = 216, H = 152;
+      const R = (x: number, y: number, w: number, h: number, c: string) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
+
+      // 1. Ambient Ground Shadow & Neon Light Spill
+      ctx.fillStyle = 'rgba(10, 8, 24, 0.45)';
+      ctx.beginPath(); ctx.ellipse(W / 2, 142, 102, 11, 0, 0, Math.PI * 2); ctx.fill();
+
+      // Neon sidewalk light reflection pool
+      const glowCyan = frame % 2 === 0 ? 'rgba(0, 240, 255, 0.18)' : 'rgba(0, 240, 255, 0.12)';
+      const glowMagenta = frame % 2 === 1 ? 'rgba(255, 0, 128, 0.18)' : 'rgba(255, 0, 128, 0.12)';
+      ctx.fillStyle = glowCyan;
+      ctx.beginPath(); ctx.ellipse(W / 2 - 36, 143, 40, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = glowMagenta;
+      ctx.beginPath(); ctx.ellipse(W / 2 + 36, 143, 40, 6, 0, 0, Math.PI * 2); ctx.fill();
+
+      // 2. Main Cyberpunk Arcade Building Facade (Deep Slate Indigo & Steel Trim)
+      R(16, 32, 184, 108, '#120f24'); // Outer main wall
+      R(18, 34, 180, 104, '#1b1735'); // Inner facade panel
+
+      // Cyber Grid / Circuit Line Accents on Facade
+      ctx.strokeStyle = '#2d2454'; ctx.lineWidth = 1;
+      for (let gx = 24; gx < 192; gx += 16) {
+        ctx.beginPath(); ctx.moveTo(gx, 36); ctx.lineTo(gx, 136); ctx.stroke();
+      }
+      for (let gy = 44; gy < 136; gy += 16) {
+        ctx.beginPath(); ctx.moveTo(20, gy); ctx.lineTo(196, gy); ctx.stroke();
+      }
+
+      // 3. Sturdy Chrome & Metallic Corner Pillars
+      [16, 192].forEach(px => {
+        R(px, 30, 8, 112, '#33295c');
+        R(px + 2, 30, 4, 112, '#4d3f8a');
+        R(px + 3, 30, 2, 112, '#7967cb');
+      });
+
+      // 4. Left & Right Showroom Glass Windows (Glowing Arcade Interior Silhouettes)
+      // Left Display Window (Retro Platformer & CRT glow)
+      R(28, 62, 54, 66, '#0a0814');
+      ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 1.5; ctx.strokeRect(28, 62, 54, 66);
+      R(32, 66, 46, 58, '#141b38');
+      // Silhouette of mini arcade machine inside window
+      R(40, 78, 22, 38, '#080c1e');
+      R(43, 82, 16, 16, frame % 2 === 0 ? '#00f0ff' : '#00a8cc'); // CRT scan glow
+      R(44, 102, 14, 4, '#ff007f'); // Joystick panel
+
+      // Right Display Window (Versus Fighter & Neon Totoro plushies)
+      R(134, 62, 54, 66, '#0a0814');
+      ctx.strokeStyle = '#ff007f'; ctx.lineWidth = 1.5; ctx.strokeRect(134, 62, 54, 66);
+      R(138, 66, 46, 58, '#26112d');
+      // Silhouette of twin cabinet inside window
+      R(146, 78, 22, 38, '#180720');
+      R(149, 82, 16, 16, frame % 2 === 1 ? '#ff0099' : '#b3006b');
+      R(150, 102, 14, 4, '#00ffff');
+
+      // 5. Central Double Glass Entrance Door
+      R(88, 70, 40, 70, '#090812');
+      // Door frame & header
+      ctx.strokeStyle = '#6851a8'; ctx.lineWidth = 2; ctx.strokeRect(88, 70, 40, 70);
+      // Double door seam
+      R(107, 70, 2, 70, '#2e234d');
+      // Door Glass Panes
+      R(92, 74, 14, 44, 'rgba(0, 240, 255, 0.25)');
+      R(110, 74, 14, 44, 'rgba(255, 0, 128, 0.25)');
+      // Brass Kickplates & Door Handles
+      R(91, 124, 16, 12, '#7a5a22');
+      R(109, 124, 16, 12, '#7a5a22');
+      R(104, 94, 2, 14, '#e6c35c');
+      R(110, 94, 2, 14, '#e6c35c');
+      // "PUSH / PULL" decals
+      R(96, 92, 6, 2, '#ffffff');
+      R(114, 92, 6, 2, '#ffffff');
+
+      // 6. Rooftop Neon Marquee Structure & Signboard
+      // Steel truss frame mounts
+      [36, 172].forEach(tx => {
+        ctx.strokeStyle = '#3e3466'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(tx, 32); ctx.lineTo(tx + 4, 12); ctx.stroke();
+      });
+      // Giant Marquee Box
+      R(20, 6, 176, 30, '#0b0817');
+      R(22, 8, 172, 26, '#181230');
+
+      // Animated Chasing Perimeter Bulbs (frames 0, 1, 2, 3)
+      const bulbColors = ['#ff0055', '#00ffff', '#ffff00', '#00ff66'];
+      let bulbIdx = frame;
+      for (let bx = 24; bx <= 190; bx += 8) {
+        ctx.fillStyle = bulbColors[(bulbIdx++) % 4];
+        ctx.fillRect(bx, 7, 3, 2);
+        ctx.fillRect(bx, 33, 3, 2);
+      }
+      for (let by = 9; by <= 31; by += 7) {
+        ctx.fillStyle = bulbColors[(bulbIdx++) % 4];
+        ctx.fillRect(21, by, 2, 3);
+        ctx.fillRect(193, by, 2, 3);
+      }
+
+      // Marquee Text: "DHAKA CYBER ARCADE"
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 8.5px "Press Start 2P", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('DHAKA CYBER ARCADE', 108, 22);
+
+      // 7. Flashing 8-bit Neon Joystick & Totoro Emblem
+      const joyColors = ['#00ffff', '#ff007f', '#ffff00', '#00ff88'];
+      const currentJoyColor = joyColors[frame % 4];
+      // Joystick stick & ball
+      R(106, 52, 4, 12, '#71717a');
+      ctx.fillStyle = currentJoyColor;
+      ctx.beginPath(); ctx.arc(108, 48, 6, 0, Math.PI * 2); ctx.fill();
+      // Neon "INSERT COIN" banner above doorway
+      R(90, 58, 36, 9, '#000000');
+      ctx.fillStyle = frame % 2 === 0 ? '#ffff00' : '#ffffff';
+      ctx.font = '6px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('★ INSERT COIN ★', 108, 65);
+    };
+
+    [0, 1, 2, 3].forEach(frame => {
+      makeTex(`prop-arcade-${frame}`, 216, 152, (ctx) => {
+        drawArcadeBuilding(ctx, frame);
+      });
+    });
+    makeTex('prop-arcade', 216, 152, (ctx) => {
+      drawArcadeBuilding(ctx, 0);
+    });
+
 
   }
 }
