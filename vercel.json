@@ -1,10 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "redirects": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "https://moon-walkers-day.pages.dev/$1",
-      "permanent": true
+      "src": "/(.*)",
+      "status": 308,
+      "headers": {
+        "Location": "https://moon-walkers-day.pages.dev/$1",
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
     }
   ]
 }
