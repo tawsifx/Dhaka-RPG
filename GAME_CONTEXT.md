@@ -507,6 +507,18 @@ export interface ArcadeGameSlot {
 | `slot_rhythm_beat` | Dance Stage (80×80 px) | **Slot #5: Beat Mania & Dance Pad Zone**<br>*Rhythm / Dance Stage Simulator* | Standby. 4-way pressure footpad diagnostic report. |
 | `slot_racing_twin` | Twin Cockpit (112×80 px) | **Slot #6: Dhaka Cyber Speed Twin-Cockpit**<br>*Force-Feedback Twin Racing Simulator* | **INSTALLED & PLAYABLE**. Launches *Dhaka Crazy Taxi: Rush Hour (Moon Walker & Totoro)* in isolated 3D Three.js modal (`CrazyTaxiEngine.ts` / `crazytaxi.html`). |
 
+#### Authentic 2D Pixel Art Interior & Venue Props
+Following strict project aesthetic guidelines (Pokémon HGSS & Tuxemon 2D orthographic pixel art), the arcade interior is constructed from authentic CC0 / CC-BY-SA 2D pixel art assets, completely eschewing 3D overworld models:
+- **Architectural Flooring & Walls**:
+  - **Cyber Obsidian Flooring**: 2D pixel art floor tiles (`tile-arcade-floor-2d`) from RUOK's 80s Retro Arcade set.
+  - **Retro 90s Laser Carpet Runners**: Vibrant magenta, cyan, and yellow geometric zigzag arcade runner carpet (`tile-arcade-carpet-2d`).
+  - **Tuxemon Structural Walls**: Dark indigo acoustic slate panels and trim (`tile-arcade-wall-2d`) adapted from George's Tuxemon interior tileset.
+- **Physical Cabinets & Attractions**:
+  - **Modular Software Cabinets**: Pixel-accurate 2D upright candy cabinets, fighting brawler cabs, dual-screen deluxe tournament cab, cocktail lounge table, and twin-cockpit racing rig.
+  - **Prize & Token Stations**: Vintage brass gumball/token dispenser (`x: 760, y: 720`), Lucky Neon claw machine (`x: 860, y: 720`), and interactive Whack-A-Mole station (`x: 960, y: 720`).
+  - **Manager Shanto's Bar Counter**: 2D retro arcade snack and manager counter (`x: 480, y: 720`).
+  - **Lounge Gaming Wing**: Green-felt vintage billiards pool table on the west wing (`x: 160, y: 560`) and tournament 4-rod foosball table on the east wing (`x: 1120, y: 560`).
+
 #### Installed Title: Dhaka Crazy Taxi: Rush Hour (`CrazyTaxiEngine.ts`)
 - **Origin & Licensing**: Cloned and ported from Ruteshisu's open-source 3D WebGL Crazy Taxi simulator (`Ruteshisu/CrazyTaxi`, credited in `ASSET_CREDITS.md`).
 - **Engine Architecture**: Full standalone Three.js WebGL simulation (`crazytaxi.html`, `/crazytaxi/` subsystem) operating inside an isolated fullscreen modal iframe overlay, safely pausing Phaser 3 and resuming on exit.

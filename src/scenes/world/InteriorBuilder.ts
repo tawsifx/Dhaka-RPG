@@ -597,27 +597,30 @@ export class InteriorBuilder {
       return entry;
     };
 
-    // 1. Flooring: Obsidian Cyber Tile Base
-    scene.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 'tile-arcade-floor').setDepth(0);
+    // Helper to prioritize external 2D pixel art assets over procedural fallbacks
+    const t = (k2d: string, fallback: string) => scene.textures.exists(k2d) ? k2d : fallback;
 
-    // 2. Retro 90s Laser Carpet Runners
-    scene.add.tileSprite(640, 530, 96, 540, 'tile-arcade-carpet').setDepth(1);
-    scene.add.tileSprite(384, 460, 480, 64, 'tile-arcade-carpet').setDepth(1);
-    scene.add.tileSprite(896, 460, 480, 64, 'tile-arcade-carpet').setDepth(1);
-    scene.add.tileSprite(640, 780, 280, 64, 'tile-arcade-carpet').setDepth(1);
+    // 1. Flooring: Authentic 2D Retro Arcade Floor Tile Base
+    scene.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, t('tile-arcade-floor-2d', 'tile-arcade-floor')).setDepth(0);
 
-    // 3. Walls & Physics Colliders
-    scene.add.tileSprite(640, 110, MAP_W, 64, 'tile-arcade-wall').setDepth(110);
+    // 2. Retro 90s Laser Carpet Runners (Authentic 2D Geometric Arcade Carpet)
+    scene.add.tileSprite(640, 530, 96, 540, t('tile-arcade-carpet-2d', 'tile-arcade-carpet')).setDepth(1);
+    scene.add.tileSprite(384, 460, 480, 64, t('tile-arcade-carpet-2d', 'tile-arcade-carpet')).setDepth(1);
+    scene.add.tileSprite(896, 460, 480, 64, t('tile-arcade-carpet-2d', 'tile-arcade-carpet')).setDepth(1);
+    scene.add.tileSprite(640, 780, 280, 64, t('tile-arcade-carpet-2d', 'tile-arcade-carpet')).setDepth(1);
+
+    // 3. Walls & Physics Colliders (Tuxemon Interior 2D Pixel Walls)
+    scene.add.tileSprite(640, 110, MAP_W, 64, t('tile-arcade-wall-2d', 'tile-arcade-wall')).setDepth(110);
     blockRect(640, 75, MAP_W, 90);
-    scene.add.tileSprite(16, MAP_H / 2, 32, MAP_H, 'tile-arcade-wall').setDepth(MAP_H / 2);
+    scene.add.tileSprite(16, MAP_H / 2, 32, MAP_H, t('tile-arcade-wall-2d', 'tile-arcade-wall')).setDepth(MAP_H / 2);
     blockRect(16, MAP_H / 2, 32, MAP_H);
-    scene.add.tileSprite(MAP_W - 16, MAP_H / 2, 32, MAP_H, 'tile-arcade-wall').setDepth(MAP_H / 2);
+    scene.add.tileSprite(MAP_W - 16, MAP_H / 2, 32, MAP_H, t('tile-arcade-wall-2d', 'tile-arcade-wall')).setDepth(MAP_H / 2);
     blockRect(MAP_W - 16, MAP_H / 2, 32, MAP_H);
 
     // Bottom Wall with central opening for double exit doors
-    scene.add.tileSprite(270, 868, 540, 64, 'tile-arcade-wall').setDepth(868);
+    scene.add.tileSprite(270, 868, 540, 64, t('tile-arcade-wall-2d', 'tile-arcade-wall')).setDepth(868);
     blockRect(270, 878, 540, 44);
-    scene.add.tileSprite(1010, 868, 540, 64, 'tile-arcade-wall').setDepth(868);
+    scene.add.tileSprite(1010, 868, 540, 64, t('tile-arcade-wall-2d', 'tile-arcade-wall')).setDepth(868);
     blockRect(1010, 878, 540, 44);
     blockRect(640, 895, 120, 20);
 
@@ -631,59 +634,114 @@ export class InteriorBuilder {
     scene.add.sprite(960, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
 
     // 5. Arcade Game Slots (Architecture Ready - Handled by ArcadeSlotManager)
-    // Slot 1: Grand Championship DX
-    addLandmark(640, 288, 'prop-arcade-cab-deluxe', 120, 48);
+    // Slot 1: Grand Championship DX (2D Deluxe Dual-Screen Pixel Cabinet)
+    addLandmark(640, 288, t('prop-arcade-cab-deluxe-2d', 'prop-arcade-cab-deluxe'), 120, 48);
     registerInteract(640, 290, null, 'Slot #1: Grand Championship DX 🕹️', 85, () => {
       ArcadeSlotManager.interactWithSlot('slot_grand_championship', scene);
     });
 
-    // Slot 2: Retro Upright Pixel Cabinet A
-    addLandmark(280, 352, 'prop-arcade-cab-upright-a', 60, 40);
+    // Slot 2: Retro Upright Pixel Cabinet A (2D Upright Candy Cabinet)
+    addLandmark(280, 352, t('prop-arcade-cab-upright-a-2d', 'prop-arcade-cab-upright-a'), 60, 40);
     registerInteract(280, 354, null, 'Slot #2: Pixel Arcade A 🕹️', 80, () => {
       ArcadeSlotManager.interactWithSlot('slot_retro_pixel_a', scene);
     });
 
-    // Slot 3: Strike Clash DX Fighting Cab
-    addLandmark(400, 352, 'prop-arcade-cab-upright-b', 60, 40);
+    // Slot 3: Strike Clash DX Fighting Cab (2D Upright Brawler Cabinet)
+    addLandmark(400, 352, t('prop-arcade-cab-upright-b-2d', 'prop-arcade-cab-upright-b'), 60, 40);
     registerInteract(400, 354, null, 'Slot #3: Super Strike DX ⚔️', 80, () => {
       ArcadeSlotManager.interactWithSlot('slot_fighting_clash', scene);
     });
 
-    // Slot 4: Tabletop Glass Cocktail Table Lounge
-    addLandmark(640, 560, 'prop-arcade-cab-cocktail', 90, 44);
-    scene.add.sprite(588, 560, 'prop-arcade-stool').setOrigin(0.5, 1).setDepth(560);
-    scene.add.sprite(692, 560, 'prop-arcade-stool').setOrigin(0.5, 1).setDepth(560);
+    // Slot 4: Tabletop Glass Cocktail Table Lounge (2D Retro Cocktail Cabinet)
+    addLandmark(640, 560, t('prop-arcade-cab-cocktail-2d', 'prop-arcade-cab-cocktail'), 90, 44);
+    scene.add.sprite(588, 560, t('prop-arcade-stool-2d', 'prop-arcade-stool')).setOrigin(0.5, 1).setDepth(560);
+    scene.add.sprite(692, 560, t('prop-arcade-stool-2d', 'prop-arcade-stool')).setOrigin(0.5, 1).setDepth(560);
     registerInteract(640, 562, null, 'Slot #4: Glass Cocktail Lounge 🍸', 80, () => {
       ArcadeSlotManager.interactWithSlot('slot_cocktail_table', scene);
     });
 
-    // Slot 5: Dance Beat Mania Rhythm Zone
-    addLandmark(880, 352, 'prop-arcade-cab-dance', 76, 44);
+    // Slot 5: Dance Beat Mania Rhythm Zone (2D Rhythm Stage Cabinet)
+    addLandmark(880, 352, t('prop-arcade-cab-dance-2d', 'prop-arcade-cab-dance'), 76, 44);
     registerInteract(880, 354, null, 'Slot #5: Dance Mania Stage 💃', 80, () => {
       ArcadeSlotManager.interactWithSlot('slot_rhythm_beat', scene);
     });
 
-    // Slot 6: Twin Cockpit Force-Feedback Racing
-    addLandmark(1040, 352, 'prop-arcade-cab-racing', 108, 48);
+    // Slot 6: Twin Cockpit Force-Feedback Racing (2D Racing Twin Cabinet)
+    addLandmark(1040, 352, t('prop-arcade-cab-racing-2d', 'prop-arcade-cab-racing'), 108, 48);
     registerInteract(1040, 354, null, 'Slot #6: Dhaka Cyber Speed 🏎️', 85, () => {
       ArcadeSlotManager.interactWithSlot('slot_racing_twin', scene);
     });
 
-    // 6. Arcade Attractions: Token Machine & Claw Machine
-    // Token Dispenser
-    addLandmark(760, 720, 'prop-arcade-token-dispenser', 36, 32);
+    // 6. Lounge Gaming Area (2D Billiards & Foosball)
+    // Left Wing: Retro Billiards Pool Table
+    addLandmark(160, 560, t('prop-arcade-pool-table-2d', 'prop-arcade-cab-cocktail'), 130, 60);
+    registerInteract(160, 562, null, 'Vintage Billiards Table 🎱', 80, () => {
+      SoundEngine.select();
+      UI.startDialogue([
+        {
+          speaker: 'Moon Walker',
+          portrait: '🌙',
+          text: 'A classic 80s arcade green-felt pool table! The cues are freshly chalked.'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: 'Totoro wants to call the corner pocket! Scratching the cue ball means buying tea!'
+        }
+      ]);
+    });
+
+    // Right Wing: Retro Foosball Table
+    addLandmark(1120, 560, t('prop-arcade-foosball-2d', 'prop-arcade-cab-cocktail'), 130, 60);
+    registerInteract(1120, 562, null, 'Championship Foosball Table ⚽', 80, () => {
+      SoundEngine.select();
+      UI.startDialogue([
+        {
+          speaker: 'Moon Walker',
+          portrait: '🌙',
+          text: 'A 4-rod vintage tournament foosball table! Fast spin bearings and wooden handles.'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: 'Team Dhaka vs Team Chittagong! Gooooal!'
+        }
+      ]);
+    });
+
+    // 7. Arcade Attractions: Token Machine, Claw Machine & Whack-A-Mole
+    // Token Dispenser (2D Retro Gumball / Token Dispenser)
+    addLandmark(760, 720, t('prop-arcade-token-dispenser-2d', 'prop-arcade-token-dispenser'), 36, 32);
     registerInteract(760, 722, null, 'Token Exchange Dispenser 🪙', 75, () => {
       ArcadeCutscenes.playTokenDispenser(scene);
     });
 
     // Prize Claw Crane Machine
-    addLandmark(860, 720, 'prop-arcade-claw', 60, 40);
+    addLandmark(860, 720, t('prop-arcade-claw-2d', 'prop-arcade-claw'), 60, 40);
     registerInteract(860, 722, null, 'Lucky Neon Claw Machine 🧸', 80, () => {
       ArcadeCutscenes.playClawMachineCutscene(scene, 860, 720);
     });
 
-    // 7. Manager Shanto Counter & Station
-    blockRect(480, 720, 60, 32);
+    // Whack-A-Mole Station
+    addLandmark(960, 720, t('prop-arcade-whack-a-mole-2d', 'prop-arcade-claw'), 56, 36);
+    registerInteract(960, 722, null, 'Whack-A-Mole Station 🔨', 75, () => {
+      SoundEngine.select();
+      UI.startDialogue([
+        {
+          speaker: 'Moon Walker',
+          portrait: '🌙',
+          text: 'Whack-A-Mole! A row of rubber mallets waiting for mechanical moles to pop up.'
+        },
+        {
+          speaker: 'Totoro',
+          portrait: '🐾',
+          text: 'Totoro is too gentle to whack moles, but loves cheering for high scores!'
+        }
+      ]);
+    });
+
+    // 8. Manager Shanto Counter & Station (2D Retro Bar Counter)
+    addLandmark(480, 720, t('prop-arcade-bar-2d', 'prop-arcade-cab-cocktail'), 90, 36);
     registerInteract(520, 724, 'npc-shanto-0', 'Manager Shanto (Arcade Master)', 90, () => {
       SoundEngine.select();
       UI.startDialogue([
@@ -700,12 +758,12 @@ export class InteriorBuilder {
         {
           speaker: 'Manager Shanto',
           portrait: '🕹️',
-          text: 'The architecture is fully built and ready! As soon as Moon Walker registers a custom mini-game via ArcadeSlotManager, the cabinets come alive! In the meantime, feel free to inspect their diagnostics or test your skills on the Lucky Claw Crane!'
+          text: 'The architecture is fully built and ready! As soon as Moon Walker registers a custom mini-game via ArcadeSlotManager, the cabinets come alive! In the meantime, feel free to inspect their diagnostics, play pool, or test your skills on the Lucky Claw Crane!'
         }
       ]);
     });
 
-    // 8. Dynamic Neon Lighting Halos
+    // 9. Dynamic Neon Lighting Halos
     [
       [640, 260, 0x00ffff, 90, 0.22],
       [280, 320, 0x00ffff, 70, 0.18],
@@ -713,6 +771,9 @@ export class InteriorBuilder {
       [640, 540, 0xfde047, 80, 0.18],
       [880, 320, 0xff007f, 75, 0.20],
       [1040, 320, 0x00f0ff, 85, 0.22],
+      [160, 540, 0x22c55e, 80, 0.18],
+      [1120, 540, 0x38bdf8, 80, 0.18],
+      [960, 680, 0xfacc15, 60, 0.18],
       [860, 680, 0xf43f5e, 70, 0.20],
       [760, 680, 0xf59e0b, 60, 0.16]
     ].forEach(([lx, ly, col, rad, alpha]) => {
@@ -728,7 +789,7 @@ export class InteriorBuilder {
       });
     });
 
-    // 9. Player & Totoro Spawn
+    // 10. Player & Totoro Spawn
     const pSpawn = spawnPos || { x: 640, y: 800 };
     scene.player = scene.physics.add.sprite(pSpawn.x, pSpawn.y, 'player-0').setOrigin(0.5, 1);
     const pBoxW = 20, pBoxH = 14;

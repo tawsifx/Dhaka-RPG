@@ -15,6 +15,7 @@ export const DEFAULT_ALLOWED_HOSTS = [
   'svn.code.sf.net',
   'kenney.nl',
   'poly.pizza',
+  'opengameart.org',
   'localhost',
   '127.0.0.1'
 ];

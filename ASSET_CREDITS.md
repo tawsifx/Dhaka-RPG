@@ -49,3 +49,33 @@ The 3D model for Totoro (`public/wii/totoro/model.dae`, `tools/character-pipelin
 - **Authors**: Alexey Vishnyakov (*n3tn0de*), Carlos Braga (*charliiee*), Pavel Antonov (*PsyBack*), Petar Petrov (*petarov*), Will Tonna (*lampeight*)
 - **License**: MIT License ([LICENSE](public/brawler/assets/sprites/LICENSE))
 - **Usage**: Retro 2D Beat-'Em-Up Arcade Cabinet mounted in Dhaka Cyber Arcade (`slot_fighting_clash`), adapted with custom Dhaka Valley campus storylines, dialogues, and custom sprites for Moon Walker and Totoro.
+
+---
+
+## 6. Tuxemon 2D Pixel Art Interior & Furniture Tilesets
+
+- **Upstream Repository**: [https://github.com/Tuxemon/Tuxemon](https://github.com/Tuxemon/Tuxemon)
+- **Authors**: George, ArMM1998, Redshrike, Isaiah658, Kelvin Shadewing, and Tuxemon Contributors
+- **License**: CC-BY-SA 3.0 / GPL 3.0
+- **Acquisition**: Multi-channel parallel download manager (`scripts/lib/parallel-download.mjs`)
+- **Usage**: Dhaka Cyber Arcade interior floorings, structural walls, counters, tech electronics, and furniture matching the authentic Pokémon Gen 2-4 / Tuxemon 2D aesthetic.
+
+---
+
+## 7. 80s Retro 2D Arcade Tile Set by RUOK
+
+- **Source**: [OpenGameArt.org — 80s Arcade Tile Set](https://opengameart.org/content/80s-arcade-tile-set)
+- **Author**: RUOK
+- **License**: CC0 1.0 Universal (Public Domain)
+- **Acquisition**: Multi-channel parallel download manager (`scripts/lib/parallel-download.mjs`)
+- **Usage**: Dhaka Cyber Arcade retro upright cabinets, gumball/token dispenser, foosball and pool game tables, whack-a-mole stations, neon carpet runners, and vintage bar counter.
+
+---
+
+## 8. Animated 2D Pixel Arcade Cabinets by Regret
+
+- **Source**: [OpenGameArt.org — Animated Arcade Cabinets](https://opengameart.org/content/animated-blue-arcade-cabinet)
+- **Author**: Regret
+- **License**: CC0 1.0 Universal (Public Domain)
+- **Acquisition**: Multi-channel parallel download manager (`scripts/lib/parallel-download.mjs`)
+- **Usage**: Dhaka Cyber Arcade tournament cabinets and active animated game screens (`sBlueArcade_strip4`, `sGreenArcade_strip9`, `sRedArcade_strip16`).

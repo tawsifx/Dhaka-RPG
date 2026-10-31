@@ -90,6 +90,24 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.load.image('tileset-superpowers', 'assets/tilesets/Superpowers_Tilesheet.png');
     this.load.image('tileset-vegetation', 'assets/tilesets/Vegetation_by_George.png');
     this.load.image('tileset-pipo-flower', 'assets/tilesets/pipo_Flower.png');
+
+    // Dhaka Cyber Arcade 2D Pixel Art External Assets (RUOK CC0 / Tuxemon)
+    this.load.image('tile-arcade-floor-2d', 'assets/arcade/sprites/tile-arcade-floor.png');
+    this.load.image('tile-arcade-carpet-2d', 'assets/arcade/sprites/tile-arcade-carpet.png');
+    this.load.image('tile-arcade-wall-2d', 'assets/arcade/sprites/tile-arcade-wall.png');
+    this.load.image('prop-arcade-cab-deluxe-2d', 'assets/arcade/sprites/prop-arcade-cab-deluxe.png');
+    this.load.image('prop-arcade-cab-upright-a-2d', 'assets/arcade/sprites/prop-arcade-cab-upright-a.png');
+    this.load.image('prop-arcade-cab-upright-b-2d', 'assets/arcade/sprites/prop-arcade-cab-upright-b.png');
+    this.load.image('prop-arcade-cab-cocktail-2d', 'assets/arcade/sprites/prop-arcade-cab-cocktail.png');
+    this.load.image('prop-arcade-cab-dance-2d', 'assets/arcade/sprites/prop-arcade-cab-dance.png');
+    this.load.image('prop-arcade-cab-racing-2d', 'assets/arcade/sprites/prop-arcade-cab-racing.png');
+    this.load.image('prop-arcade-claw-2d', 'assets/arcade/sprites/prop-arcade-claw.png');
+    this.load.image('prop-arcade-token-dispenser-2d', 'assets/arcade/sprites/prop-arcade-token-dispenser.png');
+    this.load.image('prop-arcade-stool-2d', 'assets/arcade/sprites/prop-arcade-stool.png');
+    this.load.image('prop-arcade-bar-2d', 'assets/arcade/sprites/prop-arcade-bar.png');
+    this.load.image('prop-arcade-pool-table-2d', 'assets/arcade/sprites/prop-arcade-pool-table.png');
+    this.load.image('prop-arcade-foosball-2d', 'assets/arcade/sprites/prop-arcade-foosball.png');
+    this.load.image('prop-arcade-whack-a-mole-2d', 'assets/arcade/sprites/prop-arcade-whack-a-mole.png');
   }
 
 
