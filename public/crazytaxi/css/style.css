@@ -31,13 +31,9 @@ body[data-mode="attract"] #hud .gameonly, body[data-mode="result"] #hud .gameonl
 #combo .bar { width: calc(var(--u)*24); height: calc(var(--u)*1.4); background: rgba(0,0,0,.45); border-radius: 99px; overflow: hidden; margin-top: calc(var(--u)*.6); }
 #comboBar { display: block; height: 100%; background: linear-gradient(90deg,#ff7ad9,#ffd400); }
 
-#arrowWrap { position: absolute; top: calc(var(--u)*13); left: 50%; transform: translateX(-50%); text-align: center; z-index: 9;
-  display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-#arrow { width: 0; height: 0; margin: 0 auto; border-left: calc(var(--u)*2.2) solid transparent; border-right: calc(var(--u)*2.2) solid transparent; border-bottom: calc(var(--u)*4.5) solid #38e060;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.85)); transform-origin: 50% 80%; transition: border-bottom-color 0.2s; }
-#arrowDist { font-size: calc(var(--u)*2.2); margin-top: calc(var(--u)*0.9); white-space: nowrap;
-  background: rgba(15, 23, 42, 0.88); color: #fff; border: 1.5px solid rgba(255, 255, 255, 0.4);
-  border-radius: 99px; padding: calc(var(--u)*0.35) calc(var(--u)*1.8); box-shadow: 0 4px 12px rgba(0,0,0,0.6); font-weight: 800; letter-spacing: 0.5px; }
+#arrowWrap { position: absolute; top: calc(var(--u)*15); left: 50%; transform: translateX(-50%); text-align: center; }
+#arrow { width: 0; height: 0; margin: 0 auto; border-left: calc(var(--u)*6) solid transparent; border-right: calc(var(--u)*6) solid transparent; border-bottom: calc(var(--u)*13) solid #38e060; filter: drop-shadow(0 0 calc(var(--u)*.4) #000) drop-shadow(0 0 calc(var(--u)*.4) #000) drop-shadow(0 0 calc(var(--u)*.3) #000); }
+#arrowDist { font-size: calc(var(--u)*3.6); margin-top: calc(var(--u)*.6); white-space: nowrap; }
 
 #speedBox { position: absolute; right: calc(var(--u)*3); bottom: calc(var(--u)*3); text-align: right; line-height: 1;
   background: rgba(15, 23, 42, 0.78); border: 2px solid rgba(251, 191, 36, 0.5); border-radius: calc(var(--u)*2);

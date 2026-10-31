@@ -529,9 +529,9 @@ Following strict project aesthetic guidelines (Pokémon HGSS & Tuxemon 2D orthog
 - **Character Designs & Cockpit Integration**:
   - **Totoro (Driver)**: Authentic high-fidelity 3D model posed and calibrated via Blender MCP into an active driving posture behind the steering wheel (`x = 0.42`), with paws gripping the wheel rim, leaning into sharp drifts, and bouncing during stunts.
   - **Moon Walker (Co-Pilot Companion)**: Seated beside Totoro in the front passenger seat (`x = -0.42`), navigating Fuller Road, celebrating drift combos, and waving during drop-offs.
-  - **Dynamic 3D Navigation Arrow & Streamlined HUD**:
-    - Aerodynamic 3D roof arrow hovering smoothly above the cab roof, dynamically orienting in world space toward fares and destinations with tier color-coding (green/yellow/red).
-    - Refined, non-overlapping HUD cards for digital time (`TIME 75.0`), distance tracking pill (`Passenger 120m`), neon art points / fare cards, and boost speedometer.
+  - **Classic Navigation Arrows & HUD**:
+    - High-visibility 3D roof arrow hovering directly above the taxi cab roof, tilted and aimed dynamically toward active passengers and drop-offs with distance-tier color coding (green/yellow/red).
+    - Iconic large overhead HUD directional arrow and real-time distance gauge at the top of the screen guiding high-speed navigation across Dhaka city.
   - **Dhaka Passengers**: Named DU and Dhaka characters appear as fares across the city with custom quotes and destinations (Anamika heading to Star Kebab for mutton kacchi, Ahona heading to Curzon Hall lawn, Apshora heading to Charukola Art Pavilion, Rakin heading to Dhanmondi Lake Pier, Iman heading to Mintu Road Fountain, Mehjabin heading to Shahbagh Flower Market, Baki Bhai heading to Nilkhet Book Alley, Prof. Satyendra heading to Bose Quantum Lab, Manager Shanto heading to Dhaka Cyber Arcade, and Chacha Rafiq heading to Green Meadows Farm).
 - **Audio & Controls**:
   - Real-time Web Audio API multi-channel synthesizers (dynamic engine roar, tire skid screech, horn, voice cries, and 6 rock/punk/funk procedural BGM tracks: Punk Rush, Surf Rock, Ska Punk, Cyber Beat, Garage Rock, Funk Drive).
