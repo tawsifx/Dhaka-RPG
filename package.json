@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:race": "vite --open /race.html",
-    "build": "vite build",
+    "build:brawler": "esbuild src/scenes/minigames/brawler/engine/index.js --bundle --outfile=public/brawler/brawler.bundle.js --format=iife --target=es2020",
+    "build": "npm run build:brawler && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -23,6 +24,7 @@
     "dotenv": "^16.6.1",
     "node-telegram-bot-api": "^0.66.0",
     "phaser": "^3.87.0",
+    "phaser-ce": "2.20.0",
     "three": "^0.186.1",
     "three-mesh-bvh": "0.9.16"
   },

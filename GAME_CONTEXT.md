@@ -503,10 +503,22 @@ export interface ArcadeGameSlot {
 | :--- | :--- | :--- | :--- |
 | `slot_grand_championship` | Deluxe Marquee (128×96 px) | **Slot #1: Grand Championship Cabinet**<br>*Flagship Tournament Dual CRT* | Standby. Plays BIOS v2.4 hardware diagnostic on inspect. |
 | `slot_retro_pixel_a` | Candy Upright (64×80 px) | **Slot #2: Retro Pixel Arcade A**<br>*8-Bit / 16-Bit Platformer / Brawler* | Standby. Microswitch & Sanwa stick calibration report. |
-| `slot_fighting_clash` | Upright Fighter (64×80 px) | **Slot #3: Super Battle Strike DX**<br>*2-Player Competitive Versus Fighter* | Standby. 6-button harness diagnostic report. |
+| `slot_fighting_clash` | Upright Fighter (64×80 px) | **Slot #3: Super Battle Strike DX: Moon Walker & Totoro**<br>*Side-Scrolling Beat-'Em-Up Brawler* | **INSTALLED & PLAYABLE**. Launches retro 8-bit beat-'em-up brawler in isolated CRT modal (`BrawlerEngine.ts` / `brawler.html`). |
 | `slot_cocktail_table` | Glass Tabletop (96×64 px) | **Slot #4: Tabletop Glass Cocktail Lounge**<br>*Sit-Down Strategy / Maze Action* | Standby. Top-down CRT cocktail table diagnostics. |
 | `slot_rhythm_beat` | Dance Stage (80×80 px) | **Slot #5: Beat Mania & Dance Pad Zone**<br>*Rhythm / Dance Stage Simulator* | Standby. 4-way pressure footpad diagnostic report. |
 | `slot_racing_twin` | Twin Cockpit (112×80 px) | **Slot #6: Dhaka Cyber Speed Twin-Cockpit**<br>*Force-Feedback Twin Racing Simulator* | Standby. Steering wheel & pedal calibration report. |
+
+#### Installed Title: Super Battle Strike DX: Moon Walker & Totoro (`BrawlerEngine.ts`)
+- **Origin & Licensing**: Cloned and adapted from Team Kickpunch's open-source classic (`kenamick/game-off-2017`, MIT license credited in `ASSET_CREDITS.md`).
+- **Engine Architecture**: Runs Phaser CE (2.20.0) in an isolated 240×160 retro resolution iframe (`brawler.html` / `public/brawler/brawler.bundle.js`), completely segregated from the main Phaser 3 RPG engine.
+- **Custom Sprites**:
+  - **Moon Walker (Hero)**: 18 custom 48×48 frames with bob hair, straight bangs, collared shirt, suspenders, shorts, socks, and sneakers (`hero_stand_01..04`, `hero_walk_01..03`, `hero_punch_01..03`, `hero_kick_01..03`, `hero_jump_01..03`, `hero_divekick_01`, `hero_hit_01`).
+  - **Totoro (Gloria)**: Big round forest spirit with pointy ears, whiskers, cream belly with `^ ^ ^` chevrons, and iconic wide-open spirit roar frames (`gloria_stand_01..03`, `gloria_angry_01..04`, `gloria_lifted_01..02`).
+  - **Chibi Totoro (Dido)**: Tiny spirit creature scampering across the campus with an acorn (`dog_stand_01`, `dog_sniff_01`, `dog_run_01..03`, `dog_takeleak_01..02`).
+- **Narrative & Dialogues (`dialog1.json`)**: Adapted to Dhaka Valley campus lore—Moon Walker and Totoro enjoying tea at Fuller Road, confronting campus bully Arkian and Nilkhet enforcers, and brawling through 3 difficulty acts culminating in a boss battle.
+- **Sound & Controls**:
+  - **Web Audio 8-bit Synthesis**: Real-time synthesized square waves, noise bursts, frequency sweeps, and chiptune BGM loops (`maintheme`, `act2`, `act3`, `boss`, `fanfare`).
+  - **Controls**: Keyboard (WASD / Arrows to move; J / Z to punch; K / X to kick; Space / C to jump; Esc to exit) and on-screen mobile touch D-Pad and punch/kick/jump buttons.
 
 #### Developer API: Registering New Playable Games
 Developers can plug playable games into any cabinet slot with a single invocation:

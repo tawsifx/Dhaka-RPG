@@ -1,0 +1,96 @@
+[
+  {
+    "id": 0,
+    "character_avatar": "hero",
+    "actor": "Moon Walker",
+    "text": ["Hey Totoro!", "We're finally back on Fuller Road in Dhaka Valley, aren't we?"]
+  },
+  {
+    "id": 1,
+    "character_avatar": "gloria",
+    "actor": "Totoro",
+    "text": ["*Rumble-purr!* [Sniffs happily]", 
+      "The warm scent of Krishnachura blossoms, clay-cup cha, and crispy Naga fuchka!"]
+  },
+  {
+    "id": 2,
+    "character_avatar": "hero",
+    "actor": "Moon Walker",
+    "text": ["We first met right under the Curzon Hall red-brick verandas, remember?", 
+      "Every single memory we forged together here anchors reality itself!"]
+  },
+  {
+    "id": 3,
+    "character_avatar": "gloria",
+    "actor": "Totoro",
+    "text": ["*Nods with giant smile*", "From clay cups at TSC to cycle rickshaw bells, every second with you is eternal!"]
+  },
+  {
+    "id": 4,
+    "character_avatar": "hero",
+    "actor": "Moon Walker",
+    "text": ["Look! Ahead on the street is the Tong-er Mama stall.", 
+      "Let's get five cups of malai cha and two plates of fuchka!"]
+  },
+  {
+    "id": 5,
+    "character_avatar": "gloria",
+    "actor": "Totoro",
+    "text": ["*Licks lips excitedly*"]
+  },
+  {
+    "id": 6,
+    "character_avatar": "hero",
+    "actor": "Moon Walker",
+    "text": ["Alright, let's head down Fuller Road!", 
+      "Hey little spirit! Keep up! Who left that parked rickshaw in the middle of the road?"]
+  },
+  {
+    "id": 7,
+    "character_avatar": "dido",
+    "actor": "Chibi Totoro",
+    "text": ["*Squeak-squeak!* [Bouncing on tires]"]
+  },
+  {
+    "id": 8,
+    "character_avatar": "thug",
+    "actor": "Campus Thug",
+    "text": ["Hey! Get that little creature off my rickshaw tires NOW!", 
+      "Who told you kids you could walk through our street?"]
+  },
+  {
+    "id": 9,
+    "character_avatar": "hero",
+    "actor": "Moon Walker",
+    "text": ["Take it easy, buddy! We're just students enjoying an afternoon date walk."]
+  },
+  {
+    "id": 10,
+    "character_avatar": "arkian",
+    "actor": "Arkian",
+    "text": ["Well, well, well! Look what wandered past Fuller Road.", 
+      "Moon Walker and a giant walking fur-ball!", 
+      "Hand over your Dhaka Cyber Arcade tokens and that giant mascot, little girl!"]
+  },
+  {
+    "id": 11,
+    "character_avatar": "gloria",
+    "actor": "Totoro",
+    "text": ["*ROAAAAR!* [Rumbles angrily]", 
+      "Take one step back! Moon Walker has more kindness, grace, and courage than all of you combined!"]
+  },
+  {
+    "id": 12,
+    "character_avatar": "hero",
+    "actor": "Moon Walker",
+    "text": ["Back off, Arkian!", 
+      "Your days of bullying students and disturbing Dhaka Valley are OVER!"]
+  },
+  {
+    "id": 13,
+    "character_avatar": "arkian",
+    "actor": "Arkian",
+    "text": ["Are they over, Moon Walker?", 
+      "Boys, surround that giant spirit and grab the tokens! Teach this girl a lesson!"]
+  }
+]

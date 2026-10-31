@@ -63,3 +63,12 @@ The 3D model for Totoro (`public/wii/totoro/model.dae`, `tools/character-pipelin
 - **Upstream Repository**: `https://github.com/aaaa1597/react-r3f-tutorial016` (`public/models/Totoro.glb`)
 - **Download Pipeline**: Acquired via multi-channel parallel download manager (`scripts/lib/parallel-download.mjs`).
 - **Processing**: Posed in Blender for kart seating (arms rotated to wheel rim, feet forward into footwell, reclined torso, seat contact origin at `Y = 0.00`), optimized into a single manifold static mesh, UV-mapped to `totoro_all.png`, and exported to Collada `.dae`.
+
+---
+
+## 5. KickPunch / Game-Off-2017 Beat-'Em-Up Arcade Assets
+
+- **Upstream Repository**: [https://github.com/kenamick/game-off-2017](https://github.com/kenamick/game-off-2017)
+- **Authors**: Alexey Vishnyakov (*n3tn0de*), Carlos Braga (*charliiee*), Pavel Antonov (*PsyBack*), Petar Petrov (*petarov*), Will Tonna (*lampeight*)
+- **License**: MIT License ([LICENSE](public/brawler/assets/sprites/LICENSE))
+- **Usage**: Retro 2D Beat-'Em-Up Arcade Cabinet mounted in Dhaka Cyber Arcade (`slot_fighting_clash`), adapted with custom Dhaka Valley campus storylines, dialogues, and custom sprites for Moon Walker and Totoro.

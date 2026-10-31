@@ -2,5 +2,6 @@
 export { RickshawTourEngine } from './RickshawTourEngine';
 export { StargazingEngine } from './StargazingEngine';
 export { LakeBoatEngine } from './LakeBoatEngine';
+export { BrawlerEngine } from './brawler/BrawlerEngine';
 export * from './race';
 

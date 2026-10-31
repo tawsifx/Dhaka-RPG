@@ -14,7 +14,8 @@ export default defineConfig({
     rolldownOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
-        race: path.resolve(__dirname, 'race.html')
+        race: path.resolve(__dirname, 'race.html'),
+        brawler: path.resolve(__dirname, 'brawler.html')
       },
       output: {
         codeSplitting: {

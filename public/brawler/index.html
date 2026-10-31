@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Dhaka Cyber Arcade — Moon Walker & Totoro (Beat-'Em-Up Clash)</title>
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="description" content="Retro 8-bit Beat-'Em-Up arcade brawler inside Dhaka Date RPG." />
+<meta name="theme-color" content="#1f1f1f" />
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0d0f12;
+    background: radial-gradient(circle at center, #1a1e24 0%, #08090b 100%);
+    font-family: "Trebuchet MS", system-ui, sans-serif;
+    user-select: none;
+    -webkit-user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Top Arcade Cabinet Header */
+  #arcade-marquee {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: linear-gradient(180deg, #222933 0%, #11141a 100%);
+    border-bottom: 2px solid #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+  }
+
+  .marquee-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #f3f4f6;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  }
+
+  .badge-retro {
+    background: #ef4444;
+    color: #fff;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .marquee-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .arcade-btn {
+    background: rgba(30, 41, 59, 0.9);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .arcade-btn:hover {
+    background: #fbbf24;
+    color: #0f172a;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  }
+
+  /* CRT Screen Cabinet Bezel */
+  #crt-cabinet {
+    position: relative;
+    width: 92vw;
+    max-width: 780px;
+    aspect-ratio: 3 / 2;
+    background: #1e242c;
+    border: 14px solid #2d3748;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin-top: 24px;
+  }
+
+  /* Glass reflection & scanline shader */
+  #crt-cabinet::before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+    z-index: 10;
+    background-size: 100% 3px, 6px 100%;
+    pointer-events: none;
+    border-radius: 12px;
+  }
+
+  #brawler-screen {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #8b956d;
+  }
+
+  #brawler-screen canvas {
+    display: block;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-crisp-edges;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+  }
+
+  /* Bottom Controls / Keyboard HUD */
+  #control-hint {
+    margin-top: 10px;
+    color: #94a3b8;
+    font-size: 12px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-shadow: 0 1px 2px #000;
+  }
+
+  .key-pill {
+    background: #334155;
+    color: #f8fafc;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    border: 1px solid #475569;
+  }
+
+  /* Mobile Touch Controls */
+  #mobile-touch-panel {
+    display: none;
+    position: fixed;
+    bottom: 12px;
+    left: 0;
+    right: 0;
+    padding: 0 16px;
+    z-index: 90;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  @media (max-width: 820px) {
+    #crt-cabinet {
+      width: 98vw;
+      border-width: 6px;
+      margin-top: 40px;
+      margin-bottom: 90px;
+    }
+    #mobile-touch-panel {
+      display: flex;
+    }
+    #control-hint {
+      display: none;
+    }
+  }
+
+  .touch-group {
+    pointer-events: auto;
+    display: flex;
+    gap: 8px;
+  }
+
+  .dpad-container {
+    display: grid;
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 4px;
+  }
+
+  .touch-btn {
+    background: rgba(30, 41, 59, 0.75);
+    border: 2px solid rgba(148, 163, 184, 0.4);
+    border-radius: 50%;
+    color: #f8fafc;
+    font-weight: bold;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .touch-btn:active {
+    background: #3b82f6;
+    border-color: #60a5fa;
+    transform: scale(0.92);
+  }
+
+  .action-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .btn-action {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .btn-punch { background: rgba(239, 68, 68, 0.8); border-color: #f87171; }
+  .btn-kick { background: rgba(234, 179, 8, 0.8); border-color: #facc15; }
+  .btn-jump { background: rgba(34, 197, 94, 0.8); border-color: #4ade80; }
+</style>
+</head>
+<body>
+
+<!-- Marquee Header -->
+<header id="arcade-marquee">
+  <div class="marquee-title">
+    <span>🕹️ DHAKA CYBER ARCADE</span>
+    <span class="badge-retro">Super Battle Strike DX</span>
+    <span style="opacity: 0.6; font-size: 12px;">Moon Walker & Totoro</span>
+  </div>
+  <div class="marquee-actions">
+    <button class="arcade-btn" id="btn-fullscreen">⛶ Fullscreen</button>
+    <button class="arcade-btn" id="btn-exit" style="color: #ef4444; border-color: #ef4444;">✕ Exit Arcade</button>
+  </div>
+</header>
+
+<!-- CRT Cabinet Frame -->
+<main id="crt-cabinet">
+  <div id="brawler-screen"></div>
+</main>
+
+<!-- Desktop Control Hints -->
+<footer id="control-hint">
+  <div><span class="key-pill">WASD / Arrow Keys</span> Move</div>
+  <div><span class="key-pill">J</span> or <span class="key-pill">Z</span> Punch</div>
+  <div><span class="key-pill">K</span> or <span class="key-pill">X</span> Kick</div>
+  <div><span class="key-pill">Space</span> or <span class="key-pill">C</span> Jump</div>
+  <div><span class="key-pill">Esc</span> Exit</div>
+</footer>
+
+<!-- Mobile Touch Virtual Controls -->
+<div id="mobile-touch-panel">
+  <!-- D-Pad -->
+  <div class="touch-group">
+    <div class="dpad-container">
+      <div></div>
+      <div class="touch-btn" id="vbtn-up" style="border-radius: 8px;">▲</div>
+      <div></div>
+      <div class="touch-btn" id="vbtn-left" style="border-radius: 8px;">◀</div>
+      <div></div>
+      <div class="touch-btn" id="vbtn-right" style="border-radius: 8px;">▶</div>
+      <div></div>
+      <div class="touch-btn" id="vbtn-down" style="border-radius: 8px;">▼</div>
+      <div></div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="touch-group action-container">
+    <button class="touch-btn btn-action btn-punch" id="vbtn-punch">PUNCH<br>(J)</button>
+    <button class="touch-btn btn-action btn-kick" id="vbtn-kick">KICK<br>(K)</button>
+    <button class="touch-btn btn-action btn-jump" id="vbtn-jump">JUMP<br>(SPC)</button>
+  </div>
+</div>
+
+<!-- Virtual Pad State Bridge -->
+<script>
+  window.__BRAWLER_VIRTUAL_PAD = {
+    up: false, down: false, left: false, right: false,
+    punch: false, kick: false, jump: false,
+    punchJustPressed: false, kickJustPressed: false, jumpJustPressed: false
+  };
+
+  function bindTouch(id, key) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const activate = (e) => {
+      e.preventDefault();
+      window.__BRAWLER_VIRTUAL_PAD[key] = true;
+      window.__BRAWLER_VIRTUAL_PAD[key + 'JustPressed'] = true;
+    };
+    const deactivate = (e) => {
+      e.preventDefault();
+      window.__BRAWLER_VIRTUAL_PAD[key] = false;
+    };
+    el.addEventListener('touchstart', activate, { passive: false });
+    el.addEventListener('touchend', deactivate, { passive: false });
+    el.addEventListener('touchcancel', deactivate, { passive: false });
+    el.addEventListener('mousedown', activate);
+    el.addEventListener('mouseup', deactivate);
+    el.addEventListener('mouseleave', deactivate);
+  }
+
+  bindTouch('vbtn-up', 'up');
+  bindTouch('vbtn-down', 'down');
+  bindTouch('vbtn-left', 'left');
+  bindTouch('vbtn-right', 'right');
+  bindTouch('vbtn-punch', 'punch');
+  bindTouch('vbtn-kick', 'kick');
+  bindTouch('vbtn-jump', 'jump');
+
+  // Fullscreen button
+  document.getElementById('btn-fullscreen').addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  });
+
+  // Exit button
+  document.getElementById('btn-exit').addEventListener('click', () => {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'BRAWLER_EXIT' }, '*');
+    } else {
+      window.location.href = '/';
+    }
+  });
+
+  // Global Esc key to exit
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'BRAWLER_EXIT' }, '*');
+      }
+    }
+  });
+</script>
+
+<!-- Phaser CE & Brawler Bundle -->
+<script src="/brawler/phaser.min.js"></script>
+<script src="/brawler/brawler.bundle.js"></script>
+</body>
+</html>

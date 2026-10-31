@@ -12,6 +12,7 @@ import {
 } from '../../config/constants';
 import { ArcadeSlotManager } from '../../systems/arcade/ArcadeSlotManager';
 import { ArcadeCutscenes } from '../quests/ArcadeCutscenes';
+import '../minigames/brawler/BrawlerEngine';
 
 export class InteriorBuilder {
   /**

@@ -17,3 +17,5 @@ tools/character-pipeline/*.blend1
 tools/character-pipeline/*.glb
 .cache
 .cache/**
+.scratch
+.scratch/**
