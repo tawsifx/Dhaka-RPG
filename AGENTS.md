@@ -15,9 +15,9 @@
     - Production build verification: `npm run build`
   - Run full-game test suites (`npm test`, `validate:npc`, combat E2E) only during full-game release sweeps or when 2D overworld systems or shared core configurations are directly modified.
 - **Mandatory Parallel Download System for External Assets**:
-  - Whenever acquiring, importing, or fetching external assets (e.g., from SuperTuxKart SVN, GitHub, Kenney, or remote repositories), never use ad-hoc single-stream `curl`, unmanaged shell downloads, or raw single-connection `fetch()`.
+  - Whenever acquiring, importing, or fetching external assets (e.g., from GitHub, Kenney, Poly Pizza, or remote repositories), never use ad-hoc single-stream `curl`, unmanaged shell downloads, or raw single-connection `fetch()`.
   - Always route asset downloads through the existing parallel download manager:
-    - **Offline scripts & Node pipelines**: Use `downloadFile` or `downloadParallel` from `scripts/lib/parallel-download.mjs`, or add candidate assets to `scripts/race/stk/fetch-stk.mjs` (`STK_FETCH_MANIFEST`).
+    - **Offline scripts & Node pipelines**: Use `downloadFile` or `downloadParallel` from `scripts/lib/parallel-download.mjs`.
     - **Browser runtime & engine pipelines**: Use `ParallelDownloader` (`src/scenes/minigames/race/net/ParallelDownloader.ts`) for multi-channel chunked binary transfers.
   - Maintain security and integrity: ensure remote hosts are included in `DEFAULT_ALLOWED_HOSTS`, destination paths are validated within workspace boundaries, and downloaded assets are recorded with provenance credits in `ASSET_CREDITS.md`.
 

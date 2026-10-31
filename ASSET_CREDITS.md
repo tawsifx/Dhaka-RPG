@@ -4,65 +4,31 @@ This project incorporates third-party art, 3D models, textures, audio, and VFX a
 
 ---
 
-## 1. SuperTuxKart (STK) Assets — Fuller Road Sprint Art Pass (M3.5)
+## 1. Totoro Kart 3D Racing Engine (MarioKart64JS)
 
-The 3D racing mini-game is powered by **MarioKart64JS**, a browser-based recreation of Mario Kart 64 in Three.js with Wii 3D karts and synthesized Web Audio.
+The 3D racing mini-game is powered by **MarioKart64JS / Totoro Kart**, a browser-based recreation of retro kart racing in Three.js with Wii 3D karts, Satsuki & Totoro Ghibli drivers, and synthesized Web Audio:
 
-- **Upstream Repository**: [https://svn.code.sf.net/p/supertuxkart/code/stk-assets](https://svn.code.sf.net/p/supertuxkart/code/stk-assets)
-- **Website**: [https://supertuxkart.net](https://supertuxkart.net)
-- **License Directory**: `public/assets/race/stk/licenses/`
-- **Import Manifest**: `public/assets/race/stk/import-manifest.json`
-
-### Asset Table
-
-| Asset ID | Role / Usage in Fuller Road Sprint | Authors | Upstream License | License Document |
-| :--- | :--- | :--- | :--- | :--- |
-| **stk_modernStreetLamp** | Street lamp posts along Fuller Road sidewalks | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_chineseRedLantern** | Festive hanging red lanterns at start arch & landmarks | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_bench** | University of Dhaka campus benches | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_autumnTree** | Krishnachura canopy avenue (tinted flame red-orange) | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_autumnSmallBush** | Campus boundary shrubs and flower beds | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_asianWoodPost** | Roadside boundary bollards | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_fitchBarrel** | Crash cushion barrels at chicane entries | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_candelaSky** | Candela City sunset skybox panorama | Jean-Manuel Clémençon / DR04 | CC-BY-SA 3.0 | [CC-BY-SA-3.0.txt](public/assets/race/stk/licenses/CC-BY-SA-3.0.txt) |
-| **stk_zengardenRoad** | Zen Garden asphalt road textures | SuperTuxKart Team | CC-BY-SA 3.0 | [CC-BY-SA-3.0.txt](public/assets/race/stk/licenses/CC-BY-SA-3.0.txt) |
-| **stk_haciendaGround** | Brick sidewalk paving & boost arrow meshes | Claude Werner (*bollen*) | CC-BY-SA 3.0 | [CC-BY-SA-3.0.txt](public/assets/race/stk/licenses/CC-BY-SA-3.0.txt) |
-| **stk_tuxWheel** | Articulated rickshaw kart wheels | Julian Schönbächler (*XGhost*) | CC-BY-SA 3.0 | [CC-BY-SA-3.0.txt](public/assets/race/stk/licenses/CC-BY-SA-3.0.txt) |
-| **stk_vfxParticles** | Blue/orange drift sparks, smoke, boost flames | Jean-Manuel Clémençon (*Samuncle*) | CC-BY-SA 4.0 | [CC-BY-SA-4.0.txt](public/assets/race/stk/licenses/CC-BY-SA-4.0.txt) |
-| **stk_musicGarden** | Fuller Road Sprint race loop audio (`garden.ogg`) | DJHelium | CC-BY-SA 3.0 | [CC-BY-SA-3.0.txt](public/assets/race/stk/licenses/CC-BY-SA-3.0.txt) |
+- **Technology**: Three.js WebGL renderer, custom kinematics, 16 Grand Prix circuits + 4 Battle Arenas, and Web Audio API engine/music synthesis.
+- **Wii 3D Karts & Drivers**: Satsuki (Moon Walker), Totoro, Mario, Luigi, Peach, Toad, Yoshi, DK, Wario, and Bowser.
+- **Engine Manual**: Documented in `KART_GAME_CONTEXT.md` and `docs/mariokart64/`.
 
 ---
 
-## 2. Other Third-Party Assets
+## 2. General Third-Party Engines & Libraries
 
-- **Kenney Assets**: Particle textures and UI icons (CC0 1.0 Universal).
-- **Phaser 3**: Phaser game engine (MIT License).
-- **Three.js**: 3D library (MIT License).
-
----
-
-## 3. SuperTuxKart Code & Algorithmic Design (Milestone 5 Items & AI)
-
-Portions of the item probabilities, AI item evaluation heuristics, and projectile kinematics are derived and ported to deterministic TypeScript from **SuperTuxKart**:
-
-- **Upstream Repository**: [https://github.com/supertuxkart/stk-code](https://github.com/supertuxkart/stk-code)
-- **License**: GNU General Public License v2.0 or later (GPL-2.0+)
-- **Components Ported**:
+- **Kenney Assets**: Particle textures, UI icons, and audio elements (CC0 1.0 Universal).
+- **Phaser 3**: Phaser 2D game engine (MIT License).
+- **Three.js**: 3D WebGL graphics library (MIT License).
 
 ---
 
-## 4. Crazy Taxi (Boing Taxi) by Ruteshisu
+## 3. Crazy Taxi (Boing Taxi) by Ruteshisu
 
 The 3D driving arcade simulator in Dhaka Cyber Arcade (`slot_racing_twin`) is adapted and localized from **Crazy Taxi** (Boing Taxi) by Ruteshisu:
 - **Upstream Repository**: [https://github.com/Ruteshisu/CrazyTaxi](https://github.com/Ruteshisu/CrazyTaxi)
 - **Author**: Ruteshisu
 - **Integration**: Localized to English and themed for Dhaka Date RPG (featuring Moon Walker as driver, Totoro as co-pilot companion, and Dhaka university characters as passengers).
 - **Audio & 3D**: Self-contained Three.js procedural geometry and Web Audio API real-time sound synthesis.
-  - `data/powerup.xml`: 1000-sum probability distribution across 8 positions (ported into `src/config/itemWeights.race.json`).
-  - `src/items/powerup_manager.cpp`: Item collection, roulette cooldown timer, and probability scaling.
-  - `src/items/flyable.cpp`: Projectile flight constants, wall bounce mechanics, and homing kite tracking.
-  - `src/karts/controller/skidding_ai.cpp`: AI item usage decision logic, forward targeting cone angle/distance thresholds, and defensive rear-firing checks (ported into `src/scenes/minigames/race/ai/ItemBrain.ts`).
-  - `src/animations/explosion_animation.cpp`: Hit reaction pitch tumble and speed scrub constants (ported into `src/scenes/minigames/race/core/HitReaction.ts`).
 
 ---
 
