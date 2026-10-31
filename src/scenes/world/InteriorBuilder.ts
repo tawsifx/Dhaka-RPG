@@ -13,6 +13,7 @@ import {
 import { ArcadeSlotManager } from '../../systems/arcade/ArcadeSlotManager';
 import { ArcadeCutscenes } from '../quests/ArcadeCutscenes';
 import '../minigames/brawler/BrawlerEngine';
+import '../minigames/crazytaxi/CrazyTaxiEngine';
 
 export class InteriorBuilder {
   /**

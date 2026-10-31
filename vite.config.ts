@@ -15,7 +15,8 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         race: path.resolve(__dirname, 'race.html'),
-        brawler: path.resolve(__dirname, 'brawler.html')
+        brawler: path.resolve(__dirname, 'brawler.html'),
+        crazytaxi: path.resolve(__dirname, 'crazytaxi.html')
       },
       output: {
         codeSplitting: {

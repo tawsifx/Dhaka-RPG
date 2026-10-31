@@ -48,6 +48,16 @@ Portions of the item probabilities, AI item evaluation heuristics, and projectil
 - **Upstream Repository**: [https://github.com/supertuxkart/stk-code](https://github.com/supertuxkart/stk-code)
 - **License**: GNU General Public License v2.0 or later (GPL-2.0+)
 - **Components Ported**:
+
+---
+
+## 4. Crazy Taxi (Boing Taxi) by Ruteshisu
+
+The 3D driving arcade simulator in Dhaka Cyber Arcade (`slot_racing_twin`) is adapted and localized from **Crazy Taxi** (Boing Taxi) by Ruteshisu:
+- **Upstream Repository**: [https://github.com/Ruteshisu/CrazyTaxi](https://github.com/Ruteshisu/CrazyTaxi)
+- **Author**: Ruteshisu
+- **Integration**: Localized to English and themed for Dhaka Date RPG (featuring Moon Walker as driver, Totoro as co-pilot companion, and Dhaka university characters as passengers).
+- **Audio & 3D**: Self-contained Three.js procedural geometry and Web Audio API real-time sound synthesis.
   - `data/powerup.xml`: 1000-sum probability distribution across 8 positions (ported into `src/config/itemWeights.race.json`).
   - `src/items/powerup_manager.cpp`: Item collection, roulette cooldown timer, and probability scaling.
   - `src/items/flyable.cpp`: Projectile flight constants, wall bounce mechanics, and homing kite tracking.

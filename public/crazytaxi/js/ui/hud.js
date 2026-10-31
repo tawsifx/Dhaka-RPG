@@ -1,0 +1,197 @@
+/* HUD: DOMオーバーレイ(時間/得点/コンボ/方向矢印/速度/ミニマップ/ポップアップ/バナー/客のセリフ)。
+   サイズ指定は vmin 基準(CSS側)なので解像度に依存しない */
+(function () {
+  'use strict';
+  const CT = (window.CT = window.CT || {});
+  const U = CT.util;
+  const $ = (id) => document.getElementById(id);
+
+  const CUSTOMER_LINES = {
+    hit: [
+      'Whoa whoa whoa!',
+      'Watch out for the rickshaws!',
+      'Did we just jump over Curzon Hall?!',
+      'Are they okay?!',
+      'Moon Walker, ease up on the gas!',
+      'Totoro approves this speed!',
+      'Subhanallah, what a leap!',
+      "I'm pretending I didn't see that..."
+    ],
+    drift: [
+      'INSANE DRIFT!',
+      'Full Dhaka Drift on Fuller Road!',
+      'Yaaaas! Hang on!',
+      'Master of the handbrake!'
+    ],
+    pickup: [
+      'Take me across Dhaka!',
+      'Step on the gas!',
+      'Hurry, my biryani is getting cold!',
+      'To the campus, fast!'
+    ],
+    crash: [
+      'Ouch! Watch the curb!',
+      'Not the Curzon brick wall!',
+      'My neck! Ease on the brakes!'
+    ],
+    deliver: [
+      "Dhaka's fastest cab! Thank you!",
+      '5 stars for Moon Walker!',
+      'Pure adrenaline! Here is a huge tip!',
+      'You drive like a true champion!'
+    ],
+  };
+
+  const HUD = (CT.HUD = {
+    popups: [], chatT: 0, lastChat: 0,
+    init(camera) {
+      this.cam = camera;
+      this.el = { time: $('timeVal'), art: $('artVal'), fare: $('fareVal'), comboBox: $('combo'), comboNum: $('comboNum'), mult: $('multVal'), comboBar: $('comboBar'),
+        arrow: $('arrow'), arrowDist: $('arrowDist'), arrowWrap: $('arrowWrap'), speed: $('speedVal'), boost: $('boostBar'), popups: $('popups'), banner: $('banner'),
+        chat: $('chat'), skyMark: $('skyMark'), speedlines: $('speedlines'), title: $('title'), result: $('result'), hud: $('hud'), mini: $('minimap'), timeBox: $('time'), driftBox: $('driftBox'), driftVal: $('driftVal') };
+      this._bind();
+    },
+    _bind() {
+      const bus = CT.bus;
+      bus.on('art:add', (e) => this.onArt(e));
+      bus.on('pickup', (e) => {
+        const text = e.char ? (e.char.name + ': "' + (e.char.pickupLine || 'Step on it!') + '"') : 'PASSENGER ON BOARD! HEAD TO DESTINATION!';
+        this.banner(text, 'good', 2200);
+        this.say('pickup');
+      });
+      bus.on('deliver', (e) => {
+        this.banner(e.rating + '  +৳' + (e.money + e.tip).toLocaleString() + '  +' + e.timeBonus + 's', 'gold', 2600);
+        this.pop3d('+' + e.timeBonus + 's', e.x, 4, e.z, 'pop-time');
+        this.say('deliver');
+      });
+      bus.on('bgm:track', (e) => this.bgmName(e.name));
+      bus.on('fare:react', (e) => this.pop3d(e.label, e.x, 3.2, e.z, 'pop-small'));
+      bus.on('ped:hit', (e) => { if (e.cry) this.pop3d(e.cry.text, e.x, 3.4 + (e.level || 0) * 0.4, e.z, 'pop-cry'); this.say('hit', 0.55); if ((e.level || 0) >= 3) this.flash(); });
+      bus.on('crash', (e) => { if (e.power > 0.35) this.say('crash', 0.6); });
+      bus.on('ped:apex', (e) => this.pop3d('SPARKLE☆', e.x, e.y, e.z, 'pop-star'));
+    },
+    bgmName(name) { const b = $('bgmName'); if (!b) return; b.textContent = '♪ ' + name; b.className = 'show'; clearTimeout(this._bn); this._bn = setTimeout(() => { b.className = ''; }, 4000); },
+    flash() { const f = document.getElementById('flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); },
+    setMode(m) {
+      document.body.dataset.mode = m;
+    },
+    onArt(e) {
+      if (e.x === undefined) return;
+      const cls = { hit: 'pop-hit lv' + (e.level || 0), jump: 'pop-jump', car: 'pop-car', land: 'pop-land', wall: 'pop-wall', drift: 'pop-drift', speed: 'pop-small', prop: 'pop-small' }[e.kind] || 'pop-small';
+      let txt = e.label;
+      if (e.kind === 'hit') txt = e.label + ' +' + e.pts + (e.mult > 1 ? ' ×' + e.mult : '');
+      else txt = e.label + ' +' + e.pts;
+      this.pop3d(txt, e.x, e.y, e.z, cls);
+    },
+    /** ワールド座標に追従するポップアップ */
+    pop3d(text, x, y, z, cls) {
+      if (this.popups.length > 16) { const o = this.popups.shift(); o.el.remove(); }
+      const el = document.createElement('div'); el.className = 'pop ' + (cls || ''); el.textContent = text;
+      el.style.setProperty('--rot', U.rand(-7, 7).toFixed(1) + 'deg');
+      this.el.popups.appendChild(el);
+      const o = { el, x, y, z, t: 0, life: cls === 'pop-small' ? 1.1 : 1.9 };
+      this.popups.push(o); this._place(o);
+    },
+    _place(o) {
+      const v = this._v = this._v || new THREE.Vector3();
+      v.set(o.x, o.y + o.t * 2.4, o.z).project(this.cam);
+      if (v.z > 1) { o.el.style.display = 'none'; return; }
+      o.el.style.display = '';
+      o.el.style.left = ((v.x * 0.5 + 0.5) * 100) + '%'; o.el.style.top = ((-v.y * 0.5 + 0.5) * 100) + '%';
+    },
+    banner(text, cls, ms) {
+      const b = this.el.banner; b.textContent = text; b.className = 'show ' + (cls || '');
+      clearTimeout(this._bt); this._bt = setTimeout(() => { b.className = ''; }, ms || 1500);
+    },
+    say(kind, prob) {
+      if (document.body.dataset.mode === 'result') return;
+      if (prob !== undefined && Math.random() > prob) return;
+      const now = performance.now(); if (now - this.lastChat < 1400) return; this.lastChat = now;
+      const c = this.el.chat; c.textContent = U.pick(CUSTOMER_LINES[kind]); c.className = 'show';
+      clearTimeout(this._ct); this._ct = setTimeout(() => { c.className = ''; }, 1700);
+    },
+    showResult(d) {
+      this.el.result.innerHTML =
+        '<div class="rbox"><div class="rtitle">TIME UP!</div>' +
+        '<div class="rrank">' + d.rank + '</div>' +
+        '<div class="rrow"><span>ART POINTS</span><b>' + d.art.toLocaleString() + '</b></div>' +
+        '<div class="rrow"><span>FARE</span><b>৳' + d.money.toLocaleString() + '</b></div>' +
+        '<div class="rrow big"><span>TOTAL</span><b>৳' + d.total.toLocaleString() + '</b></div>' +
+        '<div class="rsub">Pedestrians Launched: ' + d.hits + ' / Max Combo: ' + d.maxCombo + ' / Peak Height: ' + Math.round(d.bestHeight) + 'm / Fares Delivered: ' + d.deliveries + '</div>' +
+        '<div class="rhint">ENTER / SPACE / TAP TO PLAY AGAIN</div></div>';
+    },
+
+    /** 毎フレーム */
+    update(dt, s) {
+      const e = this.el;
+      e.time.textContent = Math.max(0, s.time).toFixed(1);
+      e.timeBox.classList.toggle('warn', s.time < 10 && s.mode === 'play');
+      e.art.textContent = Math.round(s.score.art).toLocaleString();
+      e.fare.textContent = Math.round(s.score.money).toLocaleString();
+      const cb = s.score;
+      if (cb.combo > 1) { e.comboBox.classList.add('on'); e.comboNum.textContent = cb.combo; e.mult.textContent = '×' + cb.mult; e.comboBar.style.width = (cb.comboTimer / CT.config.score.comboWindow * 100) + '%'; }
+      else e.comboBox.classList.remove('on');
+      e.speed.textContent = Math.round(s.taxi.totalSpeed * 3.6);
+      e.boost.style.width = (s.taxi.boost * 100) + '%';
+      e.speedlines.style.opacity = U.clamp((s.taxi.totalSpeed - 24) / 16, 0, 0.85);
+      if (s.score.driftNow > 20) { e.driftBox.classList.add('on'); e.driftVal.textContent = Math.round(s.score.driftNow); } else e.driftBox.classList.remove('on');
+      // 方向矢印
+      const t = s.target;
+      if (t) {
+        const dx = t.x - s.taxi.x, dz = t.z - s.taxi.z, d = Math.hypot(dx, dz);
+        const camAng = s.camAngle;
+        // 画面上の向き: カメラ前方に対する相対角
+        const a = Math.atan2(dx, dz) - camAng;
+        e.arrow.style.transform = 'rotate(' + (-a * 180 / Math.PI) + 'deg)';
+        e.arrow.style.borderBottomColor = '#' + ('000000' + t.color.toString(16)).slice(-6);
+        e.arrowDist.textContent = (t.kind === 'dest' ? 'Destination ' : 'Passenger ') + Math.round(d) + 'm';
+        e.arrowWrap.style.display = '';
+      } else e.arrowWrap.style.display = 'none';
+      // ポップアップ追従
+      for (let i = this.popups.length - 1; i >= 0; i--) {
+        const o = this.popups[i]; o.t += dt;
+        if (o.t > o.life) { o.el.remove(); this.popups.splice(i, 1); continue; }
+        this._place(o);
+      }
+      // 画面外(上空)の通行人マーカー
+      const hi = s.highRig;
+      if (hi && hi.y > 6) {
+        const v = this._v2 = this._v2 || new THREE.Vector3(); v.set(hi.x, hi.y, hi.z).project(this.cam);
+        if (v.y > 0.92 && v.z < 1) { e.skyMark.style.display = 'block'; e.skyMark.style.left = U.clamp((v.x * 0.5 + 0.5) * 100, 5, 95) + '%'; e.skyMark.textContent = '↑ ' + Math.round(hi.y) + 'm'; }
+        else e.skyMark.style.display = 'none';
+      } else e.skyMark.style.display = 'none';
+      this.drawMinimap(s);
+    },
+
+    /* ---- ミニマップ ---- */
+    initMinimap(world) {
+      this.world = world;
+      const c = this.el.mini, S = c.width = c.height = 320; this.mctx = c.getContext('2d');
+      const bg = (this.mbg = document.createElement('canvas')); bg.width = bg.height = S;
+      const g = bg.getContext('2d'), ext = world.half + world.R / 2 + 4, k = S / (2 * ext);
+      this.mk = k; this.mext = ext;
+      g.fillStyle = '#1b2433'; g.fillRect(0, 0, S, S);
+      g.strokeStyle = '#ff5a5a'; g.lineWidth = 3; const e0 = (-world.half + ext) * k, e1 = (world.half + ext) * k; g.strokeRect(e0, e0, e1 - e0, e1 - e0);
+      const ZC = { park: '#3b8c4c', lake: '#2f7fc0', stadium: '#c8503f', amuse: '#c060c0', shrine: '#b08a5a', beach: '#d8c680', industrial: '#6a6c70', house: '#5a6b7b', tower: '#e0a030', downtown: '#7a86a0', city: '#4a566b' };
+      for (const b of world.blocks) {
+        g.fillStyle = ZC[b.type] || '#4a566b';
+        g.fillRect((b.cx - world.B / 2 + ext) * k, (b.cz - world.B / 2 + ext) * k, world.B * k, world.B * k);
+      }
+    },
+    drawMinimap(s) {
+      if (!this.mctx) return;
+      const g = this.mctx, S = 320, k = this.mk, ext = this.mext, X = (x) => (x + ext) * k;
+      g.drawImage(this.mbg, 0, 0);
+      const t = s.target;
+      if (s.fare) {
+        for (const sp of s.fare.spots) { g.fillStyle = '#' + ('000000' + sp.tier.color.toString(16)).slice(-6); g.beginPath(); g.arc(X(sp.x), X(sp.z), 5, 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.stroke(); }
+        if (s.fare.dest) { g.fillStyle = '#fff'; g.beginPath(); g.arc(X(s.fare.dest.x), X(s.fare.dest.z), 7, 0, 7); g.fill(); g.fillStyle = '#' + ('000000' + s.fare.current.tier.color.toString(16)).slice(-6); g.beginPath(); g.arc(X(s.fare.dest.x), X(s.fare.dest.z), 4.5, 0, 7); g.fill(); }
+      }
+      // タクシー
+      const tx = X(s.taxi.x), tz = X(s.taxi.z);
+      g.save(); g.translate(tx, tz); g.rotate(-s.taxi.h);
+      g.fillStyle = '#ffd400'; g.strokeStyle = '#000'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, 9); g.lineTo(-6, -7); g.lineTo(6, -7); g.closePath(); g.fill(); g.stroke(); g.restore();
+      void t;
+    },
+  });
+})();

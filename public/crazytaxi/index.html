@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script>
+  if (window.location.hostname.includes('vercel.app')) {
+    window.location.replace('https://moon-walkers-day.pages.dev' + window.location.pathname + window.location.search + window.location.hash);
+  }
+</script>
+<title>Dhaka Cyber Arcade — Dhaka Crazy Taxi: Rush Hour (Moon Walker & Totoro)</title>
+<link rel="icon" type="image/png" href="/icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1030">
+<link rel="stylesheet" href="/crazytaxi/css/style.css">
+<style>
+  /* Arcade Cabinet Header */
+  #arcade-marquee {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(180deg, rgba(26, 32, 44, 0.95) 0%, rgba(15, 23, 42, 0.85) 100%);
+    border-bottom: 2px solid #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    z-index: 100000;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.7);
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+  .marquee-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge-slot {
+    background: #f59e0b;
+    color: #111;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .marquee-name {
+    color: #f3f4f6;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+  }
+  .marquee-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .arcade-btn {
+    background: rgba(30, 41, 59, 0.9);
+    color: #fbbf24;
+    border: 1px solid rgba(251, 191, 36, 0.5);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .arcade-btn:hover {
+    background: #fbbf24;
+    color: #0f172a;
+  }
+  .arcade-btn.btn-exit {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+  .arcade-btn.btn-exit:hover {
+    background: #ef4444;
+    color: #fff;
+  }
+  /* Push HUD slightly down so marquee does not overlap time/score */
+  #time { top: calc(var(--u) * 2.4 + 40px) !important; }
+  #scorebox { top: calc(var(--u) * 2.4 + 40px) !important; }
+  #title .logo { top: calc(var(--u) * 5 + 40px) !important; }
+</style>
+</head>
+<body data-mode="attract">
+<!-- Top Cabinet Marquee -->
+<div id="arcade-marquee">
+  <div class="marquee-left">
+    <span class="badge-slot">Twin-Cockpit #6</span>
+    <span class="marquee-name">🚕 DHAKA CRAZY TAXI: RUSH HOUR</span>
+  </div>
+  <div class="marquee-actions">
+    <button class="arcade-btn" id="btn-audio" onclick="if(window.CT&&window.CT.Audio){const m=window.CT.Audio.toggleMute();this.innerText=m?'🔇 Muted':'🔊 Sound';}">🔊 Sound</button>
+    <button class="arcade-btn btn-exit" id="btn-exit">✕ Exit Cabinet (ESC)</button>
+  </div>
+</div>
+
+<div id="stage">
+  <canvas id="gl"></canvas>
+  <div id="speedlines"></div>
+  <div id="flash"></div>
+  <div id="hud">
+    <div id="time" class="gameonly"><span class="lbl">TIME</span><span id="timeVal">75.0</span></div>
+    <div id="scorebox"><div class="lbl stroke">ART POINTS</div><div id="artVal" class="stroke">0</div><div class="sub stroke">FARE ৳<span id="fareVal">0</span></div></div>
+    <div id="combo"><span id="comboNum" class="stroke">0</span><small class="stroke">COMBO</small><span id="multVal" class="stroke">×1</span><div class="bar"><i id="comboBar"></i></div></div>
+    <div id="arrowWrap"><div id="arrow"></div><div id="arrowDist" class="stroke"></div></div>
+    <div id="driftBox" class="stroke gameonly">DRIFT <span id="driftVal">0</span></div>
+    <div id="speedBox"><span id="speedVal" class="stroke">0</span><small class="stroke">km/h</small><div class="gauge"><i id="boostBar"></i></div></div>
+    <canvas id="minimap"></canvas>
+    <div id="skyMark"></div>
+    <div id="popups"></div>
+    <div id="chat"></div>
+    <div id="banner"></div>
+    <div id="bgmName"></div>
+  </div>
+  <div id="title">
+    <div class="demo">DEMO PLAY</div>
+    <div class="logo"><div class="l1 stroke">DHAKA TAXI</div><div class="l2 stroke">CRAZY RUSH HOUR</div></div>
+    <div class="press stroke"><span class="pc">PRESS ANY KEY</span><span class="tc">TAP TO START</span></div>
+    <div class="keys">WASD / ↑↓←→: Steer & Drive · SPACE: Drift · SHIFT: Nitro Boost · H: Horn · M: Mute · ESC: Exit</div>
+  </div>
+  <div id="ver">Dhaka Cyber Arcade Edition · Twin-Cockpit Cab · Moon Walker & Totoro</div>
+  <div id="result"></div>
+  <div id="fps"></div>
+</div>
+<div id="touch">
+  <div class="tg left"><button data-k="left" aria-label="Left">◀</button><button data-k="right" aria-label="Right">▶</button></div>
+  <div class="tg right"><button data-k="boost" class="sm">BOOST</button><button data-k="drift" class="sm">DRIFT</button><button data-k="brake" class="sm">BACK</button><button data-k="gas" class="big">GO!</button></div>
+</div>
+<div id="rotate">📱 Please rotate device to landscape</div>
+<div id="loading">Starting Dhaka Crazy Taxi...</div>
+
+<script>
+  // Exit handler for arcade cabinet
+  document.getElementById('btn-exit').addEventListener('click', () => {
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'CRAZYTAXI_EXIT' }, '*');
+    } else {
+      window.location.href = '/';
+    }
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'CRAZYTAXI_EXIT' }, '*');
+      }
+    }
+  });
+</script>
+
+<!-- Three.js (Local offline bundle with CDN fallback) -->
+<script src="/crazytaxi/lib/three.min.js"></script>
+<script>
+  if (!window.THREE) {
+    document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+  }
+</script>
+
+<!-- Dhaka Crazy Taxi Engine Modules -->
+<script src="/crazytaxi/js/core/util.js"></script>
+<script src="/crazytaxi/js/core/config.js"></script>
+<script src="/crazytaxi/js/core/input.js"></script>
+<script src="/crazytaxi/js/core/audio.js"></script>
+<script src="/crazytaxi/js/models/models.js"></script>
+<script src="/crazytaxi/js/world/city.js"></script>
+<script src="/crazytaxi/js/entities/taxi.js"></script>
+<script src="/crazytaxi/js/entities/gags.js"></script>
+<script src="/crazytaxi/js/entities/ragdoll.js"></script>
+<script src="/crazytaxi/js/entities/pedestrian.js"></script>
+<script src="/crazytaxi/js/entities/props.js"></script>
+<script src="/crazytaxi/js/entities/traffic.js"></script>
+<script src="/crazytaxi/js/systems/effects.js"></script>
+<script src="/crazytaxi/js/systems/score.js"></script>
+<script src="/crazytaxi/js/systems/fare.js"></script>
+<script src="/crazytaxi/js/systems/camera.js"></script>
+<script src="/crazytaxi/js/ai/driver.js"></script>
+<script src="/crazytaxi/js/ui/hud.js"></script>
+<script src="/crazytaxi/js/game.js"></script>
+<script src="/crazytaxi/js/main.js"></script>
+</body>
+</html>
