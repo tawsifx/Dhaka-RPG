@@ -627,28 +627,49 @@ export class InteriorBuilder {
 
     // 4. Neon Wall Signs
     scene.add.sprite(640, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
-    scene.add.sprite(320, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
-    scene.add.sprite(960, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
+    scene.add.sprite(280, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
+    scene.add.sprite(1000, 95, 'prop-arcade-neon-sign').setOrigin(0.5, 1).setDepth(96);
 
-    // 5. Arcade Game Slots (Architecture Ready - Handled by ArcadeSlotManager)
+    // 5. Arcade Game Slots & Stations (Powered by External Kenney CC0 Mini Arcade Assets)
+    // --- Center Tournament Stage ---
     // Slot 1: Grand Championship DX
-    addLandmark(640, 288, 'prop-arcade-cab-deluxe', 120, 48);
+    addLandmark(640, 288, 'prop-arcade-cab-deluxe', 124, 48);
     registerInteract(640, 290, null, 'Slot #1: Grand Championship DX 🕹️', 85, () => {
       ArcadeSlotManager.interactWithSlot('slot_grand_championship', scene);
     });
 
+    // --- West Wing: Retro Arcade Alley ---
+    // Retro Pinball Machine
+    addLandmark(160, 352, 'prop-arcade-pinball', 64, 40);
+    registerInteract(160, 354, null, 'Retro Cyber Pinball ⚡', 80, () => {
+      SoundEngine.starChime();
+      UI.showToast('⚡', 'TILT! Cyber Pinball', 'Silverball multiball combo! High score achieved!');
+    });
+
     // Slot 2: Retro Upright Pixel Cabinet A
-    addLandmark(280, 352, 'prop-arcade-cab-upright-a', 60, 40);
+    addLandmark(280, 352, 'prop-arcade-cab-upright-a', 64, 40);
     registerInteract(280, 354, null, 'Slot #2: Pixel Arcade A 🕹️', 80, () => {
       ArcadeSlotManager.interactWithSlot('slot_retro_pixel_a', scene);
     });
 
+    // Guest Gamer playing at Slot #2
+    const gamer1 = scene.add.sprite(250, 380, 'npc-gamer-0').setOrigin(0.5, 1).setDepth(380);
+    scene.tweens.add({
+      targets: gamer1,
+      y: { from: 380, to: 378 },
+      duration: 350,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
     // Slot 3: Strike Clash DX Fighting Cab
-    addLandmark(400, 352, 'prop-arcade-cab-upright-b', 60, 40);
+    addLandmark(400, 352, 'prop-arcade-cab-upright-b', 64, 40);
     registerInteract(400, 354, null, 'Slot #3: Super Strike DX ⚔️', 80, () => {
       ArcadeSlotManager.interactWithSlot('slot_fighting_clash', scene);
     });
 
+    // --- Central Lounge & Tabletop Zone ---
     // Slot 4: Tabletop Glass Cocktail Table Lounge
     addLandmark(640, 560, 'prop-arcade-cab-cocktail', 90, 44);
     scene.add.sprite(588, 560, 'prop-arcade-stool').setOrigin(0.5, 1).setDepth(560);
@@ -657,64 +678,111 @@ export class InteriorBuilder {
       ArcadeSlotManager.interactWithSlot('slot_cocktail_table', scene);
     });
 
+    // Air Hockey Table
+    addLandmark(440, 560, 'prop-arcade-airhockey', 96, 44);
+    registerInteract(440, 562, null, 'Pro Air Hockey Arena 🏒', 80, () => {
+      SoundEngine.select();
+      UI.showToast('🏒', 'Air Hockey Goal!', 'Lightning puck rebound into the pocket!');
+    });
+
+    // --- East Wing: Rhythm, Sports & Twin Driving ---
     // Slot 5: Dance Beat Mania Rhythm Zone
-    addLandmark(880, 352, 'prop-arcade-cab-dance', 76, 44);
-    registerInteract(880, 354, null, 'Slot #5: Dance Mania Stage 💃', 80, () => {
+    addLandmark(860, 352, 'prop-arcade-cab-dance', 80, 44);
+    registerInteract(860, 354, null, 'Slot #5: Dance Mania Stage 💃', 80, () => {
       ArcadeSlotManager.interactWithSlot('slot_rhythm_beat', scene);
     });
 
-    // Slot 6: Twin Cockpit Force-Feedback Racing
-    addLandmark(1040, 352, 'prop-arcade-cab-racing', 108, 48);
-    registerInteract(1040, 354, null, 'Slot #6: Dhaka Cyber Speed 🏎️', 85, () => {
+    // Guest Gamer dancing on the stage
+    const gamer2 = scene.add.sprite(895, 385, 'npc-gamer-1').setOrigin(0.5, 1).setDepth(385);
+    scene.tweens.add({
+      targets: gamer2,
+      scaleX: { from: 1, to: -1 },
+      duration: 600,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Linear'
+    });
+
+    // Slot 6: Twin Cockpit Force-Feedback Racing (Crazy Taxi simulator)
+    addLandmark(1010, 352, 'prop-arcade-cab-racing', 108, 48);
+    registerInteract(1010, 354, null, 'Slot #6: Dhaka Cyber Speed 🏎️', 85, () => {
       ArcadeSlotManager.interactWithSlot('slot_racing_twin', scene);
     });
 
-    // 6. Arcade Attractions: Token Machine & Claw Machine
-    // Token Dispenser
-    addLandmark(760, 720, 'prop-arcade-token-dispenser', 36, 32);
-    registerInteract(760, 722, null, 'Token Exchange Dispenser 🪙', 75, () => {
-      ArcadeCutscenes.playTokenDispenser(scene);
+    // Basketball Hoop Shootout
+    addLandmark(1140, 352, 'prop-arcade-basketball', 76, 44);
+    registerInteract(1140, 354, null, 'Hoop Fever Shootout 🏀', 80, () => {
+      SoundEngine.itemFanfare();
+      UI.showToast('🏀', 'SWISH!', 'Buzzer-beater 3-pointer! Bonus tickets dispensed!');
     });
 
-    // Prize Claw Crane Machine
-    addLandmark(860, 720, 'prop-arcade-claw', 60, 40);
-    registerInteract(860, 722, null, 'Lucky Neon Claw Machine 🧸', 80, () => {
-      ArcadeCutscenes.playClawMachineCutscene(scene, 860, 720);
+    // --- South Wing: Prize Corner, Refreshments & Manager Desk ---
+    // Tokyo Neon Snack & Soda Vending Machine
+    addLandmark(360, 720, 'prop-arcade-vending', 52, 36);
+    registerInteract(360, 722, null, 'Cyber Soda & Treats 🥤', 80, () => {
+      SoundEngine.select();
+      UI.showToast('🥤', 'Ice Cold Cyber Cola', 'Refreshing fizz restores Moon Walker & Totoro energy!');
     });
 
-    // 7. Manager Shanto Counter & Station
-    blockRect(480, 720, 60, 32);
-    registerInteract(520, 724, 'npc-shanto-0', 'Manager Shanto (Arcade Master)', 90, () => {
+    // Manager Shanto Front Desk Counter
+    blockRect(500, 720, 80, 32);
+    scene.add.sprite(480, 706, 'prop-arcade-cash-register').setOrigin(0.5, 1).setDepth(706);
+    registerInteract(525, 724, 'npc-shanto-0', 'Manager Shanto (Arcade Master)', 90, () => {
       SoundEngine.select();
       UI.startDialogue([
         {
           speaker: 'Manager Shanto',
           portrait: '🕹️',
-          text: 'Hey there, champions! Welcome to Dhaka Cyber Arcade. Every single machine here is powered by modular software slots.'
+          text: 'Welcome, champions, to the revamped Dhaka Cyber Arcade! Notice the new machines? We just imported authentic tournament cabinets, pinball tables, and dance pads!'
         },
         {
           speaker: 'Totoro',
           portrait: '🐾',
-          text: 'Can we play games on them, Manager Shanto?'
+          text: 'Everything looks so crisp and vibrant! Can we play the claw crane and race cars?'
         },
         {
           speaker: 'Manager Shanto',
           portrait: '🕹️',
-          text: 'The architecture is fully built and ready! As soon as Moon Walker registers a custom mini-game via ArcadeSlotManager, the cabinets come alive! In the meantime, feel free to inspect their diagnostics or test your skills on the Lucky Claw Crane!'
+          text: 'Absolutely! Hop into Slot #6 for Crazy Taxi, Slot #3 for KickPunch fighting, test your luck on the Lucky Claw Crane, or spin the Fortune Wheel!'
         }
       ]);
     });
 
-    // 8. Dynamic Neon Lighting Halos
+    // Token Dispenser Station
+    addLandmark(720, 720, 'prop-arcade-token-dispenser', 42, 32);
+    registerInteract(720, 722, null, 'Token Exchange Dispenser 🪙', 75, () => {
+      ArcadeCutscenes.playTokenDispenser(scene);
+    });
+
+    // Prize Claw Crane Machine
+    addLandmark(830, 720, 'prop-arcade-claw', 64, 40);
+    registerInteract(830, 722, null, 'Lucky Neon Claw Machine 🧸', 80, () => {
+      ArcadeCutscenes.playClawMachineCutscene(scene, 830, 720);
+    });
+
+    // Lucky Fortune Spin Wheel
+    addLandmark(940, 720, 'prop-arcade-wheel', 52, 36);
+    registerInteract(940, 722, null, 'Lucky Fortune Spin Wheel 🎡', 80, () => {
+      SoundEngine.levelUp();
+      DateState.arcadeTokens = (DateState.arcadeTokens || 0) + 1;
+      UI.showToast('🎡', 'Lucky Spin!', 'The wheel stopped on GOLD! +1 Arcade Token awarded!');
+    });
+
+    // 8. Dynamic Neon Lighting Halos (Vibrant Cyber Halos matching each machine)
     [
-      [640, 260, 0x00ffff, 90, 0.22],
-      [280, 320, 0x00ffff, 70, 0.18],
-      [400, 320, 0xff0055, 70, 0.18],
-      [640, 540, 0xfde047, 80, 0.18],
-      [880, 320, 0xff007f, 75, 0.20],
-      [1040, 320, 0x00f0ff, 85, 0.22],
-      [860, 680, 0xf43f5e, 70, 0.20],
-      [760, 680, 0xf59e0b, 60, 0.16]
+      [640, 260, 0x00ffff, 95, 0.25], // Deluxe Cab cyan halo
+      [160, 320, 0xf59e0b, 65, 0.20], // Pinball amber halo
+      [280, 320, 0x00ffff, 70, 0.20], // Upright A cyan halo
+      [400, 320, 0xff0055, 70, 0.22], // Upright B crimson halo
+      [440, 540, 0x00f0ff, 75, 0.18], // Air hockey cyan halo
+      [640, 540, 0xfde047, 80, 0.18], // Cocktail table yellow halo
+      [860, 320, 0xff007f, 85, 0.24], // Dance stage magenta halo
+      [1010, 320, 0x00f0ff, 90, 0.22], // Racing twin cyan halo
+      [1140, 320, 0xff5500, 70, 0.20], // Basketball orange halo
+      [360, 680, 0x00ff88, 60, 0.18], // Vending green halo
+      [720, 680, 0xf59e0b, 60, 0.18], // Token dispenser gold halo
+      [830, 680, 0xf43f5e, 75, 0.22], // Claw machine pink halo
+      [940, 680, 0xa855f7, 60, 0.18]  // Prize wheel purple halo
     ].forEach(([lx, ly, col, rad, alpha]) => {
       const glow = scene.add.circle(lx, ly, rad, col, alpha).setDepth(ly + 1);
       scene.lampGlows.push(glow);

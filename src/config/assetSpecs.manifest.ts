@@ -1652,6 +1652,85 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       styleSearchTags: ['chrono archon final boss', 'cosmic deity sprite', 'astral boss pixel art', 'reality fracture entity']
     }
   },
-
-
+  'prop-arcade': {
+    id: 'prop-arcade',
+    name: 'Dhaka Cyber Arcade Exterior',
+    category: 'landmark',
+    description: 'Flagship entertainment parlor building with retro neon marquee and animated chaser border lights.',
+    externalPath: 'assets/arcade/sprites/prop_arcade_0.png',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'prop-arcade-0',
+    logicalGridFootprint: {
+      cols: 7,
+      rows: 5,
+      collision: { widthTiles: 6, heightTiles: 2 }
+    },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 240, height: 180 },
+      acceptedNativeSizes: ['240x180 (1:1)'],
+      sheetLayout: '4-frame animated neon marquee loop',
+      origin: { x: 0.5, y: 1.0 },
+      styleSearchTags: ['arcade building', 'cyberpunk arcade exterior', 'retro parlor facade']
+    },
+    source: {
+      author: 'Kenney',
+      url: 'https://kenney.nl/assets/city-kit-commercial',
+      license: 'CC0 1.0 Universal',
+      provenance: 'cc0'
+    }
+  },
+  'prop-arcade-cab-deluxe': {
+    id: 'prop-arcade-cab-deluxe',
+    name: 'Grand Championship DX Arcade Cabinet',
+    category: 'landmark',
+    description: 'Dual-station tournament arcade cabinet with backlit header and glowing CRT monitors.',
+    externalPath: 'assets/arcade/sprites/prop_arcade_cab_deluxe.png',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'prop-arcade-cab-deluxe',
+    logicalGridFootprint: {
+      cols: 4,
+      rows: 3,
+      collision: { widthTiles: 3.8, heightTiles: 1.5 }
+    },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 128, height: 104 },
+      acceptedNativeSizes: ['128x104 (1:1)'],
+      sheetLayout: 'Single high-res isometric sprite',
+      origin: { x: 0.5, y: 1.0 },
+      styleSearchTags: ['arcade cabinet', 'retro arcade machine', 'tournament cabinet']
+    },
+    source: {
+      author: 'Kenney',
+      url: 'https://kenney.nl/assets/mini-arcade',
+      license: 'CC0 1.0 Universal',
+      provenance: 'cc0'
+    }
+  },
+  'prop-arcade-claw': {
+    id: 'prop-arcade-claw',
+    name: 'Lucky Neon Claw Machine',
+    category: 'landmark',
+    description: 'Prize crane machine with vibrant magenta chassis, transparent glass, and plushies.',
+    externalPath: 'assets/arcade/sprites/prop_arcade_claw.png',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'prop-arcade-claw',
+    logicalGridFootprint: {
+      cols: 2,
+      rows: 3,
+      collision: { widthTiles: 2, heightTiles: 1.2 }
+    },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 80, height: 100 },
+      acceptedNativeSizes: ['80x100 (1:1)'],
+      sheetLayout: 'Single high-res isometric sprite',
+      origin: { x: 0.5, y: 1.0 },
+      styleSearchTags: ['claw machine', 'crane game', 'arcade prize machine']
+    },
+    source: {
+      author: 'Kenney',
+      url: 'https://kenney.nl/assets/mini-arcade',
+      license: 'CC0 1.0 Universal',
+      provenance: 'cc0'
+    }
+  }
 };

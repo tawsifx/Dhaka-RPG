@@ -18,6 +18,15 @@ export class TextureGenerator {
   static createMakeTex(scene: any): MakeTexFn {
     return (key: string, w: number, h: number, drawFn: (ctx: CanvasRenderingContext2D, w: number, h: number) => void) => {
       if (scene.textures.exists(key)) return;
+      // Skip procedural generation for Arcade assets so external Kenney assets take full precedence
+      if (
+        key.startsWith('prop-arcade') ||
+        key.startsWith('tile-arcade') ||
+        key.startsWith('npc-shanto') ||
+        key.startsWith('npc-gamer')
+      ) {
+        return;
+      }
       const canvas = scene.textures.createCanvas(key, Math.round(w), Math.round(h));
       if (!canvas) return;
       const ctx = canvas.getContext();
