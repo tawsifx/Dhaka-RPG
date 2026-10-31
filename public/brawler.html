@@ -341,6 +341,20 @@
     }
   });
 
+  // Audio Autoplay / Web Audio Unlock
+  const unlockAudio = () => {
+    try {
+      if (window.__brawlerGame && window.__brawlerGame.sound && window.__brawlerGame.sound.context) {
+        if (window.__brawlerGame.sound.context.state === 'suspended') {
+          window.__brawlerGame.sound.context.resume();
+        }
+      }
+    } catch (e) {}
+  };
+  ['touchstart', 'touchend', 'mousedown', 'keydown'].forEach((evt) => {
+    window.addEventListener(evt, unlockAudio, { once: true, passive: true });
+  });
+
   // Global Esc key to exit
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

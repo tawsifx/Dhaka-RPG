@@ -55,5 +55,10 @@ describe('Arcade Brawler Integration Tests', () => {
     expect(fs.existsSync(spritesJson)).toBe(true);
     expect(fs.existsSync(bundleJs)).toBe(true);
     expect(fs.existsSync(phaserJs)).toBe(true);
+
+    const bundleCode = fs.readFileSync(bundleJs, 'utf8');
+    expect(bundleCode).toContain('ChiptuneEngine');
+    expect(bundleCode).toContain('playImpact');
+    expect(bundleCode).toContain('duckBgm');
   });
 });

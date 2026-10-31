@@ -517,7 +517,7 @@ export interface ArcadeGameSlot {
   - **Chibi Totoro (Dido)**: Tiny spirit creature scampering across the campus with an acorn (`dog_stand_01`, `dog_sniff_01`, `dog_run_01..03`, `dog_takeleak_01..02`).
 - **Narrative & Dialogues (`dialog1.json`)**: Adapted to Dhaka Valley campus lore—Moon Walker and Totoro enjoying tea at Fuller Road, confronting campus bully Arkian and Nilkhet enforcers, and brawling through 3 difficulty acts culminating in a boss battle.
 - **Sound & Controls**:
-  - **Web Audio 8-bit Synthesis**: Real-time synthesized square waves, noise bursts, frequency sweeps, and chiptune BGM loops (`maintheme`, `act2`, `act3`, `boss`, `fanfare`).
+  - **Advanced Multi-Channel Chiptune & Visceral Combat Audio**: 4-channel retro polyphonic sequencer (Lead Square with vibrato, fast 3-note Arpeggio shimmer, deep Triangle/Saw bassline, and multi-band drum percussion) featuring dynamic BGM ducking on heavy impacts, master dynamics compression, procedural hit pitch-variation, multi-layer punch/kick snaps, Ghibli-esque celestial pentatonic cheers, and instant mobile audio unlock.
   - **Controls**: Keyboard (WASD / Arrows to move; J / Z to punch; K / X to kick; Space / C to jump; Esc to exit) and on-screen mobile touch D-Pad and punch/kick/jump buttons.
 
 #### Developer API: Registering New Playable Games
