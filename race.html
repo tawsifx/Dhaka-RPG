@@ -5,7 +5,7 @@
 <title>MarioKart64JS — Dhaka RPG Minigame</title>
 <link rel="icon" type="image/png" href="/icon-192.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
 <meta name="description" content="MarioKart64JS rebuilt with Three.js in Dhaka Date RPG." />
 <meta name="theme-color" content="#e52521" />
 <style>
@@ -16,11 +16,11 @@
   #screen { position: fixed; inset: 0; margin: auto; width: 320px; height: 240px; zoom: 3; z-index: 5; display: none; background: #000; }
   #screen img, #screen canvas { image-rendering: pixelated; }
   .hd #screen img, .hd #screen canvas { image-rendering: auto; }
-  #res { position: fixed; top: 10px; left: 0; right: 0; text-align: center; font-size: 20px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 #000, 0 0 4px #000; z-index: 7; display: none; pointer-events: none; }
+  #res { position: fixed; top: 10px; left: 0; right: 0; text-align: center; font-size: 20px; font-weight: 700; color: #fff; text-shadow: 0 1px 0 #000, 0 2px 4px rgba(0, 0, 0, 0.9); z-index: 7; display: none; pointer-events: none; }
   #screen .scr { position: absolute; inset: 0; display: none; overflow: hidden; }
   #screen .scr img { position: absolute; display: block; }
   #screen .bg { left: 0; top: 0; width: 320px; height: 240px; }
-  #hint { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 13px; color: #fff; opacity: .75; font-weight: 700; text-shadow: 0 1px 0 #000, 0 0 4px #000; z-index: 6; display: none; pointer-events: none; }
+  #hint { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 13px; color: #fff; opacity: .75; font-weight: 700; text-shadow: 0 1px 0 #000, 0 2px 4px rgba(0, 0, 0, 0.9); z-index: 6; display: none; pointer-events: none; }
 
   /* ---------- title: START_MENU items at their ROM positions ---------- */
   #title3d { position: absolute; left: 0; top: 0; width: 320px; height: 240px; display: none; }
@@ -93,20 +93,20 @@
 
   /* ---------- HUD ---------- */
   #hud { position: fixed; inset: 0; pointer-events: none; color: #fff; font-weight: 900; font-family: "Arial Black", "Trebuchet MS", system-ui, sans-serif; text-shadow: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000; display: none; }
-  #pos, #posStroke { position: absolute; left: 24px; bottom: 20px; padding: 0 28px 0 8px; font-size: 128px; font-style: italic; line-height: 1; text-shadow: none; }
-  #posStroke { color: #1a1a6e; }
-  #pos { color: #ffe033; background: linear-gradient(#fff36b, #ff9d00); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  #pos, #posStroke { position: absolute; left: 24px; bottom: 20px; padding: 0 28px 0 8px; font-size: 128px; font-style: italic; line-height: 1; }
+  #posStroke { color: #ffffff; text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000; }
+  #pos { color: #ffe033; text-shadow: 2px 2px 0 #000, 0 2px 4px rgba(0, 0, 0, 0.9); }
   #pos small, #posStroke small { font-size: 44px; }
   #lap { position: absolute; right: 24px; top: 16px; font-size: 34px; text-align: right; color: #ffe033; }
   #time { font-size: 24px; color: #fff; font-family: "Courier New", monospace; letter-spacing: 1px; }
   #speed { position: absolute; right: 24px; bottom: 20px; font-size: 56px; font-style: italic; color: #7dff6a; }
   #speed small { font-size: 22px; color: #fff; }
-  #banner { position: absolute; left: 0; right: 0; top: 28%; text-align: center; font-size: 150px; font-style: italic; letter-spacing: 0.03em; padding: 0 0.2em; text-shadow: none; background: linear-gradient(180deg, #fffbd0 0%, #ffe24a 35%, #ffa21e 70%, #ff6a00 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; opacity: 0.88; filter: drop-shadow(0 0 4px rgba(255,200,60,0.9)) drop-shadow(0 0 22px rgba(255,120,0,0.6)) drop-shadow(0 6px 10px rgba(120,40,0,0.35)); }
+  #banner { position: absolute; left: 0; right: 0; top: 28%; text-align: center; font-size: 150px; font-style: italic; letter-spacing: 0.03em; padding: 0 0.2em; color: #ffe24a; text-shadow: 3px 3px 0 #782e00, 0 4px 14px rgba(0, 0, 0, 0.85); opacity: 0.95; }
   #mini { position: absolute; left: 20px; top: 20px; width: 170px; height: 170px; background: rgba(0,0,40,.45); border-radius: 12px; border: 4px solid #fff; box-shadow: 0 0 0 3px #1a1a6e, 0 4px 0 3px #000; }
   #item { position: absolute; left: 50%; top: 0; transform: translateX(-50%); display: none; text-align: center; font-size: 22px; white-space: nowrap; }
   #itemWin { display: block; margin: 0 auto; image-rendering: pixelated; }
   .hd #itemWin { image-rendering: auto; }
-  #help { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 13px; opacity: .7; font-weight: 700; font-family: "Trebuchet MS", system-ui, sans-serif; text-shadow: 0 1px 0 #000, 0 0 4px #000; }
+  #help { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 13px; opacity: .7; font-weight: 700; font-family: "Trebuchet MS", system-ui, sans-serif; text-shadow: 0 1px 0 #000, 0 2px 4px rgba(0, 0, 0, 0.9); }
 
   /* ---------- split screen ---------- */
   .vhud { position: fixed; pointer-events: none; color: #fff; font-weight: 900; font-family: "Arial Black", "Trebuchet MS", system-ui, sans-serif; text-shadow: 3px 0 #000, -3px 0 #000, 0 3px #000, 0 -3px #000, 2px 2px #000, -2px -2px #000, 2px -2px #000, -2px 2px #000; }
@@ -123,7 +123,7 @@
   #lobbyList div { color: #7dff6a; }
   #lobbyList div.me { color: #fff; }
   #lobbyMsg { font-size: 22px; color: #ff8a7a; min-height: 1.4em; }
-  #lobbyHint { position: absolute; left: 0; right: 0; bottom: 40px; font-size: 16px; opacity: .8; font-weight: 700; font-family: "Trebuchet MS", system-ui, sans-serif; text-shadow: 0 1px 0 #000, 0 0 4px #000; }
+  #lobbyHint { position: absolute; left: 0; right: 0; bottom: 40px; font-size: 16px; opacity: .8; font-weight: 700; font-family: "Trebuchet MS", system-ui, sans-serif; text-shadow: 0 1px 0 #000, 0 2px 4px rgba(0, 0, 0, 0.9); }
 
   /* Navigation / Exit Button */
   #btn-return-rpg {
@@ -149,6 +149,13 @@
     background: #fbbf24;
     color: #0f172a;
     border-color: #f59e0b;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      transition-duration: 0.1s !important;
+      animation: none !important;
+    }
   }
 </style>
 </head>
@@ -185,7 +192,7 @@
     <img id="mapSelect" alt="Map select" src="/mk64/courseselect/map_select.png" data-hd="courseselect/map_select.png" />
     <div id="cups"></div>
     <div id="prevs"></div>
-    <div id="prevBig"><img alt="" src="" /></div>
+    <div id="prevBig"><img id="prevBigImg" alt="Course Preview" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='78'%3E%3Crect width='100%25' height='100%25' fill='%23000'/%3E%3C/svg%3E" width="128" height="78" /></div>
     <div id="cnames"></div>
     <button id="courseOk" aria-label="OK"><div class="box"></div><img alt="" src="/mk64/charselect/ok.png" data-hd="charselect/ok.png" /></button>
   </div>
@@ -216,7 +223,7 @@
 <div id="hud">
   <canvas id="mini" width="340" height="340"></canvas>
   <div id="lap"><div id="lapText">LAP 1/3</div><div id="time">0:00.00</div></div>
-  <div id="item"><img id="itemWin" alt="" /><div id="itemName"></div></div>
+  <div id="item"><img id="itemWin" alt="Active Item" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32'%3E%3C/svg%3E" width="32" height="32" /><div id="itemName"></div></div>
   <div id="posStroke">1<small>st</small></div>
   <div id="pos">1<small>st</small></div>
   <div id="speed">0<small> km/h</small></div>

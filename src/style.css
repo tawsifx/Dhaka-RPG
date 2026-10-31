@@ -1,12 +1,23 @@
 :root {
   --bg-parchment: #fdf5e6;
   --bg-dark: #1d1511;
+  --bg-card: rgba(29, 21, 17, 0.94);
+  --bg-surface-elevated: #2b1d14;
   --border-wood: #4a2e1b;
+  --border-wood-light: #6e4e37;
   --accent-gold: #f7cb45;
+  --accent-gold-hover: #ffd76a;
   --accent-rose: #d45779;
   --accent-teal: #3b8ea5;
+  --accent-krishnachura: #e63946;
   --text-dark: #2b1d14;
   --text-light: #fff8eb;
+  --text-muted: #d4c5b3;
+  --status-hp: #e74c3c;
+  --status-sp: #2563eb;
+  --status-xp: #10b981;
+  --status-bond: #f59e0b;
+  --shadow-elevation: 0 4px 16px rgba(0, 0, 0, 0.55);
 }
 
 *, *::before, *::after {
@@ -36,15 +47,12 @@ button {
   touch-action: manipulation;
 }
 
-body, html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background-color: #12101a;
-  font-family: 'Outfit', sans-serif;
-  color: var(--text-light);
+button:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent-gold) !important;
+  outline-offset: 2px !important;
 }
 
 #phaser-mount {
@@ -96,18 +104,17 @@ body, html {
   align-items: center;
   gap: 7px;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.52rem;
+  font-size: 12px;
   letter-spacing: 0.05em;
   color: #7dd3fc;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px rgba(56, 189, 248, 0.25);
-  transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  transition: transform 0.15s, border-color 0.15s;
 }
 
 .hud-live-pill:hover {
   transform: translateY(-1px);
-  border-color: #34d399;
-  color: #a7f3d0;
-  box-shadow: 0 6px 18px rgba(52, 211, 153, 0.35);
+  border-color: #38bdf8;
+  color: #bae6fd;
 }
 
 .hud-live-pill .live-dot {
@@ -115,25 +122,15 @@ body, html {
   height: 8px;
   border-radius: 50%;
   background: #10b981;
-  box-shadow: 0 0 8px #34d399;
-  animation: livePulse 1.4s infinite ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .hud-live-pill.active .live-dot {
   background: #34d399;
-  box-shadow: 0 0 12px #34d399;
-  animation: livePulse 0.9s infinite ease-in-out;
 }
 
 .hud-live-pill.paused .live-dot {
   background: #f59e0b;
-  box-shadow: 0 0 6px #f59e0b;
-  animation: none;
-}
-
-@keyframes livePulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(1.35); }
 }
 
 .hud-zone-card {
@@ -150,11 +147,11 @@ body, html {
   text-transform: uppercase;
   letter-spacing: 1.2px;
   color: var(--accent-gold);
-  text-shadow: 0 0 10px rgba(247, 203, 69, 0.35);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .hud-subrow {
-  font-family: 'Rajdhani', 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Rajdhani', 'Outfit', sans-serif;
   font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.6px;
@@ -195,15 +192,18 @@ body, html {
 .stat-bar {
   position: relative;
   flex: 1;
-  height: 14px;
+  height: 20px;
+  padding: 2px;
   background: #2c221e;
-  border: 1px solid #6e503b;
-  border-radius: 4px;
+  border: none;
+  border-radius: 5px;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .bar-fill {
   height: 100%;
+  border-radius: 3px;
   transition: width 0.2s ease;
 }
 
@@ -213,15 +213,16 @@ body, html {
 
 .stat-bar span {
   position: absolute;
-  inset: 0;
+  inset: 2px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Rajdhani', sans-serif;
-  font-size: 0.74rem;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.8px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
 }
 
 .hud-quest-card {
@@ -237,11 +238,11 @@ body, html {
   text-transform: uppercase;
   color: var(--accent-gold);
   margin-bottom: 2px;
-  text-shadow: 0 0 8px rgba(247, 203, 69, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 #hud-quest {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 500;
   font-size: 0.86rem;
   color: #fff8eb;
@@ -320,7 +321,7 @@ body, html {
   border-radius: 10px;
   padding: 8px 14px;
   text-align: center;
-  box-shadow: 0 0 24px rgba(255, 64, 100, 0.45);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(212, 87, 121, 0.25);
 }
 
 #boss-name {
@@ -331,7 +332,7 @@ body, html {
   text-transform: uppercase;
   color: #ffb3c4;
   margin-bottom: 6px;
-  text-shadow: 0 0 10px rgba(255, 94, 126, 0.6);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 .boss-bar-outer {
@@ -353,8 +354,8 @@ body, html {
 .boss-poise-outer {
   width: 100%;
   height: 6px;
-  background: #1e1b4b;
-  border: 1px solid #818cf8;
+  background: #2b1d14;
+  border: 1px solid #b45309;
   border-radius: 4px;
   overflow: hidden;
   margin-top: 4px;
@@ -363,7 +364,7 @@ body, html {
 #boss-poise-fill {
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, #6366f1, #a855f7);
+  background: linear-gradient(90deg, #d97706, #fbbf24);
   transition: width 0.15s ease;
 }
 
@@ -372,11 +373,11 @@ body, html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 5px;
-  padding: 3px 6px;
-  background: rgba(30, 27, 75, 0.7);
-  border: 1px solid rgba(168, 85, 247, 0.6);
-  border-radius: 6px;
+  margin-top: 6px;
+  padding: 6px 4px 2px;
+  border-top: 1px dashed rgba(247, 203, 69, 0.35);
+  background: transparent;
+  border-radius: 0;
 }
 
 .bond-pips-group {
@@ -385,19 +386,19 @@ body, html {
 }
 
 .bond-pip {
-  font-size: 0.88rem;
+  font-size: 14px;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .bond-pip.bond-full {
   opacity: 1;
-  filter: drop-shadow(0 0 5px #c084fc);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
   transform: scale(1.15);
 }
 
 .bond-pip.bond-half {
   opacity: 0.6;
-  filter: drop-shadow(0 0 2px #a855f7);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
 }
 
 .bond-pip.bond-empty {
@@ -407,10 +408,10 @@ body, html {
 
 #hud-bond-text {
   font-family: 'Rajdhani', sans-serif;
-  font-size: 0.78rem;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.8px;
-  color: #e9d5ff;
+  color: #ffd76a;
 }
 
 /* ================= BOTTOM HOTBAR ================= */
@@ -567,7 +568,7 @@ body, html {
 }
 
 #dlg-text {
-  font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 500;
   font-size: 1.15rem;
   line-height: 1.56;
@@ -592,12 +593,12 @@ body, html {
   border: 2px solid #b45309;
   border-radius: 9px;
   padding: 9px 15px;
-  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-weight: 600;
   font-size: 0.96rem;
   letter-spacing: 0.2px;
   cursor: pointer;
-  box-shadow: 0 3px 8px rgba(180, 83, 9, 0.15);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -605,7 +606,7 @@ body, html {
   background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
   border-color: #92400e;
   transform: translateX(4px) translateY(-1px);
-  box-shadow: 0 5px 14px rgba(180, 83, 9, 0.28);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.35);
 }
 
 #dlg-next-hint {
@@ -692,7 +693,7 @@ body, html {
 }
 
 .modal-subtitle {
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 0.88rem;
   font-weight: 500;
   color: #6b4c35;
@@ -830,10 +831,10 @@ body, html {
   z-index: 2;
   text-align: center;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
+  font-size: 13px;
   letter-spacing: 0.12em;
   color: #fff3c4;
-  text-shadow: 0 2px 0 #3a2410, 0 0 8px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
 }
 
 /* CRT Scanlines Overlay */
@@ -851,7 +852,7 @@ body, html {
   position: relative;
   width: min(640px, 94vw);
   background: linear-gradient(180deg, rgba(24, 34, 71, 0.34) 0%, rgba(13, 18, 40, 0.42) 100%);
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.7);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
   transition: background 0.25s ease;
   border: 4px solid #f7cb45;
   box-shadow: 
@@ -880,7 +881,7 @@ body, html {
 
 .rpg-version-tag {
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.52rem;
+  font-size: 13px;
   color: #90e0ef;
   letter-spacing: 0.1em;
 }
@@ -903,7 +904,7 @@ body, html {
     1px -1px 0 #000,
     -1px 1px 0 #000,
     1px 1px 0 #000,
-    0 4px 14px rgba(247, 203, 69, 0.6);
+    0 4px 14px rgba(0, 0, 0, 0.95);
   letter-spacing: 0.06em;
 }
 
@@ -916,31 +917,28 @@ body, html {
 }
 
 .rpg-story-scroll {
-  background: rgba(10, 14, 30, 0.4);
-  border: 2px solid #3d518c;
-  border-radius: 6px;
-  padding: 8px 14px;
-  margin: 0 auto 18px;
+  background: transparent;
+  border-top: 1px dashed rgba(247, 203, 69, 0.35);
+  border-bottom: 1px dashed rgba(247, 203, 69, 0.35);
+  padding: 10px 4px;
+  margin: 0 auto 16px;
   max-width: 540px;
 }
 
 .rpg-story-text {
-  font-family: 'VT323', monospace;
-  font-size: 1.25rem;
-  line-height: 1.2;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.45;
   color: #dfd8ce;
   margin: 0;
 }
 
 /* Classic RPG Command Window Box */
 .rpg-command-window {
-  background: rgba(8, 11, 24, 0.45);
-  border: 3px solid #f7cb45;
-  border-radius: 6px;
-  padding: 12px 16px;
+  background: transparent;
+  padding: 8px 0;
   max-width: 440px;
   margin: 0 auto;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
 }
 
 .rpg-command-list {
@@ -960,6 +958,11 @@ body, html {
   cursor: pointer;
   border-radius: 4px;
   transition: background 0.12s;
+}
+
+.rpg-cmd-btn:focus-visible {
+  outline: 2px solid var(--accent-gold) !important;
+  outline-offset: 2px !important;
 }
 
 .cmd-cursor {
@@ -990,7 +993,7 @@ body, html {
 
 .rpg-cmd-btn:hover .cmd-label, .rpg-cmd-btn:focus .cmd-label {
   color: #ffffff;
-  text-shadow: 0 0 8px #f7cb45;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
 }
 
 @keyframes cursorBlink {
@@ -1003,7 +1006,7 @@ body, html {
   padding-top: 8px;
   border-top: 1px dashed #3d518c;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.48rem;
+  font-size: 12px;
   color: #80ffdb;
   display: flex;
   align-items: center;
@@ -1015,17 +1018,16 @@ body, html {
 /* Guide Sub-Window */
 .rpg-guide-box {
   margin-top: 14px;
-  background: rgba(8, 11, 24, 0.95);
-  border: 2px solid #5a73b8;
-  border-radius: 6px;
-  padding: 12px;
+  background: transparent;
+  border-top: 1px dashed rgba(90, 115, 184, 0.6);
+  padding: 12px 0 0;
   text-align: left;
   animation: popUp 0.15s ease-out;
 }
 
 .guide-title {
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.58rem;
+  font-size: 12px;
   color: #f7cb45;
   text-align: center;
   margin-bottom: 10px;
@@ -1035,18 +1037,18 @@ body, html {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 8px;
-  font-family: 'VT323', monospace;
-  font-size: 1.15rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
   color: #f5ebe0;
 }
 
 .guide-key {
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.48rem;
-  color: #ff9ebb;
-  background: #23162b;
-  padding: 2px 4px;
-  border: 1px solid #ff9ebb;
+  font-size: 12px;
+  color: #ffd76a;
+  background: #332118;
+  padding: 3px 6px;
+  border: 1px solid #ffd76a;
   border-radius: 3px;
   margin-right: 4px;
 }
@@ -1084,8 +1086,10 @@ body, html {
   justify-content: center;
   align-items: center;
   gap: 4px;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   background: #332118;
   border: 2px solid var(--accent-gold);
@@ -1166,14 +1170,21 @@ body, html {
   padding: 16px env(safe-area-inset-right, 20px) 16px env(safe-area-inset-left, 20px);
 }
 
-/* Show controls on touch devices and small viewports */
-@media (hover: none) and (pointer: coarse), (max-width: 950px) {
+/* Show controls on touch devices */
+@media (hover: none) and (pointer: coarse) {
   #mobile-controls {
     display: flex;
   }
   #combat-hints {
     display: none;
   }
+}
+
+body.is-mobile-device #mobile-controls {
+  display: flex;
+}
+body.is-mobile-device #combat-hints {
+  display: none;
 }
 
 /* Virtual Joystick */
@@ -1270,7 +1281,8 @@ body, html {
 
 .mob-btn .btn-label {
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.45rem;
+  font-size: 12px;
+  font-weight: 700;
   margin-top: 2px;
   color: #fff;
   letter-spacing: 0.05em;
@@ -1282,7 +1294,7 @@ body, html {
   height: 66px;
   bottom: 0px;
   right: 14px;
-  background: linear-gradient(135deg, #e63946, #9b1d20);
+  background: linear-gradient(135deg, #b91c1c, #7f1d1d);
   border-color: #ffd166;
 }
 .mob-btn.act {
@@ -1290,38 +1302,35 @@ body, html {
   height: 52px;
   bottom: 78px;
   right: 0px;
-  background: linear-gradient(135deg, #2a9d8f, #1b5b52);
+  background: linear-gradient(135deg, #0f766e, #115e59);
 }
 .mob-btn.dash {
   width: 52px;
   height: 52px;
   bottom: 6px;
   right: 88px;
-  background: linear-gradient(135deg, #3a86ff, #1d4ed8);
+  background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
 }
 .mob-btn.skill {
   width: 48px;
   height: 48px;
   bottom: 70px;
   right: 68px;
-  background: linear-gradient(135deg, #9b5de5, #5a189a);
+  background: linear-gradient(135deg, #b45309, #78350f);
 }
 .mob-btn.slam {
   width: 48px;
   height: 48px;
   bottom: 126px;
   right: 48px;
-  background: linear-gradient(135deg, #f97316, #c2410c);
+  background: linear-gradient(135deg, #c2410c, #9a3412);
   border-color: #fde047;
 }
 
 /* ================= MINIMIZED MOBILE HUD (STATS ONLY) ================= */
-@media (hover: none) and (pointer: coarse), (max-width: 950px), (max-height: 550px) {
-  /* Hide non-stats HUD elements in mobile version */
-  .hud-zone-card,
-  .hud-quest-card,
-  #minimap-panel,
-  #bottom-hud {
+@media (hover: none) and (pointer: coarse), (max-width: 600px), (max-height: 500px) {
+  /* Hide non-critical zone card on compact screens */
+  .hud-zone-card {
     display: none !important;
   }
 
@@ -1338,15 +1347,15 @@ body, html {
 
   /* Minimized, sleek stats card */
   .hud-stats-card {
-    min-width: 160px !important;
-    max-width: 195px !important;
-    padding: 4px 7px !important;
-    background: rgba(15, 23, 42, 0.78) !important;
+    min-width: 175px !important;
+    max-width: 215px !important;
+    padding: 4px 8px !important;
+    background: rgba(15, 23, 42, 0.85) !important;
     backdrop-filter: blur(8px) !important;
     border: 1.5px solid rgba(247, 203, 69, 0.8) !important;
     border-radius: 8px !important;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5) !important;
-    gap: 2px !important;
+    gap: 3px !important;
     pointer-events: auto !important;
   }
 
@@ -1360,17 +1369,17 @@ body, html {
 
   #hud-level {
     font-family: 'Rajdhani', sans-serif !important;
-    font-size: 0.78rem !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
     letter-spacing: 0.4px !important;
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    max-width: 110px !important;
+    max-width: 120px !important;
   }
 
   .heart-container {
-    font-size: 0.68rem !important;
+    font-size: 12px !important;
     gap: 1px !important;
   }
 
@@ -1378,25 +1387,25 @@ body, html {
   .bar-group {
     display: grid !important;
     grid-template-columns: 1fr 1fr !important;
-    gap: 3px !important;
+    gap: 4px !important;
   }
 
   .stat-bar {
-    height: 10px !important;
+    height: 14px !important;
     border-width: 1px !important;
     border-radius: 3px !important;
   }
 
   .stat-bar span {
     font-family: 'Rajdhani', sans-serif !important;
-    font-size: 0.58rem !important;
-    line-height: 10px !important;
+    font-size: 12px !important;
+    line-height: 14px !important;
     font-weight: 700 !important;
   }
 
   .stat-bar.xp-bar {
     grid-column: 1 / -1 !important;
-    height: 4px !important;
+    height: 6px !important;
   }
 
   .stat-bar.xp-bar span {
@@ -1405,26 +1414,27 @@ body, html {
 
   /* Compact Totoro bond row */
   .totoro-bond-meter {
-    margin-top: 1px !important;
-    padding: 2px 4px !important;
+    margin-top: 2px !important;
+    padding: 3px 6px !important;
     gap: 4px !important;
     align-items: center !important;
-    background: rgba(88, 28, 135, 0.3) !important;
-    border: 1px solid rgba(168, 85, 247, 0.3) !important;
+    background: rgba(43, 29, 20, 0.85) !important;
+    border: 1px solid rgba(247, 203, 69, 0.4) !important;
     border-radius: 4px !important;
   }
 
   .bond-pips-group {
-    gap: 1px !important;
+    gap: 2px !important;
   }
 
   .bond-pip {
-    font-size: 0.68rem !important;
+    font-size: 12px !important;
   }
 
   #hud-bond-text {
-    font-size: 0.62rem !important;
+    font-size: 12px !important;
     font-weight: 700 !important;
+    color: #ffd76a !important;
   }
 
   /* Compact top-right hamburger menu button */
@@ -1433,10 +1443,12 @@ body, html {
   }
 
   #btn-menu-toggle {
-    width: 34px !important;
-    height: 34px !important;
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
     padding: 6px !important;
-    background: rgba(15, 23, 42, 0.78) !important;
+    background: rgba(15, 23, 42, 0.85) !important;
     backdrop-filter: blur(8px) !important;
     border: 1.5px solid rgba(247, 203, 69, 0.8) !important;
     border-radius: 8px !important;
@@ -1444,7 +1456,7 @@ body, html {
   }
 
   #btn-menu-toggle .hamburger-bar {
-    height: 2px !important;
+    height: 2.5px !important;
   }
 
   /* Scaled boss bar overlay */
@@ -1456,10 +1468,7 @@ body, html {
 }
 
 /* Fallback class-based scoping */
-body.is-mobile-device .hud-zone-card,
-body.is-mobile-device .hud-quest-card,
-body.is-mobile-device #minimap-panel,
-body.is-mobile-device #bottom-hud {
+body.is-mobile-device .hud-zone-card {
   display: none !important;
 }
 
@@ -1485,7 +1494,7 @@ body.is-mobile-device #top-hud {
   background: #5a2717 !important;
   border-color: #ffd166 !important;
   color: #fff2cc !important;
-  box-shadow: 0 0 8px rgba(255, 209, 102, 0.45);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
 }
 /* Title panel: slightly firmer when the player interacts with it, so reading stays easy */
 .rpg-main-frame:hover,
@@ -1499,13 +1508,17 @@ body.is-mobile-device #top-hud {
   right: 12px;
   z-index: 5;
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.5rem;
+  font-size: 12px;
+  min-height: 44px;
   color: #fff3c4;
   background: rgba(8, 11, 24, 0.6);
   border: 2px solid #f7cb45;
   border-radius: 4px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .title-peek-btn:hover {
@@ -1532,8 +1545,8 @@ html, body { overscroll-behavior: none; }
   transform: translateY(-50%);
   z-index: 41;
   opacity: 0.75;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border-radius: 8px;
   border: 2px solid rgba(247, 203, 69, 0.8);
   background: rgba(8, 11, 24, 0.55);
@@ -1565,21 +1578,43 @@ html, body { overscroll-behavior: none; }
   color: #fff8eb;
 }
 .rotate-icon { font-size: 2.6rem; margin-bottom: 10px; }
-.rotate-title { font-family: 'Press Start 2P', monospace; font-size: 0.7rem; color: #f7cb45; margin-bottom: 10px; }
-.rotate-sub { font-size: 0.85rem; opacity: 0.9; margin-bottom: 10px; }
+.rotate-title { font-family: 'Press Start 2P', monospace; font-size: 13px; color: #f7cb45; margin-bottom: 10px; }
+.rotate-sub { font-size: 14px; opacity: 0.9; margin-bottom: 10px; }
 .rotate-btn {
   font-family: 'Press Start 2P', monospace;
-  font-size: 0.55rem;
+  font-size: 12px;
+  min-height: 44px;
   color: #fff3c4;
   background: rgba(8, 11, 24, 0.7);
   border: 2px solid #f7cb45;
   border-radius: 6px;
-  padding: 10px 12px;
+  padding: 10px 14px;
   margin-top: 6px;
 }
 
 /* Larger touch targets for title commands on phones */
 @media (hover: none) and (pointer: coarse) {
   .rpg-cmd-btn { min-height: 44px; }
-  .title-peek-btn { padding: 10px 12px; }
+  .title-peek-btn { padding: 10px 14px; }
+}
+
+/* Accessibility: intentional prefers-reduced-motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  .rpg-scanlines {
+    display: none !important;
+  }
+  .rpg-title-backdrop,
+  .hud-live-pill .live-dot,
+  .hud-dropdown-drawer,
+  .rpg-guide-box,
+  .bond-pip,
+  .hotbar-slot,
+  .rpg-cmd-btn {
+    animation: none !important;
+    transition: opacity 0.15s ease !important;
+    transform: none !important;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
 }

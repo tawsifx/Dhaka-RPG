@@ -116,14 +116,53 @@ export const UIController: any = (() => {
     ]);
   }
 
+  let lastFocusedElement: HTMLElement | null = null;
+
+  function trapFocusInModal(modalEl: HTMLElement | null) {
+    if (!modalEl || typeof document === 'undefined') return;
+    lastFocusedElement = document.activeElement as HTMLElement | null;
+    requestAnimationFrame(() => {
+      const focusables = modalEl.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length > 0) {
+        focusables[0].focus();
+      }
+    });
+  }
+
+  function releaseFocusTrap() {
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+      lastFocusedElement = null;
+    }
+  }
+
   function updateRPGStats() {
     if ($('hud-level')) $('hud-level').textContent = `LV. ${DateState.level} Moon Walker`;
     if ($('hud-hp-fill')) $('hud-hp-fill').style.width = `${Math.max(0, (DateState.hp / DateState.maxHp) * 100)}%`;
     if ($('hud-hp-text')) $('hud-hp-text').textContent = `HP ${Math.ceil(DateState.hp)}/${DateState.maxHp}`;
+    const hpBar = document.querySelector('.stat-bar.hp-bar');
+    if (hpBar) {
+      hpBar.setAttribute('aria-valuenow', Math.ceil(DateState.hp).toString());
+      hpBar.setAttribute('aria-valuemax', DateState.maxHp.toString());
+    }
+
     if ($('hud-sp-fill')) $('hud-sp-fill').style.width = `${Math.max(0, (DateState.sp / DateState.maxSp) * 100)}%`;
     if ($('hud-sp-text')) $('hud-sp-text').textContent = `SP ${Math.ceil(DateState.sp)}/${DateState.maxSp}`;
+    const spBar = document.querySelector('.stat-bar.sp-bar');
+    if (spBar) {
+      spBar.setAttribute('aria-valuenow', Math.ceil(DateState.sp).toString());
+      spBar.setAttribute('aria-valuemax', DateState.maxSp.toString());
+    }
+
     if ($('hud-xp-fill')) $('hud-xp-fill').style.width = `${Math.min(100, (DateState.xp / DateState.xpToNext) * 100)}%`;
     if ($('hud-xp-text')) $('hud-xp-text').textContent = `XP ${DateState.xp}/${DateState.xpToNext}`;
+    const xpBar = document.querySelector('.stat-bar.xp-bar');
+    if (xpBar) {
+      xpBar.setAttribute('aria-valuenow', DateState.xp.toString());
+      xpBar.setAttribute('aria-valuemax', DateState.xpToNext.toString());
+    }
 
     // Update Totoro Bond Gauge (0 - 4 pips)
     const bond = DateState.bond || 0;
@@ -141,6 +180,10 @@ export const UIController: any = (() => {
     }
     if ($('hud-bond-text')) {
       $('hud-bond-text').textContent = `BOND ${bond.toFixed(1)}/4`;
+    }
+    const bondMeter = document.querySelector('.totoro-bond-meter');
+    if (bondMeter) {
+      bondMeter.setAttribute('aria-valuenow', bond.toFixed(1));
     }
   }
 
@@ -399,7 +442,11 @@ export const UIController: any = (() => {
       `;
       wirePaginationButtons(grid, showScrapbook);
     }
-    $('scrapbook-modal').hidden = false;
+    const scrapbookModal = $('scrapbook-modal');
+    if (scrapbookModal) {
+      scrapbookModal.hidden = false;
+      trapFocusInModal(scrapbookModal);
+    }
   }
 
   /* Tabbed RPG Menu (Quests, Bag/Gear, Crafting, World Map, System/Save) */
@@ -410,14 +457,22 @@ export const UIController: any = (() => {
     if (!modal) return;
     modal.hidden = false;
     document.querySelectorAll('.rpg-tab-btn').forEach(b => {
-      b.classList.toggle('active', (b as any).dataset.tab === currentTab);
+      const isActive = (b as any).dataset.tab === currentTab;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
+    const body = $('rpg-tab-body');
+    if (body) {
+      body.setAttribute('aria-labelledby', `tab-${currentTab}`);
+    }
     renderRPGTabBody();
+    trapFocusInModal(modal);
   }
 
   function closeRPGMenu() {
     const modal = $('rpg-menu-modal');
     if (modal) modal.hidden = true;
+    releaseFocusTrap();
   }
 
   function renderRPGTabBody() {
@@ -773,6 +828,7 @@ export const UIController: any = (() => {
         SoundEngine.select();
         const m = $('scrapbook-modal');
         if (m) m.hidden = true;
+        releaseFocusTrap();
       });
       $('btn-open-quests')?.addEventListener('click', () => openRPGMenu('quests'));
       $('btn-open-bag')?.addEventListener('click', () => openRPGMenu('inventory'));
@@ -795,6 +851,7 @@ export const UIController: any = (() => {
           const isHidden = dropdown.hidden;
           dropdown.hidden = !isHidden;
           menuBtn.classList.toggle('open', !isHidden);
+          menuBtn.setAttribute('aria-expanded', (!isHidden).toString());
         });
 
         // Auto-close dropdown when any drawer item is tapped
@@ -802,6 +859,7 @@ export const UIController: any = (() => {
           b.addEventListener('click', () => {
             dropdown.hidden = true;
             menuBtn.classList.remove('open');
+            menuBtn.setAttribute('aria-expanded', 'false');
           });
         });
 
@@ -810,9 +868,59 @@ export const UIController: any = (() => {
           if (!dropdown.hidden && !dropdown.contains(e.target as Node) && e.target !== menuBtn) {
             dropdown.hidden = true;
             menuBtn.classList.remove('open');
+            menuBtn.setAttribute('aria-expanded', 'false');
           }
         });
       }
+
+      // Global Keyboard Accessibility & Escape / Tab Trapping
+      window.addEventListener('keydown', (e) => {
+        const scrapbook = $('scrapbook-modal');
+        const rpgMenu = $('rpg-menu-modal');
+
+        if (e.key === 'Escape') {
+          if (dropdown && !dropdown.hidden) {
+            dropdown.hidden = true;
+            menuBtn?.classList.remove('open');
+            menuBtn?.setAttribute('aria-expanded', 'false');
+            menuBtn?.focus();
+            return;
+          }
+          if (rpgMenu && !rpgMenu.hidden) {
+            closeRPGMenu();
+            return;
+          }
+          if (scrapbook && !scrapbook.hidden) {
+            scrapbook.hidden = true;
+            releaseFocusTrap();
+            return;
+          }
+        }
+
+        const activeModal = (scrapbook && !scrapbook.hidden) ? scrapbook : (rpgMenu && !rpgMenu.hidden) ? rpgMenu : null;
+        if (e.key === 'Tab' && activeModal) {
+          const focusables = (Array.from(
+            activeModal.querySelectorAll(
+              'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+          ) as HTMLElement[]).filter(el => el.offsetParent !== null);
+          if (focusables.length === 0) return;
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+
+          if (e.shiftKey) {
+            if (document.activeElement === first) {
+              last.focus();
+              e.preventDefault();
+            }
+          } else {
+            if (document.activeElement === last) {
+              first.focus();
+              e.preventDefault();
+            }
+          }
+        }
+      });
 
       // Title Screen Wiring & Menu BGM Manager (via Web Audio API)
       const titleOverlay = $('title-screen-overlay');

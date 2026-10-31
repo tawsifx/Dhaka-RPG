@@ -4,7 +4,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -17,7 +17,7 @@
   <!-- Google Fonts for Modern Game UI, Headbars & Shop Signs -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Press+Start+2P&family=Rajdhani:wght@500;600;700&family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Press+Start+2P&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
@@ -28,13 +28,13 @@
     <span style="font-family: 'Outfit'; font-weight: 700;">Outfit Prewarm</span>
   </div>
   <!-- Phaser Canvas Mount -->
-  <div id="phaser-mount"></div>
+  <div id="phaser-mount" role="region" aria-label="Game World View"></div>
 
-  <header id="top-hud">
+  <header id="top-hud" role="region" aria-label="Game Status Bar">
 
-    <div class="hud-card hud-zone-card">
+    <div class="hud-card hud-zone-card" aria-label="Zone and Time Information">
       <div class="hud-row">
-        <span id="hud-weather">🌤️</span>
+        <span id="hud-weather" aria-hidden="true">🌤️</span>
         <strong id="hud-zone">Curzon Hall Lawn</strong>
       </div>
       <div class="hud-subrow">
@@ -42,20 +42,20 @@
       </div>
     </div>
 
-    <div class="hud-card hud-stats-card">
+    <div class="hud-card hud-stats-card" aria-label="Player Vital Stats and Bond">
       <div class="stat-top">
         <span id="hud-level">LV. 1 Moon Walker</span>
-        <span class="heart-container" title="Relationship Bond with Totoro">
+        <span class="heart-container" title="Relationship Bond with Totoro" aria-label="Relationship: 5 hearts">
           <span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span>
         </span>
       </div>
       <div class="bar-group">
-        <div class="stat-bar hp-bar"><div id="hud-hp-fill" class="bar-fill"></div><span id="hud-hp-text">HP 100/100</span></div>
-        <div class="stat-bar sp-bar"><div id="hud-sp-fill" class="bar-fill"></div><span id="hud-sp-text">SP 50/50</span></div>
-        <div class="stat-bar xp-bar"><div id="hud-xp-fill" class="bar-fill"></div><span id="hud-xp-text">XP 0/100</span></div>
+        <div class="stat-bar hp-bar" role="progressbar" aria-label="Hit Points" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"><div id="hud-hp-fill" class="bar-fill"></div><span id="hud-hp-text">HP 100/100</span></div>
+        <div class="stat-bar sp-bar" role="progressbar" aria-label="Stamina Points" aria-valuenow="50" aria-valuemin="0" aria-valuemax="50"><div id="hud-sp-fill" class="bar-fill"></div><span id="hud-sp-text">SP 50/50</span></div>
+        <div class="stat-bar xp-bar" role="progressbar" aria-label="Experience Points" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div id="hud-xp-fill" class="bar-fill"></div><span id="hud-xp-text">XP 0/100</span></div>
       </div>
-      <div class="totoro-bond-meter" title="Totoro Bond Pips (Roar [Q]: 1 | Slam [E]: 2 | Swiftness [F]: 1)">
-        <div class="bond-pips-group">
+      <div class="totoro-bond-meter" role="progressbar" aria-label="Totoro Bond Level" aria-valuenow="1" aria-valuemin="0" aria-valuemax="4" title="Totoro Bond Pips (Roar [Q]: 1 | Slam [E]: 2 | Swiftness [F]: 1)">
+        <div class="bond-pips-group" aria-hidden="true">
           <span class="bond-pip" id="bond-pip-1">🐾</span>
           <span class="bond-pip" id="bond-pip-2">🐾</span>
           <span class="bond-pip" id="bond-pip-3">🐾</span>
@@ -65,38 +65,38 @@
       </div>
     </div>
 
-    <div class="hud-card hud-quest-card">
-      <div class="quest-header">📜 ACTIVE OBJECTIVE</div>
+    <div class="hud-card hud-quest-card" aria-label="Active Objective">
+      <div class="quest-header">ACTIVE OBJECTIVE</div>
       <div id="hud-quest">1. Find Totoro waiting under the Krishnachura tree at Curzon Hall (South-West).</div>
     </div>
 
     <!-- 3-Bar Dropdown Menu -->
     <div class="hud-menu-container">
-      <button id="btn-menu-toggle" class="hud-btn hamburger-btn" type="button" aria-label="Toggle Navigation Menu">
+      <button id="btn-menu-toggle" class="hud-btn hamburger-btn" type="button" aria-label="Toggle Navigation Menu" aria-expanded="false" aria-controls="hud-dropdown-menu">
         <span class="hamburger-bar"></span>
         <span class="hamburger-bar"></span>
         <span class="hamburger-bar"></span>
       </button>
-      <div id="hud-dropdown-menu" class="hud-dropdown-drawer" hidden>
-        <button id="btn-talk-partner" class="drawer-item-btn" type="button">🐾 Partner</button>
-        <button id="btn-open-quests" class="drawer-item-btn" type="button">📜 Quests (L)</button>
-        <button id="btn-open-bag" class="drawer-item-btn" type="button">🎒 Bag &amp; Craft (I)</button>
-        <button id="btn-open-map" class="drawer-item-btn" type="button">🗺️ Realm Map (M)</button>
-        <button id="btn-save-game" class="drawer-item-btn" type="button">💾 Quick Save</button>
-        <button id="btn-bgm" class="drawer-item-btn" type="button">🎵 BGM: ON</button>
+      <div id="hud-dropdown-menu" class="hud-dropdown-drawer" role="menu" aria-label="Game Quick Actions" hidden>
+        <button id="btn-talk-partner" class="drawer-item-btn" role="menuitem" type="button">🐾 Partner</button>
+        <button id="btn-open-quests" class="drawer-item-btn" role="menuitem" type="button">📜 Quests (L)</button>
+        <button id="btn-open-bag" class="drawer-item-btn" role="menuitem" type="button">🎒 Bag &amp; Craft (I)</button>
+        <button id="btn-open-map" class="drawer-item-btn" role="menuitem" type="button">🗺️ Realm Map (M)</button>
+        <button id="btn-save-game" class="drawer-item-btn" role="menuitem" type="button">💾 Quick Save</button>
+        <button id="btn-bgm" class="drawer-item-btn" role="menuitem" type="button">🎵 BGM: ON</button>
       </div>
     </div>
 
   </header>
 
   <!-- Live Minimap Widget -->
-  <div id="minimap-panel">
-    <canvas id="minimap-canvas" width="144" height="108"></canvas>
+  <div id="minimap-panel" role="region" aria-label="Minimap Overview">
+    <canvas id="minimap-canvas" width="144" height="108" role="img" aria-label="Dhaka Valley Live Minimap"></canvas>
     <div id="minimap-world-label">World 1: Dhaka Valley</div>
   </div>
 
   <!-- Boss Health & Poise Bar Overlay -->
-  <div id="boss-hud" hidden>
+  <div id="boss-hud" role="region" aria-label="Boss Combat Status" hidden>
     <div id="boss-name">GUARDIAN BOSS</div>
     <div class="boss-bar-outer">
       <div id="boss-hp-fill"></div>
@@ -166,8 +166,8 @@
   </div>
 
   <!-- Item / Quest Toast Notification -->
-  <div id="item-toast" hidden>
-    <span id="toast-icon">🌺</span>
+  <div id="item-toast" role="status" aria-live="polite" hidden>
+    <span id="toast-icon" aria-hidden="true">🌺</span>
     <div>
       <strong id="toast-title">Obtained Item!</strong>
       <div id="toast-sub">Added to your inventory</div>
@@ -175,10 +175,10 @@
   </div>
 
   <!-- Dialogue Overlay with Custom SVG Pixel Portrait Canvas -->
-  <div id="dialogue-overlay" hidden>
+  <div id="dialogue-overlay" role="dialog" aria-modal="false" aria-label="Character Dialogue" aria-live="polite" hidden>
     <div class="dialogue-box">
       <div class="dlg-portrait-frame">
-        <div id="dlg-portrait">🐾</div>
+        <div id="dlg-portrait" aria-hidden="true">🐾</div>
       </div>
       <div class="dlg-content">
         <div id="dlg-speaker">Totoro</div>
@@ -190,9 +190,9 @@
   </div>
 
   <!-- Scrapbook / Memories Modal -->
-  <div id="scrapbook-modal" class="rpg-modal-backdrop" hidden>
+  <div id="scrapbook-modal" class="rpg-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="scrapbook-title" hidden>
     <div class="rpg-modal-card">
-      <h2>📖 Dhaka & Astral Chronicle Scrapbook</h2>
+      <h2 id="scrapbook-title">📖 Dhaka & Astral Chronicle Scrapbook</h2>
       <p class="modal-subtitle">Every keepsake and memory forged across the realms by Moon Walker & Totoro.</p>
       <div id="scrapbook-moments" class="scrapbook-grid"></div>
       <div class="modal-actions">
@@ -202,17 +202,17 @@
   </div>
 
   <!-- RPG Tabbed Menu Modal (Quests, Inventory/Equipment, Crafting, World Map, Settings/Save) -->
-  <div id="rpg-menu-modal" class="rpg-modal-backdrop" hidden>
+  <div id="rpg-menu-modal" class="rpg-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tab-quests" hidden>
     <div class="rpg-modal-card wide-card">
-      <div class="rpg-tabs">
-        <button class="rpg-tab-btn active" data-tab="quests" type="button">📜 Quest Journal</button>
-        <button class="rpg-tab-btn" data-tab="inventory" type="button">🎒 Bag & Gear</button>
-        <button class="rpg-tab-btn" data-tab="crafting" type="button">⚒️ Crafting</button>
-        <button class="rpg-tab-btn" data-tab="map" type="button">🗺️ Realm Travel</button>
-        <button class="rpg-tab-btn" data-tab="system" type="button">⚙️ Save & Audio</button>
-        <button id="btn-close-rpg-menu" class="rpg-close-btn" type="button">✕ Close</button>
+      <div class="rpg-tabs" role="tablist" aria-label="Adventure Ledger Tabs">
+        <button class="rpg-tab-btn active" data-tab="quests" id="tab-quests" role="tab" aria-selected="true" aria-controls="rpg-tab-body" type="button">📜 Quest Journal</button>
+        <button class="rpg-tab-btn" data-tab="inventory" id="tab-inventory" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">🎒 Bag &amp; Gear</button>
+        <button class="rpg-tab-btn" data-tab="crafting" id="tab-crafting" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">⚒️ Crafting</button>
+        <button class="rpg-tab-btn" data-tab="map" id="tab-map" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">🗺️ Realm Travel</button>
+        <button class="rpg-tab-btn" data-tab="system" id="tab-system" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">⚙️ Save &amp; Audio</button>
+        <button id="btn-close-rpg-menu" class="rpg-close-btn" type="button" aria-label="Close Adventure Ledger">✕ Close</button>
       </div>
-      <div id="rpg-tab-body" class="rpg-tab-body"></div>
+      <div id="rpg-tab-body" class="rpg-tab-body" role="tabpanel" aria-labelledby="tab-quests"></div>
     </div>
   </div>
 

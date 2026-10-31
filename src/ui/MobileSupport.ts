@@ -52,7 +52,7 @@ export function injectMobileFitStyles(): void {
   const css = `
 @media (hover: none) and (pointer: coarse), (max-width: 950px) {
   :root {
-    --slot: clamp(24px, calc((100vw - 380px) / 10 - 3px), 32px);
+    --slot: clamp(38px, calc((100vw - 380px) / 10 - 3px), 44px);
   }
   html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
 
@@ -64,33 +64,33 @@ export function injectMobileFitStyles(): void {
     right: calc(env(safe-area-inset-right, 0px) + 6px);
     gap: 4px;
   }
-  .hud-card { padding: 3px 7px; border-width: 1.5px; border-radius: 8px; }
+  .hud-card { padding: 4px 8px; border-width: 1.5px; border-radius: 8px; }
   .hud-zone-card, .hud-stats-card { min-width: 0; }
-  .hud-row { font-size: 0.7rem; gap: 4px; }
-  .hud-subrow { font-size: 0.6rem; margin-top: 0; }
-  .stat-top { font-size: 0.64rem; }
-  .heart-container { font-size: 0.7rem; letter-spacing: 0; }
+  .hud-row { font-size: 12px; gap: 4px; }
+  .hud-subrow { font-size: 11px; margin-top: 0; }
+  .stat-top { font-size: 11px; }
+  .heart-container { font-size: 12px; letter-spacing: 0; }
   .bar-group { gap: 4px; }
-  .stat-bar { height: 11px; min-width: 52px; }
-  .stat-bar span { font-size: 0.5rem; }
-  .hud-quest-card { flex: 1 1 120px; min-width: 0; }
-  .quest-header { font-size: 0.42rem; margin-bottom: 1px; }
+  .stat-bar { height: 14px; min-width: 58px; }
+  .stat-bar span { font-size: 11px; font-weight: 700; }
+  .hud-quest-card { flex: 1 1 140px; min-width: 0; }
+  .quest-header { font-size: 11px; margin-bottom: 2px; }
   #hud-quest {
-    font-size: 0.62rem; line-height: 1.2;
+    font-size: 12px; line-height: 1.3;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: none;
   }
 
   /* Burger button + drawer */
-  .hamburger-btn { width: 34px; height: 34px; gap: 3px; border-radius: 8px; }
-  .hamburger-bar { width: 16px; height: 2px; }
-  .hamburger-btn.open .hamburger-bar:nth-child(1) { transform: translateY(5px) rotate(45deg); }
-  .hamburger-btn.open .hamburger-bar:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
+  .hamburger-btn { width: 44px; height: 44px; min-width: 44px; min-height: 44px; gap: 4px; border-radius: 8px; }
+  .hamburger-bar { width: 18px; height: 2.5px; }
+  .hamburger-btn.open .hamburger-bar:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .hamburger-btn.open .hamburger-bar:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
   .hud-dropdown-drawer {
     top: calc(100% + 4px);
     width: max-content;
     max-width: calc(100vw - 16px);
-    padding: 5px;
-    gap: 4px;
+    padding: 6px;
+    gap: 6px;
     display: grid;
     grid-template-columns: repeat(2, auto);
     overflow-y: auto;
@@ -104,8 +104,9 @@ export function injectMobileFitStyles(): void {
   }
   .hud-dropdown-drawer[hidden] { display: none !important; }
   .drawer-item-btn {
-    padding: 7px 9px;
-    font-size: 0.7rem;
+    min-height: 44px;
+    padding: 10px 12px;
+    font-size: 12px;
     white-space: nowrap;
     touch-action: manipulation;
   }
@@ -123,15 +124,15 @@ export function injectMobileFitStyles(): void {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
     transform: translateX(-50%) !important;
   }
-  #inventory-bar { gap: 3px; padding: 3px; border-width: 2px; border-radius: 9px; }
-  .hotbar-slot { width: var(--slot); height: var(--slot); border-width: 1.5px; border-radius: 6px; }
-  .slot-key { font-size: 0.42rem; top: 1px; left: 3px; }
+  #inventory-bar { gap: 4px; padding: 4px; border-width: 2px; border-radius: 9px; }
+  .hotbar-slot { width: var(--slot); height: var(--slot); min-width: 38px; min-height: 38px; border-width: 1.5px; border-radius: 6px; }
+  .slot-key { font-size: 11px; top: 1px; left: 3px; }
   .slot-emoji { font-size: calc(var(--slot) * 0.52); }
 }
 
 /* Portrait phones: lift the hotbar above the thumb controls, and fit 10 slots across */
 @media ((hover: none) and (pointer: coarse), (max-width: 950px)) and (orientation: portrait) {
-  :root { --slot: clamp(22px, calc((100vw - 48px) / 10 - 3px), 32px); }
+  :root { --slot: clamp(34px, calc((100vw - 48px) / 10 - 2px), 44px); }
   #bottom-hud { bottom: calc(env(safe-area-inset-bottom, 0px) + 190px); }
 }`;
 
