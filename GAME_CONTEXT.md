@@ -134,7 +134,12 @@ dhaka-date-rpg/
     ├── style.css                    # Retro styling, CRT scanline effects, HUD layout
     ├── vite-env.d.ts                # Vite client type definitions
     ├── audio/
-    │   ├── SoundEngine.ts           # Web Audio synthesizer, BGM crossfader, SFX pool & ducking
+    │   ├── AudioBusLayout.ts        # 5-Bus audio mixing graph (Master, Music, SFX, Voice, Ambient) & ducking
+    │   ├── AudioPool.ts             # 16-channel voice pool with priority stealing & zero GC
+    │   ├── DynamicMusicSystem.ts    # Interactive music state machine (EXPLORATION, TENSION, COMBAT, BOSS) & vertical remixing
+    │   ├── RandomizedAudio.ts       # Pitch/volume variance & anti-machine-gun repeat suppression
+    │   ├── SoundEngine.ts           # Unified audio facade integrating buses, dynamic music, SFX pool & ducking
+    │   ├── types.ts                 # Audio buses, music states, BGM track and voice interfaces
     │   └── index.ts                 # Audio subsystem barrel export
     ├── config/
     │   ├── assetSpecs.manifest.ts   # AI-readable asset requirements manifest
@@ -1252,40 +1257,83 @@ To resolve visual glitching, screen-tearing, and missing structural pillars on t
 
 ## 11. Audio Pipeline & SoundEngine Architecture
 
-The audio engine (`src/audio/SoundEngine.ts`) delivers studio-quality retro immersion with seamless cross-fading and zero stuttering.
+The audio engine (`src/audio/`) implements industry-standard game audio patterns (as specified in `audio-patterns`), providing sample-accurate Web Audio API routing, a 5-bus mixing graph, interactive vertical remixing, dynamic music state management, a 16-channel voice pool with priority stealing, and anti-machine-gun pitch/volume variance.
 
-### Compressed BGM Tracks (LAME VBR Encoded)
+### 11.1 Audio Bus Architecture (`AudioBusLayout.ts`)
+The Web Audio mixing graph follows a strict 5-sub-bus hierarchy terminating in a master dynamics compressor:
+```
+[ ctx.destination ]
+         ▲
+[ DynamicsCompressorNode ] (Threshold: -12dB, Knee: 18, Ratio: 3:1, Attack: 5ms, Release: 150ms)
+         ▲
+   [ Master Bus ] (Linear: 0.0 - 1.0, dB: -80 to 0)
+    ▲       ▲       ▲       ▲
+    │       │       │       │
+[ Music ] [ SFX ] [ Voice ] [ Ambient ]
+```
+- **Independent Bus Volumes**: Each bus features independent linear and decibel gain controls (`setBusVolume`, `getBusVolume`, `setBusVolumeDb`, `getBusVolumeDb`).
+- **Smart Music Ducking**:
+  - Automatically ducks music volume by `-12dB` (`duckMusic(-12.0, 0.3)`) when NPC dialogue opens (`UIController.startDialogue`) or major fanfare triggers.
+  - Smoothly unducks back to base music volume (`unduckMusic(0.5)`) on dialogue close or fanfare finish.
+  - Converts decibels and linear gain reciprocally: $\text{linear} = 10^{\text{dB} / 20}$, $\text{dB} = 20 \log_{10}(\text{linear})$.
+
+### 11.2 Dynamic Music System & Vertical Remixing (`DynamicMusicSystem.ts`)
+The music system supports interactive gameplay states with dynamic vertical stems:
+- **Interactive Music States**:
+  - `EXPLORATION`: Peaceful exploration, melodic themes, serene atmospheric pads.
+  - `TENSION`: Approaching hostile creatures, subtle rhythmic tension layers.
+  - `COMBAT`: Engaged in active combat, driving percussion and bass ostinato.
+  - `BOSS`: Guardian Boss encounter, maximum energy with heavy syncopated kicks, rapid hi-hats, and synth drive.
+- **Vertical Stem Layering Matrix (`STEM_LEVELS`)**:
+  | Stem | EXPLORATION | TENSION | COMBAT | BOSS |
+  | :--- | :--- | :--- | :--- | :--- |
+  | **Melody** | 1.00 (0.0 dB) | 0.80 (-1.9 dB) | 0.45 (-6.9 dB) | 0.25 (-12.0 dB) |
+  | **Ambient** | 0.85 (-1.4 dB) | 0.60 (-4.4 dB) | 0.30 (-10.5 dB) | 0.10 (-20.0 dB) |
+  | **Percussion**| 0.00 (-80 dB) | 0.45 (-6.9 dB) | 0.85 (-1.4 dB) | 1.00 (0.0 dB) |
+  | **Intense** | 0.00 (-80 dB) | 0.25 (-12.0 dB)| 0.75 (-2.5 dB) | 1.00 (0.0 dB) |
+- **Real-Time Combat Intensity Driver**:
+  - `CombatSystem.updateEnemies()` calculates threat distance and drives `SoundEngine.setCombatIntensity(maxIntensity)` (0.0 = calm, 1.0 = boss climax).
+  - Automatically transitions between `EXPLORATION`, `TENSION`, `COMBAT`, and `BOSS` with smooth Web Audio linear ramps.
+- **Horizontal Beat-Synchronized Transitions**:
+  - `transitionAtNextBar(bpm, beat, onBarTransition)` schedules sectional crossfades at the next 4-beat bar boundary.
+
+### 11.3 16-Channel Preallocated Audio Pool (`AudioPool.ts`)
+- Pre-allocates 16 fixed Web Audio voice instances connected to their designated bus (`SFX`, `Voice`, `Ambient`), eliminating run-time object allocations and garbage collection hitches.
+- **Priority-Based Voice Stealing**: When the 16-voice pool is fully saturated, the system identifies the lowest-priority active voice (e.g. UI = 3.0, Boss/Alert = 2.8, Combat = 1.5, Footsteps = 0.5) and steals it for the incoming sound.
+
+### 11.4 Randomized Audio & Anti-Machine-Gun Suppression (`RandomizedAudio.ts`)
+- Prevents repetitive "machine-gun" fatigue on footsteps, slashes, and text typewriter blips.
+- Applies subtle random pitch variance ($[0.92, 1.08]$) and volume variance ($[-2.5, 0.0]\text{dB}$).
+- Guaranteed non-consecutive variant selection (`pickVariantIndex`) ensures identical audio samples are never triggered twice in immediate succession.
+
+### 11.5 Compressed BGM Tracks (LAME VBR Encoded)
 All music tracks are compressed using high-efficiency LAME Variable Bitrate (VBR `-V 5` / `-V 6`, `-q 0`) with 44.1kHz stereo fidelity, preserving high-frequency warmth while reducing initial payload size:
 1. **`spirited_away_piano.mp3`** (3.4 MB): Joe Hisaishi's *"One Summer's Day"* piano arrangement. Plays in Curzon Hall Interior, Kingdom of Eternal Frost, and Title Menu.
 2. **`totoro_theme.mp3`** (3.5 MB): Joe Hisaishi's *"My Neighbor Totoro Main Theme"* Ghibli chill arrangement. Plays in Dhaka Valley Overworld, Green Meadows Farmhouse, and Whispering Emerald Forest.
 3. **`game_bgm.mp3`** (2.5 MB): Original Dhaka Adventure OST. Plays in Sunken Kingdom, Emberfall Highlands, and Boss Arenas.
 4. **`menu_theme.mp3`** (2.9 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
 
-### Dual-Player Cross-Fading Architecture
+### 11.6 Dual-Player Cross-Fading Architecture
 ```
-[World Transition / Weather Event]
-          │
-          ▼
-   SoundEngine.setTheme(newTheme)
-          │
-    ┌─────┴────────────────────────┐
-    ▼                              ▼
-Player A (Active Track)       Player B (Incoming Track)
-  Volume: 0.85 ───► 0.00        Volume: 0.00 ───► 0.85
-     (Fades out in 400ms)          (Fades in in 400ms)
+[World Transition / Weather Event / State Change]
+                    │
+                    ▼
+       SoundEngine.setTheme(newTheme)
+                    │
+     ┌──────────────┴────────────────────────┐
+     ▼                                       ▼
+Player A (Active Track)             Player B (Incoming Track)
+  Volume: 0.85 ───► 0.00              Volume: 0.00 ───► 0.85
+     (Fades out in 450ms)                (Fades in in 450ms)
 ```
 
-### Vocal Romance & Acoustic Concert Track (`ohona_song.mp3`)
+### 11.7 Vocal Romance & Acoustic Concert Track (`ohona_song.mp3`)
 In addition to background instrumental themes, the game integrates an authentic high-fidelity acoustic vocal arrangement:
 - **`ohona_song.mp3`**: Heartfelt romantic ballad celebrating love and companionship across Dhaka.
 - **Dynamic Playback Control (`SoundEngine`)**:
   - `playOhonaSong(startTimeSec = 20)`: Smoothly ducks active BGM and initiates vocal playback from 20s during high-affection dialogues with Ahona, or from 15s during Rakin's acoustic guitar concert at Dhanmondi Lake (`playRakinConcertForAhonaCutscene`).
   - `stopOhonaSong(fadeMs = 800)`: Fades out the vocal track smoothly and restores the ambient overworld BGM.
   - `getOhonaSongDuration()`: Returns track duration for cutscene synchronization.
-
-### 16-Channel SFX Pool (`sfxAudioPool`)
-SFX instances are pre-buffered into audio pools of up to 6 simultaneous voices to eliminate browser audio latency:
-`slash.wav`, `thrust.wav`, `spin.wav`, `dash.wav`, `enemy_hit.wav`, `player_hurt.wav`, `level_up.wav`, `totoro_roar.wav`, `totoro_slam.wav`, `tea_clink.wav`, `crunch_fuchka.wav`, `rickshaw_bell.wav`, `water_splash.wav`, `portal_warp.wav`, `select.wav`, `item_get.wav`.
 
 ---
 
@@ -1573,8 +1621,13 @@ src/
 │   ├── RPGStats.ts              # HP, SP, XP, Level, ATK, DEF, level progression curve
 │   ├── SaveManager.ts           # IndexedDB & LocalStorage persistent state engine
 │   └── index.ts                 # Clean barrel export for state management
-├── audio/                       # Web Audio & SFX pipelines + index.ts barrel
-│   ├── SoundEngine.ts           # 400ms cross-fading BGM, pooled SFX & dynamic ducking
+├── audio/                       # Modern Web Audio & SFX pipelines + index.ts barrel
+│   ├── AudioBusLayout.ts        # 5-Bus audio mixing graph (Master, Music, SFX, Voice, Ambient) & ducking
+│   ├── AudioPool.ts             # 16-channel voice pool with priority stealing & zero GC
+│   ├── DynamicMusicSystem.ts    # Interactive music state machine (EXPLORATION, TENSION, COMBAT, BOSS) & vertical remixing
+│   ├── RandomizedAudio.ts       # Pitch/volume variance & anti-machine-gun repeat suppression
+│   ├── SoundEngine.ts           # Unified audio facade integrating buses, dynamic music, SFX pool & ducking
+│   ├── types.ts                 # Audio buses, music states, BGM track and voice interfaces
 │   └── index.ts                 # Clean barrel export for audio subsystem
 ├── graphics/                    # Procedural & External asset adapters + index.ts barrel
 │   ├── CharacterSpriteGenerator.ts # External sprite adapter & procedural fallback

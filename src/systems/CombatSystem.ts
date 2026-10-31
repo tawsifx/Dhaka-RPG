@@ -692,6 +692,7 @@ export class CombatSystem {
 
     const px = scene.player.x;
     const py = scene.player.y;
+    let maxCombatIntensity = 0.0;
 
     // Passive Bond generation: +0.05 pips per second when standing close to Totoro (< 70px)
     if (DateState.totoroJoined && scene.totoro) {
@@ -704,6 +705,15 @@ export class CombatSystem {
     scene.enemies.forEach((en: CombatEntity, idx: number) => {
       const dist = Phaser.Math.Distance.Between(px, py, en.x, en.y);
       const detectRange = en.isBoss ? 440 : 250;
+
+      // Track Dynamic Music Threat & Intensity
+      if (en.isBoss && dist < 540) {
+        maxCombatIntensity = Math.max(maxCombatIntensity, 1.0);
+      } else if (dist < 120) {
+        maxCombatIntensity = Math.max(maxCombatIntensity, 0.75);
+      } else if (dist < detectRange) {
+        maxCombatIntensity = Math.max(maxCombatIntensity, 0.35);
+      }
 
       // Update Boss HUD with Poise Bar
       if (en.isBoss) {
@@ -783,6 +793,9 @@ export class CombatSystem {
         en.label.setPosition(en.x, en.y - (en.isBoss ? 114 : 54)).setDepth(en.y + 5);
       }
     });
+
+    // Update dynamic interactive music intensity & stem layering
+    SoundEngine.setCombatIntensity(maxCombatIntensity);
   }
 
   /**
@@ -1122,6 +1135,7 @@ export class CombatSystem {
     if (en.isBoss) {
       scene.activeBoss = null;
       UI.setBossHUD(false);
+      SoundEngine.setMusicState('EXPLORATION', 2.0);
       if (!DateState.defeatedBosses.includes(en.id)) {
         DateState.defeatedBosses.push(en.id);
       }

@@ -368,6 +368,7 @@ export const UIController: any = (() => {
     onFinishCallback = onDone || null;
     const overlay = $('dialogue-overlay');
     if (overlay) overlay.hidden = false;
+    SoundEngine.duckMusic(-12.0, 0.3);
     renderNode();
   }
 
@@ -376,6 +377,7 @@ export const UIController: any = (() => {
     isTyping = false;
     const overlay = $('dialogue-overlay');
     if (overlay) overlay.hidden = true;
+    SoundEngine.unduckMusic(0.5);
     if (onFinishCallback) {
       const cb = onFinishCallback;
       onFinishCallback = null;
