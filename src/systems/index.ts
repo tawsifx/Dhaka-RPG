@@ -8,3 +8,4 @@ export * from './WeatherSystem';
 export * from './OpeningDialogueSystem';
 export * from './player';
 export * from './npc';
+export * from './level';

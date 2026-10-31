@@ -139,8 +139,10 @@ class GameDatabaseEngine {
     }
 
     // 4. Index Worlds
-    for (const [id, world] of Object.entries(WORLDS_DB)) {
-      this.worldsById.set(id, world);
+    if (WORLDS_DB && typeof WORLDS_DB === 'object') {
+      for (const [id, world] of Object.entries(WORLDS_DB)) {
+        this.worldsById.set(id, world);
+      }
     }
 
     // 5. Index NPC Schedules (by ID, Home Map, All Scheduled Maps, and Tier)

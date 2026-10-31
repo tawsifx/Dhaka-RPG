@@ -2,8 +2,9 @@
 // Migrated 100% intact from game.js
 import { SoundEngine } from '../audio/SoundEngine';
 import { DateState } from '../state/DateState';
-import { UI } from '../ui/UIController';
 import { CURZON_X, CURZON_Y, ARCADE_X, ARCADE_Y } from './constants';
+
+const getUI = (): any => (typeof window !== 'undefined' ? (window as any).UI : null);
 
 export const WORLDS_DB: Record<string, any> = {
   dhaka: {
@@ -71,8 +72,8 @@ export const WORLDS_DB: Record<string, any> = {
                 SoundEngine.itemFanfare();
                 DateState.hp = DateState.maxHp;
                 DateState.sp = DateState.maxSp;
-                UI.updateRPGStats();
-                UI.showToast('🌿', 'Forest Blessing!', 'The Elder Sage revitalized your spirit!');
+                getUI()?.updateRPGStats();
+                getUI()?.showToast('🌿', 'Forest Blessing!', 'The Elder Sage revitalized your spirit!');
               },
               nextNodes: [
                 { speaker: 'Elder Banyan Sage', portrait: '🌿', text: 'May the soothing dew of the emerald canopy restore your strength. Walk in peace, children of Earth and Spirit! (HP & SP Fully Restored!)' }
@@ -152,7 +153,7 @@ export const WORLDS_DB: Record<string, any> = {
                 SoundEngine.itemFanfare();
                 DateState.hp = DateState.maxHp;
                 DateState.sp = DateState.maxSp;
-                UI.updateRPGStats();
+                getUI()?.updateRPGStats();
               },
               nextNodes: [
                 { speaker: 'Tidekeeper Marina', portrait: '🐚', text: 'May the crystal waters soothe your wounds. Cleanse the Leviathan and bring peace back to the deep! (HP & SP Fully Restored!)' }
@@ -212,7 +213,7 @@ export const WORLDS_DB: Record<string, any> = {
                 SoundEngine.itemFanfare();
                 DateState.hp = DateState.maxHp;
                 DateState.sp = DateState.maxSp;
-                UI.updateRPGStats();
+                getUI()?.updateRPGStats();
               },
               nextNodes: [
                 { speaker: 'Master Blacksmith Kael', portrait: '⚒️', text: 'Here is a hearty draught of forge-fire nectar! Go show that Magma Drake what Dhaka spirit is made of! (HP & SP Fully Restored!)' }
@@ -266,7 +267,7 @@ export const WORLDS_DB: Record<string, any> = {
                 SoundEngine.teaClink();
                 DateState.hp = DateState.maxHp;
                 DateState.sp = DateState.maxSp;
-                UI.updateRPGStats();
+                getUI()?.updateRPGStats();
               },
               nextNodes: [
                 { speaker: 'Moon Walker', portrait: '🌙', text: 'Here, Lyra—close your eyes and imagine the aroma of crushed cardamom, thick malai, and warm clay cups on Fuller Road.' },
@@ -333,7 +334,7 @@ export const WORLDS_DB: Record<string, any> = {
                 SoundEngine.itemFanfare();
                 DateState.hp = DateState.maxHp;
                 DateState.sp = DateState.maxSp;
-                UI.updateRPGStats();
+                getUI()?.updateRPGStats();
               },
               nextNodes: [
                 { speaker: 'Celestial Chronicler', portrait: '🌟', text: 'May the eternal light of the cosmos surround you both. Vanquish the Archon and return to Dhaka Valley as legends! (HP & SP Fully Restored!)' }
@@ -358,7 +359,7 @@ export const WORLDS_DB: Record<string, any> = {
     minimapColor: '#5c1d24',
     petalColor: 0xffd580,
     isInterior: true,
-    returnPos: { x: CURZON_X, y: CURZON_Y + 36 }
+    returnPos: { x: CURZON_X, y: CURZON_Y + 32 }
   },
   farmhouse: {
     id: 'farmhouse',

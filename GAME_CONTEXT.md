@@ -224,6 +224,9 @@ dhaka-date-rpg/
     │   ├── ScheduleSystem.ts        # Living-world orchestrator, active entity lifecycle & dispatcher
     │   ├── TimeCalendarSystem.ts    # Day/Night clock, 5 Bengal seasons, event bus emitter
     │   ├── WeatherSystem.ts         # Rain particles, puddles, lightning, wind gusts
+    │   ├── level/                   # Level design patterns & automated validation
+    │   │   ├── LevelValidator.ts    # 32px grid snapping, multi-path routing, clearance audits
+    │   │   └── index.ts             # Level design barrel export
     │   ├── npc/                     # Specialized living-world NPC subsystems
     │   │   ├── NpcBehaviors.ts      # Seeded PRNG idle selection, activity badges & emotes
     │   │   ├── NpcMover.ts          # Smooth tile-stepping controller & interaction freezing
@@ -265,6 +268,36 @@ The game features **9 fully realized playable maps**. Outdoor realms use an **80
 | `curzon_interior` | **Curzon Hall: Faculty of Science**<br>*Auditorium, Bose Quantum Lab & Herbarium* | 40 × 30<br>(1280 × 960) | Teak parquet flooring, velvet runners, brass chandeliers | Central Mathematics Dais (Prof. Motahar Hossain), Bose Quantum Lab (Prof. Satyendra & Faiza), Botanical Herbarium & Chemistry Lab (Prof. Sultana, Dr. Kabir, Tanvir). |
 | `farmhouse` | **Green Meadows Farmhouse**<br>*Chacha Rafiq’s Pastoral Sanctuary & Animal Pastures* | 40 × 30<br>(1280 × 960) | Pastoral meadow, rural fences, duckling pond, sunflowers | Chacha Rafiq's Barn & Silo, 32×32 Tilled Crop Plots, Cow Pasture (Shuravi), Goat Pen (Kalu), Hen Coop (Tuntuni), Duckling Pond (Piku). |
 | `arcade_interior` | **Dhaka Cyber Arcade**<br>*Retro Cabinets, Rhythm Stages & Claw Machines* | 40 × 30<br>(1280 × 960) | Obsidian cyber floor, 90s geometric laser carpet, neon halos | Modular 6-Slot Arcade Architecture, Grand Championship DX, Upright Pixel A & Strike DX, Tabletop Cocktail Cab, Dance Mania Stage, Twin-Cockpit Racer, Lucky Claw Crane, Brass Token Dispenser, Manager Shanto. |
+
+### Level Design Standards & Spatial Architecture
+
+The world maps follow strict level design patterns adhering to industry standards for top-down 2D action RPGs and life sims:
+
+1. **32×32 Grid Snapping Standards**:
+   - All interactive objects, world portals, NPC initial spawn coordinates, and structural roads must snap precisely to the 32px boundary (`n * 32`) or exact tile center (`n * 32 + 16`).
+   - World portals and return positions (e.g. `curzon_interior:returnPos` at `(208, 1360)`) are strictly snapped to ensure zero position drift when transitioning between interiors and overworld maps.
+
+2. **Dual-Path Routing & Exploration Loops (Eliminating Single-Path Anti-Patterns)**:
+   - In all 5 elemental expedition realms (`forest`, `sunken`, `ember`, `frost`, `astral`), the layout provides both a primary central causeway and an exploratory northern bypass corridor:
+     - **Main Arterial Road**: Central causeway bridge crossing at `x: 1150` spanning the hazardous liquid/magma divide, connecting directly to Guardian boss arenas.
+     - **Northern Exploratory Bypass**: Paved secondary arterial branch (`tileSprite` corridor at `y: 520` spanning `x: 528` to `x: 1808`) allowing Moon Walker and Totoro to flank hazardous bottlenecks, gather high-tier elemental resources, and navigate around aggressive mobs without being forced into linear choke points.
+
+3. **Physical Hazard Collision Boundaries**:
+   - Visual liquid and hazard bodies (such as the southern lake water basins and jagged realm coves at `y: 1430`–`1780`) are reinforced with physical collision blockers:
+     - Left hazard blockades: `blockRect(620, 1430, 480, 100)` & `blockRect(580, 1630, 1000, 300)`
+     - Right hazard blockades: `blockRect(1740, 1430, 520, 100)` & `blockRect(1720, 1630, 1000, 300)`
+     - Central causeway passage: Exactly 140px width (`x: 1150` to `x: 1290`), providing a clear, readable landmark bridge without phantom collision or walking on water/lava.
+
+4. **Totoro & Companion Clearance Geometry**:
+   - Navigable corridors maintain a minimum width of **64px (2 full tiles)** to accommodate Totoro's 68×76 px trailing footprint alongside Moon Walker, preventing companion rubber-banding clipping and physics body pinning.
+
+5. **Automated Level Validation Subsystem (`LevelValidator`)**:
+   - Located at `src/systems/level/LevelValidator.ts` and verified via `tests/level/level_design.test.ts`.
+   - Programmatically audits worlds for:
+     - Coordinate grid alignment (`isPositionSnapped`, `isBoundingBoxAligned`).
+     - Companion clearance (`verifyCorridorClearance >= 64px`).
+     - Hazard collision registration across all realms.
+     - Multi-path loop integrity.
 
 ---
 

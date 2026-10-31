@@ -1510,6 +1510,12 @@ export class DhakaValleyScene extends Phaser.Scene {
       this.add.sprite(1150, 302, 'path-cap-stone-n').setOrigin(0.5, 1).setDepth(1.3);
       this.add.sprite(1150, 254, 'prop-stepping-trail-v').setOrigin(0.5, 1).setFlipY(true).setDepth(1.05);
 
+      // Secondary Exploratory Northern Loop (Multi-Path Level Design - level-design-patterns)
+      // Connects West Sanctuary (x: 528) -> North Landmark Ridge (y: 520) -> East Boss Arena (x: 1808)
+      this.add.tileSprite(528, 694, 64, 348, wCfg.pathTex).setDepth(1.08);
+      this.add.tileSprite(1168, 520, 1280, 64, wCfg.pathTex).setDepth(1.08);
+      this.add.tileSprite(1808, 716, 64, 392, wCfg.pathTex).setDepth(1.08);
+
       // Circular Sanctuary & Boss Arena Plaza Medallions
       this.add.sprite(240, 912, 'prop-plaza-medallion').setDepth(1.35);
       this.add.sprite(528, 868, 'prop-plaza-medallion').setDepth(1.35);
@@ -1522,6 +1528,13 @@ export class DhakaValleyScene extends Phaser.Scene {
       const realmCoveL = this.add.tileSprite(620, 1430, 480, 100, wCfg.waterTex).setDepth(1.0);
       const realmCoveR = this.add.tileSprite(1740, 1430, 520, 100, wCfg.waterTex).setDepth(1.0);
       this.extraWaterSprites.push(realmCoveL, realmCoveR);
+
+      // Physical Collision Boundaries on Hazard Waterways & Magma Basins (level-design-patterns)
+      // Eliminates tile physics gaps so entities cannot walk over open hazards
+      blockRect(620, 1430, 480, 100);
+      blockRect(1740, 1430, 520, 100);
+      blockRect(580, 1630, 1000, 300);
+      blockRect(1720, 1630, 1000, 300);
 
       this.add.tileSprite(620, 1380, 488, 22, 'tile-bank').setDepth(2.0);
       this.add.tileSprite(1740, 1380, 528, 22, 'tile-bank').setDepth(2.0);
