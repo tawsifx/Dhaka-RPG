@@ -1,5 +1,6 @@
 // src/index.ts - Root Architectural Barrel Export for Dhaka Date RPG
 export * from './types';
+export * from './core';
 export * from './config';
 export * from './state';
 export * from './audio';

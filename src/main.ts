@@ -3,9 +3,20 @@ import Phaser from 'phaser';
 import { DhakaValleyScene } from './scenes/DhakaValleyScene';
 import { GameDB } from './config/databaseIndex';
 import { SaveManager } from './state/SaveManager';
+import { SoundEngine } from './audio/SoundEngine';
+import { UI } from './ui/UIController';
+import { RPGStats } from './state/RPGStats';
+import { Services, EventBus, StateStack, GameLoop } from './core';
 import { initTitleSlideshow } from './ui/TitleSlideshow';
 import { initMobileSupport } from './ui/MobileSupport';
 import './style.css';
+
+// Register core services in ServiceLocator (game-arch-patterns)
+Services.register('SoundEngine', SoundEngine);
+Services.register('SaveManager', SaveManager);
+Services.register('UI', UI);
+Services.register('RPGStats', RPGStats);
+Services.register('GameLoop', GameLoop);
 
 // Instant standalone 3D race redirect if URL contains ?race or #race
 if (typeof window !== 'undefined' && (window.location.search.includes('race') || window.location.hash.includes('race'))) {
@@ -51,6 +62,9 @@ function bootGame() {
     game = new Phaser.Game(config);
     if (typeof window !== 'undefined') {
       (window as any).__gameInstance = game;
+      (window as any).__services = Services;
+      (window as any).__eventBus = EventBus;
+      (window as any).__stateStack = StateStack;
     }
   }
 }

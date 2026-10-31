@@ -12,13 +12,19 @@ Dhaka Date RPG (*Totoro & Moon Walker: Chronicles of the Six Realms*) uses a **d
 
 ### Key Architectural Tenets
 1. **Single-Responsibility Subsystems:** Monolithic scene files are decomposed into dedicated subsystem classes (combat, farming, calendar/time, weather, atmosphere, NPC navigation, dialogue, quests, and minimap).
-2. **Canonical Barrel Exports (`index.ts`):** Every subsystem directory provides a clean, self-contained `index.ts` barrel. Cross-module imports target the directory barrel rather than deep internal paths.
-3. **Dual Engine Isolation (2D / 3D Context Boundary):** The 3D Totoro Kart simulator operates in an isolated iframe harness (`/race.html`) launched via `TotoroKartEngine.launch(scene)`. This prevents Three.js WebGL2 contexts and assets from leaking into the 2D Phaser pipeline and preserves fast bundle load times.
-4. **Unidirectional Data Flow:**
+2. **Standard Core Architecture Framework (`src/core/`):** Adheres to industry game programming patterns (`game-arch-patterns`):
+   - **Typed EventBus (`EventBus.ts`):** Decoupled, strongly-typed publish/subscribe system replacing tight cross-singleton couplings.
+   - **Game State Stack (`GameStateStack.ts`):** Hierarchical state stack FSM (`GAMEPLAY`, `PAUSE`, `DIALOGUE`, `CUTSCENE`, `MINIGAME`, `COMBAT`) with enter/exit lifecycle transitions.
+   - **Service Locator (`Services.ts`):** Controlled global access with Null Object safety pattern (`registerNullService`).
+   - **Fixed Timestep Loop (`GameLoop.ts`):** Glenn Fiedler accumulator pattern with spiral-of-death delta clamping (`MAX_DELTA = 0.25`).
+   - **ECS Composition Primitives (`Component.ts`):** Entity-Component primitives (`HealthComponent`, `MovementComponent`) replacing deep inheritance.
+3. **Canonical Barrel Exports (`index.ts`):** Every subsystem directory provides a clean, self-contained `index.ts` barrel. Cross-module imports target the directory barrel rather than deep internal paths.
+4. **Dual Engine Isolation (2D / 3D Context Boundary):** The 3D Totoro Kart simulator operates in an isolated iframe harness (`/race.html`) launched via `TotoroKartEngine.launch(scene)`. This prevents Three.js WebGL2 contexts and assets from leaking into the 2D Phaser pipeline and preserves fast bundle load times.
+5. **Unidirectional Data Flow:**
    ```
-   [Config & Databases] ──> [State & SaveManager] ──> [Systems & Engines] ──> [Scenes & Minigames] ──> [UI & HUD Controller]
+   [Config & Databases] ──> [State & SaveManager] ──> [Core & Services] ──> [Systems & Engines] ──> [Scenes & Minigames] ──> [UI & HUD Controller]
    ```
-5. **Zero-Lag Diagnostic Tooling:** Real-time diagnostics (`NpcDebugOverlay`, telemetry) are fully modularized under `src/debug/` and can be toggled via hotkeys (`F3`, `F4`) or browser console (`window.__npc`).
+6. **Zero-Lag Diagnostic Tooling:** Real-time diagnostics (`NpcDebugOverlay`, telemetry) are fully modularized under `src/debug/` and can be toggled via hotkeys (`F3`, `F4`) or browser console (`window.__npc`).
 
 ---
 
@@ -26,10 +32,18 @@ Dhaka Date RPG (*Totoro & Moon Walker: Chronicles of the Six Realms*) uses a **d
 
 ```
 src/
-├── index.ts                     # Root master barrel export (re-exports types, config, state, audio, graphics, systems, ui, scenes, debug)
+├── index.ts                     # Root master barrel export (re-exports types, core, config, state, audio, graphics, systems, ui, scenes, debug)
 ├── main.ts                      # Slim application bootloader (Phaser Game initialization & window bindings)
 ├── style.css                    # Retro styling, CRT scanline filter, responsive HUD positioning
 ├── vite-env.d.ts                # Vite client type definitions
+│
+├── core/                        # Standard Game Architecture Core (game-arch-patterns)
+│   ├── index.ts                 # Core subsystem barrel export
+│   ├── EventBus.ts              # Strongly-typed publish-subscribe event bus
+│   ├── GameStateStack.ts        # Hierarchical FSM state stack (GAMEPLAY, DIALOGUE, CUTSCENE, MINIGAME)
+│   ├── Services.ts              # Service Locator with Null Object fallback
+│   ├── GameLoop.ts              # Fixed timestep physics accumulator loop & spiral-of-death clamp
+│   └── Component.ts             # ECS component composition primitives (Health, Movement)
 │
 ├── types/                       # Core TypeScript definitions & contracts
 │   ├── index.ts                 # Types barrel export

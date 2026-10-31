@@ -47,6 +47,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
 | **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 223 unit & regression tests across 20 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics, drift, turbo, surfaces, air, BVH collision, track spline, lap tracking, rescue, and countdown) + automated Playwright E2E suites (`test:race:m1`, `test:race:m2`, `test:race:m3`) + CLI track validation (`race:validate`) |
+| **Core Architecture** | Standard Game Architecture (`src/core/`) | Decoupled typed `EventBus`, hierarchical `GameStateStack` (FSM), `Services` locator with Null Object fallback, `GameLoop` with Glenn Fiedler fixed-timestep accumulator & spiral-of-death clamp (`MAX_DELTA = 0.25`), ECS `Component` composition primitives |
 | **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio real-time engine & drift screech synthesizers |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
@@ -68,6 +69,23 @@ dhaka-date-rpg/
 ├── tsconfig.json                    # TypeScript compiler options
 ├── vite.config.ts                   # Vite bundler configuration (Rolldown code-splitting)
 ├── vercel.json                      # Legacy Vercel 308 permanent redirect configuration to Cloudflare Pages
+├── src/
+│   ├── core/                        # Standard Game Architecture Core (game-arch-patterns)
+│   │   ├── EventBus.ts              # Strongly-typed publish-subscribe event bus
+│   │   ├── GameStateStack.ts        # Hierarchical FSM state stack (GAMEPLAY, DIALOGUE, CUTSCENE, MINIGAME)
+│   │   ├── Services.ts              # Service Locator with Null Object fallback
+│   │   ├── GameLoop.ts              # Fixed timestep physics accumulator loop & spiral-of-death clamp
+│   │   ├── Component.ts             # ECS component composition primitives (Health, Movement)
+│   │   └── index.ts                 # Master barrel export for core architecture
+│   ├── types/                       # Core TypeScript definitions & contracts
+│   ├── config/                      # Declarative configuration, game databases, and indexing
+│   ├── state/                       # Reactive state machines & persistence
+│   ├── audio/                       # SFX and Procedural Audio Pipelines
+│   ├── graphics/                    # Hybrid External Asset & Procedural Fallback Adapters
+│   ├── debug/                       # Diagnostic HUD & Developer Tooling
+│   ├── systems/                     # Core Game Simulation Engines
+│   ├── scenes/                      # Phaser Scenes & Minigames
+│   └── ui/                          # HUD & Mobile Integration
 ├── docs/
 │   ├── mariokart64/                 # Totoro Kart 3D Racing Subsystem Documentation
 │   │   ├── CHARACTER_MODELING_SPEC.md # 3D Driver modeling pipeline (Satsuki, Totoro)
@@ -1487,10 +1505,17 @@ To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.
 
 ```
 src/
-├── index.ts                     # Root library barrel export (re-exports types, config, state, audio, graphics, systems, ui, scenes, debug)
+├── index.ts                     # Root library barrel export (re-exports types, core, config, state, audio, graphics, systems, ui, scenes, debug)
 ├── main.ts                      # Slim application bootloader & Phaser Game instance (58 lines)
 ├── style.css                    # Retro scanlines, CRT filter, UI HUD positioning
 ├── vite-env.d.ts                # Vite client type declarations
+├── core/                        # Standard Game Architecture Core (game-arch-patterns)
+│   ├── EventBus.ts              # Strongly-typed publish-subscribe event bus
+│   ├── GameStateStack.ts        # Hierarchical FSM state stack (GAMEPLAY, DIALOGUE, CUTSCENE, MINIGAME)
+│   ├── Services.ts              # Service Locator with Null Object fallback
+│   ├── GameLoop.ts              # Fixed timestep physics accumulator loop & spiral-of-death clamp
+│   ├── Component.ts             # ECS component composition primitives (Health, Movement)
+│   └── index.ts                 # Clean barrel export for core architecture
 ├── types/                       # Core TypeScript definitions + index.ts barrel
 │   ├── rpg.types.ts             # Items, crafting, spawns, dialog interfaces
 │   ├── npc.types.ts             # Stardew/HGSS living-world schedule & navigation contracts

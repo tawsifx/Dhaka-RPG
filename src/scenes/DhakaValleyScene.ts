@@ -34,6 +34,7 @@ import { OpeningDialogueSystem } from '../systems/OpeningDialogueSystem';
 import { RickshawTourEngine, StargazingEngine, LakeBoatEngine, TotoroKartEngine } from './minigames';
 import { MinimapRenderer, InteriorBuilder } from './world';
 import { CampusRomanceQuests, ArcadeCutscenes } from './quests';
+import { EventBus, StateStack, GameState, Services, GameLoop } from '../core';
 
 export class DhakaValleyScene extends Phaser.Scene {
   [key: string]: any;
@@ -234,6 +235,8 @@ export class DhakaValleyScene extends Phaser.Scene {
     (window as any).RPGStats = RPGStats;
     (window as any).CombatSystem = CombatSystem;
     (window as any).UI = UI;
+    Services.register('DhakaValleyScene', this);
+    Services.register('CombatSystem', CombatSystem);
     (window as any).__startRace = () => this.startTotoroKart();
     if (typeof window !== 'undefined' && !(window as any).__race) {
       (window as any).__race = {
@@ -3673,12 +3676,19 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   async startTotoroKart() {
     try {
+      StateStack.pushState(GameState.MINIGAME, { minigameId: 'TotoroKart' });
+      EventBus.emit('minigame:launched', { minigameId: 'TotoroKart' });
       const result = await TotoroKartEngine.launch(this);
       console.log('🏁 [Race] Completed with result:', result);
+      EventBus.emit('minigame:closed', { minigameId: 'TotoroKart', results: result });
       return result;
     } catch (err) {
       console.error('Failed to launch TotoroKartEngine:', err);
       return null;
+    } finally {
+      if (StateStack.currentState() === GameState.MINIGAME) {
+        StateStack.popState();
+      }
     }
   }
 
@@ -4315,11 +4325,15 @@ export class DhakaValleyScene extends Phaser.Scene {
   update(time, delta) {
     if (!this.player) return;
 
+    // Fixed timestep delta clamping to prevent spiral of death (game-arch-patterns)
+    const safeDeltaSeconds = GameLoop.clampDelta(delta / 1000);
+    const safeDeltaMs = safeDeltaSeconds * 1000;
+
     // Advance TimeCalendarSystem, AtmosphereSystem and Living-World NPC ScheduleSystem
-    const isWorldPaused = UI.isOpen() || this.cutsceneLocked;
-    if (this.timeCalendar && !isWorldPaused) this.timeCalendar.update(delta);
-    if (this.atmosphere && !isWorldPaused) this.atmosphere.update(time, delta);
-    if (this.scheduleSystem) this.scheduleSystem.update(time, delta);
+    const isWorldPaused = !StateStack.isGameplayActive() || UI.isOpen() || this.cutsceneLocked;
+    if (this.timeCalendar && !isWorldPaused) this.timeCalendar.update(safeDeltaMs);
+    if (this.atmosphere && !isWorldPaused) this.atmosphere.update(time, safeDeltaMs);
+    if (this.scheduleSystem) this.scheduleSystem.update(time, safeDeltaMs);
 
     // Render Monsoon Rain Drops & Slanted Streaks (Batched single draw call)
     if (this.isRaining && this.rainGraphics) {
@@ -4330,8 +4344,8 @@ export class DhakaValleyScene extends Phaser.Scene {
 
       this.rainGraphics.beginPath();
       this.rainDrops.forEach(drop => {
-        drop.y += (drop.speed * delta) / 1000;
-        drop.x += (slant * drop.speed * delta) / 3000;
+        drop.y += (drop.speed * safeDeltaMs) / 1000;
+        drop.x += (slant * drop.speed * safeDeltaMs) / 3000;
         if (drop.y > cam.scrollY + cam.height + 40) {
           drop.y = cam.scrollY - 30;
           drop.x = cam.scrollX + Phaser.Math.Between(-80, cam.width + 80);
@@ -4346,12 +4360,19 @@ export class DhakaValleyScene extends Phaser.Scene {
         this.nextThunder = time + Phaser.Math.Between(10000, 18000);
         this.cameras.main.flash(200, 240, 245, 255, true);
         SoundEngine.thunder();
+        EventBus.emit('weather:changed', { isRaining: true, isMonsoon: this.monsoonTriggered });
       }
     }
 
     // Regenerate SP slowly
     if (DateState.sp < DateState.maxSp) {
-      DateState.sp = Math.min(DateState.maxSp, DateState.sp + (delta / 1000) * 3.2);
+      const oldSp = DateState.sp;
+      DateState.sp = Math.min(DateState.maxSp, DateState.sp + safeDeltaSeconds * 3.2);
+      EventBus.emit('player:sp-changed', {
+        current: DateState.sp,
+        max: DateState.maxSp,
+        delta: DateState.sp - oldSp
+      });
       UI.updateRPGStats();
     }
 
