@@ -195,7 +195,7 @@
       put(glass, prof([[0.78, 1.0, 0], [0.5, 1.46, 0.02], [0.45, 1.46, 0.02], [0.72, 1.0, 0]], 1.66, { bt: 0.015, bs: 0.015, seg: 1, cs: 3 }), 0);
       pbox(trim, 0x2a2a2a, 1.72, 0.05, 0.06, 0, 1.47, 0.47); pbox(trim, 0x2a2a2a, 0.05, 0.5, 0.05, 0.85, 1.22, 0.62); pbox(trim, 0x2a2a2a, 0.05, 0.5, 0.05, -0.85, 1.22, 0.62);
       for (const z of [0.08, -0.95]) pbox(trim, 0x8a1f1f, 1.46, 0.2, 0.62, 0, 0.88, z);       // 座面
-      pbox(trim, 0x8a1f1f, 1.46, 0.58, 0.14, 0, 1.2, -0.28); pbox(trim, 0x8a1f1f, 1.46, 0.62, 0.14, 0, 1.22, -1.32);  // 背もたれ
+      pbox(trim, 0x8a1f1f, 1.46, 0.44, 0.14, 0, 1.10, -0.28); pbox(trim, 0x8a1f1f, 1.46, 0.36, 0.14, 0, 1.04, -1.32);  // 背もたれ (オープンカー後方視界確保)
       pbox(trim, 0x2a2a2a, 1.6, 0.18, 0.3, 0, 0.98, 0.62);                                    // ダッシュボード
       const wheel = new (T().TorusGeometry)(0.19, 0.03, 6, 14);
       put(trim, wheel, 0x1a1a1a, [0.42, 1.12, 0.52], [-1.0, 0, 0]);
@@ -600,6 +600,30 @@
       return { group: g, root };
     },
 
+    /* ================= Totoro Driver (Posed via Blender MCP) ================= */
+    totoroDriver(o) {
+      const THREE = T();
+      o = Object.assign({ scale: 0.68 }, o || {});
+      const g = new THREE.Group(), root = new THREE.Group(); g.add(root);
+      if (CT.TotoroModelData) {
+        if (!G.totoroDriverGeo) {
+          const geo = new THREE.BufferGeometry();
+          geo.setAttribute('position', new THREE.BufferAttribute(CT.TotoroModelData.getPositions(), 3));
+          geo.setAttribute('normal', new THREE.BufferAttribute(CT.TotoroModelData.getNormals(), 3));
+          geo.setAttribute('color', new THREE.BufferAttribute(CT.TotoroModelData.getColors(), 3));
+          G.totoroDriverGeo = geo;
+        }
+        const mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+        const mesh = new THREE.Mesh(G.totoroDriverGeo, mat);
+        root.add(mesh);
+      } else {
+        const proc = M.totoro(o);
+        root.add(proc.root);
+      }
+      root.scale.setScalar(o.scale);
+      return { group: g, root };
+    },
+
     /* ================= タクシー (Dhaka Yellow Cab) ================= */
     taxi(color) {
       const THREE = T(), g = new THREE.Group(), body = new THREE.Group(); g.add(body);
@@ -611,7 +635,7 @@
         }, { repeat: true });
         G.checker.repeat.set(26 / 4, 1);
         G.plate = M.textTex('DHAKA-GA 11-2026', { w: 128, h: 64, bg: '#f4f4e6', fg: '#1e3a8a', font: 'bold 20px sans-serif', border: '#1e3a8a' });
-        G.signTex = M.textTex('DHAKA TAXI', { w: 128, h: 48, bg: '#fff7d6', fg: '#c40', font: 'bold 24px sans-serif' });
+        G.signTex = M.textTex('DHAKA TAXI', { w: 256, h: 96, bg: '#fff7d6', fg: '#c40', font: 'bold 44px sans-serif' });
       }
       const sm = new THREE.MeshLambertMaterial({ map: G.checker });
       const sg = new THREE.PlaneGeometry(1.8, 0.14);
@@ -620,11 +644,11 @@
       const pm = new THREE.MeshLambertMaterial({ map: G.plate }), pg = new THREE.PlaneGeometry(0.5, 0.25);
       const pf = new THREE.Mesh(pg, pm); pf.position.set(0, 0.5, 2.382); body.add(pf);
       const pr = new THREE.Mesh(pg, pm); pr.rotation.y = Math.PI; pr.position.set(0, 0.5, -2.382); body.add(pr);
-      // 屋根のTAXI行灯
+      // 屋根のTAXI行灯 (フロントガラス上部に配置し、運転手視界とチェイスカメラを遮らない)
       const sw = M.basic(0xfff7d6), smat = new THREE.MeshBasicMaterial({ map: G.signTex });
-      const sign = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.27, 0.38), [sw, sw, sw, sw, smat, smat]);
-      sign.position.set(0, 1.28, -1.8); body.add(sign);
-      const bt = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.18, 0.3), M.mat(0x2a2a2a)); bt.position.set(0, 1.12, -1.8); body.add(bt);
+      const sign = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.16, 0.22), [sw, sw, sw, sw, smat, smat]);
+      sign.position.set(0, 1.68, 0.48); body.add(sign);
+      const bt = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 0.16), M.mat(0x2a2a2a)); bt.position.set(0, 1.58, 0.48); body.add(bt);
       // ホイール
       const wheels = [];
       for (const [sx, sz, front] of [[-1.05, 1.4, true], [1.05, 1.4, true], [-1.05, -1.45, false], [1.05, -1.45, false]]) {
@@ -633,8 +657,11 @@
         wheels.push({ steer, spin, front, side: sx });
       }
       const shadow = M.blobShadow(6); shadow.scale.set(0.8, 1.15, 1); g.add(shadow);
-      // 乗員: Moon Walker driving + Totoro companion co-pilot + passenger
-      const driver = M.human({
+      // 乗員: 3D Totoro driver behind steering wheel (x = 0.42) + Moon Walker co-pilot (x = -0.42) + rear passenger
+      const driver = M.totoroDriver({ scale: 0.75 });
+      driver.group.position.set(0.42, 1.18, 0.22);
+
+      const copilot = M.human({
         shirt: 0xfef08a,
         pants: 0xf97316,
         hair: 0x3a2215,
@@ -643,16 +670,15 @@
         accent: 0xf59e0b,
         shoe: 0x3d2314,
         skin: 0xfbd0a8,
-        scale: 0.95,
+        scale: 0.98,
         hat: false
       });
-      const totoro = M.totoro({ scale: 0.78 });
-      totoro.group.position.set(-0.42, 0.16, 0.08);
+      copilot.group.position.set(-0.42, 0.24, 0.10);
 
       const pax = M.human({ shirt: 0xec4899, pants: 0x2b4a7a, scale: 0.95 });
-      pax.group.position.set(0.0, 0.18, -1.0); pax.group.visible = false;
-      body.add(driver.group, totoro.group, pax.group);
-      return { group: g, body, wheels, shadow, riders: { driver, totoro, passenger: pax } };
+      pax.group.position.set(0.0, 0.18, -0.95); pax.group.visible = false;
+      body.add(driver.group, copilot.group, pax.group);
+      return { group: g, body, wheels, shadow, riders: { driver, totoro: driver, copilot, passenger: pax } };
     },
 
     /* ================= 通行人(歩き用) ================= */

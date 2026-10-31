@@ -75,13 +75,20 @@
       R.passenger.group.visible = this.passengerOn;
       const cheer = this.cheerT > 0, t = this.rideT;
       const rk = this.reactT > 0 ? this.reactKind : null;
-      CT.Models.animHuman(R.driver, rk === 'hifi' || rk === 'fist' ? 'seatHifi' : (cheer || rk === 'banzai') ? 'cheer' : 'seat', t * 3, t);
-      if (this.passengerOn) CT.Models.animHuman(R.passenger, cheer ? 'cheer' : 'seatIdle', t * 3 + 1, t + 0.6);
-      if (R.totoro && R.totoro.root) {
-        R.totoro.root.rotation.z = Math.sin(t * 4) * 0.06 + (this.drifting ? this.slip * 0.02 : 0);
-        R.totoro.root.rotation.x = (this.totalSpeed > 10 ? -0.06 : 0) + (cheer ? Math.sin(t * 12) * 0.12 : 0);
-        R.totoro.root.position.y = cheer ? Math.abs(Math.sin(t * 12)) * 0.08 : 0;
+      // Animate Totoro driver (steering tilt, drift lean, cheer bounce)
+      const totoro = R.totoro || R.driver;
+      if (totoro && totoro.root) {
+        const steerLean = (this.lastCtl ? this.lastCtl.steer : 0) * 0.15;
+        totoro.root.rotation.z = Math.sin(t * 4) * 0.04 + (this.drifting ? this.slip * 0.04 : steerLean);
+        totoro.root.rotation.x = (this.totalSpeed > 10 ? -0.06 : 0) + (cheer ? Math.sin(t * 12) * 0.14 : 0);
+        totoro.root.position.y = cheer ? Math.abs(Math.sin(t * 12)) * 0.08 : 0;
       }
+      // Animate Moon Walker co-pilot
+      if (R.copilot) {
+        CT.Models.animHuman(R.copilot, rk === 'hifi' || rk === 'fist' ? 'seatHifi' : (cheer || rk === 'banzai') ? 'cheer' : 'seatIdle', t * 3, t);
+      }
+      // Animate passenger
+      if (this.passengerOn && R.passenger) CT.Models.animHuman(R.passenger, cheer ? 'cheer' : 'seatIdle', t * 3 + 1, t + 0.6);
     }
 
     _step(dt, ctl, world) {

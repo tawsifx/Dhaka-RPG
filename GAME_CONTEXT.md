@@ -238,7 +238,7 @@ The game features **9 fully realized playable maps**. Outdoor realms use an **80
 
 | Map ID | Display Name & Subtitle | Size (Tiles & Px) | Atmosphere / Theme | Key Landmarks & Features |
 | :--- | :--- | :--- | :--- | :--- |
-| `dhaka` | **Dhaka Valley**<br>*Curzon Hall, TSC, Nilkhet, Arcade & Dhanmondi Lake* | 80 × 60<br>(2560 × 1920) | Lush green, warm sunshine, falling Krishnachura petals | Curzon Hall facade, TSC Tea Stall, Nilkhet Boiwala, Charukola Art Studio, Dhaka Cyber Arcade exterior (Kenney 3D commercial building with 4-frame animated neon marquee & chaser bulbs), Mintu Rd Fountain Plaza, Rickshaw Tour, Dhanmondi Lake Pier & Stargazing Telescope, Realm Portal. |
+| `dhaka` | **Dhaka Valley**<br>*Curzon Hall, TSC, Nilkhet, Arcade & Dhanmondi Lake* | 80 × 60<br>(2560 × 1920) | Lush green, warm sunshine, falling Krishnachura petals | Curzon Hall facade, TSC Tea Stall, Nilkhet Boiwala, Charukola Art Studio, Dhaka Cyber Arcade exterior (animated neon marquee), Mintu Rd Fountain Plaza, Rickshaw Tour, Dhanmondi Lake Pier & Stargazing Telescope, Realm Portal. |
 | `forest` | **Whispering Emerald Forest**<br>*Ancient Spirit Groves & Briar Sanctuary* | 80 × 60<br>(2560 × 1920) | Deep moss green, luminous cyan bioluminescence | Ancient Spirit Altar, North Banyan Tree (Ananya Ghost), Southwest Marsh (Kofil Chacha), Northeast Ruins (Prof. Shamsher), Sylvan Briar Stag Boss Arena. |
 | `sunken` | **Sunken Kingdom**<br>*Coral Temples, Tidepools & Lost Relics* | 80 × 60<br>(2560 × 1920) | Azure cyan, underwater caustic rays, tide ripples | Coral Pillars, Tidekeeper Marina Shrine, Luminous Coral Tidepools, Abyssal Coral Leviathan Caldera. |
 | `ember` | **Emberfall Highlands**<br>*Obsidian Forges, Lava Bridges & Dragon Territory* | 80 × 60<br>(2560 × 1920) | Volcanic amber-orange, magma embers, obsidian rock | Basalt lava bridges, Master Blacksmith Kael's Forge, Volcanic Ore veins, Ignis the Magma Drake Caldera. |
@@ -497,25 +497,15 @@ export interface ArcadeGameSlot {
 }
 ```
 
-#### Pre-Configured Hardware Slots & Attractions (Kenney CC0 Assets)
-The arcade interior is built with high-fidelity external 2D sprites rendered from Kenney's CC0 Mini Arcade & Commercial kits, replacing legacy procedural canvas drawings:
-
-| Slot ID / Attraction | Hardware & Style | Theme & Dimensions | Gameplay / Interaction State |
+#### Pre-Configured Hardware Slots
+| Slot ID | Cabinet Style & Dimensions | Hardware Name & Theme | Default Standby State |
 | :--- | :--- | :--- | :--- |
-| `slot_grand_championship` | Deluxe Marquee (128×104 px) | **Slot #1: Grand Championship DX**<br>*Flagship Tournament Dual CRT* | Standby. Elevated tournament stage with cyan/gold lighting. Diagnostic cutscene on inspect. |
-| `slot_retro_pixel_a` | Candy Upright (80×96 px) | **Slot #2: Retro Pixel Arcade A**<br>*8-Bit / 16-Bit Platformer / Brawler* | Standby. Played by guest gamer NPC. Microswitch & Sanwa stick calibration report. |
-| `slot_fighting_clash` | Upright Fighter (80×96 px) | **Slot #3: Super Battle Strike DX: Moon Walker & Totoro**<br>*Side-Scrolling Beat-'Em-Up Brawler* | **INSTALLED & PLAYABLE**. Launches retro 8-bit beat-'em-up brawler in isolated CRT modal (`BrawlerEngine.ts` / `brawler.html`). |
-| `slot_cocktail_table` | Glass Tabletop (96×64 px) | **Slot #4: Tabletop Glass Cocktail Lounge**<br>*Sit-Down Strategy / Maze Action* | Standby. Woodgrain & smoked glass cocktail table with chrome red-cushion bar stools. |
-| `slot_rhythm_beat` | Dance Stage (96×96 px) | **Slot #5: Beat Mania & Dance Pad Zone**<br>*Rhythm / Dance Stage Simulator* | Standby. Dual sound towers, subwoofers, 4-arrow metallic dance pad, and animated dancing guest NPC. |
+| `slot_grand_championship` | Deluxe Marquee (128×96 px) | **Slot #1: Grand Championship Cabinet**<br>*Flagship Tournament Dual CRT* | Standby. Plays BIOS v2.4 hardware diagnostic on inspect. |
+| `slot_retro_pixel_a` | Candy Upright (64×80 px) | **Slot #2: Retro Pixel Arcade A**<br>*8-Bit / 16-Bit Platformer / Brawler* | Standby. Microswitch & Sanwa stick calibration report. |
+| `slot_fighting_clash` | Upright Fighter (64×80 px) | **Slot #3: Super Battle Strike DX: Moon Walker & Totoro**<br>*Side-Scrolling Beat-'Em-Up Brawler* | **INSTALLED & PLAYABLE**. Launches retro 8-bit beat-'em-up brawler in isolated CRT modal (`BrawlerEngine.ts` / `brawler.html`). |
+| `slot_cocktail_table` | Glass Tabletop (96×64 px) | **Slot #4: Tabletop Glass Cocktail Lounge**<br>*Sit-Down Strategy / Maze Action* | Standby. Top-down CRT cocktail table diagnostics. |
+| `slot_rhythm_beat` | Dance Stage (80×80 px) | **Slot #5: Beat Mania & Dance Pad Zone**<br>*Rhythm / Dance Stage Simulator* | Standby. 4-way pressure footpad diagnostic report. |
 | `slot_racing_twin` | Twin Cockpit (112×80 px) | **Slot #6: Dhaka Cyber Speed Twin-Cockpit**<br>*Force-Feedback Twin Racing Simulator* | **INSTALLED & PLAYABLE**. Launches *Dhaka Crazy Taxi: Rush Hour (Moon Walker & Totoro)* in isolated 3D Three.js modal (`CrazyTaxiEngine.ts` / `crazytaxi.html`). |
-| `pinball` | Retro Pinball (80×96 px) | **Retro Cyber Pinball Machine**<br>*High-Voltage Silverball Table* | **INTERACTIVE**. Pop bumpers, flippers, multiball sound effects and high score awards! |
-| `airhockey` | Tabletop (104×72 px) | **Pro Air Hockey Arena**<br>*High-Speed Puck Table* | **INTERACTIVE**. Smooth gliding puck sound and goal score animations. |
-| `basketball` | Arcade Hoop (88×104 px) | **Hoop Fever Shootout**<br>*Buzzer-Beater Basketball Game* | **INTERACTIVE**. Basketball buzzer-beater 3-pointer shot with ticket dispensary. |
-| `claw` | Prize Crane (80×100 px) | **Lucky Neon Claw Machine**<br>*Magenta Enclosure & Mechanical Arm* | **INTERACTIVE**. Insert 1 Arcade Token to win rare plushies (Neon Totoro keepsake!). |
-| `token_dispenser` | Vintage Steel & Brass (48×72 px) | **Token Exchange Dispenser**<br>*High-Capacity Coin Hopper* | **INTERACTIVE**. Exchange 10 Taka for 5 brass arcade tokens. |
-| `wheel` | Standee (64×88 px) | **Lucky Fortune Spin Wheel**<br>*Neon Carnival Fortune Wheel* | **INTERACTIVE**. Spin the wheel for a chance to win free arcade tokens! |
-| `vending` | Neon Vending (64×88 px) | **Cyber Soda & Treats Vending Machine**<br>*Chilled Beverage Dispenser* | **INTERACTIVE**. Refreshing chilled cyber cola to revitalize Moon Walker & Totoro. |
-| `shanto_counter` | Workshop Counter (48×48 px register) | **Manager Shanto Station**<br>*Arcade Technician Counter & Register* | **TALK & QUESTS**. Manager Shanto provides arcade lore, diagnostic guidance, and token management. |
 
 #### Installed Title: Dhaka Crazy Taxi: Rush Hour (`CrazyTaxiEngine.ts`)
 - **Origin & Licensing**: Cloned and ported from Ruteshisu's open-source 3D WebGL Crazy Taxi simulator (`Ruteshisu/CrazyTaxi`, credited in `ASSET_CREDITS.md`).
@@ -524,9 +514,12 @@ The arcade interior is built with high-fidelity external 2D sprites rendered fro
   - Full English translation of UI, HUD, tutorial banners, stunt announcements, and end-of-run ranking screens (`S - Legendary Dhaka Cab Champion`, `A - Master Campus Speedster`, `B - Skilled City Racer`, `C - Rookie Rickshaw Switcher`, `D - Paper License Driver`).
   - Currency localized to BDT ৳ (Taka) fare calculation and tips.
   - Stunt callouts: `MEGA LAUNCH!`, `DHAKA DRIFT!`, `WALL SLAM!`, `BOING!`, `SPIN CYCLE!`, `HOME RUN!`, `ROCKET LAUNCH!`, `STAR SHOT!`.
-- **Character Designs & Overworld Integration**:
-  - **Moon Walker (Driver)**: Custom 3D procedural chibi model behind the wheel, featuring dark brown bob hair, bright yellow collared shirt, and amber pinafore suspender dress.
-  - **Totoro (Co-Pilot Companion)**: Full 3D procedural grey forest spirit seated in the front passenger seat with cream belly, chevrons, pointed ears, whiskers, smiling mouth, and animated body sway/cheers during high-speed drifts.
+- **Character Designs & Cockpit Integration**:
+  - **Totoro (Driver)**: Authentic high-fidelity 3D model posed and calibrated via Blender MCP into an active driving posture behind the steering wheel (`x = 0.42`), with paws gripping the wheel rim, leaning into sharp drifts, and bouncing during stunts.
+  - **Moon Walker (Co-Pilot Companion)**: Seated beside Totoro in the front passenger seat (`x = -0.42`), navigating Fuller Road, celebrating drift combos, and waving during drop-offs.
+  - **Dynamic 3D Navigation Arrow & Streamlined HUD**:
+    - Aerodynamic 3D roof arrow hovering smoothly above the cab roof, dynamically orienting in world space toward fares and destinations with tier color-coding (green/yellow/red).
+    - Refined, non-overlapping HUD cards for digital time (`TIME 75.0`), distance tracking pill (`Passenger 120m`), neon art points / fare cards, and boost speedometer.
   - **Dhaka Passengers**: Named DU and Dhaka characters appear as fares across the city with custom quotes and destinations (Anamika heading to Star Kebab for mutton kacchi, Ahona heading to Curzon Hall lawn, Apshora heading to Charukola Art Pavilion, Rakin heading to Dhanmondi Lake Pier, Iman heading to Mintu Road Fountain, Mehjabin heading to Shahbagh Flower Market, Baki Bhai heading to Nilkhet Book Alley, Prof. Satyendra heading to Bose Quantum Lab, Manager Shanto heading to Dhaka Cyber Arcade, and Chacha Rafiq heading to Green Meadows Farm).
 - **Audio & Controls**:
   - Real-time Web Audio API multi-channel synthesizers (dynamic engine roar, tire skid screech, horn, voice cries, and 6 rock/punk/funk procedural BGM tracks: Punk Rush, Surf Rock, Ska Punk, Cyber Beat, Garage Rock, Funk Drive).

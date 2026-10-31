@@ -82,10 +82,12 @@
     background: #ef4444;
     color: #fff;
   }
-  /* Push HUD slightly down so marquee does not overlap time/score */
-  #time { top: calc(var(--u) * 2.4 + 40px) !important; }
-  #scorebox { top: calc(var(--u) * 2.4 + 40px) !important; }
-  #title .logo { top: calc(var(--u) * 5 + 40px) !important; }
+  /* Push HUD and title down so marquee does not overlap */
+  #time { top: calc(var(--u) * 1.8 + 42px) !important; }
+  #scorebox { top: calc(var(--u) * 1.8 + 42px) !important; }
+  #title .logo { top: calc(var(--u) * 6 + 42px) !important; }
+  #title .demo { top: calc(var(--u) * 1.6 + 44px) !important; }
+  #arrowWrap { top: calc(var(--u) * 13 + 46px) !important; }
 </style>
 </head>
 <body data-mode="attract">
@@ -168,6 +170,7 @@
 <script src="/crazytaxi/js/core/config.js"></script>
 <script src="/crazytaxi/js/core/input.js"></script>
 <script src="/crazytaxi/js/core/audio.js"></script>
+<script src="/crazytaxi/js/models/totoro_data.js"></script>
 <script src="/crazytaxi/js/models/models.js"></script>
 <script src="/crazytaxi/js/world/city.js"></script>
 <script src="/crazytaxi/js/entities/taxi.js"></script>

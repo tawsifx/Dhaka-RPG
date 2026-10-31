@@ -37,14 +37,30 @@
         scale: 1.0,
       }, char);
     }
-    /** タクシー屋根の上に浮く、目的地を指す矢印 (平たい矢印形) */
+    /** タクシー屋根の上に浮く、目的地を指す3D矢印 (Crazy Taxi スタイルの流線形3Dポインター) */
     _roofArrow() {
       const THREE = window.THREE, sh = new THREE.Shape();
-      sh.moveTo(0, 2.3); sh.lineTo(1.5, 0.3); sh.lineTo(0.55, 0.3); sh.lineTo(0.55, -1.7); sh.lineTo(-0.55, -1.7); sh.lineTo(-0.55, 0.3); sh.lineTo(-1.5, 0.3); sh.lineTo(0, 2.3);
-      const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.5, bevelEnabled: false }); geo.translate(0, 0, -0.25); geo.rotateX(Math.PI / 2); // 先端が +z
+      sh.moveTo(0, 1.8);
+      sh.lineTo(0.9, 0.2);
+      sh.lineTo(0.38, 0.2);
+      sh.lineTo(0.38, -1.3);
+      sh.lineTo(-0.38, -1.3);
+      sh.lineTo(-0.38, 0.2);
+      sh.lineTo(-0.9, 0.2);
+      sh.lineTo(0, 1.8);
+      const geo = new THREE.ExtrudeGeometry(sh, {
+        depth: 0.32,
+        bevelEnabled: true,
+        bevelThickness: 0.06,
+        bevelSize: 0.05,
+        bevelSegments: 2
+      });
+      geo.translate(0, 0, -0.16);
+      geo.rotateX(Math.PI / 2); // 先端が +z (車首方向)
       const mat = new THREE.MeshBasicMaterial({ color: 0x38e060 });
       const m = new THREE.Mesh(geo, mat), g = new THREE.Group(); g.add(m);
-      const edge = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.BackSide })); edge.scale.set(1.12, 1.4, 1.12); g.add(edge);
+      const edge = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.BackSide }));
+      edge.scale.set(1.08, 1.25, 1.08); g.add(edge);
       g.userData = { mat }; g.visible = false; return g;
     }
     reset(taxi) {
@@ -106,14 +122,20 @@
         s.obj.userData.pil.material.opacity = near ? 0.34 : 0.17;
       }
       if (this.dest) { this.dest.obj.userData.ring.scale.setScalar(pulse); this.dest.obj.userData.arr.position.y = 13 + Math.sin(this.t * 4) * 1.0; this.dest.obj.userData.arr.rotation.y = this.t * 2; }
-      // 屋根の矢印
-      if (tg) {
+      // 屋根の3D矢印 (Crazy Taxi スタイルの流線形3Dポインター)
+      if (tg && document.body.dataset.mode !== 'attract') {
         const a = this.arrow, dx = tg.x - taxi.x, dz = tg.z - taxi.z;
-        a.visible = true; a.userData.mat.color.setHex(tg.color);
-        a.position.set(taxi.x, taxi.y + 2.5 + Math.sin(this.t * 6) * 0.1, taxi.z);
-        a.rotation.order = 'YXZ'; a.rotation.y = Math.atan2(dx, dz); a.rotation.x = -0.45;
-        const sc = 0.62 + Math.sin(this.t * 6) * 0.03; a.scale.set(sc, sc, sc);
-      } else this.arrow.visible = false;
+        a.visible = true;
+        a.userData.mat.color.setHex(tg.color);
+        a.position.set(taxi.x, taxi.y + 2.35 + Math.sin(this.t * 5) * 0.08, taxi.z);
+        a.rotation.order = 'YXZ';
+        a.rotation.y = Math.atan2(dx, dz);
+        a.rotation.x = -0.10;
+        const sc = 0.42 + Math.sin(this.t * 5) * 0.02;
+        a.scale.set(sc, sc, sc);
+      } else {
+        this.arrow.visible = false;
+      }
       const sp = taxi.totalSpeed;
       if (this.cap) { this._cap(dt, taxi, game); return; }
       if (taxi.y > 1 || taxi.spinning) return;

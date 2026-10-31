@@ -90,37 +90,6 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.load.image('tileset-superpowers', 'assets/tilesets/Superpowers_Tilesheet.png');
     this.load.image('tileset-vegetation', 'assets/tilesets/Vegetation_by_George.png');
     this.load.image('tileset-pipo-flower', 'assets/tilesets/pipo_Flower.png');
-
-    // External Dhaka Cyber Arcade Exterior & Interior Assets (Kenney CC0 Mini Arcade & Commercial Kit)
-    this.load.image('prop-arcade-0', 'assets/arcade/sprites/prop_arcade_0.png');
-    this.load.image('prop-arcade-1', 'assets/arcade/sprites/prop_arcade_1.png');
-    this.load.image('prop-arcade-2', 'assets/arcade/sprites/prop_arcade_2.png');
-    this.load.image('prop-arcade-3', 'assets/arcade/sprites/prop_arcade_3.png');
-    this.load.image('prop-arcade', 'assets/arcade/sprites/prop_arcade_0.png');
-    this.load.image('prop-arcade-cab-deluxe', 'assets/arcade/sprites/prop_arcade_cab_deluxe.png');
-    this.load.image('prop-arcade-cab-upright-a', 'assets/arcade/sprites/prop_arcade_cab_upright_a.png');
-    this.load.image('prop-arcade-cab-upright-b', 'assets/arcade/sprites/prop_arcade_cab_upright_b.png');
-    this.load.image('prop-arcade-cab-cocktail', 'assets/arcade/sprites/prop_arcade_cab_cocktail.png');
-    this.load.image('prop-arcade-cab-dance', 'assets/arcade/sprites/prop_arcade_cab_dance.png');
-    this.load.image('prop-arcade-cab-racing', 'assets/arcade/sprites/prop_arcade_cab_racing.png');
-    this.load.image('prop-arcade-claw', 'assets/arcade/sprites/prop_arcade_claw.png');
-    this.load.image('prop-arcade-token-dispenser', 'assets/arcade/sprites/prop_arcade_token_dispenser.png');
-    this.load.image('prop-arcade-pinball', 'assets/arcade/sprites/prop_arcade_pinball.png');
-    this.load.image('prop-arcade-airhockey', 'assets/arcade/sprites/prop_arcade_airhockey.png');
-    this.load.image('prop-arcade-basketball', 'assets/arcade/sprites/prop_arcade_basketball.png');
-    this.load.image('prop-arcade-vending', 'assets/arcade/sprites/prop_arcade_vending.png');
-    this.load.image('prop-arcade-wheel', 'assets/arcade/sprites/prop_arcade_wheel.png');
-    this.load.image('prop-arcade-cash-register', 'assets/arcade/sprites/prop_arcade_cash_register.png');
-    this.load.image('prop-arcade-stool', 'assets/arcade/sprites/prop_arcade_stool.png');
-    this.load.image('prop-arcade-neon-sign', 'assets/arcade/sprites/prop_arcade_neon_sign.png');
-    this.load.image('prop-arcade-exit-door', 'assets/arcade/sprites/prop_arcade_exit_door.png');
-    this.load.image('tile-arcade-floor', 'assets/arcade/sprites/tile_arcade_floor.png');
-    this.load.image('tile-arcade-carpet', 'assets/arcade/sprites/tile_arcade_carpet.png');
-    this.load.image('tile-arcade-wall', 'assets/arcade/sprites/tile_arcade_wall.png');
-    this.load.image('npc-shanto-0', 'assets/arcade/sprites/npc_shanto_0.png');
-    this.load.image('npc-shanto-1', 'assets/arcade/sprites/npc_shanto_1.png');
-    this.load.image('npc-gamer-0', 'assets/arcade/sprites/npc_gamer_0.png');
-    this.load.image('npc-gamer-1', 'assets/arcade/sprites/npc_gamer_1.png');
   }
 
 
