@@ -354,6 +354,7 @@ function sceneImage(src?: string): HTMLImageElement | null {
 
 /** Draws the painted background with a slow Ken Burns pan/zoom, else the procedural scene. */
 function renderScene(c: Ctx, scene: Scene, t: number, localMs: number, s: Sprites): void {
+  if (!scene) return;
   const img = sceneImage(scene.image);
   if (!img) {
     c.save();
@@ -425,25 +426,30 @@ export function initTitleSlideshow(): void {
     requestAnimationFrame(frame);
     if (overlay.hidden || overlay.style.display === 'none' || document.hidden) return;
 
-    const elapsed = reduceMotion ? 0 : now - start;
-    const idx = Math.floor(elapsed / SCENE_MS) % SCENES.length;
+    const elapsed = reduceMotion ? 0 : Math.max(0, now - start);
+    const sceneCount = Math.max(1, SCENES.length);
+    const idx = Math.floor(elapsed / SCENE_MS) % sceneCount;
     const local = elapsed % SCENE_MS;
     const t = elapsed / 1000;
 
+    const currentScene = SCENES[idx] || SCENES[0];
+    if (!currentScene) return;
+
     ctx.clearRect(0, 0, W * OUT_SCALE, H * OUT_SCALE);
-    renderScene(ctx, SCENES[idx], t, local, sprites);
+    renderScene(ctx, currentScene, t, local, sprites);
 
     // crossfade into next scene during the final FADE_MS
     if (local > SCENE_MS - FADE_MS) {
-      const next = (idx + 1) % SCENES.length;
+      const nextIdx = (idx + 1) % sceneCount;
+      const nextScene = SCENES[nextIdx] || currentScene;
       bctx.clearRect(0, 0, W * OUT_SCALE, H * OUT_SCALE);
-      renderScene(bctx, SCENES[next], t, 0, sprites);
+      renderScene(bctx, nextScene, t, 0, sprites);
       ctx.globalAlpha = (local - (SCENE_MS - FADE_MS)) / FADE_MS;
       ctx.drawImage(buffer, 0, 0);
       ctx.globalAlpha = 1;
     }
 
-    const text = SCENES[idx].caption;
+    const text = currentScene.caption || '';
     if (text !== lastCaption) {
       lastCaption = text;
       caption.textContent = `❖ ${text} ❖`;

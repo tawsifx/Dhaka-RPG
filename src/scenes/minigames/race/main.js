@@ -27,8 +27,13 @@ import { YoshiEgg } from './yoshi-egg.js';
 import { PhysicsDebug } from './physics-debug.js';
 
 const LAPS = 3;
-const canvas = document.getElementById('game');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, stencil: true });   // stencil: Track.setShadowCatchers
+async function bootRace() {
+  const canvas = document.getElementById('game');
+  if (!canvas) {
+    console.warn('[MarioKart64JS] Canvas #game not found. Skipping 3D race boot.');
+    return;
+  }
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, stencil: true });   // stencil: Track.setShadowCatchers
 renderer.setPixelRatio(1);
 HD.setRenderer(renderer);
 renderer.shadowMap.enabled = true;
@@ -1746,3 +1751,5 @@ if (trackDef && !online) setup();
 requestAnimationFrame(frame);
 window.__game = { track, items, lakitu, penguins, foliage, cows, props, piranha, yoshiEgg, train, traffic, ferry, balloon, thwomps, snowmen, neon, chomps, crabs, hedgehogs, physicsDebug, get karts() { return karts; }, get player() { return player; }, get autopilot() { return autopilot; }, set autopilot(v) { autopilot = !!v; },
   get state() { return state; }, get raceTime() { return raceTime; }, get views() { return views; }, keys, renderer, scene, camera };
+}
+bootRace();
