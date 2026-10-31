@@ -22,15 +22,14 @@
   - Maintain security and integrity: ensure remote hosts are included in `DEFAULT_ALLOWED_HOSTS`, destination paths are validated within workspace boundaries, and downloaded assets are recorded with provenance credits in `ASSET_CREDITS.md`.
 
 ## Deployment & Infrastructure
-- **Dual Deployment Targets**: This project deploys simultaneously to both **Vercel** and **Cloudflare Pages** (`moon-walkers-day`).
+- **Cloudflare Pages Deployment**: This project deploys to **Cloudflare Pages** (`moon-walkers-day`). All legacy Vercel links are permanently redirected (HTTP 308) to Cloudflare Pages (`https://moon-walkers-day.pages.dev`).
 - **Secret & API Key Protection (Never Push Secrets)**:
-  - Never hardcode API keys, tokens (`TELEGRAM_BOT_TOKEN`, Cloudflare/Vercel tokens, etc.), or credentials in any source, config, or script file.
+  - Never hardcode API keys, tokens (`TELEGRAM_BOT_TOKEN`, Cloudflare tokens, etc.), or credentials in any source, config, or script file.
   - Before running `git add` / `git commit` / `git push`, always inspect `git status --short` and scan staged diffs (`git diff --cached`) to verify that no `.env*`, `.dev.vars`, `*.pem`, `*.key`, or secret strings are staged. If any secret is detected, unstage/redact it immediately before committing.
 - **Mandatory Post-Edit Push & Deployment**: Every time you finish making any edit to the project (and verify the build passes), you **must** automatically:
   1. Verify no API keys or secrets are present in modified/untracked files, then stage, commit, and push the changes to **GitHub** (`git add -A && git commit -m "<descriptive message>" && git push`).
   2. Deploy to **Cloudflare Pages** (`npm run deploy:cf`).
-  3. Deploy to **Vercel** (`npx vercel --prod --yes`).
 - **Preserve Deployment Tooling**:
   - Do **not** remove `wrangler` from `devDependencies` or the `deploy:cf` script from `package.json`.
-  - Do **not** remove `vercel.json` or the Vercel deployment pipeline in `telegram-bot.js`.
-  - Ensure build outputs (`dist/`) and asset paths remain compatible with both Vercel and Cloudflare Pages static hosting.
+  - Preserve `vercel.json` as it maintains the permanent 308 redirects from legacy Vercel URLs to Cloudflare Pages.
+  - Ensure build outputs (`dist/`) and asset paths remain fully optimized for Cloudflare Pages static hosting.

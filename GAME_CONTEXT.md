@@ -51,7 +51,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio real-time engine & drift screech synthesizers |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
 | **Mobile & PWA Engine** | Web App Manifest + MobileSupport | PWA manifest, screen wake lock API, rotate-device guidance modal, touch gesture suppression, floating fullscreen toggle |
-| **Hosting & CI/CD** | [Cloudflare Pages](https://pages.cloudflare.com/) + [Vercel](https://vercel.com/) | Live Cloudflare Pages production deployment: `https://moon-walkers-day.pages.dev` (Project: `moon-walkers-day`). Vercel mirror: `https://moonwalkersday.vercel.app`. |
+| **Hosting & CI/CD** | [Cloudflare Pages](https://pages.cloudflare.com/) | Live Cloudflare Pages production deployment: `https://moon-walkers-day.pages.dev` (Project: `moon-walkers-day`). All legacy Vercel links permanently redirect (HTTP 308) to Cloudflare Pages. |
 
 ### Source Code Directory Layout
 ```
@@ -67,7 +67,7 @@ dhaka-date-rpg/
 ├── package.json                     # Node dependencies, scripts, and build targets
 ├── tsconfig.json                    # TypeScript compiler options
 ├── vite.config.ts                   # Vite bundler configuration (Rolldown code-splitting)
-├── vercel.json                      # Vercel deployment & immutable cache header rules
+├── vercel.json                      # Legacy Vercel 308 permanent redirect configuration to Cloudflare Pages
 ├── docs/
 │   ├── mariokart64/                 # Totoro Kart 3D Racing Subsystem Documentation
 │   │   ├── CHARACTER_MODELING_SPEC.md # 3D Driver modeling pipeline (Satsuki, Totoro)
@@ -980,11 +980,9 @@ To resolve load-time latency discrepancies between regional edge hosts (Cloudfla
    - Added `rollupOptions.output.manualChunks(id)` to isolate `phaser` (1.19 MB / 317 kB gzip) into a dedicated vendor chunk (`dist/assets/phaser-*.js`).
    - Reduced primary application JS bundle from `1.82 MB` down to `629 kB` (`176 kB` gzip).
    - Disabled heavy 11.3 MB sourcemaps in production builds (`sourcemap: false`).
-3. **Vercel Edge Caching Configuration (`vercel.json`)**:
-   - Injected edge and browser caching headers:
-     - `/assets/(.*)` and static media (`.mp3`, `.png`, `.jpg`, `.svg`): `Cache-Control: public, max-age=31536000, immutable`.
-     - `/index.html`: `Cache-Control: public, max-age=0, must-revalidate`.
-   - Ensured repeat visits and asset requests are served immediately from edge CDN and browser disk cache.
+3. **Vercel Redirect & Edge Caching Configuration (`vercel.json`)**:
+   - Injected permanent HTTP 308 redirect from `/:path*` to `https://moon-walkers-day.pages.dev/:path*` forwarding all legacy Vercel visits to Cloudflare Pages.
+   - Maintained immutable asset caching rules (`Cache-Control: public, max-age=31536000, immutable`) for any lingering cached assets.
 
 ### 10.15 Nadia Female Fine-Arts Painter & Sketcher Sprite Upgrade (`public/assets/sprites/characters/npc_walker2.png`)
 Nadia (`npc-walker2`), the enthusiastic Charukola fine arts student sketching campus landmarks in charcoal and watercolor, previously held a placeholder sprite depicting an infant/baby in diapers holding a rattle. This was permanently replaced with an authentic 16-bit retro Pokémon HeartGold/SoulSilver / Emerald overworld trainer sprite of a young female fine-arts painter:
@@ -1437,8 +1435,8 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 - `npm run deploy:cf`: Build production bundle and deploy directly to Cloudflare Pages (`wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true`).
 
 ### Live Production Deployments
-- **Cloudflare Pages (Primary)**: [`https://moon-walkers-day.pages.dev`](https://moon-walkers-day.pages.dev) (Project: `moon-walkers-day`, Branch: `main`)
-- **Vercel (Mirror)**: `https://moonwalkersday.vercel.app` (Mirror production deployment)
+- **Cloudflare Pages (Production)**: [`https://moon-walkers-day.pages.dev`](https://moon-walkers-day.pages.dev) (Project: `moon-walkers-day`, Branch: `main`)
+- **Vercel (Decommissioned / Redirect)**: `https://moonwalkersday.vercel.app` (Permanently redirects HTTP 308 to `https://moon-walkers-day.pages.dev`)
 
 ### Verification Checklist Before Commits
 1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
@@ -1453,7 +1451,7 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
 10. Run `npm run race:simulate` — headless Monte-Carlo race simulation passing with valid spread, items/hazards, and determinism.
 11. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
 12. Run `npm run build` — bundle compiles cleanly with no missing assets.
-13. Deploy to Cloudflare Pages (`npm run deploy:cf`) and Vercel (`npx vercel --prod --yes`).
+13. Deploy to Cloudflare Pages (`npm run deploy:cf`).
 
 ### 10.20 Modular Filesystem Architecture & Subsystem Decomposition (v4.0.0 Overhaul)
 To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.ts`), the filesystem architecture was restructured into dedicated, single-responsibility engine subsystems with idiomatic barrel exports:

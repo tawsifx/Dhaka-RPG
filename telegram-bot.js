@@ -1,11 +1,11 @@
-// telegram-bot.js - Local Telegram Automation Bridge for Antigravity & Vercel
+// telegram-bot.js - Local Telegram Automation Bridge for Antigravity & Cloudflare Pages
 require('dotenv/config');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const TelegramBot = require('node-telegram-bot-api');
 
-// Enhance PATH so agy, git, npx, node, and vercel are discoverable on macOS / Linux
+// Enhance PATH so agy, git, npx, node, and wrangler are discoverable on macOS / Linux
 const homeDir = process.env.HOME || process.env.USERPROFILE || '';
 const extraPaths = [
   '/opt/homebrew/bin',
@@ -221,21 +221,6 @@ function getAgyLiveStatus() {
   } catch (e) {}
 
   return { stepNumber, actionInfo, modifiedFiles };
-}
-
-function extractVercelUrl(output) {
-  if (!output) return null;
-  const match = output.match(/https:\/\/[a-zA-Z0-9-._]+\.vercel\.app/i);
-  if (match) return match[0];
-
-  const lines = output.split('\n').map(l => l.trim()).filter(Boolean);
-  for (const line of lines) {
-    const urlMatch = line.match(/https:\/\/[^\s]+/i);
-    if (urlMatch && !urlMatch[0].includes('github.com') && !urlMatch[0].includes('npmjs.com')) {
-      return urlMatch[0];
-    }
-  }
-  return null;
 }
 
 // Helper to download image and audio files into the assets directory
@@ -473,28 +458,27 @@ bot.on('message', async (msg) => {
       console.warn('⚠️ Git auto-commit warning (safely ignored):', gitErr.message);
     }
 
-    // d. Update the Telegram status message: "🚀 Edits applied! Deploying to Vercel..."
-    console.log('[STEP 3/3] Deploying to Vercel...');
+    // d. Update the Telegram status message: "🚀 Edits applied! Deploying to Cloudflare Pages..."
+    console.log('[STEP 3/3] Deploying to Cloudflare Pages...');
     try {
       if (statusMsg) {
-        await bot.editMessageText('🚀 Edits applied! Deploying to Vercel...', {
+        await bot.editMessageText('🚀 Edits applied! Deploying to Cloudflare Pages...', {
           chat_id: chatId,
           message_id: statusMsg.message_id
         });
       } else {
-        await bot.sendMessage(chatId, '🚀 Edits applied! Deploying to Vercel...');
+        await bot.sendMessage(chatId, '🚀 Edits applied! Deploying to Cloudflare Pages...');
       }
     } catch (editErr) {
-      await bot.sendMessage(chatId, '🚀 Edits applied! Deploying to Vercel...');
+      await bot.sendMessage(chatId, '🚀 Edits applied! Deploying to Cloudflare Pages...');
     }
 
-    // e. Execute npx vercel --prod --yes to push the production build
-    const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 0);
-    const vercelOutput = `${vercelRes.stdout}\n${vercelRes.stderr}`;
+    // e. Execute npm run deploy:cf to push to Cloudflare Pages
+    await runCommand('npm', ['run', 'deploy:cf'], 0);
 
-    // f. Extract the live https://*.vercel.app URL and send final confirmation link
-    const liveUrl = extractVercelUrl(vercelOutput) || 'https://dhaka-date-rpg.vercel.app';
-    const finalReply = `✅ Deployed successfully!\n🔗 ${liveUrl}`;
+    // f. Send final confirmation link
+    const liveUrl = 'https://moon-walkers-day.pages.dev';
+    const finalReply = `✅ Deployed successfully to Cloudflare Pages!\n🔗 ${liveUrl}`;
     console.log(`🎉 Complete: ${liveUrl}`);
     await bot.sendMessage(chatId, finalReply);
 
@@ -510,14 +494,14 @@ bot.on('message', async (msg) => {
           await runCommand('npm', ['run', 'typecheck'], 0);
         }
         console.log('💡 Code modifications are valid! Salvaging work, committing and deploying...');
-        await bot.sendMessage(chatId, '⚠️ Execution interrupted, but code modifications were validated! Auto-committing and deploying to Vercel...');
+        await bot.sendMessage(chatId, '⚠️ Execution interrupted, but code modifications were validated! Auto-committing and deploying to Cloudflare Pages...');
         const promptSnippet = promptText.slice(0, 50).replace(/["`$\r\n]/g, ' ').trim();
         await runCommand('git', ['add', '-A'], 0);
         await runCommand('git', ['commit', '-m', `"Auto-update: ${promptSnippet}"`], 0);
         await pushToGitHub();
-        const vercelRes = await runCommand('npx', ['vercel', '--prod', '--yes'], 0);
-        const liveUrl = extractVercelUrl(`${vercelRes.stdout}\n${vercelRes.stderr}`) || 'https://dhaka-date-rpg.vercel.app';
-        await bot.sendMessage(chatId, `✅ Deployed successfully!\n🔗 ${liveUrl}`);
+        await runCommand('npm', ['run', 'deploy:cf'], 0);
+        const liveUrl = 'https://moon-walkers-day.pages.dev';
+        await bot.sendMessage(chatId, `✅ Deployed successfully to Cloudflare Pages!\n🔗 ${liveUrl}`);
         salvaged = true;
       }
     } catch (salvageErr) {
