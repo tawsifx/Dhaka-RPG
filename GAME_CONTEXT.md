@@ -1279,6 +1279,41 @@ To ensure smooth, responsive gameplay across smartphones, tablets, and mobile we
      - `slam.svg` (Seismic ground impact smash for Totoro Belly Slam)
    - Scaled and centered with `currentColor` filling and drop-shadow depth, matching button theme colors and active touch feedback.
 
+### 13.5 Modern Retro UI/UX Overhaul & Keyboard Navigation Engine
+In November 2026, the game's interface and interaction mechanics received a comprehensive UI/UX overhaul designed to bridge authentic 16-bit RPG ergonomics with modern web accessibility:
+
+1. **Interactive HUD Cards & Modal Shortcuts**:
+   - `#hud-zone-card`: Clicking opens the Realm Map (`M`).
+   - `#hud-stats-card`: Clicking opens Bag & Gear (`I`).
+   - `#hud-quest-card`: Clicking opens the Quest Journal (`L`), featuring an inline keyboard shortcut badge (`L`).
+   - `#minimap-panel`: Clicking opens the Realm Map (`M`). Features a clean bottom legend (`You`, `Totoro`, `Goal`).
+
+2. **Contextual Action Key (`E` & `SPACE`) Interaction Fix**:
+   - Resolved the interaction precedence bug where `keydown-E` always executed Totoro's Ground Slam because `this.currentInteractable` was unassigned.
+   - `DhakaValleyScene.update()` dynamically tracks the nearest interactable object, Totoro companion, or opening scenario within interaction radius and assigns `this.currentInteractable`.
+   - Pressing `E` or `SPACE` interacts with nearby NPCs, triggers objects, and advances dialogue when active; pressing `E` when no interactable is nearby executes Totoro's Ground Slam.
+   - Combat ability keys (`J`, `K`, `SHIFT`, `Q`, `R`, `F`) are strictly inhibited when `UI.isOpen()` is true, preventing accidental combat execution during modal or dialogue browsing.
+
+3. **Bottom Hotbar `1`–`0` Keyboard Shortcuts & Tooltips**:
+   - Number keys `1` through `9` and `0` trigger active hotbar keepsake slots, providing immediate item use, gear equip toggles, and instant stat feedback.
+   - Stack counts (`×N`) and blue equipped pips (`.slot-eq-dot`) are rendered directly over hotbar slots.
+   - Screen-edge-aware floating tooltip (`#hotbar-tooltip`) displays item rarity badge, combat stats (`+HP/SP/XP`), and cultural flavor descriptions with smart viewport boundary positioning.
+
+4. **Dialogue Choice Keyboard Accessibility**:
+   - Dialogue choices feature numeric shortcut badges (`[1]`, `[2]`, etc.) supporting instant selection via number keys.
+   - Arrow keys (`ArrowUp`/`ArrowDown`) and `W`/`S` cycle choice button focus; pressing `Enter` confirms the selected option.
+   - Auto-focuses the first available option when typewriter text finishes printing.
+
+5. **Minimap Objective Waypoint Beacon**:
+   - `MinimapRenderer` calculates the active objective waypoint based on current quest stages (e.g. Mehjabin, Iman, Apshora, Ahona, tea stall, stargazing pier, or realm bosses).
+   - Renders a pulsing golden-amber diamond and radial beacon wave on the radar minimap canvas matching `.mm-goal` in the legend.
+   - Totoro marker rendered as an emerald green dot (`#10b981`) matching `.mm-totoro`.
+
+6. **Semantic Modal Design, Custom Scrollbars & Tabular Figures**:
+   - Replaced inline style strings with semantic CSS classes (`.rpg-pagination-bar`, `.rpg-filter-pill`, `.rpg-section-header`, `.jukebox-card`, `.entry-done`, `.entry-equipped`).
+   - Applied `font-variant-numeric: tabular-nums` to stat bars, bond meter, clock, and pagination counters to prevent number jitter.
+   - Themed thin scrollbars and text selection highlights in dark burgundy (`#591c33`) and antique gold (`#f7cb45`).
+
 ---
 
 ## 14. Deployment, Build Commands & Verification Protocol

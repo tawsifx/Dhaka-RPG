@@ -256,20 +256,48 @@ export class MinimapRenderer {
       }
     });
 
-    // 7. Draw Totoro (Violet companion marker)
+    // 7. Draw Totoro (Emerald companion marker matching legend)
     if (scene.totoro) {
       const tx = scene.totoro.x * sx;
       const ty = scene.totoro.y * sy;
-      ctx.fillStyle = '#a855f7';
+      ctx.fillStyle = '#10b981';
       ctx.beginPath();
-      ctx.arc(tx, ty, 3.2, 0, Math.PI * 2);
+      ctx.arc(tx, ty, 3.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#f3e8ff';
+      ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 1;
       ctx.stroke();
     }
 
-    // 8. Draw Player (Radar ping beacon with glowing core)
+    // 8. Draw Active Quest / Objective Beacon (Pulsing Diamond & Ring)
+    const goalPos = MinimapRenderer.getActiveObjectiveTarget(scene, world);
+    if (goalPos) {
+      const gx = goalPos.x * sx;
+      const gy = goalPos.y * sy;
+      const pulse = (Math.sin(Date.now() * 0.006) + 1) * 0.5;
+
+      // Pulsing outer beacon wave
+      ctx.strokeStyle = `rgba(247, 203, 69, ${0.35 + pulse * 0.55})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(gx, gy, 4 + pulse * 4, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Sharp golden objective diamond
+      ctx.fillStyle = '#f7cb45';
+      ctx.beginPath();
+      ctx.moveTo(gx, gy - 4.5);
+      ctx.lineTo(gx + 4.5, gy);
+      ctx.lineTo(gx, gy + 4.5);
+      ctx.lineTo(gx - 4.5, gy);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#78350f';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // 9. Draw Player (Radar ping beacon with glowing core)
     const px = scene.player.x * sx;
     const py = scene.player.y * sy;
 
@@ -287,5 +315,37 @@ export class MinimapRenderer {
     ctx.strokeStyle = '#0284c7';
     ctx.lineWidth = 1;
     ctx.stroke();
+  }
+
+  /**
+   * Calculates the primary active quest objective coordinate to guide the player.
+   */
+  private static getActiveObjectiveTarget(scene: any, world: string): { x: number; y: number } | null {
+    if (world === 'dhaka') {
+      if (!DateState.totoroJoined) {
+        return scene.totoro ? { x: scene.totoro.x, y: scene.totoro.y } : { x: CURZON_X, y: CURZON_Y };
+      }
+      if (DateState.imanQuestStage === 0 || DateState.imanQuestStage === 2) return { x: 1060, y: 820 };
+      if (DateState.imanQuestStage === 4) return { x: 1060, y: 820 };
+      if (DateState.apshoraQuestStage === 1) return { x: 260, y: 740 };
+      if (DateState.ahonaQuestStage === 1) return { x: 1460, y: 460 };
+      if (DateState.ahonaQuestStage === 2) return { x: 1040, y: 240 };
+      if (!DateState.teaDone) return { x: 340, y: 260 };
+      if (!DateState.charukolaDone) return { x: 260, y: 740 };
+      if (!DateState.bookDone) return { x: 1040, y: 240 };
+      if (!DateState.fuchkaDone) return { x: 1560, y: 230 };
+      if (!DateState.doiDone) return { x: 1730, y: 230 };
+      if (!DateState.gajraDone) return { x: 1210, y: 490 };
+      if (!DateState.rickshawTourDone) return { x: 1060, y: 820 };
+      if (!DateState.stargazingDone) return { x: 1600, y: 1310 };
+      return { x: 2280, y: 816 }; // Eastern Fracture Portal
+    } else if (world === 'farmhouse') {
+      if (!DateState.eggCollected) return { x: 240, y: 560 };
+      if (!DateState.duckFed) return { x: 880, y: 640 };
+      return { x: 600, y: 830 };
+    } else if (scene.activeBoss) {
+      return { x: scene.activeBoss.x, y: scene.activeBoss.y };
+    }
+    return null;
   }
 }

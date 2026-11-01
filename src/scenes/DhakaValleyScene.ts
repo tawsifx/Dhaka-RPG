@@ -281,7 +281,7 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-SPACE', e => { if (!e.repeat) this.handleActionPress(); });
     this.input.keyboard.on('keydown-E', e => {
       if (!e.repeat) {
-        if (this.currentInteractable) {
+        if (UI.isOpen() || this.currentInteractable) {
           this.handleActionPress();
         } else {
           CombatSystem.performTotoroGroundSlam(this);
@@ -289,7 +289,7 @@ export class DhakaValleyScene extends Phaser.Scene {
       }
     });
     this.input.keyboard.on('keydown-J', e => {
-      if (!e.repeat) {
+      if (!e.repeat && !UI.isOpen()) {
         CombatSystem.performPlayerAttack(this);
         this.jHoldTimer = this.time.delayedCall(160, () => {
           CombatSystem.startGuard(this);
@@ -300,11 +300,11 @@ export class DhakaValleyScene extends Phaser.Scene {
       if (this.jHoldTimer) this.jHoldTimer.remove();
       CombatSystem.stopGuard(this);
     });
-    this.input.keyboard.on('keydown-K', e => { if (!e.repeat) CombatSystem.performPlayerDash(this); });
-    this.input.keyboard.on('keydown-SHIFT', e => { if (!e.repeat) CombatSystem.performPlayerDash(this); });
-    this.input.keyboard.on('keydown-Q', e => { if (!e.repeat) CombatSystem.performTotoroRoar(this); });
-    this.input.keyboard.on('keydown-R', e => { if (!e.repeat) CombatSystem.performTotoroGroundSlam(this); });
-    this.input.keyboard.on('keydown-F', e => { if (!e.repeat) CombatSystem.performTotoroLeafGust(this); });
+    this.input.keyboard.on('keydown-K', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performPlayerDash(this); });
+    this.input.keyboard.on('keydown-SHIFT', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performPlayerDash(this); });
+    this.input.keyboard.on('keydown-Q', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performTotoroRoar(this); });
+    this.input.keyboard.on('keydown-R', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performTotoroGroundSlam(this); });
+    this.input.keyboard.on('keydown-F', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performTotoroLeafGust(this); });
     this.input.keyboard.on('keydown-I', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('inventory'); });
     this.input.keyboard.on('keydown-M', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('map'); });
     this.input.keyboard.on('keydown-L', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('quests'); });
@@ -4676,19 +4676,30 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     // 8. Floating Interaction Prompt
     let nearTarget = null, bestDist = Infinity;
+    this.currentInteractable = null;
     if (!DateState.totoroJoined && this.totoro && Phaser.Math.Distance.Between(px, py, this.totoro.x, this.totoro.y) < 92) {
-      nearTarget = this.currentOpeningScenario ? this.currentOpeningScenario.promptText : 'SPACE: Meet Totoro 🐾';
+      this.currentInteractable = { name: 'Meet Totoro 🐾', onInteract: () => this.meetTotoroFirstTime() };
+      nearTarget = this.currentOpeningScenario ? this.currentOpeningScenario.promptText : 'SPACE / E: Meet Totoro 🐾';
     } else {
       for (const item of this.interactables) {
         const d = Phaser.Math.Distance.Between(px, py, item.x, item.y);
         if (d < item.radius && d < bestDist) {
           bestDist = d;
-          nearTarget = `SPACE: ${item.name}`;
+          this.currentInteractable = item;
+          nearTarget = `SPACE / E: ${item.name}`;
         }
+      }
+      if (!this.currentInteractable && DateState.totoroJoined && this.totoro && Phaser.Math.Distance.Between(px, py, this.totoro.x, this.totoro.y) < 98) {
+        this.currentInteractable = { name: 'Talk to Totoro 🐾', onInteract: () => this.talkToTotoroCompanion() };
+        nearTarget = 'SPACE / E: Talk to Totoro 🐾';
       }
     }
 
-    if (nearTarget) {
+    if (UI.isOpen() || this.cutsceneLocked) {
+      this.currentInteractable = null;
+    }
+
+    if (nearTarget && !UI.isOpen() && !this.cutsceneLocked) {
       this.promptBubble.setText(nearTarget);
       this.promptBubble.setPosition(px, py - 62);
       this.promptBubble.setVisible(true);

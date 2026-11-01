@@ -26,6 +26,7 @@ export const UIController: any = (() => {
   let speakerPitch = 480;
   let speakerWave = 'sine';
   let currentTab = 'quests';
+  let toastTimer: any = null;
 
   // Pagination & Filter state for large lists across modals
   const pageState: Record<string, number> = {
@@ -43,10 +44,10 @@ export const UIController: any = (() => {
   function renderPaginationBar(key: string, page: number, totalPages: number, totalItems: number, startIdx: number, endIdx: number): string {
     if (totalPages <= 1) return '';
     return `
-      <div class="rpg-pagination-bar" style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:6px 10px;background:rgba(140,109,79,0.14);border:1.5px solid #bfa07a;border-radius:8px;font-size:0.8rem;">
-        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="-1" ${page <= 1 ? 'disabled' : ''} style="padding:4px 10px;opacity:${page <= 1 ? 0.45 : 1};" type="button">◀ Prev</button>
-        <span style="font-weight:700;color:#4a3525;">Page ${page} of ${totalPages} <small style="font-weight:500;opacity:0.8;">(${startIdx + 1}–${endIdx} of ${totalItems})</small></span>
-        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="1" ${page >= totalPages ? 'disabled' : ''} style="padding:4px 10px;opacity:${page >= totalPages ? 0.45 : 1};" type="button">Next ▶</button>
+      <div class="rpg-pagination-bar">
+        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="-1" ${page <= 1 ? 'disabled' : ''} type="button">◀ Prev</button>
+        <span class="pg-status-text">Page ${page} of ${totalPages} <small>(${startIdx + 1}–${endIdx} of ${totalItems})</small></span>
+        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="1" ${page >= totalPages ? 'disabled' : ''} type="button">Next ▶</button>
       </div>
     `;
   }
@@ -70,23 +71,91 @@ export const UIController: any = (() => {
     if (bgmBtn) bgmBtn.textContent = '🎵 BGM: ON';
   }
 
+  function showHotbarTooltip(slotBtn: HTMLElement, item: any, count: number, isEquipped: boolean) {
+    const tt = $('hotbar-tooltip');
+    if (!tt || !item) return;
+    const statBadges: string[] = [];
+    if (item.atk) statBadges.push(`+${item.atk} ATK`);
+    if (item.def) statBadges.push(`+${item.def} DEF`);
+    if (item.healHp) statBadges.push(`+${item.healHp} HP`);
+    if (item.healSp) statBadges.push(`+${item.healSp} SP`);
+    const catLabel = item.cat === 'keepsake' ? 'Keepsake' : item.cat === 'consumable' ? 'Consumable' : item.cat === 'relic' ? 'Realm Seal' : item.cat;
+    tt.innerHTML = `
+      <div class="hb-tt-head">
+        <span class="hb-tt-name">${item.emoji} ${item.name}${count > 1 ? ` ×${count}` : ''}</span>
+        <span class="hb-tt-badge">${isEquipped ? 'Equipped ✓' : catLabel}</span>
+      </div>
+      ${statBadges.length ? `<div class="hb-tt-stats">${statBadges.join(' • ')}</div>` : ''}
+      <div class="hb-tt-desc">${item.desc}</div>
+    `;
+    tt.hidden = false;
+    if (typeof window !== 'undefined' && slotBtn.getBoundingClientRect) {
+      const rect = slotBtn.getBoundingClientRect();
+      const parentRect = $('bottom-hud')?.getBoundingClientRect();
+      if (parentRect && parentRect.width > 0) {
+        const relCenter = rect.left - parentRect.left + rect.width / 2;
+        const clamped = Math.max(90, Math.min(parentRect.width - 90, relCenter));
+        tt.style.left = `${clamped}px`;
+      }
+    }
+  }
+
+  function hideHotbarTooltip() {
+    const tt = $('hotbar-tooltip');
+    if (tt) tt.hidden = true;
+  }
+
+  function triggerHotbarSlot(slotIndex: number) {
+    const itemId = DateState.inventory[slotIndex];
+    const bar = $('inventory-bar');
+    const slotBtn = bar?.querySelector(`[data-slot="${slotIndex}"]`) as HTMLElement | null;
+    if (slotBtn) {
+      slotBtn.classList.remove('active-pulse');
+      void slotBtn.offsetWidth;
+      slotBtn.classList.add('active-pulse');
+    }
+    if (!itemId || !ITEMS_DB[itemId]) return;
+    useOrInspectItem(itemId);
+    refreshHotbarUI();
+  }
+
   function refreshHotbarUI() {
     const bar = $('inventory-bar');
     if (!bar) return;
     bar.innerHTML = '';
+    hideHotbarTooltip();
     for (let i = 0; i < 10; i++) {
       const btn = document.createElement('button');
       const itemId = DateState.inventory[i];
       const item = itemId ? ITEMS_DB[itemId] : null;
-      btn.className = 'hotbar-slot' + (item ? ' filled' : '');
+      const count = itemId ? (DateState.itemCounts?.[itemId] || 1) : 0;
+      const isEquipped = Boolean(
+        itemId &&
+        DateState.equipped &&
+        (DateState.equipped.weapon === itemId || DateState.equipped.armor === itemId || DateState.equipped.accessory === itemId)
+      );
+      btn.className = 'hotbar-slot' + (item ? ' filled' : '') + (isEquipped ? ' is-equipped' : '');
       (btn as any).dataset.slot = String(i);
       btn.type = 'button';
-      btn.title = item ? `${item.name}: ${item.desc}` : `Slot ${(i + 1) % 10}`;
-      btn.innerHTML = `<span class="slot-key">${(i + 1) % 10}</span><span class="slot-emoji">${item ? item.emoji : ''}</span>`;
+      const keyLabel = (i + 1) % 10;
+      btn.setAttribute('aria-label', item ? `Slot ${keyLabel}: ${item.name}${isEquipped ? ' (Equipped)' : ''}` : `Empty Hotbar Slot ${keyLabel}`);
+      btn.title = item ? `${item.name} [${keyLabel}]: ${item.desc}` : `Slot ${keyLabel}`;
+      btn.innerHTML = `
+        <span class="slot-key">${keyLabel}</span>
+        <span class="slot-emoji">${item ? item.emoji : ''}</span>
+        ${item && count > 1 ? `<span class="slot-qty">×${count}</span>` : ''}
+        ${isEquipped ? `<span class="slot-eq-dot" aria-hidden="true" title="Equipped">✓</span>` : ''}
+      `;
       btn.addEventListener('click', () => {
         if (!item) return;
-        useOrInspectItem(itemId);
+        triggerHotbarSlot(i);
       });
+      if (item) {
+        btn.addEventListener('mouseenter', () => showHotbarTooltip(btn, item, count, isEquipped));
+        btn.addEventListener('focus', () => showHotbarTooltip(btn, item, count, isEquipped));
+        btn.addEventListener('mouseleave', hideHotbarTooltip);
+        btn.addEventListener('blur', hideHotbarTooltip);
+      }
       bar.appendChild(btn);
     }
   }
@@ -107,6 +176,7 @@ export const UIController: any = (() => {
       DateState.equipped[item.cat] = itemId;
       SoundEngine.select();
       updateRPGStats();
+      refreshHotbarUI();
       showToast(item.emoji, `Equipped ${item.name}!`, `ATK: ${RPGStats.getAtk()} | DEF: ${RPGStats.getDef()}`);
       return;
     }
@@ -296,12 +366,23 @@ export const UIController: any = (() => {
   }
 
   function showToast(icon, title, sub = 'Added to your bag') {
-    if (!$('item-toast')) return;
+    const toastEl = $('item-toast');
+    if (!toastEl) return;
+    if (toastTimer) {
+      clearTimeout(toastTimer);
+      toastTimer = null;
+    }
     $('toast-icon').textContent = icon;
     $('toast-title').textContent = title;
     if ($('toast-sub')) $('toast-sub').textContent = sub;
-    $('item-toast').hidden = false;
-    setTimeout(() => { $('item-toast').hidden = true; }, 3000);
+    toastEl.hidden = false;
+    toastEl.classList.remove('toast-pop');
+    void toastEl.offsetWidth;
+    toastEl.classList.add('toast-pop');
+    toastTimer = setTimeout(() => {
+      toastEl.hidden = true;
+      toastTimer = null;
+    }, 3000);
   }
 
   function giveItem(itemId, memoryLabel) {
@@ -366,11 +447,12 @@ export const UIController: any = (() => {
       const box = $('dlg-choices');
       box.hidden = false;
       box.innerHTML = '';
-      node.choices.forEach(ch => {
+      node.choices.forEach((ch, idx) => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'choice-option-btn';
-        btn.textContent = '▸ ' + ch.label;
+        btn.dataset.choiceIndex = String(idx);
+        btn.innerHTML = `<span class="choice-key-badge" aria-hidden="true">${idx + 1}</span><span class="choice-label-text">▸ ${ch.label}</span>`;
         btn.addEventListener('click', e => {
           e.stopPropagation();
           SoundEngine.select();
@@ -382,6 +464,10 @@ export const UIController: any = (() => {
           renderNode();
         });
         box.appendChild(btn);
+      });
+      requestAnimationFrame(() => {
+        const firstChoice = box.querySelector('.choice-option-btn') as HTMLButtonElement | null;
+        if (firstChoice) firstChoice.focus();
       });
     }
   }
@@ -526,11 +612,11 @@ export const UIController: any = (() => {
       pageState.questsSide = pgSide.page;
 
       body.innerHTML = `
-        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
-          <h3 style="margin:0;">🌟 Main Campaign (${mainList.filter(q => q.done).length}/${mainList.length})</h3>
-          <div style="display:flex;gap:6px;">
+        <div class="rpg-section-header">
+          <h3>🌟 Main Campaign (${mainList.filter(q => q.done).length}/${mainList.length})</h3>
+          <div class="rpg-filter-bar" role="group" aria-label="Filter Quests">
             ${(['all', 'active', 'done'] as const).map(f => `
-              <button class="hud-btn q-filter-btn ${questFilter === f ? 'active' : ''}" data-qf="${f}" style="padding:3px 9px;font-size:0.75rem;" type="button">
+              <button class="hud-btn q-filter-btn rpg-filter-pill ${questFilter === f ? 'active' : ''}" data-qf="${f}" aria-pressed="${questFilter === f}" type="button">
                 ${f === 'all' ? 'All Quests' : f === 'active' ? '⏳ In Progress' : '✅ Completed'}
               </button>
             `).join('')}
@@ -538,7 +624,7 @@ export const UIController: any = (() => {
         </div>
         <div class="scrapbook-grid">
           ${pgMain.items.length ? pgMain.items.map(q => `
-            <div class="scrapbook-entry" style="border-color:${q.done ? '#2d8a56' : '#bfa07a'};background:${q.done ? '#e5f7ed' : '#f5e6ce'}">
+            <div class="scrapbook-entry ${q.done ? 'entry-done' : ''}">
               <span>${q.done ? '✅' : '⏳'}</span>
               <div><b>${q.title}</b><small>${q.desc}</small></div>
             </div>
@@ -546,10 +632,10 @@ export const UIController: any = (() => {
         </div>
         ${renderPaginationBar('questsMain', pgMain.page, pgMain.totalPages, pgMain.totalItems, pgMain.startIndex, pgMain.endIndex)}
 
-        <h3 style="margin:14px 0 8px;">🧭 Side Quests &amp; Discoveries (${sideList.filter(q => q.done).length}/${sideList.length})</h3>
+        <h3 class="rpg-subsection-title">🧭 Side Quests &amp; Discoveries (${sideList.filter(q => q.done).length}/${sideList.length})</h3>
         <div class="scrapbook-grid">
           ${pgSide.items.length ? pgSide.items.map(q => `
-            <div class="scrapbook-entry">
+            <div class="scrapbook-entry ${q.done ? 'entry-done' : ''}">
               <span>${q.done ? '🌟' : '📌'}</span>
               <div><b>${q.title}</b><small>${q.desc}</small></div>
             </div>
@@ -585,16 +671,16 @@ export const UIController: any = (() => {
       pageState.inventory = pgBag.page;
 
       body.innerHTML = `
-        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between;background:#f3e3c9;padding:12px;border-radius:10px;border:2px solid #8c6d4f;margin-bottom:10px;">
-          <div><b>Moon Walker (LV. ${DateState.level})</b> | HP: ${Math.ceil(DateState.hp)}/${DateState.maxHp} | SP: ${Math.ceil(DateState.sp)}/${DateState.maxSp}</div>
-          <div><b>ATK:</b> ${RPGStats.getAtk()} | <b>DEF:</b> ${RPGStats.getDef()}</div>
-          <div style="width:100%;font-size:0.88rem;">
-            <b>Weapon:</b> ${eqW ? eqW.emoji + ' ' + eqW.name : 'None'} &nbsp;•&nbsp;
-            <b>Armor:</b> ${eqA ? eqA.emoji + ' ' + eqA.name : 'None'} &nbsp;•&nbsp;
-            <b>Accessory:</b> ${eqAc ? eqAc.emoji + ' ' + eqAc.name : 'None'}
+        <div class="rpg-stat-summary-banner">
+          <div><b>Moon Walker (LV. ${DateState.level})</b> &nbsp;•&nbsp; HP: ${Math.ceil(DateState.hp)}/${DateState.maxHp} &nbsp;•&nbsp; SP: ${Math.ceil(DateState.sp)}/${DateState.maxSp}</div>
+          <div><b>ATK:</b> ${RPGStats.getAtk()} &nbsp;|&nbsp; <b>DEF:</b> ${RPGStats.getDef()}</div>
+          <div class="rpg-equipped-row">
+            <span><b>Weapon:</b> ${eqW ? eqW.emoji + ' ' + eqW.name : 'None'}</span>
+            <span><b>Armor:</b> ${eqA ? eqA.emoji + ' ' + eqA.name : 'None'}</span>
+            <span><b>Accessory:</b> ${eqAc ? eqAc.emoji + ' ' + eqAc.name : 'None'}</span>
           </div>
         </div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+        <div class="rpg-filter-bar" role="group" aria-label="Filter Inventory Category">
           ${[
             ['all', `All (${allOwnedIds.length})`],
             ['keepsake', '🌺 Keepsakes'],
@@ -602,7 +688,7 @@ export const UIController: any = (() => {
             ['gear', '⚔️ Gear'],
             ['materials', '💎 Materials & Relics']
           ].map(([catKey, label]) => `
-            <button class="hud-btn bag-cat-btn ${bagCatFilter === catKey ? 'active' : ''}" data-bcat="${catKey}" style="padding:3px 9px;font-size:0.75rem;" type="button">${label}</button>
+            <button class="hud-btn bag-cat-btn rpg-filter-pill ${bagCatFilter === catKey ? 'active' : ''}" data-bcat="${catKey}" aria-pressed="${bagCatFilter === catKey}" type="button">${label}</button>
           `).join('')}
         </div>
         <div class="scrapbook-grid">
@@ -613,15 +699,15 @@ export const UIController: any = (() => {
             const isEquipped = DateState.equipped.weapon === id || DateState.equipped.armor === id || DateState.equipped.accessory === id;
             const actionLabel = it.cat === 'consumable' ? 'Use / Sip' : (['weapon', 'armor', 'accessory'].includes(it.cat) ? (isEquipped ? 'Equipped ✓' : 'Equip') : 'Inspect');
             return `
-              <div class="scrapbook-entry" style="justify-content:space-between;">
-                <div style="display:flex;gap:8px;align-items:center;">
+              <div class="scrapbook-entry scrapbook-action-row ${isEquipped ? 'entry-equipped' : ''}">
+                <div class="entry-lead">
                   <span>${it.emoji}</span>
                   <div>
                     <b>${it.name} ${count > 1 ? `(x${count})` : ''}</b>
                     <small>${it.desc}</small>
                   </div>
                 </div>
-                <button class="hud-btn bag-act-btn" data-id="${id}" type="button">${actionLabel}</button>
+                <button class="hud-btn bag-act-btn ${isEquipped ? 'active' : ''}" data-id="${id}" type="button">${actionLabel}</button>
               </div>
             `;
           }).join('') : `<div class="scrapbook-entry"><small>No items in this category yet.</small></div>`}
@@ -648,21 +734,21 @@ export const UIController: any = (() => {
       pageState.crafting = pgCraft.page;
 
       body.innerHTML = `
-        <p style="margin-top:0;">Combine realm materials gathered from Worlds 2–6 to forge upgraded weapons, cloaks, and restorative TSC Malai Cha.</p>
+        <p class="modal-subtitle">Combine realm materials gathered from Worlds 2–6 to forge upgraded weapons, cloaks, and restorative TSC Malai Cha.</p>
         <div class="scrapbook-grid">
           ${pgCraft.items.map(r => {
             const res = ITEMS_DB[r.result];
             const canCraft = Object.entries(r.reqs).every(([k, reqQty]) => (DateState.itemCounts[k] || 0) >= reqQty);
             return `
-              <div class="scrapbook-entry" style="justify-content:space-between;">
-                <div style="display:flex;gap:10px;align-items:center;">
+              <div class="scrapbook-entry scrapbook-action-row ${canCraft ? 'entry-done' : ''}">
+                <div class="entry-lead">
                   <span>${res.emoji}</span>
                   <div>
                     <b>${r.name}</b>
                     <small>Requires: ${r.costDesc}</small>
                   </div>
                 </div>
-                <button class="hud-btn craft-btn" data-rid="${r.id}" ${canCraft ? '' : 'disabled'} style="opacity:${canCraft ? 1 : 0.45}" type="button">⚒️ Craft</button>
+                <button class="hud-btn craft-btn" data-rid="${r.id}" ${canCraft ? '' : 'disabled'} type="button">⚒️ Craft</button>
               </div>
             `;
           }).join('')}
@@ -687,13 +773,13 @@ export const UIController: any = (() => {
       pageState.map = pgMap.page;
 
       body.innerHTML = `
-        <p style="margin-top:0;">Fast-travel between any unlocked realm. (Tip: You can also unlock all 6 realms immediately if you want to tour every world right away!)</p>
+        <p class="modal-subtitle">Fast-travel between any unlocked realm. (Tip: You can also unlock all 6 realms immediately if you want to tour every world right away!)</p>
         <div class="scrapbook-grid">
           ${pgMap.items.map(w => {
             const unlocked = DateState.unlockedWorlds.includes(w.id);
             const active = DateState.currentWorld === w.id;
             return `
-              <div class="scrapbook-entry" style="justify-content:space-between;border-color:${active ? '#d45779' : '#bfa07a'}">
+              <div class="scrapbook-entry scrapbook-action-row ${active ? 'entry-equipped' : ''}">
                 <div>
                   <b>${w.name} ${active ? '📍 (Current)' : ''}</b>
                   <small>${w.subtitle}</small>
@@ -725,55 +811,55 @@ export const UIController: any = (() => {
       const autoTheme = SoundEngine.isAutoThemeEnabled();
 
       body.innerHTML = `
-        <div style="display:flex;flex-direction:column;gap:14px;">
-          <div class="scrapbook-entry" style="justify-content:space-between;">
+        <div class="system-settings-stack">
+          <div class="scrapbook-entry scrapbook-action-row">
             <div><b>💾 Save / Load Progress</b><small>Persist your level, keepsakes, quests, and current world in browser storage.</small></div>
-            <div style="display:flex;gap:8px;">
+            <div class="system-btn-pair">
               <button id="sys-btn-save" class="primary-rpg-btn" type="button">Save Now</button>
               <button id="sys-btn-load" class="secondary-rpg-btn" type="button">Load Save</button>
             </div>
           </div>
 
           <!-- Ghibli & Realm Jukebox (Paginated) -->
-          <div class="scrapbook-entry" style="flex-direction:column;gap:8px;background:rgba(20,14,10,0.5);">
-            <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+          <div class="scrapbook-entry jukebox-card">
+            <div class="jukebox-header">
               <div><b>📻 Ghibli &amp; Realm Jukebox</b><small>Select BGM tracks or let the game adapt to your location.</small></div>
-              <label style="font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#fce38a;">
-                <input id="sys-auto-bgm" type="checkbox" ${autoTheme ? 'checked' : ''} style="cursor:pointer;" />
+              <label class="jukebox-auto-toggle">
+                <input id="sys-auto-bgm" type="checkbox" ${autoTheme ? 'checked' : ''} />
                 <span>Auto Realm Music</span>
               </label>
             </div>
 
-            <div style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,0.3);padding:8px 12px;border-radius:8px;border:1px solid rgba(255,209,102,0.25);width:100%;box-sizing:border-box;">
-              <span style="font-size:18px;">🎵</span>
-              <div style="flex:1;min-width:0;">
-                <div id="jukebox-current-title" style="font-size:12px;font-weight:700;color:#ffd166;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${currTrack.title}</div>
-                <div style="font-size:10px;color:#d8cbb8;"><span id="jukebox-current-badge">${currTrack.badge}</span> • ${currTrack.artist}</div>
+            <div class="jukebox-now-playing">
+              <span class="jukebox-note" aria-hidden="true">🎵</span>
+              <div class="jukebox-meta">
+                <div id="jukebox-current-title" class="jukebox-title">${currTrack.title}</div>
+                <div class="jukebox-sub"><span id="jukebox-current-badge">${currTrack.badge}</span> • ${currTrack.artist}</div>
               </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;box-sizing:border-box;margin-top:2px;">
+            <div class="jukebox-track-grid">
               ${pgJukebox.items.map(t => `
-                <button class="hud-btn sys-track-btn ${t.id === currTrack.id ? 'active' : ''}" data-tid="${t.id}" style="font-size:11px;text-align:left;padding:6px 8px;display:flex;flex-direction:column;gap:2px;" type="button">
-                  <span style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${t.title.split('—')[0].trim()}</span>
-                  <span style="font-size:9px;opacity:0.85;">${t.badge}</span>
+                <button class="hud-btn sys-track-btn ${t.id === currTrack.id ? 'active' : ''}" data-tid="${t.id}" type="button">
+                  <span class="track-btn-title">${t.title.split('—')[0].trim()}</span>
+                  <span class="track-btn-badge">${t.badge}</span>
                 </button>
               `).join('')}
             </div>
-            <div style="width:100%;">
+            <div class="jukebox-pagination-wrap">
               ${renderPaginationBar('jukebox', pgJukebox.page, pgJukebox.totalPages, pgJukebox.totalItems, pgJukebox.startIndex, pgJukebox.endIndex)}
             </div>
           </div>
 
-          <div class="scrapbook-entry" style="justify-content:space-between;">
-            <div><b>🎵 Music Volume</b></div>
-            <input id="sys-music-vol" type="range" min="0" max="1" step="0.05" value="${vols.musicVol}" />
+          <div class="scrapbook-entry scrapbook-action-row">
+            <label for="sys-music-vol"><b>🎵 Music Volume</b></label>
+            <input id="sys-music-vol" class="rpg-range-slider" type="range" min="0" max="1" step="0.05" value="${vols.musicVol}" />
           </div>
-          <div class="scrapbook-entry" style="justify-content:space-between;">
-            <div><b>🔊 Sound Effects Volume</b></div>
-            <input id="sys-sfx-vol" type="range" min="0" max="1" step="0.05" value="${vols.sfxVol}" />
+          <div class="scrapbook-entry scrapbook-action-row">
+            <label for="sys-sfx-vol"><b>🔊 Sound Effects Volume</b></label>
+            <input id="sys-sfx-vol" class="rpg-range-slider" type="range" min="0" max="1" step="0.05" value="${vols.sfxVol}" />
           </div>
-          <div class="scrapbook-entry" style="justify-content:space-between;">
+          <div class="scrapbook-entry scrapbook-action-row">
             <div><b>📖 Chronicle Scrapbook</b><small>View all recorded keepsake memories.</small></div>
             <button id="sys-btn-scrapbook" class="hud-btn" type="button">Open Scrapbook</button>
           </div>
@@ -836,8 +922,50 @@ export const UIController: any = (() => {
       $('btn-save-game')?.addEventListener('click', () => RPGStats.saveGame(window.__activeScene));
       $('btn-close-rpg-menu')?.addEventListener('click', () => closeRPGMenu());
 
-      document.querySelectorAll('.rpg-tab-btn').forEach(btn => {
+      // Interactive HUD Cards & Minimap quick-open affordances
+      const bindHudTrigger = (id: string, tab: string) => {
+        const el = $(id);
+        if (!el) return;
+        el.addEventListener('click', () => openRPGMenu(tab));
+        el.addEventListener('keydown', (ev: KeyboardEvent) => {
+          if (ev.key === 'Enter' || ev.key === ' ') {
+            ev.preventDefault();
+            openRPGMenu(tab);
+          }
+        });
+      };
+      bindHudTrigger('hud-zone-card', 'map');
+      bindHudTrigger('hud-stats-card', 'inventory');
+      bindHudTrigger('hud-quest-card', 'quests');
+      bindHudTrigger('minimap-panel', 'map');
+
+      // Dismiss modals when clicking the backdrop outside the card
+      ['rpg-menu-modal', 'scrapbook-modal'].forEach(modalId => {
+        const m = $(modalId);
+        if (!m) return;
+        m.addEventListener('click', (ev: MouseEvent) => {
+          if (ev.target === m) {
+            SoundEngine.select();
+            m.hidden = true;
+            releaseFocusTrap();
+          }
+        });
+      });
+
+      const tabButtons = Array.from(document.querySelectorAll<HTMLButtonElement>('.rpg-tab-btn'));
+      tabButtons.forEach((btn, idx) => {
         btn.addEventListener('click', () => openRPGMenu((btn as any).dataset.tab));
+        btn.addEventListener('keydown', (ev: KeyboardEvent) => {
+          if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') {
+            ev.preventDefault();
+            const dir = ev.key === 'ArrowRight' ? 1 : -1;
+            const nextBtn = tabButtons[(idx + dir + tabButtons.length) % tabButtons.length];
+            if (nextBtn) {
+              openRPGMenu((nextBtn as any).dataset.tab);
+              nextBtn.focus();
+            }
+          }
+        });
       });
 
       // Hamburger Dropdown Drawer Toggle
@@ -873,10 +1001,83 @@ export const UIController: any = (() => {
         });
       }
 
-      // Global Keyboard Accessibility & Escape / Tab Trapping
+      // Global Keyboard Accessibility & Escape / Tab Trapping / Hotbar / Dialogue Choices
       window.addEventListener('keydown', (e) => {
         const scrapbook = $('scrapbook-modal');
         const rpgMenu = $('rpg-menu-modal');
+        const dlgOverlay = $('dialogue-overlay');
+        const titleScrn = $('title-screen-overlay');
+
+        // 1. Dialogue Choice Keyboard Navigation (ArrowUp/Down, 1-9, Enter/Space)
+        if (dlgOverlay && !dlgOverlay.hidden) {
+          const choicesBox = $('dlg-choices');
+          if (choicesBox && !choicesBox.hidden) {
+            const choiceBtns = (Array.from(choicesBox.querySelectorAll('.choice-option-btn')) as HTMLButtonElement[]);
+            if (choiceBtns.length > 0) {
+              if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 's' || e.key === 'w') {
+                e.preventDefault();
+                const dir = (e.key === 'ArrowDown' || e.key === 's') ? 1 : -1;
+                const curIdx = choiceBtns.indexOf(document.activeElement as HTMLButtonElement);
+                const nextIdx = curIdx === -1 ? 0 : (curIdx + dir + choiceBtns.length) % choiceBtns.length;
+                SoundEngine.blip(620, 'triangle');
+                choiceBtns[nextIdx].focus();
+                return;
+              }
+              if (/^[1-9]$/.test(e.key)) {
+                const numIdx = parseInt(e.key, 10) - 1;
+                if (choiceBtns[numIdx]) {
+                  e.preventDefault();
+                  choiceBtns[numIdx].click();
+                  return;
+                }
+              }
+              if (e.key === 'Enter') {
+                const focused = document.activeElement as HTMLButtonElement;
+                if (choiceBtns.includes(focused)) {
+                  e.preventDefault();
+                  focused.click();
+                  return;
+                }
+              }
+            }
+          }
+        }
+
+        // 2. Toggle open RPG Menu Tabs off when pressing their shortcut key (I, M, L, C) again
+        if (rpgMenu && !rpgMenu.hidden && !e.repeat) {
+          const k = e.key.toLowerCase();
+          if ((k === 'i' && currentTab === 'inventory') ||
+              (k === 'm' && currentTab === 'map') ||
+              (k === 'l' && currentTab === 'quests') ||
+              (k === 'c' && currentTab === 'crafting')) {
+            e.preventDefault();
+            closeRPGMenu();
+            return;
+          }
+          if (k === 'i') { e.preventDefault(); openRPGMenu('inventory'); return; }
+          if (k === 'm') { e.preventDefault(); openRPGMenu('map'); return; }
+          if (k === 'l') { e.preventDefault(); openRPGMenu('quests'); return; }
+          if (k === 'c') { e.preventDefault(); openRPGMenu('crafting'); return; }
+        }
+
+        // 3. Hotbar Number Keys (1-9, 0) when in active overworld gameplay
+        const anyModalOpen =
+          (dlgOverlay && !dlgOverlay.hidden) ||
+          (scrapbook && !scrapbook.hidden) ||
+          (rpgMenu && !rpgMenu.hidden) ||
+          (titleScrn && !titleScrn.hidden);
+        if (!anyModalOpen && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
+          if (/^[0-9]$/.test(e.key)) {
+            const num = parseInt(e.key, 10);
+            const slotIdx = num === 0 ? 9 : num - 1;
+            triggerHotbarSlot(slotIdx);
+            return;
+          }
+          if (e.key.toLowerCase() === 'c') {
+            openRPGMenu('crafting');
+            return;
+          }
+        }
 
         if (e.key === 'Escape') {
           if (dropdown && !dropdown.hidden) {
