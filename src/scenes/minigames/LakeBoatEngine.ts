@@ -2,6 +2,7 @@
 import { DateState } from '../../state/DateState';
 import { SoundEngine } from '../../audio/SoundEngine';
 import { UIController as UI } from '../../ui/UIController';
+import { CutsceneDirector } from '../../systems/CutsceneDirector';
 
 export class LakeBoatEngine {
   /**
@@ -102,16 +103,46 @@ export class LakeBoatEngine {
   }
 
   static releaseSkyLanterns(scene: any, B: any): void {
-    for (let i = 0; i < 7; i++) {
-      scene.time.delayedCall(i * 330, () => {
+    CutsceneDirector.spawnBlossomSwirl(scene, B.x, B.y - 18, 16, 88);
+    for (let i = 0; i < 8; i++) {
+      scene.time.delayedCall(i * 310, () => {
         if (scene.lakeBoat !== B || !scene.boatSprite || !scene.boatSprite.active) return;
-        const x = B.x + Phaser.Math.Between(-46, 46), y = B.y - 24 + Phaser.Math.Between(-8, 8);
+        const x = B.x + Phaser.Math.Between(-52, 52), y = B.y - 24 + Phaser.Math.Between(-8, 8);
         const lan = scene.add.sprite(x, y, 'prop-skylantern').setDepth(2500);
-        const glow = scene.add.circle(x, y, 22, 0xffb347, 0.3).setBlendMode(Phaser.BlendModes.ADD).setDepth(2499);
-        const dx = Phaser.Math.Between(-40, 60), dy = Phaser.Math.Between(190, 280);
-        scene.tweens.add({ targets: [lan, glow], x: `+=${dx}`, y: `-=${dy}`, duration: 3800, ease: 'Sine.easeOut' });
-        scene.tweens.add({ targets: [lan, glow], alpha: 0, delay: 2000, duration: 1800, onComplete: () => { lan.destroy(); glow.destroy(); } });
-        this.spawnWaterRipple(scene, x, B.y + 30, 20, 0);
+        const glow = scene.add.circle(x, y, 24, 0xffb347, 0.34).setBlendMode(Phaser.BlendModes.ADD).setDepth(2499);
+        const waterRefl = scene.add
+          .ellipse(x, B.y + 42, 16, 8, 0xffb347, 0.28)
+          .setBlendMode(Phaser.BlendModes.ADD)
+          .setDepth(3.65);
+        const dx = Phaser.Math.Between(-45, 65), dy = Phaser.Math.Between(195, 285);
+        scene.tweens.add({
+          targets: [lan, glow],
+          x: `+=${dx}`,
+          y: `-=${dy}`,
+          angle: { from: -4, to: 4 },
+          duration: 3800,
+          ease: 'Sine.easeOut'
+        });
+        scene.tweens.add({
+          targets: waterRefl,
+          x: `+=${dx}`,
+          scaleX: 2.2,
+          alpha: 0,
+          duration: 2600,
+          ease: 'Sine.easeOut',
+          onComplete: () => waterRefl.destroy()
+        });
+        scene.tweens.add({
+          targets: [lan, glow],
+          alpha: 0,
+          delay: 2000,
+          duration: 1800,
+          onComplete: () => {
+            lan.destroy();
+            glow.destroy();
+          }
+        });
+        this.spawnWaterRipple(scene, x, B.y + 30, 22, 0);
       });
     }
   }
@@ -121,6 +152,7 @@ export class LakeBoatEngine {
     if (!B || !scene.boatSprite || !scene.boatSprite.active) { onDone(); return; }
     const alive = () => scene.lakeBoat === B && scene.boatSprite && scene.boatSprite.active;
     scene.cutsceneLocked = true;
+    CutsceneDirector.showLetterbox(scene, 38, 420);
     SoundEngine.waterSplash();
     const origPX = scene.player.x, origPY = scene.player.y;
     B.touring = true; B.heading = 1; B.rowTarget = 1; B.x = B.homeX; B.y = B.homeY;
@@ -135,6 +167,7 @@ export class LakeBoatEngine {
       scene.player.setPosition(origPX, origPY).setFlipX(false);
       scene.totoro.setPosition(origPX - 38, origPY).setFlipX(false);
       if (scene.totoroBadge) scene.totoroBadge.setPosition(scene.totoro.x, scene.totoro.y - 66);
+      CutsceneDirector.hideLetterbox(scene, 380);
       scene.cutsceneLocked = false;
       onDone();
     };
@@ -195,6 +228,8 @@ export class LakeBoatEngine {
             ]
           }
         ], () => {
+          CutsceneDirector.playEmoteReaction(scene, scene.totoro, '💖⛵', 'double-hop');
+          CutsceneDirector.spawnBlossomSwirl(scene, scene.player.x, scene.player.y - 20, 18, 90);
           if (!DateState.confessionDone) {
             DateState.confessionDone = true;
             DateState.memories.push({ emoji: '⛵', title: 'Dhanmondi Lake Confession', note: 'Rowed under the lanterns and said 100% yes.' });

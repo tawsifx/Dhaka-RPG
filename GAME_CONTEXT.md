@@ -1011,6 +1011,34 @@ To resolve visual glitching, screen-tearing, and missing structural pillars on t
 3. **Phaser Animation Update (`DhakaValleyScene.ts`)**:
    - Updated `anim-doicart` to cycle across 4 frames (`prop-doicart-0` through `prop-doicart-3`) at 3 fps (`repeat: -1`), delivering smooth, flicker-free rendering.
 
+### 10.20 Cutscene Choreography Director, Multi-Layer Water Surface & Leaf Fall Animation Systems
+To elevate cinematic storytelling, water surface realism, and living botanical atmosphere across all worlds, two dedicated animation subsystems (`src/systems/CutsceneDirector.ts` and `src/systems/LeafWaterAnimator.ts`) and procedural pixel-art effect textures (`src/graphics/GroundTileGenerator.ts`) were engineered:
+1. **Procedural Pixel-Art Leaf & Water Effect Textures (`GroundTileGenerator.ts`)**:
+   - **Leaf & Blossom Sprites**:
+     - `leaf-krishnachura` (12×12 scarlet-vermilion Delonix regia spoon petal with golden-amber claw stem).
+     - `leaf-krishna-pinna` (14×10 feathery bipinnate compound green leaf frond).
+     - `leaf-banyan` (12×12 glossy emerald-jade Ficus leaf with central midrib and drip-tip).
+     - `leaf-autumn` (12×12 warm golden-russet Boishakhi leaf).
+     - `leaf-lotus-petal` (10×10 rose-pink Shapla/lotus petal).
+     - Realm-specific elemental leaves: `leaf-frost` (Cryo-Glacier), `leaf-ember` (Cinder-Forge), and `leaf-astral` (Astral-Nexus).
+   - **Multi-Layer Water Surface Textures**:
+     - Upgraded `tile-water` and `tile-water-shallow` with multi-octave caustic wave bands and diamond specular crests.
+     - `water-caustic-overlay` (64×64 seamless counter-scrolling caustic lattice with starlight glints).
+     - `water-foam-h` (64×12) & `water-foam-v` (12×64) shoreline lapping surf strips.
+2. **Aerodynamic Leaf Fall & Canopy Detachment Engine (`LeafWaterAnimator.ts`)**:
+   - **Tree Crown Detachment & Sky Drift**: Spawns 34 textured leaf particles with ground drop-shadows (`Phaser.GameObjects.Ellipse`), detaching directly from registered tree canopies (`scene.treeCanopyCoords`) and drifting across the valley.
+   - **3D Flutter & Pendular Swing**: Animates each falling leaf with sinusoidal pendular sway, 3D-like tumble (`scaleX`/`scaleY` harmonic oscillation), rocking rotation, and ground shadow convergence as the leaf nears `targetGroundY`.
+   - **Ground Settling & Player Wake Swirl**: Leaves flatten upon landing on grass/paths, rest for `1.2s–2.3s` before gently fading, and get kicked back up into an aerodynamic swirl if Moon Walker or Totoro runs past them.
+   - **Periodic Canopy Leaf Drops & Wind Gusts**: Periodically detaches 2–4 fluttering leaves from tree crowns (`spawnCanopyLeafDrop`) and sweeps 14–20 tumbling leaves across the viewport while rustling tree canopies during `triggerLeafWindGust()`.
+3. **Multi-Layered Water & Fountain Animation (`LeafWaterAnimator.ts`, `DhakaValleyScene.ts`)**:
+   - **Counter-Scrolling Caustic Shimmer**: Attaches `water-caustic-overlay` layers over Dhanmondi Lake, coves, Upper Ramna Lotus Pond, Curzon Botanical Lotus Pond, Farmhouse Duck Pond, and Realm waterways with counter-diagonal wave motion and breathing opacity.
+   - **Shoreline Lapping Foam**: Animates `water-foam-h` and `water-foam-v` strips along stone embankments and Shiri Ghat steps with rhythmic wave surge.
+   - **Undulating Water Reflections & Ambient Surface Rings**: Applies horizontal wave shear distortion to `boatReflection` and `pierReflection`, spawns periodic ambient water rings across ponds/lakes, and upgrades the Mintu Road Fountain (`prop-fountain`) with parabolic water arc jets and expanding basin ripples.
+4. **Cinematic Cutscene Choreography (`CutsceneDirector.ts`, `CampusRomanceQuests.ts`, `ScheduleSystem.ts`)**:
+   - **Widescreen Letterbox & Safe Camera Framing**: Smooth top/bottom cinema bars (`showLetterbox`/`hideLetterbox`), `focusCamera`, and `restoreCamera` (which always restores camera zoom to the canonical `1.22` and re-engages `startFollow`).
+   - **Directional Walk-Cycle Tweening (`walkCharacterTo`)**: Moves characters during cutscenes while playing directional 4-row walk animations (`-walk-left`, `-walk-right`, `-walk-up`, `-walk-down`), spawning footstep dust motes, preventing `ScheduleSystem.update()` from pausing cutscene animations via `__cutsceneAnimActive`, and synchronizing `NpcMover` coordinates on arrival via `scheduleSystem.syncSpritePosition()`.
+   - **Expressive Reactions & Stage/Runway FX**: Added `playEmoteReaction` (squash-and-stretch hops, double-hops, trembles), `spawnBlossomSwirl`, `spawnShockwaveRings`, converging spirit orbs for the Whispering Forest Grand Seance, glowing water reflections for Dhanmondi Lake sky lanterns, twinkling/shooting stars in the Stargazing Observatory, and a full Mughal carpet runway walk for Apshora's Curzon Hall Debut Exhibition.
+
 
 ---
 

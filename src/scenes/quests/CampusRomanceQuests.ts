@@ -3,6 +3,8 @@ import { DateState } from '../../state/DateState';
 import { RPGStats } from '../../state/RPGStats';
 import { SoundEngine } from '../../audio/SoundEngine';
 import { UIController as UI } from '../../ui/UIController';
+import { CutsceneDirector } from '../../systems/CutsceneDirector';
+import { LeafWaterAnimator } from '../../systems/LeafWaterAnimator';
 
 export class CampusRomanceQuests {
   /* =========================================================================
@@ -20,7 +22,9 @@ export class CampusRomanceQuests {
     if (!DateState.bulliesDefeated) {
       scene.cutsceneLocked = true;
       SoundEngine.alertExclaim();
-      scene.tweens.add({ targets: [scene.ahona, scene.apshora], y: '-=10', duration: 120, yoyo: true });
+      CutsceneDirector.showLetterbox(scene, 40, 380);
+      CutsceneDirector.playEmoteReaction(scene, scene.ahona, '😒!', 'hop');
+      CutsceneDirector.playEmoteReaction(scene, scene.apshora, '🙄', 'hop');
 
       UI.startDialogue([
         { speaker: 'Ahona', portrait: '😒', text: 'Well, well, look who is strolling past Fuller Road. Where do you think you are going, Moon Walker?' },
@@ -38,6 +42,10 @@ export class CampusRomanceQuests {
           ease: 'Back.easeOut',
           onComplete: () => {
             scene.cameras.main.shake(230, 0.006);
+            CutsceneDirector.spawnShockwaveRings(scene, scene.totoro.x, scene.totoro.y - 14, 0x34d399, 3, 95);
+            CutsceneDirector.spawnBlossomSwirl(scene, scene.totoro.x, scene.totoro.y - 16, 12, 65);
+            CutsceneDirector.playEmoteReaction(scene, scene.ahona, '😨💦', 'tremble');
+            CutsceneDirector.playEmoteReaction(scene, scene.apshora, '😰💨', 'tremble');
             UI.startDialogue([
               { speaker: 'Totoro', portrait: '🐾', text: 'Moon Walker has more kindness, grace, and brilliance in her little finger than both of you combined. If either of you ever tries to disrespect her again, you will answer to me.' },
               { speaker: 'Ahona', portrait: '😨', text: 'Eek! W-why is he so huge and intimidating?! Apshora, did the ground just shake?!' },
@@ -45,26 +53,16 @@ export class CampusRomanceQuests {
             ], () => {
               SoundEngine.scurryAway();
               scene.tweens.add({ targets: scene.totoro, scaleX: 1, scaleY: 1, duration: 250 });
-              scene.tweens.add({
-                targets: scene.ahona,
-                x: 1452,
-                y: 468,
-                duration: 950,
-                ease: 'Cubic.easeOut'
+              CutsceneDirector.walkCharacterTo(scene, scene.apshora, 'npc-apshora', 1496, 468, 950, {
+                endFacing: 'down',
+                hopAmplitude: 3.2
               });
-              scene.tweens.add({
-                targets: scene.apshora,
-                x: 1496,
-                y: 468,
-                duration: 950,
-                ease: 'Cubic.easeOut'
-              });
-              scene.tweens.add({
-                targets: scene.rivalBadge,
-                x: 1472,
-                y: 400,
-                duration: 950,
-                ease: 'Cubic.easeOut',
+              CutsceneDirector.walkCharacterTo(scene, scene.ahona, 'npc-ahona', 1452, 468, 950, {
+                badge: scene.rivalBadge,
+                badgeOffsetY: 68,
+                interactObj: scene.rivalInteract,
+                endFacing: 'down',
+                hopAmplitude: 3.2,
                 onComplete: () => {
                   scene.ahona.setPosition(1452, 468).setDepth(468);
                   scene.apshora.setPosition(1496, 468).setDepth(468);
@@ -74,6 +72,7 @@ export class CampusRomanceQuests {
                   scene.rivalInteract.name = 'Check on Crying Ahona';
                   DateState.bulliesDefeated = true;
                   DateState.ahonaQuestStage = 1;
+                  CutsceneDirector.hideLetterbox(scene, 340);
                   scene.cutsceneLocked = false;
                   UI.giveItem('shield', 'Totoro stepped in and sent Ahona & Apshora running.');
                   scene.advanceDateProgress();
@@ -237,12 +236,13 @@ export class CampusRomanceQuests {
       ], () => {
         DateState.ahonaQuestStage = 3;
         scene.cutsceneLocked = true;
-        scene.tweens.add({
-          targets: [scene.rakin, scene.rakinBadge],
-          x: 1255,
-          y: 480,
-          duration: 1400,
-          ease: 'Sine.easeInOut',
+        CutsceneDirector.playEmoteReaction(scene, scene.rakin, '🌹💨', 'double-hop');
+        CutsceneDirector.walkCharacterTo(scene, scene.rakin, 'npc-rakin', 1255, 480, 1400, {
+          badge: scene.rakinBadge,
+          badgeOffsetY: 68,
+          interactObj: scene.rakinInteract,
+          endFacing: 'right',
+          hopAmplitude: 3.0,
           onComplete: () => {
             scene.rakin.setPosition(1255, 480).setDepth(480);
             scene.rakinBadge.setPosition(1255, 412).setText('💌 Rakin');
@@ -270,10 +270,13 @@ export class CampusRomanceQuests {
       return;
     }
     scene.cutsceneLocked = true;
-    scene.cameras.main.pan(1472, 470, 700, 'Sine.easeInOut');
+    CutsceneDirector.focusCamera(scene, 1472, 470, 1.36, 700, true);
 
     scene.time.delayedCall(750, () => {
       SoundEngine.heartUp();
+      CutsceneDirector.spawnBlossomSwirl(scene, 1468, 464, 16, 78);
+      CutsceneDirector.playEmoteReaction(scene, scene.rakin, '🌹💌', 'hop');
+      CutsceneDirector.playEmoteReaction(scene, scene.ahona, '💖😭', 'double-hop');
       UI.startDialogue([
         { speaker: 'Rakin', portrait: '💌', text: 'Ahona! I was such an idiot earlier at TSC. I brought you fresh red roses, your favorite book from Nilkhet, and wrote everything I was too shy to say.' },
         { speaker: 'Ahona', portrait: '😭', text: 'Rakin! No, it was my fault. I was so miserable without you that I was rude to Moon Walker, and she still came all the way to Nilkhet to bring you back to me!' },
@@ -294,6 +297,7 @@ export class CampusRomanceQuests {
 
   static playRakinConcertForAhonaCutscene(scene: any): void {
     scene.cutsceneLocked = true;
+    CutsceneDirector.showLetterbox(scene, 42, 420);
 
     const stageX = scene.ahona ? scene.ahona.x - 18 : 1272;
     const stageY = scene.ahona ? scene.ahona.y + 8 : 488;
@@ -387,7 +391,7 @@ export class CampusRomanceQuests {
 
     scene.cameras.main.stopFollow();
     scene.cameras.main.pan(stageX + 18, stageY - 18, 750, 'Sine.easeInOut');
-    scene.cameras.main.zoomTo(1.18, 850, 'Sine.easeInOut');
+    scene.cameras.main.zoomTo(1.36, 850, 'Sine.easeInOut');
 
     if (!scene.anims.exists('rakin-guitar-strum')) {
       scene.anims.create({
@@ -407,6 +411,8 @@ export class CampusRomanceQuests {
 
     SoundEngine.guitarChord();
     SoundEngine.playOhonaSong(15);
+    CutsceneDirector.spawnShockwaveRings(scene, stageX, stageY - 18, 0xfacc15, 3, 95);
+    LeafWaterAnimator.spawnCanopyLeafDrop(scene, stageX + 18, stageY, 8);
     UI.showToast('🎸', 'Now Playing: "Ohona" (Live Concert)', 'Rakin is singing "Ohona" with his acoustic guitar from 0:15 for Ahona!');
 
     const rakinSway = scene.rakin ? scene.tweens.add({
@@ -424,6 +430,16 @@ export class CampusRomanceQuests {
       angle: { from: 2, to: -2 },
       y: ahonaY - 3,
       duration: 480,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    }) : null;
+
+    const totoroSway = scene.totoro ? scene.tweens.add({
+      targets: scene.totoro,
+      angle: { from: -2, to: 2 },
+      scaleY: { from: 1, to: 1.04 },
+      duration: 450,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut'
@@ -495,15 +511,23 @@ export class CampusRomanceQuests {
         noteTimer.remove(false);
         if (rakinSway) rakinSway.stop();
         if (ahonaSway) ahonaSway.stop();
+        if (totoroSway) totoroSway.stop();
+        if (scene.totoro) scene.totoro.setAngle(0).setScale(1, 1);
         if (scene.rakin) {
           scene.rakin.stop();
           scene.rakin.setAngle(0).setY(stageY).setTexture('npc-rakin-0');
           if (DateState.ahonaQuestStage >= 4 && !scene.scheduleSystem) {
             scene.rakinBadge.setVisible(false);
           }
+          if (scene.scheduleSystem) {
+            scene.scheduleSystem.syncSpritePosition(scene.rakin, stageX, stageY, 'right');
+          }
         }
         if (scene.ahona) {
           scene.ahona.setAngle(0).setY(ahonaY);
+          if (scene.scheduleSystem) {
+            scene.scheduleSystem.syncSpritePosition(scene.ahona, ahonaX, ahonaY, 'left');
+          }
         }
         stageProps.forEach((p: any) => {
           scene.tweens.add({
@@ -516,8 +540,7 @@ export class CampusRomanceQuests {
 
         SoundEngine.stopOhonaSong();
 
-        scene.cameras.main.zoomTo(1.0, 600, 'Sine.easeInOut');
-        scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
+        CutsceneDirector.restoreCamera(scene, 600);
         scene.cutsceneLocked = false;
       });
     });
@@ -706,17 +729,18 @@ export class CampusRomanceQuests {
 
   static playImanExcusesCutscene(scene: any): void {
     scene.cutsceneLocked = true;
-    scene.cameras.main.pan(1060, 750, 600, 'Sine.easeInOut');
+    CutsceneDirector.focusCamera(scene, 1060, 750, 1.36, 600, true);
 
     scene.time.delayedCall(650, () => {
-      scene.tweens.add({
-        targets: [scene.mehjabin, scene.mehjabinBadge],
-        x: 1105,
-        y: 736,
-        duration: 750,
-        ease: 'Power1',
+      CutsceneDirector.playEmoteReaction(scene, scene.mehjabin, '🌸✨', 'hop');
+      CutsceneDirector.walkCharacterTo(scene, scene.mehjabin, 'npc-mehjabin', 1105, 736, 780, {
+        badge: scene.mehjabinBadge,
+        badgeOffsetY: 68,
+        interactObj: scene.mehjabinInteract,
+        endFacing: 'right',
         onComplete: () => {
           SoundEngine.blip(480, 'sine');
+          CutsceneDirector.playEmoteReaction(scene, scene.iman, '📱💼', 'tremble');
           UI.startDialogue([
             {
               speaker: 'Mehjabin',
@@ -750,16 +774,17 @@ export class CampusRomanceQuests {
             }
           ], () => {
             SoundEngine.blip(260, 'sine');
-            scene.tweens.add({
-              targets: [scene.mehjabin, scene.mehjabinBadge],
-              x: 965,
-              duration: 800,
-              ease: 'Sine.easeInOut',
+            CutsceneDirector.playEmoteReaction(scene, scene.mehjabin, '💔💧', 'tremble');
+            CutsceneDirector.walkCharacterTo(scene, scene.mehjabin, 'npc-mehjabin', 965, 736, 850, {
+              badge: scene.mehjabinBadge,
+              badgeOffsetY: 68,
+              interactObj: scene.mehjabinInteract,
+              endFacing: 'down',
               onComplete: () => {
                 DateState.imanQuestStage = 2;
                 if (scene.mehjabinBadge) scene.mehjabinBadge.setText('😢 Mehjabin (Crying by Fountain)');
                 if (scene.imanBadge) scene.imanBadge.setText('📱 Iman (Glued to Screen)');
-                scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
+                CutsceneDirector.restoreCamera(scene, 550);
                 scene.cutsceneLocked = false;
                 UI.updateQuestText();
                 UI.showToast('😢', 'Mehjabin is Heartbroken', 'Iman gave excuses and brushed her off. Go comfort Mehjabin!');
@@ -808,28 +833,16 @@ export class CampusRomanceQuests {
 
   static playTotoroSwaysImanCutscene(scene: any): void {
     scene.cutsceneLocked = true;
-    scene.cameras.main.pan(1110, 750, 700, 'Sine.easeInOut');
+    CutsceneDirector.focusCamera(scene, 1110, 750, 1.38, 700, true);
 
     scene.time.delayedCall(750, () => {
-      scene.tweens.add({
-        targets: scene.totoro,
-        x: 1105,
-        y: 736,
-        duration: 500,
-        ease: 'Sine.easeOut',
+      CutsceneDirector.walkCharacterTo(scene, scene.totoro, 'totoro', 1105, 736, 520, {
+        endFacing: 'right',
         onComplete: () => {
           SoundEngine.totoroRoar();
-          for (let i = 0; i < 8; i++) {
-            const petal = scene.add.circle(scene.totoro.x, scene.totoro.y - 30, 4, 0xff6b8b, 0.9).setDepth(2500);
-            scene.tweens.add({
-              targets: petal,
-              x: scene.totoro.x + Phaser.Math.Between(-60, 60),
-              y: scene.totoro.y - Phaser.Math.Between(40, 100),
-              alpha: 0,
-              duration: 1200,
-              onComplete: () => petal.destroy()
-            });
-          }
+          CutsceneDirector.spawnShockwaveRings(scene, scene.totoro.x, scene.totoro.y - 24, 0x38bdf8, 4, 110);
+          CutsceneDirector.spawnBlossomSwirl(scene, scene.totoro.x, scene.totoro.y - 24, 14, 75);
+          CutsceneDirector.playEmoteReaction(scene, scene.iman, '😳❗', 'double-hop');
 
           UI.startDialogue([
             {
@@ -878,13 +891,17 @@ export class CampusRomanceQuests {
               text: 'I was so terrified of falling behind in life that I forgot why I wanted to succeed in the first place—to give her a happy life. But I was losing her in the process.'
             }
           ], () => {
-            scene.tweens.add({
-              targets: [scene.iman, scene.imanBadge],
-              x: 865,
-              duration: 600,
-              ease: 'Power2',
+            CutsceneDirector.playEmoteReaction(scene, scene.iman, '💝💨', 'hop');
+            CutsceneDirector.walkCharacterTo(scene, scene.iman, 'npc-iman', 865, 736, 720, {
+              badge: scene.imanBadge,
+              badgeOffsetY: 68,
+              interactObj: scene.imanInteract,
+              endFacing: 'left',
+              hopAmplitude: 2.8,
               onComplete: () => {
                 SoundEngine.heartUp();
+                CutsceneDirector.spawnBlossomSwirl(scene, 865, 725, 14, 70);
+                CutsceneDirector.playEmoteReaction(scene, scene.mehjabin, '😭💖', 'double-hop');
                 UI.startDialogue([
                   {
                     speaker: 'Iman',
@@ -930,15 +947,22 @@ export class CampusRomanceQuests {
 
   static playDoubleDateCutscene(scene: any): void {
     scene.cutsceneLocked = true;
-    scene.cameras.main.pan(1060, 750, 600, 'Sine.easeInOut');
+    CutsceneDirector.focusCamera(scene, 1040, 745, 1.4, 650, true);
 
     scene.mehjabin.setPosition(1045, 750).setDepth(750);
     scene.iman.setPosition(1080, 750).setDepth(750);
+    if (scene.scheduleSystem) {
+      scene.scheduleSystem.syncSpritePosition(scene.mehjabin, 1045, 750, 'right');
+      scene.scheduleSystem.syncSpritePosition(scene.iman, 1080, 750, 'left');
+    }
     scene.mehjabinBadge.setPosition(1062, 685).setText('💑 Iman & Mehjabin (Happy Couple)');
     if (scene.imanBadge) scene.imanBadge.setVisible(false);
 
     scene.player.setPosition(1010, 750);
     scene.totoro.setPosition(975, 750);
+
+    CutsceneDirector.spawnBlossomSwirl(scene, 1035, 735, 18, 95);
+    LeafWaterAnimator.spawnCanopyLeafDrop(scene, 1040, 750, 8);
 
     for (let i = 0; i < 16; i++) {
       const heart = scene.add.text(
@@ -985,6 +1009,11 @@ export class CampusRomanceQuests {
         text: '*Smiling together hand-in-hand* CHEESE! 📸'
       }
     ], () => {
+      // Camera flash shutter effect for the Polaroid memory!
+      scene.cameras.main.flash(350, 255, 252, 240);
+      CutsceneDirector.playEmoteReaction(scene, scene.mehjabin, '📸💖', 'double-hop');
+      CutsceneDirector.playEmoteReaction(scene, scene.totoro, '📸🐾', 'double-hop');
+
       UI.giveItem('double_date_polaroid', 'Went on a memorable Double Couple Date with Iman, Mehjabin, and Totoro.');
       RPGStats.gainXP(80);
       DateState.hearts = Math.min(5, DateState.hearts + 1);
@@ -1002,7 +1031,7 @@ export class CampusRomanceQuests {
       UI.updateQuestText();
       UI.showToast('📸', 'Double Date Polaroid Keepsake!', 'Four-Hearts Double Date Polaroid added to bag! (+80 XP, +1 Heart)');
 
-      scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
+      CutsceneDirector.restoreCamera(scene, 600);
       scene.cutsceneLocked = false;
     });
   }
@@ -1124,17 +1153,16 @@ export class CampusRomanceQuests {
       targetY = scene.anamikaWanderer.sprite.y;
     }
 
-    scene.cameras.main.pan(targetX, targetY, 650, 'Sine.easeInOut');
+    CutsceneDirector.focusCamera(scene, targetX - 18, targetY - 10, 1.38, 650, true);
 
     scene.time.delayedCall(700, () => {
-      scene.apshora.setPosition(targetX - 70, targetY).setDepth(targetY);
-      scene.tweens.add({
-        targets: scene.apshora,
-        x: targetX - 35,
-        duration: 600,
-        ease: 'Power1',
+      scene.apshora.setPosition(targetX - 82, targetY).setDepth(targetY);
+      CutsceneDirector.walkCharacterTo(scene, scene.apshora, 'npc-apshora', targetX - 35, targetY, 620, {
+        endFacing: 'right',
         onComplete: () => {
           SoundEngine.heartUp();
+          CutsceneDirector.playEmoteReaction(scene, scene.apshora, '✨👗', 'double-hop');
+          CutsceneDirector.spawnBlossomSwirl(scene, targetX - 18, targetY - 24, 12, 65);
 
           for (let i = 0; i < 8; i++) {
             const star = scene.add.text(targetX - 18, targetY - 40, '✨', { fontSize: '13px' }).setDepth(2600);
@@ -1204,6 +1232,9 @@ export class CampusRomanceQuests {
             DateState.apshoraQuestStage = 2;
 
             scene.apshora.setPosition(320, 785).setDepth(785);
+            if (scene.scheduleSystem) {
+              scene.scheduleSystem.syncSpritePosition(scene.apshora, 320, 785, 'down');
+            }
             if (scene.apshoraBadge) {
               scene.apshoraBadge.setPosition(320, 720).setText('✨ Apshora & Anamika Atelier');
               scene.apshoraBadge.setVisible(true);
@@ -1215,7 +1246,7 @@ export class CampusRomanceQuests {
               scene.apshoraInteract.onInteract = () => this.interactApshoraAnamikaStudio(scene);
             }
 
-            scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
+            CutsceneDirector.restoreCamera(scene, 600);
             scene.cutsceneLocked = false;
             UI.updateQuestText();
             UI.showToast('👗', 'Apshora & Anamika Atelier Founded!', 'Visit their design studio at Charukola Fine Arts (West, x:320 y:785) to review their debut collection!');
@@ -1326,12 +1357,40 @@ export class CampusRomanceQuests {
 
     const runwayX = 420;
     const runwayY = 1310;
-    scene.cameras.main.pan(runwayX, runwayY, 800, 'Sine.easeInOut');
+    CutsceneDirector.focusCamera(scene, runwayX, runwayY, 1.36, 800, true);
 
     scene.time.delayedCall(850, () => {
       scene.player.setPosition(runwayX - 95, runwayY + 20);
       scene.totoro.setPosition(runwayX - 125, runwayY + 20);
-      scene.apshora.setPosition(runwayX, runwayY - 20).setDepth(runwayY + 10);
+      scene.apshora.setPosition(runwayX - 65, runwayY - 12).setDepth(runwayY + 10);
+
+      // Roll out a crimson-and-gold Mughal runway carpet with sweeping golden spotlights
+      const runwayProps: any[] = [];
+      const carpet = scene.add.graphics().setDepth(runwayY - 25);
+      carpet.fillStyle(0x881337, 0.92);
+      carpet.fillRoundedRect(runwayX - 86, runwayY - 30, 172, 36, 6);
+      carpet.lineStyle(2, 0xfacc15, 0.95);
+      carpet.strokeRoundedRect(runwayX - 82, runwayY - 27, 164, 30, 4);
+      runwayProps.push(carpet);
+
+      const spotL = scene.add.circle(runwayX - 35, runwayY - 12, 48, 0xfef08a, 0.18).setDepth(runwayY - 24);
+      const spotR = scene.add.circle(runwayX + 35, runwayY - 12, 48, 0xf472b6, 0.18).setDepth(runwayY - 24);
+      scene.tweens.add({ targets: [spotL, spotR], scaleX: 1.35, alpha: 0.28, duration: 700, yoyo: true, repeat: -1 });
+      runwayProps.push(spotL, spotR);
+
+      // Choreographed runway walk for Apshora down the catwalk and back to center mic!
+      CutsceneDirector.walkCharacterTo(scene, scene.apshora, 'npc-apshora', runwayX + 64, runwayY - 12, 1100, {
+        endFacing: 'down',
+        onComplete: () => {
+          CutsceneDirector.playEmoteReaction(scene, scene.apshora, '👑✨', 'double-hop');
+          CutsceneDirector.spawnBlossomSwirl(scene, runwayX + 64, runwayY - 22, 14, 70);
+          CutsceneDirector.walkCharacterTo(scene, scene.apshora, 'npc-apshora', runwayX, runwayY - 12, 800, {
+            endFacing: 'down'
+          });
+        }
+      });
+
+      LeafWaterAnimator.spawnCanopyLeafDrop(scene, runwayX, runwayY - 30, 10);
 
       const runwayParticles: any[] = [];
       for (let i = 0; i < 24; i++) {
@@ -1425,6 +1484,9 @@ export class CampusRomanceQuests {
           text: 'A wondrous achievement born of perseverance and sisterhood. May your creations touch every corner of the earth!'
         }
       ], () => {
+        runwayProps.forEach(rp => {
+          if (rp && rp.active) rp.destroy();
+        });
         DateState.apshoraQuestStage = 4;
         UI.giveItem('apshora_silk_stole', 'Awarded by Apshora & Anamika at their triumphant Curzon Hall debut runway.');
         RPGStats.gainXP(90);
@@ -1444,6 +1506,9 @@ export class CampusRomanceQuests {
         UI.showToast('🧣', 'Apshora’s Silk Stole Acquired!', 'Royal Heritage Silk Stole added to bag! (+8 ATK, +8 DEF, +90 XP)');
 
         scene.apshora.setPosition(1512, 468).setDepth(468);
+        if (scene.scheduleSystem) {
+          scene.scheduleSystem.syncSpritePosition(scene.apshora, 1512, 468, 'down');
+        }
         if (scene.apshoraBadge) {
           scene.apshoraBadge.setPosition(1512, 400).setText('👑 Apshora (Celebrated Fashion Mogul)');
           scene.apshoraBadge.setVisible(true);
@@ -1455,7 +1520,7 @@ export class CampusRomanceQuests {
           scene.apshoraInteract.onInteract = () => this.interactApshoraSolo(scene);
         }
 
-        scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
+        CutsceneDirector.restoreCamera(scene, 600);
         scene.cutsceneLocked = false;
       });
     });

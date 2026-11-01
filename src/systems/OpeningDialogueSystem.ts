@@ -11,6 +11,8 @@ import {
 import { DateState } from '../state/DateState';
 import { SoundEngine } from '../audio/SoundEngine';
 import { UIController as UI } from '../ui/UIController';
+import { CutsceneDirector } from './CutsceneDirector';
+import { LeafWaterAnimator } from './LeafWaterAnimator';
 
 export interface SelectionContext {
   isRaining?: boolean;
@@ -186,15 +188,20 @@ export class OpeningDialogueEngine {
     scenario: OpeningScenarioDef,
     onComplete?: () => void
   ): void {
-    if (scene && scene.totoro) {
+    if (scene && scene.totoro && scene.tweens) {
       scene.tweens.add({
         targets: scene.totoro,
         y: scene.totoro.y - 14,
-        scaleY: 1.05,
+        scaleY: 1.06,
         duration: 200,
         yoyo: true,
         repeat: 1
       });
+      if (scene.add && scene.textures) {
+        CutsceneDirector.playEmoteReaction(scene, scene.totoro, '🐾💖', 'double-hop');
+        CutsceneDirector.spawnBlossomSwirl(scene, scene.totoro.x, scene.totoro.y - 24, 14, 72);
+        LeafWaterAnimator.spawnCanopyLeafDrop(scene, scene.totoro.x, scene.totoro.y, 6);
+      }
     }
 
     SoundEngine.heartUp();

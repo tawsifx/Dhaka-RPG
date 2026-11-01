@@ -27,6 +27,8 @@ import { FarmingSystem } from '../systems/FarmingSystem';
 import { AtmosphereSystem } from '../systems/AtmosphereSystem';
 import { PlayerBehaviors } from '../systems/player/PlayerBehaviors';
 import { OpeningDialogueSystem } from '../systems/OpeningDialogueSystem';
+import { LeafWaterAnimator } from '../systems/LeafWaterAnimator';
+import { CutsceneDirector } from '../systems/CutsceneDirector';
 import { RickshawTourEngine, StargazingEngine, LakeBoatEngine } from './minigames';
 import { MinimapRenderer, InteriorBuilder } from './world';
 import { CampusRomanceQuests } from './quests';
@@ -720,6 +722,7 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.obstacles = this.physics.add.staticGroup();
     this.overheadCanopies = [];
     this.interactiveFoliage = [];
+    this.treeCanopyCoords = [];
 
     const blockRect = (x, y, w, h) => {
       const zone = this.add.zone(x, y, w, h);
@@ -739,26 +742,54 @@ export class DhakaValleyScene extends Phaser.Scene {
         // Dynamic fountain water pulsing
         this.tweens.add({
           targets: sp,
-          scaleX: { from: 1, to: 1.018 },
-          scaleY: { from: 1, to: 1.025 },
-          duration: 1400,
+          scaleX: { from: 1, to: 1.02 },
+          scaleY: { from: 1, to: 1.03 },
+          duration: 1200,
           yoyo: true,
           repeat: -1,
           ease: 'Sine.easeInOut'
         });
-        // Ambient fountain mist droplets
+        // Multi-tiered fountain water arc jets & basin surface ripples
         this.time.addEvent({
-          delay: 380,
+          delay: 280,
           loop: true,
           callback: () => {
             if (!sp.active) return;
-            const drop = this.add.circle(x + (Math.random() - 0.5) * 32, y - 46 - Math.random() * 16, 2, 0x81d4fa, 0.7).setDepth(y + 2);
+            // Parabolic fountain water arc droplets from central spout to basin rim
+            for (let j = 0; j < 2; j++) {
+              const dir = j === 0 ? -1 : 1;
+              const startX = x + dir * 2;
+              const startY = y - 58;
+              const endX = x + dir * Phaser.Math.Between(12, 26);
+              const endY = y - Phaser.Math.Between(18, 28);
+              const drop = this.add
+                .circle(startX, startY, Phaser.Math.FloatBetween(1.6, 2.4), j === 0 ? 0xbae6fd : 0xe0f2fe, 0.85)
+                .setDepth(y + 2);
+              this.tweens.add({
+                targets: drop,
+                alpha: { from: 0.9, to: 0 },
+                duration: 460 + Math.random() * 140,
+                onUpdate: (tw: Phaser.Tweens.Tween) => {
+                  const p = tw.progress;
+                  drop.x = Phaser.Math.Linear(startX, endX, p);
+                  drop.y = Phaser.Math.Linear(startY, endY, p) - Math.sin(p * Math.PI) * 14;
+                },
+                onComplete: () => drop.destroy()
+              });
+            }
+            // Basin concentric ripple ring
+            const ring = this.add
+              .ellipse(x + Phaser.Math.Between(-14, 14), y - 22, 6, 3, 0xbae6fd, 0)
+              .setStrokeStyle(1, 0xe0f2fe, 0.65)
+              .setDepth(y + 1);
             this.tweens.add({
-              targets: drop,
-              y: drop.y + 14,
+              targets: ring,
+              scaleX: 3.2,
+              scaleY: 2.6,
               alpha: 0,
-              duration: 420 + Math.random() * 180,
-              onComplete: () => drop.destroy()
+              duration: 540,
+              ease: 'Quad.easeOut',
+              onComplete: () => ring.destroy()
             });
           }
         });
@@ -803,6 +834,7 @@ export class DhakaValleyScene extends Phaser.Scene {
 
       // Layer 5: Register overhead canopies for smooth alpha fading (0.42) when walking behind
       if (tex.includes('tree')) {
+        this.treeCanopyCoords.push({ x, y, tex });
         this.overheadCanopies.push({
           sprite: sp,
           minX: x - 48,
@@ -810,11 +842,13 @@ export class DhakaValleyScene extends Phaser.Scene {
           minY: y - 110,
           maxY: y - 10
         });
-        // Gentle canopy wind sway
+        // Gentle canopy wind sway & foliage breathing
         this.tweens.add({
           targets: sp,
-          angle: { from: -1.2, to: 1.2 },
-          duration: 2500 + Math.random() * 800,
+          angle: { from: -1.4, to: 1.4 },
+          scaleX: { from: 0.99, to: 1.015 },
+          scaleY: { from: 1.01, to: 0.99 },
+          duration: 2400 + Math.random() * 800,
           yoyo: true,
           repeat: -1,
           ease: 'Sine.easeInOut',
@@ -1621,13 +1655,14 @@ export class DhakaValleyScene extends Phaser.Scene {
     }).setOrigin(0.5, 1).setDepth(2100);
     this.trail = Array(16).fill({ x: this.player.x, y: this.player.y });
 
-    // Atmospheric Particles
-    this.petals = Array.from({ length: 26 }, () => ({
-      obj: this.add.circle(Phaser.Math.Between(60, MAP_W - 60), Phaser.Math.Between(60, MAP_H - 60), 3, wCfg.petalColor, 0.75).setDepth(2400),
-      vx: Phaser.Math.FloatBetween(-12, -4),
-      vy: Phaser.Math.FloatBetween(8, 18),
+    // Atmospheric Particles & Procedural Leaf Fall / Multi-Layer Water Effects
+    this.petals = Array.from({ length: 14 }, () => ({
+      obj: this.add.circle(Phaser.Math.Between(60, MAP_W - 60), Phaser.Math.Between(60, MAP_H - 60), 2.2, wCfg.petalColor, 0.55).setDepth(2400),
+      vx: Phaser.Math.FloatBetween(-10, -4),
+      vy: Phaser.Math.FloatBetween(8, 16),
       phase: Phaser.Math.FloatBetween(0, 6)
     }));
+    LeafWaterAnimator.initWorldEffects(this, worldId, MAP_W, MAP_H);
 
     // Rain Particles & Slanted Streaks Setup
     this.rainGraphics = this.add.graphics().setDepth(2600);
@@ -1816,36 +1851,9 @@ export class DhakaValleyScene extends Phaser.Scene {
     }
   }
 
-  /* Sweeps a lateral gust of 8–12 crimson petals across the camera */
+  /* Sweeps a lateral gust of textured Krishnachura & banyan leaves across the camera */
   triggerPetalWindGust() {
-    if (DateState.currentWorld !== 'dhaka') return;
-    const cam = this.cameras.main;
-    const startX = cam.scrollX - 40;
-    const count = Phaser.Math.Between(8, 12);
-
-    for (let i = 0; i < count; i++) {
-      const startY = cam.scrollY + Phaser.Math.Between(20, cam.height - 20);
-      const petal = this.add.circle(
-        startX - Phaser.Math.Between(0, 120),
-        startY,
-        Phaser.Math.FloatBetween(2.2, 3.4),
-        Phaser.Math.RND.pick([0xe63946, 0xff5c77, 0xff7b33]),
-        0.85
-      ).setDepth(2700);
-
-      const travelDist = cam.width + 180;
-      const duration = Phaser.Math.Between(1300, 2000);
-
-      this.tweens.add({
-        targets: petal,
-        x: petal.x + travelDist,
-        y: petal.y + Phaser.Math.Between(-30, 40),
-        alpha: { from: 0.85, to: 0 },
-        duration,
-        ease: 'Sine.easeInOut',
-        onComplete: () => petal.destroy()
-      });
-    }
+    LeafWaterAnimator.triggerLeafWindGust(this);
   }
 
   /* Real-Time Combat: Overhauled Data-Driven Combos & Companion System */
@@ -3302,7 +3310,9 @@ export class DhakaValleyScene extends Phaser.Scene {
     SoundEngine.ghostWhisper();
     if (DateState.ananyaQuestStage === 0) {
       SoundEngine.spookyChime();
-      this.cameras.main.pan(880, 460, 800, 'Sine.easeInOut');
+      CutsceneDirector.focusCamera(this, 880, 460, 1.38, 800, true);
+      CutsceneDirector.spawnShockwaveRings(this, 880, 440, 0x34d399, 2, 72);
+      LeafWaterAnimator.spawnCanopyLeafDrop(this, 880, 460, 8);
       UI.startDialogue([
         {
           speaker: 'Ananya (Weeping Petni)',
@@ -3333,6 +3343,8 @@ export class DhakaValleyScene extends Phaser.Scene {
                 UI.giveItem('spectral_lantern', 'Received Phantom Silver Lantern from Ananya!');
                 UI.showToast('🏮', 'Spirit Pacified!', 'Ananya’s sorrow has been soothed! (+7 ATK, +5 DEF)');
                 this.cameras.main.flash(500, 52, 211, 153);
+                CutsceneDirector.spawnBlossomSwirl(this, 880, 445, 16, 80);
+                CutsceneDirector.playEmoteReaction(this, { x: 880, y: 460 }, '🏮✨', 'pulse');
               },
               nextNodes: [
                 {
@@ -3344,9 +3356,12 @@ export class DhakaValleyScene extends Phaser.Scene {
             }
           ]
         }
-      ]);
+      ], () => {
+        CutsceneDirector.restoreCamera(this, 600);
+      });
     } else {
       SoundEngine.spookyChime();
+      CutsceneDirector.playEmoteReaction(this, { x: 880, y: 460 }, '✨', 'pulse');
       UI.startDialogue([
         {
           speaker: 'Ananya (Pacified Spirit)',
@@ -3361,7 +3376,8 @@ export class DhakaValleyScene extends Phaser.Scene {
     SoundEngine.bellToll();
     if (DateState.kofilQuestStage === 0) {
       SoundEngine.rickshawBell();
-      this.cameras.main.pan(420, 1320, 800, 'Sine.easeInOut');
+      CutsceneDirector.focusCamera(this, 420, 1320, 1.38, 800, true);
+      CutsceneDirector.spawnShockwaveRings(this, 420, 1300, 0x38bdf8, 2, 74);
       UI.startDialogue([
         {
           speaker: 'Kofil Chacha',
@@ -3394,6 +3410,8 @@ export class DhakaValleyScene extends Phaser.Scene {
                 UI.giveItem('ghost_bell', 'Received Phantom Rickshaw Brass Bell from Kofil Chacha!');
                 UI.showToast('🔔', 'Chacha’s Joy!', 'Kofil Chacha’s phantom rickshaw shines bright! (+6 ATK, +8 DEF)');
                 this.cameras.main.flash(500, 56, 189, 248);
+                CutsceneDirector.spawnShockwaveRings(this, 420, 1300, 0xfacc15, 3, 95);
+                CutsceneDirector.playEmoteReaction(this, { x: 420, y: 1320 }, '🔔🍵', 'double-hop');
               },
               nextNodes: [
                 {
@@ -3405,9 +3423,12 @@ export class DhakaValleyScene extends Phaser.Scene {
             }
           ]
         }
-      ]);
+      ], () => {
+        CutsceneDirector.restoreCamera(this, 600);
+      });
     } else {
       SoundEngine.rickshawBell();
+      CutsceneDirector.playEmoteReaction(this, { x: 420, y: 1320 }, '🛺🔔', 'hop');
       UI.startDialogue([
         {
           speaker: 'Kofil Chacha',
@@ -3422,7 +3443,8 @@ export class DhakaValleyScene extends Phaser.Scene {
     SoundEngine.radioStatic();
     if (DateState.shamsherQuestStage === 0) {
       SoundEngine.spookyChime();
-      this.cameras.main.pan(1540, 460, 800, 'Sine.easeInOut');
+      CutsceneDirector.focusCamera(this, 1540, 460, 1.38, 800, true);
+      CutsceneDirector.playEmoteReaction(this, { x: 1540, y: 460 }, '📻🌀', 'tremble');
       UI.startDialogue([
         {
           speaker: 'Prof. Shamsher',
@@ -3450,6 +3472,9 @@ export class DhakaValleyScene extends Phaser.Scene {
                 SoundEngine.totoroRoar();
                 this.cameras.main.shake(500, 0.02);
                 this.cameras.main.flash(500, 244, 63, 94);
+                CutsceneDirector.spawnShockwaveRings(this, 1540, 450, 0xf43f5e, 4, 130);
+                LeafWaterAnimator.spawnCanopyLeafDrop(this, 1540, 460, 10);
+                CutsceneDirector.playEmoteReaction(this, this.totoro, '🦁💥', 'double-hop');
               },
               nextNodes: [
                 {
@@ -3470,6 +3495,7 @@ export class DhakaValleyScene extends Phaser.Scene {
                         SoundEngine.itemFanfare();
                         UI.giveItem('occult_talisman', 'Received Prof. Shamsher’s Occult Field Tome!');
                         UI.showToast('📜', 'Nishi Banished!', 'Hypnotic trance broken! Tome acquired.');
+                        CutsceneDirector.playEmoteReaction(this, { x: 1540, y: 460 }, '📜✨', 'hop');
                       },
                       nextNodes: [
                         {
@@ -3485,9 +3511,12 @@ export class DhakaValleyScene extends Phaser.Scene {
             }
           ]
         }
-      ]);
+      ], () => {
+        CutsceneDirector.restoreCamera(this, 600);
+      });
     } else {
       SoundEngine.spookyChime();
+      CutsceneDirector.playEmoteReaction(this, { x: 1540, y: 460 }, '👓✨', 'hop');
       UI.startDialogue([
         {
           speaker: 'Prof. Shamsher',
@@ -3506,6 +3535,7 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     if (DateState.forestSeanceComplete) {
       SoundEngine.bellToll();
+      CutsceneDirector.spawnShockwaveRings(this, 1150, 620, 0x34d399, 2, 70);
       UI.startDialogue([
         {
           speaker: 'Ancient Spirit Altar',
@@ -3534,10 +3564,44 @@ export class DhakaValleyScene extends Phaser.Scene {
       return;
     }
 
-    // Grand Seance Cutscene: All 3 Spirits Gather
+    // Grand Seance Cutscene: All 3 Spirits Gather with Converging Spirit Orbs & Sacred Runes
     SoundEngine.bellToll();
-    this.cameras.main.pan(1150, 640, 1000, 'Sine.easeInOut');
+    CutsceneDirector.focusCamera(this, 1150, 640, 1.4, 900, true);
     this.cameras.main.flash(700, 168, 85, 247);
+
+    // Animate 3 converging spirit orbs representing Ananya, Kofil Chacha, and Prof. Shamsher
+    const orbSpecs = [
+      { sx: 1030, sy: 550, col: 0x34d399, icon: '🏮' },
+      { sx: 1040, sy: 720, col: 0x38bdf8, icon: '🔔' },
+      { sx: 1270, sy: 560, col: 0xc084fc, icon: '📜' }
+    ];
+    orbSpecs.forEach((o, idx) => {
+      const orb = this.add.circle(o.sx, o.sy, 9, o.col, 0.85).setDepth(2820);
+      const badge = this.add.text(o.sx, o.sy, o.icon, { fontSize: '16px' }).setOrigin(0.5).setDepth(2825);
+      this.tweens.add({
+        targets: [orb, badge],
+        x: 1150 + Math.cos((idx / 3) * Math.PI * 2) * 28,
+        y: 615 + Math.sin((idx / 3) * Math.PI * 2) * 18,
+        duration: 1400,
+        ease: 'Cubic.easeInOut',
+        onComplete: () => {
+          this.tweens.add({
+            targets: [orb, badge],
+            y: '+=8',
+            duration: 900,
+            yoyo: true,
+            repeat: 3,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+              orb.destroy();
+              badge.destroy();
+            }
+          });
+        }
+      });
+    });
+    CutsceneDirector.spawnShockwaveRings(this, 1150, 620, 0xa855f7, 3, 115);
+
     UI.startDialogue([
       {
         speaker: 'Ancient Spirit Altar',
@@ -3580,6 +3644,8 @@ export class DhakaValleyScene extends Phaser.Scene {
               UI.updateRPGStats();
               UI.showToast('🧿', 'Grand Seance Complete!', 'The Forest Spirits blessed you! (+14 ATK, +14 DEF, Fully Healed)');
               this.cameras.main.flash(800, 52, 211, 153);
+              CutsceneDirector.spawnShockwaveRings(this, 1150, 615, 0x34d399, 4, 140);
+              CutsceneDirector.spawnBlossomSwirl(this, 1150, 615, 18, 95);
             },
             nextNodes: [
               {
@@ -3591,7 +3657,9 @@ export class DhakaValleyScene extends Phaser.Scene {
           }
         ]
       }
-    ]);
+    ], () => {
+      CutsceneDirector.restoreCamera(this, 650);
+    });
   }
 
   /* ===== Grand Dhaka Rickshaw Tour & Race Subsystem ===== */
@@ -4329,21 +4397,8 @@ export class DhakaValleyScene extends Phaser.Scene {
       }
     }
 
-    // 1. Animate Water & Petals
-    if (this.lakeWater) {
-      this.lakeWater.tilePositionX = Math.sin(time * 0.0012) * 14;
-      this.lakeWater.tilePositionY += delta * 0.006;
-    }
-    if (this.extraWaterSprites && this.extraWaterSprites.length > 0) {
-      const waveX = Math.sin(time * 0.0012) * 12;
-      const stepY = delta * 0.0055;
-      for (const ws of this.extraWaterSprites) {
-        if (ws && ws.active) {
-          ws.tilePositionX = waveX;
-          ws.tilePositionY += stepY;
-        }
-      }
-    }
+    // 1. Animate Multi-Layer Water, Caustics, Shoreline Foam, Reflections & Falling Leaves
+    LeafWaterAnimator.update(this, time, delta);
     if (this.petals) {
       this.petals.forEach(p => {
         p.obj.x += p.vx * (delta / 1000) + Math.sin(time * 0.003 + p.phase) * 0.3;
@@ -4424,7 +4479,7 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     if (UI.isOpen() || this.cutsceneLocked) {
       this.player.setVelocity(0, 0);
-      if (this.player.anims && this.player.anims.isPlaying) {
+      if (this.player.anims && this.player.anims.isPlaying && !(this.player as any).__cutsceneAnimActive) {
         this.player.stop();
         this.player.setTexture('player-0');
       }

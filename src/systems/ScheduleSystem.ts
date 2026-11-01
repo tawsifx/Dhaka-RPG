@@ -596,6 +596,13 @@ export class ScheduleSystem {
       }
 
       if (isPaused) {
+        if ((ent.sprite as any)?.__cutsceneAnimActive) {
+          ent.sprite.setDepth(ent.sprite.y);
+          if (ent.badge) {
+            ent.badge.setPosition(ent.sprite.x, ent.sprite.y - ent.sprite.height - 6).setDepth(ent.sprite.y + 5);
+          }
+          return;
+        }
         if (
           ent.sprite.anims &&
           ent.sprite.anims.isPlaying &&
@@ -746,6 +753,46 @@ export class ScheduleSystem {
 
     if (this.debugOverlay) {
       this.debugOverlay.update();
+    }
+  }
+
+  /**
+   * Synchronizes an NPC's underlying NpcMover and roam anchor after a cutscene relocates their sprite.
+   */
+  public syncSpritePosition(
+    spriteOrId: Phaser.GameObjects.Sprite | string,
+    x: number,
+    y: number,
+    facing?: 'down' | 'left' | 'right' | 'up'
+  ): void {
+    let targetEnt: ActiveNpcEntity | undefined;
+    if (typeof spriteOrId === 'string') {
+      targetEnt = this.activeNpcs.get(spriteOrId);
+    } else {
+      this.activeNpcs.forEach(ent => {
+        if (ent.sprite === spriteOrId) targetEnt = ent;
+      });
+    }
+    if (!targetEnt) return;
+    const col = Math.max(1, Math.floor(x / 32));
+    const row = Math.max(1, Math.floor(y / 32));
+    targetEnt.mover.setPath([]);
+    targetEnt.mover.x = x;
+    targetEnt.mover.y = y;
+    targetEnt.mover.currentTile = { col, row };
+    if (facing) targetEnt.mover.facing = facing;
+    targetEnt.sprite.setPosition(x, y).setDepth(y);
+    if (targetEnt.interactObj) {
+      targetEnt.interactObj.x = x;
+      targetEnt.interactObj.y = y;
+    }
+    if (targetEnt.badge) {
+      targetEnt.badge.setPosition(x, y - targetEnt.sprite.height - 6).setDepth(y + 5);
+    }
+    const roam = this.roamStates.get(targetEnt.id);
+    if (roam) {
+      roam.anchorTile = { col, row };
+      roam.nextRoamTime = ((this.scene.time?.now || 0) / 1000) + 6;
     }
   }
 

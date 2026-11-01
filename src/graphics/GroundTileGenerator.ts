@@ -952,32 +952,218 @@ export class GroundTileGenerator {
     makePlazaCircle('prop-plaza-medallion', 136, '#b43e2b');
     makePlazaCircle('prop-plaza-ring', 192, '#9e2f24');
 
-    // --- UPGRADED WATER, SHALLOW COVES, STEPPED BENGALI GHATS & ARCHED BRIDGE ---
+    // --- UPGRADED WATER, SHALLOW COVES, CAUSTIC SHIMMER, SHORELINE FOAM, STEPPED BENGALI GHATS & ARCHED BRIDGE ---
     makeTex('tile-water', 64, 64, ctx => {
       const S = 64;
-      tk.paintBase(ctx, S, ['#174969', '#1d587d', '#246891', '#2c78a4', '#3588b5'], 901, 4, 1.8);
-      // Shimmering caustic wave bands
-      const w1 = tk.noise(S, 4, 911), w2 = tk.noise(S, 8, 922);
-      const wf = (x: number, y: number) => w1(x, y) * 0.6 + w2(x, y) * 0.4;
-      tk.iso(ctx, S, wf, 0.52, 0.022, 'rgba(126, 208, 242, 0.28)');
-      tk.iso(ctx, S, wf, 0.52, 0.008, 'rgba(224, 247, 255, 0.55)');
-      // Crisp horizontal surface wave glints
-      ctx.fillStyle = 'rgba(186, 235, 255, 0.65)';
-      [[6, 10, 14], [34, 22, 18], [16, 38, 16], [40, 52, 14]].forEach(([x, y, w]) => {
+      tk.paintBase(ctx, S, ['#133f5c', '#184e70', '#1f6087', '#27729c', '#3185b3', '#3d98c7'], 901, 4, 1.85);
+      // Deep underwater current bands & dual-octave caustic lattice
+      const w1 = tk.noise(S, 4, 911), w2 = tk.noise(S, 8, 922), w3 = tk.noise(S, 6, 933);
+      const wf = (x: number, y: number) => w1(x, y) * 0.5 + w2(x, y) * 0.35 + w3(x, y) * 0.15;
+      tk. wash(ctx, S, w3, 0.56, '#0d2b40', 0.32, true);
+      tk.iso(ctx, S, wf, 0.50, 0.026, 'rgba(110, 204, 245, 0.32)');
+      tk.iso(ctx, S, wf, 0.53, 0.012, 'rgba(190, 240, 255, 0.58)');
+      // Crisp multi-tier surface wave crests with specular diamond glints
+      const crests = [
+        [5, 8, 16], [36, 14, 18], [18, 26, 14], [44, 34, 15],
+        [8, 44, 18], [32, 52, 16], [14, 58, 11]
+      ];
+      crests.forEach(([x, y, w], idx) => {
+        ctx.fillStyle = 'rgba(125, 218, 252, 0.42)';
+        ctx.fillRect(x - 1, y + 1, w + 2, 2);
+        ctx.fillStyle = 'rgba(205, 244, 255, 0.78)';
         ctx.fillRect(x, y, w, 2);
         ctx.fillStyle = '#ffffff';
-        ctx.fillRect(x + 3, y, Math.max(4, w - 8), 1);
-        ctx.fillStyle = 'rgba(186, 235, 255, 0.65)';
+        ctx.fillRect(x + 3, y, Math.max(4, w - 7), 1);
+        if (idx % 2 === 0) {
+          ctx.fillRect(x + Math.floor(w / 2), y - 1, 2, 3);
+        }
       });
     });
 
     makeTex('tile-water-shallow', 64, 64, ctx => {
       const S = 64;
-      tk.paintBase(ctx, S, ['#24708f', '#2b82a1', '#3494b2', '#41a6c2', '#52b7d1'], 955, 4, 1.7);
-      // Warm submerged sandy-pebble shimmer & gentle ripples
-      tk.wash(ctx, S, tk.noise(S, 4, 961), 0.58, '#a7e8f2', 0.25, true);
-      ctx.fillStyle = 'rgba(230, 252, 255, 0.7)';
-      [[8, 14, 12], [36, 30, 14], [18, 48, 15]].forEach(([x, y, w]) => ctx.fillRect(x, y, w, 1.5));
+      tk.paintBase(ctx, S, ['#1f6987', '#267c9c', '#2f8fb0', '#3ba3c4', '#4cb6d6', '#64cae6'], 955, 4, 1.75);
+      // Warm submerged sandy-pebble shimmer & gentle turquoise ripples
+      const nw = tk.noise(S, 4, 961), nw2 = tk.noise(S, 8, 977);
+      tk.wash(ctx, S, nw, 0.56, '#a7f3d0', 0.22, true);
+      tk.iso(ctx, S, (x: number, y: number) => nw(x, y) * 0.65 + nw2(x, y) * 0.35, 0.54, 0.016, 'rgba(215, 252, 255, 0.55)');
+      const ripples = [[7, 12, 13], [35, 22, 15], [14, 36, 16], [42, 46, 13], [20, 56, 14]];
+      ripples.forEach(([x, y, w]) => {
+        ctx.fillStyle = 'rgba(165, 243, 252, 0.52)';
+        ctx.fillRect(x, y + 1, w, 2);
+        ctx.fillStyle = 'rgba(240, 253, 255, 0.85)';
+        ctx.fillRect(x + 1, y, w - 2, 1.5);
+      });
+    });
+
+    // Seamless Counter-Scrolling Caustic Shimmer Overlay (for multi-layer animated water depth)
+    makeTex('water-caustic-overlay', 64, 64, ctx => {
+      const S = 64;
+      const n1 = tk.noise(S, 4, 1911), n2 = tk.noise(S, 6, 1927);
+      const cf = (x: number, y: number) => n1(x, y) * 0.58 + n2(x, y) * 0.42;
+      tk.iso(ctx, S, cf, 0.54, 0.018, 'rgba(186, 238, 255, 0.34)');
+      tk.iso(ctx, S, cf, 0.545, 0.007, 'rgba(255, 255, 255, 0.62)');
+      // Specular starlight water glints
+      const glints = [[12, 10], [46, 18], [26, 34], [52, 46], [16, 54], [38, 8]];
+      glints.forEach(([gx, gy]) => {
+        ctx.fillStyle = 'rgba(224, 248, 255, 0.65)';
+        ctx.fillRect(gx - 2, gy, 5, 1);
+        ctx.fillRect(gx, gy - 2, 1, 5);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(gx, gy, 1, 1);
+      });
+    });
+
+    // Shoreline Lapping Foam Strips (Horizontal & Vertical)
+    makeTex('water-foam-h', 64, 12, ctx => {
+      for (let x = 0; x < 64; x++) {
+        const wave = Math.sin((x / 64) * Math.PI * 4) * 2.2 + Math.cos((x / 64) * Math.PI * 2) * 1.1;
+        const y0 = Math.round(3 + wave);
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.42)';
+        ctx.fillRect(x, y0, 1, 5);
+        ctx.fillStyle = 'rgba(224, 247, 255, 0.78)';
+        ctx.fillRect(x, y0, 1, 3);
+        if (x % 3 !== 0) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(x, y0, 1, 1.5);
+        }
+      }
+    });
+
+    makeTex('water-foam-v', 12, 64, ctx => {
+      for (let y = 0; y < 64; y++) {
+        const wave = Math.sin((y / 64) * Math.PI * 4) * 2.2 + Math.cos((y / 64) * Math.PI * 2) * 1.1;
+        const x0 = Math.round(3 + wave);
+        ctx.fillStyle = 'rgba(125, 211, 252, 0.42)';
+        ctx.fillRect(x0, y, 5, 1);
+        ctx.fillStyle = 'rgba(224, 247, 255, 0.78)';
+        ctx.fillRect(x0, y, 3, 1);
+        if (y % 3 !== 0) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(x0, y, 1.5, 1);
+        }
+      }
+    });
+
+    // --- PROCEDURAL PIXEL-ART FALLING LEAF & BLOSSOM TEXTURES ---
+    // 1. Krishnachura (Royal Poinciana / Delonix regia) scarlet-orange spoon petal
+    makeTex('leaf-krishnachura', 12, 12, ctx => {
+      // Soft drop glow/outline
+      ctx.fillStyle = '#881337';
+      ctx.fillRect(3, 2, 6, 7);
+      ctx.fillRect(2, 3, 8, 5);
+      // Main scarlet-vermilion fan blade
+      ctx.fillStyle = '#e11d48';
+      ctx.fillRect(3, 3, 6, 5);
+      ctx.fillRect(4, 2, 4, 7);
+      // Sunlit fiery orange upper lobe
+      ctx.fillStyle = '#fb7185';
+      ctx.fillRect(4, 3, 4, 3);
+      ctx.fillStyle = '#ffedd5';
+      ctx.fillRect(5, 3, 2, 1);
+      // Narrow golden-amber claw stem at base
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(5, 8, 2, 2);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(5, 9, 1, 2);
+    });
+
+    // 2. Krishnachura feathery bipinnate compound green leaf frond
+    makeTex('leaf-krishna-pinna', 14, 10, ctx => {
+      // Central rachis stem
+      ctx.fillStyle = '#365314';
+      ctx.fillRect(1, 4, 12, 2);
+      // Paired opposite pinnae leaflets along the stem
+      const pairs = [2, 5, 8, 11];
+      pairs.forEach((px, idx) => {
+        ctx.fillStyle = idx % 2 === 0 ? '#15803d' : '#16a34a';
+        ctx.fillRect(px, 1, 2, 3);
+        ctx.fillRect(px, 6, 2, 3);
+        ctx.fillStyle = '#86efac';
+        ctx.fillRect(px, 1, 1, 1);
+        ctx.fillRect(px + 1, 7, 1, 1);
+      });
+    });
+
+    // 3. Banyan / Ficus glossy emerald-jade ovate leaf with pointed drip-tip
+    makeTex('leaf-banyan', 12, 12, ctx => {
+      ctx.fillStyle = '#064e3b';
+      ctx.fillRect(3, 2, 6, 8);
+      ctx.fillRect(2, 3, 8, 6);
+      ctx.fillStyle = '#059669';
+      ctx.fillRect(3, 3, 6, 6);
+      ctx.fillStyle = '#34d399';
+      ctx.fillRect(4, 3, 4, 4);
+      // Central golden-green midrib vein & petiole
+      ctx.fillStyle = '#a7f3d0';
+      ctx.fillRect(5, 3, 1, 6);
+      ctx.fillRect(4, 5, 3, 1);
+      // Stem & pointed tip
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(5, 10, 2, 2);
+      ctx.fillStyle = '#6ee7b7';
+      ctx.fillRect(5, 1, 1, 1);
+    });
+
+    // 4. Golden Autumn / Boishakhi dry amber-russet leaf
+    makeTex('leaf-autumn', 12, 12, ctx => {
+      ctx.fillStyle = '#7c2d12';
+      ctx.fillRect(3, 2, 6, 8);
+      ctx.fillRect(2, 4, 8, 4);
+      ctx.fillStyle = '#d97706';
+      ctx.fillRect(3, 3, 6, 6);
+      ctx.fillRect(3, 4, 7, 4);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(4, 3, 4, 4);
+      ctx.fillStyle = '#fef3c7';
+      ctx.fillRect(5, 4, 2, 3);
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(5, 10, 1, 2);
+    });
+
+    // 5. Soft Pink Shapla / Lotus petal
+    makeTex('leaf-lotus-petal', 10, 10, ctx => {
+      ctx.fillStyle = '#9d174d';
+      ctx.fillRect(2, 2, 6, 6);
+      ctx.fillStyle = '#ec4899';
+      ctx.fillRect(3, 2, 4, 6);
+      ctx.fillRect(2, 3, 6, 4);
+      ctx.fillStyle = '#fbcfe8';
+      ctx.fillRect(4, 2, 2, 4);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(4, 7, 2, 1);
+    });
+
+    // 6. Realm-specific elemental leaves (Frost, Ember, Astral)
+    makeTex('leaf-frost', 12, 12, ctx => {
+      ctx.fillStyle = '#0284c7';
+      ctx.fillRect(3, 2, 6, 8); ctx.fillRect(2, 4, 8, 4);
+      ctx.fillStyle = '#7dd3fc';
+      ctx.fillRect(4, 3, 4, 6); ctx.fillRect(3, 5, 6, 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(5, 3, 2, 6); ctx.fillRect(3, 5, 6, 1);
+    });
+
+    makeTex('leaf-ember', 12, 12, ctx => {
+      ctx.fillStyle = '#450a0a';
+      ctx.fillRect(3, 2, 6, 8); ctx.fillRect(2, 4, 8, 4);
+      ctx.fillStyle = '#ea580c';
+      ctx.fillRect(3, 3, 6, 6);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(4, 4, 4, 4);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(5, 5, 2, 2);
+    });
+
+    makeTex('leaf-astral', 12, 12, ctx => {
+      ctx.fillStyle = '#4c1d95';
+      ctx.fillRect(3, 2, 6, 8); ctx.fillRect(2, 4, 8, 4);
+      ctx.fillStyle = '#a855f7';
+      ctx.fillRect(3, 3, 6, 6);
+      ctx.fillStyle = '#e879f9';
+      ctx.fillRect(4, 4, 4, 4);
+      ctx.fillStyle = '#fef08a';
+      ctx.fillRect(5, 4, 2, 4);
     });
 
     makeTex('tile-lava', 64, 64, ctx => {

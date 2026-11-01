@@ -2,6 +2,7 @@
 import { DateState } from '../../state/DateState';
 import { SoundEngine } from '../../audio/SoundEngine';
 import { UIController as UI } from '../../ui/UIController';
+import { CutsceneDirector } from '../../systems/CutsceneDirector';
 
 export class StargazingEngine {
   static interact(scene: any): void {
@@ -41,7 +42,25 @@ export class StargazingEngine {
 
       <div style="position:relative;width:100%;max-width:820px;aspect-ratio:16/9;border:3px solid #f0b942;border-radius:16px;overflow:hidden;box-shadow:0 0 45px rgba(244,169,192,0.28);background:#090b16;">
         <svg id="cutscene-sky-svg" viewBox="0 0 800 450" style="width:100%;height:100%;display:block;">
+          <style>
+            @keyframes starTwinkle {
+              0%, 100% { opacity: 0.25; transform: scale(0.9); }
+              50% { opacity: 0.95; transform: scale(1.25); }
+            }
+            @keyframes shootingStar {
+              0% { stroke-dashoffset: 140; opacity: 0; }
+              15% { opacity: 1; }
+              80% { opacity: 0.9; }
+              100% { stroke-dashoffset: -140; opacity: 0; }
+            }
+            .twinkle-star { transform-box: fill-box; transform-origin: center; animation: starTwinkle 2.8s ease-in-out infinite; }
+            .shooting-meteor { stroke-dasharray: 45 200; animation: shootingStar 3.4s ease-out infinite; }
+          </style>
           <g id="cutscene-bg-stars"></g>
+          <g id="cutscene-shooting-stars">
+            <line class="shooting-meteor" x1="680" y1="35" x2="510" y2="115" stroke="#fff3a1" stroke-width="2" stroke-linecap="round" style="animation-delay:0.6s;" />
+            <line class="shooting-meteor" x1="340" y1="28" x2="190" y2="98" stroke="#bae6fd" stroke-width="1.8" stroke-linecap="round" style="animation-delay:2.1s;" />
+          </g>
           <g class="sky-const-node" data-id="0" style="cursor:pointer;">
             <polygon id="c-line-0" points="140,130 165,105 205,105 230,130 205,155 165,155" fill="rgba(247,203,69,0.06)" stroke="#f7cb45" stroke-width="2" stroke-dasharray="5 4" opacity="0.35"/>
             <circle cx="140" cy="130" r="5" fill="#fff"/><circle cx="165" cy="105" r="4.5" fill="#fff"/>
@@ -89,7 +108,9 @@ export class StargazingEngine {
     let shtml = '';
     for (let i = 0; i < 95; i++) {
       const sx = (i * 89) % 800, sy = (i * 53) % 385, r = (i % 3 === 0) ? 1.8 : 1.1;
-      shtml += `<circle cx="${sx}" cy="${sy}" r="${r}" fill="#ffffff" opacity="${(0.3 + (i % 5) * 0.12).toFixed(2)}"/>`;
+      const delay = ((i * 0.23) % 3.0).toFixed(2);
+      const cls = i % 2 === 0 ? 'class="twinkle-star"' : '';
+      shtml += `<circle ${cls} cx="${sx}" cy="${sy}" r="${r}" fill="#ffffff" opacity="${(0.3 + (i % 5) * 0.12).toFixed(2)}" style="animation-delay:${delay}s;"/>`;
     }
     if (bgGroup) bgGroup.innerHTML = shtml;
 
@@ -106,11 +127,19 @@ export class StargazingEngine {
         const id = Number((node as any).dataset.id);
         foundSet.add(id);
         SoundEngine.starChime();
-        const shape = skyModal.querySelector(`#c-line-${id}`);
+        const shape = skyModal.querySelector(`#c-line-${id}`) as SVGElement | null;
         if (shape) {
           shape.setAttribute('opacity', '1');
           shape.removeAttribute('stroke-dasharray');
+          shape.style.transition = 'opacity 0.45s ease, filter 0.45s ease';
+          shape.style.filter = 'drop-shadow(0 0 8px rgba(254, 240, 138, 0.85))';
         }
+        node.querySelectorAll('circle').forEach(c => {
+          (c as SVGElement).style.transition = 'transform 0.35s ease';
+          (c as SVGElement).style.transformOrigin = 'center';
+          (c as SVGElement).style.transformBox = 'fill-box';
+          (c as SVGElement).style.transform = 'scale(1.35)';
+        });
         const dia = skyModal.querySelector('#sky-dialogue-line');
         if (dia) dia.textContent = LORE[id];
         const status = skyModal.querySelector('#sky-sub-status');
@@ -125,6 +154,10 @@ export class StargazingEngine {
         skyModal.remove();
         scene.cutsceneLocked = false;
         if (foundSet.size >= 4) {
+          if (scene && scene.totoro) {
+            CutsceneDirector.playEmoteReaction(scene, scene.totoro, '🔭🌟', 'double-hop');
+            CutsceneDirector.spawnBlossomSwirl(scene, scene.totoro.x, scene.totoro.y - 20, 14, 70);
+          }
           if (!DateState.stargazingDone) {
             DateState.stargazingDone = true;
             UI.giveItem('starlight', 'Spotted all 4 constellations in the Dhaka night sky.');

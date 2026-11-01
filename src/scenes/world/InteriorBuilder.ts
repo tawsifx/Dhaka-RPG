@@ -7,6 +7,7 @@ import {
   FARMHOUSE_WIDTH,
   FARMHOUSE_HEIGHT
 } from '../../config/constants';
+import { LeafWaterAnimator } from '../../systems/LeafWaterAnimator';
 
 export class InteriorBuilder {
   /**
@@ -210,7 +211,12 @@ export class InteriorBuilder {
     scene.ambientOverlay = scene.add.rectangle(0, 0, MAP_W * 2, MAP_H * 2, 0x1a1438, 0)
       .setOrigin(0, 0).setDepth(2500);
 
+    scene.treeCanopyCoords = [];
+    scene.extraWaterSprites = [];
+    LeafWaterAnimator.initWorldEffects(scene, 'curzon_interior', MAP_W, MAP_H);
+
     scene.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
+    scene.cameras.main.setZoom(1.22);
     scene.cameras.main.startFollow(scene.player, true, 0.1, 0.1);
     if (scene.scheduleSystem) {
       scene.scheduleSystem.initWorldNpcs('curzon_interior');
@@ -247,6 +253,7 @@ export class InteriorBuilder {
     scene.currentMapH = MAP_H;
     scene.physics.world.setBounds(0, 0, MAP_W, MAP_H);
     scene.obstacles = scene.physics.add.staticGroup();
+    scene.treeCanopyCoords = [];
 
     const blockRect = (x: number, y: number, w: number, h: number) => {
       const zone = scene.add.zone(x, y, w, h);
@@ -258,10 +265,13 @@ export class InteriorBuilder {
       const sp = scene.add.sprite(x, y, tex).setOrigin(0.5, 1).setDepth(y);
       if (w && h) blockRect(x, y - h / 2, w, h);
       if (tex.includes('tree')) {
+        scene.treeCanopyCoords.push({ x, y, tex });
         scene.tweens.add({
           targets: sp,
-          angle: { from: -1.2, to: 1.2 },
-          duration: 2600 + Math.random() * 800,
+          angle: { from: -1.4, to: 1.4 },
+          scaleX: { from: 0.99, to: 1.015 },
+          scaleY: { from: 1.01, to: 0.99 },
+          duration: 2400 + Math.random() * 800,
           yoyo: true,
           repeat: -1,
           ease: 'Sine.easeInOut'
@@ -507,6 +517,8 @@ export class InteriorBuilder {
 
     scene.ambientOverlay = scene.add.rectangle(0, 0, MAP_W * 2, MAP_H * 2, 0x1a1438, 0)
       .setOrigin(0, 0).setDepth(2500);
+
+    LeafWaterAnimator.initWorldEffects(scene, 'farmhouse', MAP_W, MAP_H);
 
     scene.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     scene.cameras.main.setZoom(1.22);
