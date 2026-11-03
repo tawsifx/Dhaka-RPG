@@ -16,7 +16,6 @@
     "assets:validate": "vitest run tests/combat/assets_validation.test.ts",
     "assets:report": "vitest run tests/combat/assets_validation.test.ts",
     "assets:compress": "python3 scripts/compress_images.py",
-    "test:race": "vitest run tests/race/",
     "deploy:cf": "npm run build && wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true",
     "start": "node telegram-bot.js",
     "bot": "caffeinate -s -i node telegram-bot.js"

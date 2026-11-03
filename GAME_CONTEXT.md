@@ -44,7 +44,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Dedicated WebGL overlay and standalone harness for MarioKart64JS Grand Prix (all 16 N64 tracks, 4 battle arenas, 8 classic drivers, Wii 3D karts, synthesized Web Audio) |
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
-| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 223 unit & regression tests across 20 test suites (combat, farming, NPC engine, opening dialogues, database index, behaviors, 3D race kinematics, drift, turbo, surfaces, air, BVH collision, track spline, lap tracking, rescue, and countdown) + automated Playwright E2E suites (`test:race:m1`, `test:race:m2`, `test:race:m3`) + CLI track validation (`race:validate`) |
+| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | Consolidated Vitest test suites (14 suites, 113 unit & regression tests across combat, farming, NPC roaming & schedule engine, opening dialogues, database index, behaviors, and stats) + unified Playwright E2E test runner (`npm run test:e2e` across 4 domain suites) |
 | **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio real-time engine & drift screech synthesizers |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
@@ -344,7 +344,7 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **Spline, laps, gates (`TrackSpline`, `LapTracker`)**: arc-length Catmull-Rom spline with local-window nearest search (never jumps across the flyover); continuous segment-vs-plane gate crossing (reversing rejected); ordered gates with **`any-of` groups** (`groupId`, the courtyard shortcut gates 11A/11B count as one index).
 - **Rescue (`RescueSystem`)**: kill plane (`y < −10`) or 3.5 s of throttle-held standstill → respawn behind the last gate with invulnerability.
 - **UI**: `RaceMinimap` (canvas radar from track data), `RaceLoadingScreen`, `RaceResults` (total time, lap splits, best-lap star, Race Again/Exit), `TrackDebugOverlay` (**F6**).
-- **Tooling**: `npm run race:validate` (schema, budgets, grid/gates on ground, headless autopilot 3-lap run), `npm run test:race:m3`, `__race` additions (`getStats`, `start(trackId)`, `teleport`, `triggerRescue`, `engine`, `TrackAutopilot`). The M2 analytic arena stays available via `?race-arena` / `__race.start('arena')` as a permanent regression bed.
+- **Tooling**: `__race` additions (`getStats`, `start(trackId)`, `teleport`, `triggerRescue`, `engine`, `TrackAutopilot`). The flat proving arena stays available via `?race-arena` / `__race.start('arena')`.
 
 #### Milestone 4 — Rivals, 8-Kart Grid, AI Drivers & Race Flow (ADRs 018–022)
 - **8-Kart Start Grid & Roster (`src/config/drivers.race.db.ts`, ADR 018):** 8-driver roster featuring Moon Walker (player) and 7 distinct AI rivals (Tania, Baki Bhai, Iman, Arif, Anamika, Rakin, Apshora). Each driver has custom body/canopy colors, unique weight categories (Light, Balanced, Heavy), handling (2.4–3.2 rad/s), skill rating ($0.65 - 0.95$), aggression ($0.20 - 0.85$), driftiness, mistake rates, and shortcut affinity.
@@ -360,7 +360,7 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
   - *Bounded Rubber-Band:* Subtle speed modifier strictly bounded between $[0.94, 1.06]$ ($\pm 6\%$) based on gap to player. **Always 1.0 (zero assist) for the player**.
 - **2.5D Billboard Drivers & Rival Presentation (`BillboardDriver.ts`, `RivalKartRenderer.ts`, ADR 022):** Authentic 2.5D pixel art characters mounted inside 3D rickshaws. Billboard drivers sample existing character spritesheets (`moon_walker`, `npc_walker1`, `npc_walker3`, `npc_iman`, `npc_anamika`, etc.) with dynamic 4-directional row switching (front, back, left, right) relative to chase camera yaw. Projected screen-space HTML name tags follow rival karts.
 - **Race Flow & HUD Upgrades:** Pre-Race Setup Panel (`RacePreRacePanel.ts`) for mode/difficulty selection, live position badge (`1st / 8`), 8-driver standings ladder with gap intervals, animated "FINAL LAP!" banner, multi-blip radar minimap with distinctive driver colors, and post-race Podium finish modal (`RaceResults.ts`).
-- **Telemetry & Tooling:** F7 AI Telemetry Overlay (`AiDebugOverlay.ts`) with live 8-kart tabular metrics and 3D racing line visualization, headless Monte-Carlo balancing simulator (`npm run race:simulate`), 36 new unit tests (`npm test`), and comprehensive Playwright verification (`npm run test:race:m4`).
+- **Telemetry & Tooling:** F7 AI Telemetry Overlay (`AiDebugOverlay.ts`) with live 8-kart tabular metrics and 3D racing line visualization.
 
 #### Milestone 3.5 — Art Pass: SuperTuxKart Asset Integration & Fuller Road Dressing (ADRs 023–027)
 - **Gameplay Lock Invariance (ADR 025):** Non-negotiable architectural invariant ensuring `collision.glb`, the centerline spline, gates, start grid, and racing line remain 100% byte-identical. Verified via SHA-256 hashes in `public/assets/race/tracks/fuller_road_sprint/gameplay.lock.json` and tested in CI (`tests/race/race_m35.test.ts`). Visual assets are strictly derived from gameplay geometry.
@@ -376,7 +376,7 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 - **Batch Scenery Instancing & Scalability (`PropInstancer.ts`, `GfxQuality.ts`, ADR 026):** Roadside props (street lamps, benches, Krishnachura trees, shrubs, barrels, lanterns) rendered via `THREE.InstancedMesh` with 1 draw call per prop type. Scalable via `?race-gfx=low|med|high`.
 - **Rickshaw Kart Articulation & Visuals:** Added driver and passenger attachment anchors, spinning spoke wheels with front steering pivot, 8 unique rival color tints, and a swinging red rescue lantern.
 - **Race BGM Loop & Audio Ducking:** Seamless loop playback of `garden.ogg` via Web Audio API, automatically ducked on pause menu and race finish.
-- **QA Tooling:** Visual Art Gallery modal (`RaceGallery.ts`, `?race-gallery`), 8-vantage-point screenshot tour (`screenshot-tour.mjs`, `docs/rickshaw-race/art-pass/`), and Playwright E2E verification script (`npm run test:race:m35`).
+- **QA Tooling:** Visual Art Gallery modal (`RaceGallery.ts`, `?race-gallery`).
 
 #### Milestone 5 — Dhaka Street Items, Street Hazards & Parallel Downloader (ADRs 028–030)
 - **Multi-Channel Parallel Download Manager (`parallel-download.mjs`, ADR 029):** High-throughput IDM-style parallel downloader with 4-stream range requests, dynamic segment work-stealing, single-stream fallback, retry with exponential backoff & jitter, and SHA-256 integrity verification pinned in `downloads.lock.json`. 7.86× acceleration measured on throttled servers (`npm run race:dl:bench`).
@@ -1393,50 +1393,28 @@ In November 2026, the game's interface and interaction mechanics received a comp
 
 ### Essential Scripts (`package.json`)
 - `npm run dev`: Launch local Vite development server on `http://localhost:3000/`.
+- `npm run dev:race`: Launch standalone MarioKart64JS race harness (`/race.html`).
 - `npm run build`: Execute production Vite build to `dist/`.
-- `npm run test`: Run the full Vitest test suite (`tests/` directory, 259/259 tests across 21 suites).
-- `npm run test:race:m1`: Run Playwright E2E verification test suite for Three.js 3D race spike (state preservation, driving telemetry, memory leak cycles, mobile touch).
-- `npm run test:race:m2`: Run Playwright E2E verification test suite for M2 kart feel (drift sparks, 3-tier mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
-- `npm run test`: Run the consolidated Vitest unit & integration test suite (15 test files, 120 tests).
+- `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
+- `npm test`: Run the consolidated Vitest unit & integration test suite (14 test files, 113 tests).
 - `npm run test:e2e`: Run the unified 4-suite Playwright E2E test runner (`tests/e2e/runner.js`) across NPC Roaming, Combat & Player, World & Farming, and Dialogue & Audio.
 - `npm run test:all`: Run both Vitest unit tests and Playwright E2E tests sequentially (`npm test && npm run test:e2e`).
-- `npm run test:race`: Run the 3D kart race unit test suite (`tests/race/`).
-- `npm run test:race:m1`: Run Playwright E2E verification test suite for M1 3D race spike (Phaser -> Three.js overlay -> canvas handover -> return to 2D overworld, 10-cycle zero-leak audit).
-- `npm run test:race:m2`: Run Playwright E2E verification test suite for M2 feel (drift, sparks, mini-turbo, surface physics, ramp jump, camera lead, 10-cycle zero-leak audit).
-- `npm run test:race:m3`: Run Playwright E2E verification test suite for M3 track pipeline (lazy loading, countdown, minimap, flyover bridge elevation, ramp jump, lantern rescue, 3 full laps, finish modal splits, 10-cycle zero-leak audit).
-- `npm run test:race:m35`: Run Playwright E2E verification test suite for M3.5 SuperTuxKart art pass (graphics quality presets, dressed Fuller Road circuit, zero 2D overworld leaks).
-- `npm run test:race:m4`: Run Playwright E2E verification test suite for M4 rivals (8-kart grid, AI drivers, multi-kart collisions, ranking standings, rubber-band, podium finish, 10-cycle zero-leak audit).
-- `npm run test:race:m5`: Run Playwright E2E verification test suite for M5 items & hazards (item boxes, roulette slot, Malai Cha nitro, Naga Fuchka rocket, Mishti Doi puddles, hit reaction states, F8 debug overlay, 10-cycle zero-leak audit).
-- `npm run race:validate`: Run CLI track data, geometry, and headless autopilot 3-lap simulation validator.
-- `npm run race:simulate`: Run headless 8-kart Monte-Carlo race simulation harness across difficulty tiers with determinism, spread validation, and items/hazards.
-- `npm run race:items`: Offline item box and hazard builder generating `items.json` for tracks.
-- `npm run race:dl`: Multi-channel parallel download manager CLI for high-throughput asset fetching.
-- `npm run race:dl:bench`: Throughput benchmark comparing parallel range downloads vs single-stream.
-- `npm run race:build`: Offline track builder compiling spline, prop instances, collision geometry, and `track.json`.
-- `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
+- `npm run validate:npc`: Run the Living-World NPC Schedule Validator (validates all 38 schedules, graph connectivity, travel times, and slack).
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
 - `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
-- `npm run validate:npc`: Run the Living-World NPC Schedule Validator (validates all 38 schedules, graph connectivity, travel times, and slack).
+- `npm run assets:compress`: Run Python PIL batch image compression on `public/assets/`.
 - `npm run deploy:cf`: Build production bundle and deploy directly to Cloudflare Pages (`wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true`).
 
 ### Live Production Deployments
 - **Cloudflare Pages (Primary)**: [`https://moon-walkers-day.pages.dev`](https://moon-walkers-day.pages.dev) (Project: `moon-walkers-day`, Branch: `main`)
-- **Vercel (Mirror)**: `https://moonwalkersday.vercel.app` (Mirror production deployment)
 
 ### Verification Checklist Before Commits
-1. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
-2. Run `npm run typecheck` — zero TypeScript errors.
-3. Run `npm run test` — all Vitest suites pass (259/259 tests across 21 suites).
-4. Run `npm run test:race:m1` — Playwright end-to-end 3D race spike verified with zero leaks and 100% state preservation.
-5. Run `npm run test:race:m2` — Playwright end-to-end 3D race M2 feel test verified (drift sparks, mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
-6. Run `npm run test:race:m3` — Playwright end-to-end 3D race M3 track pipeline verified (flyover bridge, ramp, rescue, 3 laps, results modal, 10-cycle zero-leak audit).
-7. Run `npm run test:race:m4` — Playwright end-to-end 3D race M4 rivals verified (8-kart grid, AI drivers, collision resolution, position badge, standings ladder, podium finish, 10-cycle zero-leak audit).
-8. Run `npm run test:race:m5` — Playwright end-to-end 3D race M5 items & hazards verified (item boxes, roulette slot, Malai Cha boost, Naga Fuchka rocket, Mishti Doi puddles, hit reaction states, F8 debug overlay, 10-cycle zero-leak audit).
-9. Run `npm run race:validate` — 3 full laps simulated with 100% checkpoint passing.
-10. Run `npm run race:simulate` — headless Monte-Carlo race simulation passing with valid spread, items/hazards, and determinism.
-11. Run `npm run assets:validate` & `npm run assets:report` — all combat and 3D asset specifications validated.
-12. Run `npm run build` — bundle compiles cleanly with no missing assets.
-13. Deploy to Cloudflare Pages (`npm run deploy:cf`) and Vercel (`npx vercel --prod --yes`).
+1. Run `npm run typecheck` — zero TypeScript errors.
+2. Run `npm test` — all Vitest suites pass (113/113 tests across 14 suites).
+3. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
+4. Run `npm run test:e2e` — Playwright end-to-end suites pass across all 4 domains.
+5. Run `npm run build` — bundle compiles cleanly with no missing assets.
+6. Deploy to Cloudflare Pages (`npm run deploy:cf`).
 
 ### 10.20 Modular Filesystem Architecture & Subsystem Decomposition (v4.0.0 Overhaul)
 To overcome monolithic file bloat (previously 7,545+ lines in `DhakaValleyScene.ts`), the filesystem architecture was restructured into dedicated, single-responsibility engine subsystems with idiomatic barrel exports:
@@ -1501,14 +1479,15 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
 The testing infrastructure is organized symmetrically across unit/integration (Vitest) and end-to-end browser runtime (Playwright) suites:
 
 ### 1. Vitest Unit & Integration Suites (`npm test` / `tests/`)
-15 consolidated test suites covering 120 automated assertions:
+14 consolidated test suites covering 113 automated assertions:
 - **Character & Movement**: `tests/npc/character_movement.test.ts` (unifies Nadia, Tania, Phulwali movement specs, facing directions, and spritesheet layouts).
 - **NPC Roaming & Offscreen Engine**: `tests/npc/roaming.test.ts` (combines dynamic scatter logic, obstacle repulsion, and analytic offscreen placement).
 - **NPC Navigation & Scheduling**: `tests/npc/navigator.test.ts`, `tests/npc/mover.test.ts`, `tests/npc/resolver.test.ts`, `tests/npc/validator.test.ts`.
 - **Combat Framework**: `tests/combat/attacks.test.ts`, `tests/combat/assets_validation.test.ts`.
 - **World & Farming**: `tests/farming.test.ts`, `tests/player_behaviors.test.ts`, `tests/stats.test.ts`, `tests/database_index.test.ts`.
 - **Audio & Dialogue**: `tests/sound_engine.test.ts`, `tests/opening_dialogue.test.ts`.
-- **3D Kart Racing Engine**: `tests/race/mariokart64.test.ts`.
+
+*(Note: MarioKart64JS is cloned directly as an external 3D mini-game and verified via TypeScript check and Vite build rather than redundant unit tests).*
 
 ### 2. Playwright End-to-End Suites (`npm run test:e2e` / `tests/e2e/`)
 Consolidated into 4 domain-aligned test suites with an automated ephemeral Vite dev server runner (`tests/e2e/runner.js`):

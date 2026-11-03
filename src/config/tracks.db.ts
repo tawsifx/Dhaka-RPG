@@ -36,7 +36,7 @@ export const TRACK_REGISTRY: Record<string, TrackMeta> = {
     id: 'arena',
     name: 'Analytic Proving Ground',
     subtitle: 'Flat Test Arena',
-    description: 'The M2 flat proving ground with slalom cones, boost pads, mud/puddle chicanes, and boundary walls.',
+    description: 'Flat test arena with slalom cones, boost pads, mud/puddle chicanes, and boundary walls.',
     laps: 3,
     lengthMeters: 800,
     targetLapTimeSec: 40,
