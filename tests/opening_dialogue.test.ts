@@ -1,7 +1,19 @@
 // tests/opening_dialogue.test.ts
 // Unit tests for OpeningDialogueSystem and OPENING_SCENARIOS_DB
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+vi.mock('phaser', () => ({
+  default: {
+    Math: {
+      Between: (min: number, max: number) => min,
+      Distance: {
+        Between: (x1: number, y1: number, x2: number, y2: number) => Math.hypot(x2 - x1, y2 - y1)
+      }
+    }
+  }
+}));
+
 import { OpeningDialogueEngine } from '../src/systems/OpeningDialogueSystem';
 import { OPENING_SCENARIOS_DB } from '../src/config/openingDialogues.db';
 import { DateState } from '../src/state/DateState';

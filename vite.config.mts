@@ -13,8 +13,8 @@ export default defineConfig({
     chunkSizeWarningLimit: 1250,
     rolldownOptions: {
       input: {
-        main: path.resolve(__dirname, 'index.html'),
-        race: path.resolve(__dirname, 'race.html')
+        main: path.resolve(import.meta.dirname, 'index.html'),
+        race: path.resolve(import.meta.dirname, 'race.html')
       },
       output: {
         codeSplitting: {
