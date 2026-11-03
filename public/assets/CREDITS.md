@@ -71,12 +71,38 @@
 
 ---
 
-## 🎵 Special Audio & Vocal Tracks
+## 🎵 Special Audio, Anime BGMs & Vocal Tracks
 
 ### 1. 'Ohona' (Ahona's Theme & Concert Song)
 - **File**: `public/assets/audio/ohona_song.mp3`
 - **Usage**: Plays from 20s during high-affection interactions with Ahona, and from 15s during Rakin's acoustic guitar lakeside concert cutscene.
 - **Date**: October 24, 2026
+
+### 2. Anime Soundtrack Masterpieces (Ingested via `pdl`)
+- **Howl's Moving Castle — Merry-Go-Round of Life**:
+  - **File**: `public/assets/audio/anime/howl_moving_castle.mp3`
+  - **Composer**: Joe Hisaishi
+  - **Acquisition Tool**: `pdl` CoreAudio lossless extraction
+- **Your Name (Kimi no Na wa) — Sparkle**:
+  - **File**: `public/assets/audio/anime/your_name_sparkle.mp3`
+  - **Composer/Artist**: RADWIMPS
+  - **Acquisition Tool**: `pdl` CoreAudio lossless extraction
+- **Naruto — Sadness and Sorrow**:
+  - **File**: `public/assets/audio/anime/naruto_sadness_sorrow.mp3`
+  - **Composer**: Toshiro Masuda (Flute & Piano Cover by Psych2Go)
+  - **Acquisition Tool**: `pdl` CoreAudio lossless extraction
+- **Demon Slayer (Kimetsu no Yaiba) — Kamado Tanjiro no Uta**:
+  - **File**: `public/assets/audio/anime/tanjiro_no_uta.mp3`
+  - **Composer**: Go Shiina
+  - **Acquisition Tool**: `pdl` CoreAudio lossless extraction
+- **A Silent Voice (Koe no Katachi) — Lit**:
+  - **File**: `public/assets/audio/anime/silent_voice_lit.mp3`
+  - **Composer**: Kensuke Ushio
+  - **Acquisition Tool**: `pdl` CoreAudio lossless extraction
+- **Princess Mononoke — The Legend of Ashitaka**:
+  - **File**: `public/assets/audio/anime/mononoke_ashitaka.mp3`
+  - **Composer**: Joe Hisaishi (WDR Funkhausorchester)
+  - **Acquisition Tool**: `pdl` CoreAudio lossless extraction
 
 ---
 

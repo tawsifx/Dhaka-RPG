@@ -1050,9 +1050,22 @@ The audio engine (`src/audio/SoundEngine.ts`) delivers studio-quality retro imme
 All music tracks are compressed using high-efficiency LAME Variable Bitrate (VBR `-V 5` / `-V 6`, `-q 0`) with 44.1kHz stereo fidelity, preserving high-frequency warmth while reducing initial payload size:
 1. **`spirited_away_piano.mp3`** (3.4 MB): Joe Hisaishi's *"One Summer's Day"* piano arrangement. Plays in Curzon Hall Interior, Kingdom of Eternal Frost, and Title Menu.
 2. **`totoro_theme.mp3`** (3.5 MB): Joe Hisaishi's *"My Neighbor Totoro Main Theme"* Ghibli chill arrangement. Plays in Dhaka Valley Overworld, Green Meadows Farmhouse, and Whispering Emerald Forest.
-3. **`dhaka_flute.mp3`** (2.3 MB): Soul-stirring Bengali bamboo bansuri arrangement by Robi Ray (*Dhaka Valley — Krishnachura Bansuri*). Plays in Dhaka Valley and is selectable in the Jukebox.
-4. **`game_bgm.mp3`** (2.5 MB): Original Dhaka Adventure OST. Plays in Sunken Kingdom, Emberfall Highlands, and Boss Arenas.
-5. **`menu_theme.mp3`** (2.9 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
+3. **`howl_moving_castle.mp3`** (5.0 MB): Joe Hisaishi's *"Merry-Go-Round of Life"* (*Howl's Moving Castle*).
+4. **`your_name_sparkle.mp3`** (6.0 MB): RADWIMPS' *"Sparkle"* (*Your Name / Kimi no Na wa*).
+5. **`naruto_sadness_sorrow.mp3`** (3.2 MB): Toshiro Masuda's *"Sadness and Sorrow"* (*Naruto* flute & piano).
+6. **`tanjiro_no_uta.mp3`** (5.3 MB): Go Shiina's *"Kamado Tanjiro no Uta"* (*Demon Slayer* piano).
+7. **`silent_voice_lit.mp3`** (2.8 MB): Kensuke Ushio's *"Lit"* (*A Silent Voice / Koe no Katachi*).
+8. **`mononoke_ashitaka.mp3`** (4.6 MB): Joe Hisaishi's *"The Legend of Ashitaka"* (*Princess Mononoke* orchestral).
+9. **`dhaka_flute.mp3`** (2.3 MB): Soul-stirring Bengali bamboo bansuri arrangement by Robi Ray (*Dhaka Valley — Krishnachura Bansuri*). Plays in Dhaka Valley and is selectable in the Jukebox.
+10. **`game_bgm.mp3`** (2.5 MB): Original Dhaka Adventure OST. Plays in Sunken Kingdom, Emberfall Highlands, and Boss Arenas.
+11. **`menu_theme.mp3`** (2.9 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
+
+### HUD Dropdown Music Track Change System
+Located in the 3-bar hamburger dropdown menu (`#hud-dropdown-menu`):
+- **Dynamic Track Select (`#hud-music-select`)**: Instant dropdown selector featuring grouped categories (*✨ Anime Masterpieces* and *☀️ Dhaka Valley & Heritage*).
+- **Navigation Controls (`⏮️` / `⏭️`)**: Quickly skip backward/forward through the soundtrack with smooth 420ms Web Audio cross-fading.
+- **Auto-Theme Mode (`🔄 Auto: ON / 🎵 Manual`)**: Allows toggling automatic biome/realm music sync or locking in any preferred anime BGM.
+- **Active Badge Display (`#hud-music-badge`)**: Shows current track vibe badge (`🏰 Ghibli Waltz`, `💫 Shinkai Romance`, `🍃 Shinobi Melancholy`, `🔥 Hinokami Kagura`, etc.).
 
 ### Dual-Player Cross-Fading Architecture
 ```

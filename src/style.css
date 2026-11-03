@@ -1610,7 +1610,7 @@ a:focus-visible {
   position: absolute;
   top: 48px;
   right: 0;
-  width: 210px;
+  width: 250px;
   background: rgba(29, 21, 17, 0.96);
   border: 3px solid var(--border-wood);
   outline: 2px solid var(--accent-gold);
@@ -1646,6 +1646,131 @@ a:focus-visible {
 .drawer-item-btn:active, .drawer-item-btn:hover {
   background: #4a2e1b;
   border-color: var(--accent-gold);
+}
+
+/* ================= HUD DROPDOWN MUSIC TRACK SELECTOR ================= */
+.drawer-music-section {
+  margin-top: 4px;
+  padding: 8px 10px;
+  background: rgba(18, 12, 9, 0.88);
+  border: 1.5px solid #855938;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.drawer-music-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer-music-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--accent-gold);
+}
+
+.drawer-music-badge {
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  background: rgba(253, 230, 138, 0.15);
+  border: 1px solid rgba(253, 230, 138, 0.4);
+  border-radius: 4px;
+  color: #fef08a;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.drawer-music-select-wrap {
+  width: 100%;
+}
+
+.drawer-music-select {
+  width: 100%;
+  background: #2b1d14;
+  color: #fff8eb;
+  border: 1.5px solid #6e4e37;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-family: 'Outfit', 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.drawer-music-select:focus,
+.drawer-music-select:hover {
+  border-color: var(--accent-gold);
+}
+
+.drawer-music-select optgroup {
+  background: #1d1511;
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+.drawer-music-select option {
+  background: #2b1d14;
+  color: #fff8eb;
+  padding: 4px 6px;
+}
+
+.drawer-music-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.drawer-music-btn {
+  background: #2b1d14;
+  color: #fff8eb;
+  border: 1.5px solid #6e4e37;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex: 0 0 auto;
+}
+
+.drawer-music-btn:hover,
+.drawer-music-btn:active {
+  background: #4a2e1b;
+  border-color: var(--accent-gold);
+}
+
+.drawer-music-auto-btn {
+  background: #1c3b2b;
+  color: #a7f3d0;
+  border: 1.5px solid #059669;
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  flex: 1 1 auto;
+  text-align: center;
+  transition: all 0.15s;
+}
+
+.drawer-music-auto-btn.manual {
+  background: #3b281c;
+  color: #fde68a;
+  border-color: #d97706;
+}
+
+.drawer-music-auto-btn:hover {
+  filter: brightness(1.15);
 }
 
 /* ================= ENHANCED MOBILE LANDSCAPE CONTROLS ================= */

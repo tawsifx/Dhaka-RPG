@@ -48,4 +48,29 @@ describe('SoundEngine — Ohona Song Cutscene Audio Management', () => {
     SoundEngine.stopOhonaSong();
     expect(SoundEngine.getCurrentTrack().id).toBe('totoro_theme');
   });
+
+  it('correctly registers and cycles through anime soundtrack tracks', () => {
+    const all = SoundEngine.getAllTracks();
+    expect(all).toHaveProperty('howl_moving_castle');
+    expect(all).toHaveProperty('your_name_sparkle');
+    expect(all).toHaveProperty('naruto_sadness_sorrow');
+    expect(all).toHaveProperty('tanjiro_no_uta');
+    expect(all).toHaveProperty('silent_voice_lit');
+    expect(all).toHaveProperty('mononoke_ashitaka');
+
+    // Can manually play an anime track
+    SoundEngine.playTrack('howl_moving_castle');
+    expect(SoundEngine.getCurrentTrack().id).toBe('howl_moving_castle');
+
+    // Navigation next and prev
+    const nextTid = SoundEngine.nextTrack();
+    expect(SoundEngine.getCurrentTrack().id).toBe(nextTid);
+
+    const prevTid = SoundEngine.prevTrack();
+    expect(SoundEngine.getCurrentTrack().id).toBe(prevTid);
+
+    // Toggle auto theme
+    const auto = SoundEngine.toggleAutoTheme();
+    expect(SoundEngine.isAutoThemeEnabled()).toBe(auto);
+  });
 });

@@ -73,6 +73,48 @@ export const SoundEngine = (() => {
       src: 'assets/audio/totoro_theme.mp3',
       badge: '🍃 Ghibli Classic'
     },
+    howl_moving_castle: {
+      id: 'howl_moving_castle',
+      title: "Howl's Moving Castle — Merry-Go-Round of Life",
+      artist: 'Joe Hisaishi',
+      src: 'assets/audio/anime/howl_moving_castle.mp3',
+      badge: '🏰 Ghibli Waltz'
+    },
+    your_name_sparkle: {
+      id: 'your_name_sparkle',
+      title: 'Your Name — Sparkle',
+      artist: 'RADWIMPS / Piano',
+      src: 'assets/audio/anime/your_name_sparkle.mp3',
+      badge: '💫 Shinkai Romance'
+    },
+    naruto_sadness_sorrow: {
+      id: 'naruto_sadness_sorrow',
+      title: 'Naruto — Sadness and Sorrow',
+      artist: 'Toshiro Masuda / Flute & Piano',
+      src: 'assets/audio/anime/naruto_sadness_sorrow.mp3',
+      badge: '🍃 Shinobi Melancholy'
+    },
+    tanjiro_no_uta: {
+      id: 'tanjiro_no_uta',
+      title: 'Demon Slayer — Kamado Tanjiro no Uta',
+      artist: 'Go Shiina / Piano',
+      src: 'assets/audio/anime/tanjiro_no_uta.mp3',
+      badge: '🔥 Hinokami Kagura'
+    },
+    silent_voice_lit: {
+      id: 'silent_voice_lit',
+      title: 'A Silent Voice — Lit',
+      artist: 'Kensuke Ushio',
+      src: 'assets/audio/anime/silent_voice_lit.mp3',
+      badge: '🌸 Kyoto Animation'
+    },
+    mononoke_ashitaka: {
+      id: 'mononoke_ashitaka',
+      title: 'Princess Mononoke — The Legend of Ashitaka',
+      artist: 'Joe Hisaishi / WDR Orchestra',
+      src: 'assets/audio/anime/mononoke_ashitaka.mp3',
+      badge: '🐺 Epic Symphony'
+    },
     dhaka_flute: {
       id: 'dhaka_flute',
       title: 'Dhaka Valley — Krishnachura Bansuri',
@@ -493,6 +535,25 @@ export const SoundEngine = (() => {
       if ((btn as HTMLElement).dataset.tid === currentTrackId) btn.classList.add('active');
       else btn.classList.remove('active');
     });
+
+    // Synchronize HUD Dropdown Music Track Select & Badge
+    const hudSelect = document.getElementById('hud-music-select') as HTMLSelectElement | null;
+    if (hudSelect && hudSelect.value !== currentTrackId) {
+      hudSelect.value = currentTrackId;
+    }
+    const hudBadge = document.getElementById('hud-music-badge');
+    if (hudBadge) {
+      hudBadge.textContent = track.badge;
+    }
+    const autoBtn = document.getElementById('btn-music-auto');
+    if (autoBtn) {
+      autoBtn.textContent = isAutoTheme ? '🔄 Auto: ON' : '🎵 Manual';
+      if (isAutoTheme) {
+        autoBtn.classList.remove('manual');
+      } else {
+        autoBtn.classList.add('manual');
+      }
+    }
   }
 
   function tone(
@@ -776,6 +837,29 @@ export const SoundEngine = (() => {
     getCurrentTrack: () => BGM_TRACKS[currentTrackId] || BGM_TRACKS.totoro_theme,
     getAllTracks: () => BGM_TRACKS,
     isAutoThemeEnabled: () => isAutoTheme,
+
+    nextTrack: () => {
+      const keys = Object.keys(BGM_TRACKS);
+      const currIdx = keys.indexOf(currentTrackId);
+      const nextIdx = (currIdx + 1) % keys.length;
+      SoundEngine.playTrack(keys[nextIdx], true);
+      return keys[nextIdx];
+    },
+
+    prevTrack: () => {
+      const keys = Object.keys(BGM_TRACKS);
+      const currIdx = keys.indexOf(currentTrackId);
+      const prevIdx = (currIdx - 1 + keys.length) % keys.length;
+      SoundEngine.playTrack(keys[prevIdx], true);
+      return keys[prevIdx];
+    },
+
+    toggleAutoTheme: () => {
+      const next = !isAutoTheme;
+      SoundEngine.setAutoTheme(next);
+      updateJukeboxDisplay();
+      return next;
+    },
 
     setVolumes: (m: number, s: number) => {
       musicVol = clamp01(m);

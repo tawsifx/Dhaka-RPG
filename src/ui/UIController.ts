@@ -982,14 +982,53 @@ export const UIController: any = (() => {
           menuBtn.setAttribute('aria-expanded', (!isHidden).toString());
         });
 
-        // Auto-close dropdown when any drawer item is tapped
-        dropdown.querySelectorAll('button').forEach(b => {
+        // Auto-close dropdown when navigation drawer items are tapped
+        dropdown.querySelectorAll('.drawer-nav-item').forEach(b => {
           b.addEventListener('click', () => {
             dropdown.hidden = true;
             menuBtn.classList.remove('open');
             menuBtn.setAttribute('aria-expanded', 'false');
           });
         });
+
+        // Prevent click events inside the music section from closing the drawer
+        const musicSec = dropdown.querySelector('.drawer-music-section');
+        if (musicSec) {
+          musicSec.addEventListener('click', (e) => e.stopPropagation());
+        }
+
+        const musicSelect = $('hud-music-select') as HTMLSelectElement | null;
+        if (musicSelect) {
+          musicSelect.addEventListener('change', (e) => {
+            e.stopPropagation();
+            const tid = (e.target as HTMLSelectElement).value;
+            SoundEngine.playTrack(tid, true);
+          });
+        }
+
+        const prevBtn = $('btn-music-prev');
+        if (prevBtn) {
+          prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            SoundEngine.prevTrack();
+          });
+        }
+
+        const nextBtn = $('btn-music-next');
+        if (nextBtn) {
+          nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            SoundEngine.nextTrack();
+          });
+        }
+
+        const autoBtn = $('btn-music-auto');
+        if (autoBtn) {
+          autoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            SoundEngine.toggleAutoTheme();
+          });
+        }
 
         // Close when tapping anywhere else on screen
         window.addEventListener('click', (e) => {

@@ -78,12 +78,45 @@
         <span class="hamburger-bar"></span>
       </button>
       <div id="hud-dropdown-menu" class="hud-dropdown-drawer" role="menu" aria-label="Game Quick Actions" hidden>
-        <button id="btn-talk-partner" class="drawer-item-btn" role="menuitem" type="button">🐾 Partner</button>
-        <button id="btn-open-quests" class="drawer-item-btn" role="menuitem" type="button">📜 Quests (L)</button>
-        <button id="btn-open-bag" class="drawer-item-btn" role="menuitem" type="button">🎒 Bag &amp; Craft (I)</button>
-        <button id="btn-open-map" class="drawer-item-btn" role="menuitem" type="button">🗺️ Realm Map (M)</button>
-        <button id="btn-save-game" class="drawer-item-btn" role="menuitem" type="button">💾 Quick Save</button>
+        <button id="btn-talk-partner" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">🐾 Partner</button>
+        <button id="btn-open-quests" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">📜 Quests (L)</button>
+        <button id="btn-open-bag" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">🎒 Bag &amp; Craft (I)</button>
+        <button id="btn-open-map" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">🗺️ Realm Map (M)</button>
+        <button id="btn-save-game" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">💾 Quick Save</button>
         <button id="btn-bgm" class="drawer-item-btn" role="menuitem" type="button">🎵 BGM: ON</button>
+
+        <!-- Music Track Change Subsystem -->
+        <div class="drawer-music-section" role="group" aria-label="Soundtrack Track Selector">
+          <div class="drawer-music-header">
+            <span class="drawer-music-title">🎶 SOUNDTRACK</span>
+            <span id="hud-music-badge" class="drawer-music-badge">🍃 Ghibli Classic</span>
+          </div>
+          <div class="drawer-music-select-wrap">
+            <select id="hud-music-select" class="drawer-music-select" aria-label="Select Background Music Track">
+              <optgroup label="✨ Anime Masterpieces">
+                <option value="howl_moving_castle">🏰 Howl's Moving Castle — Merry-Go-Round</option>
+                <option value="your_name_sparkle">💫 Your Name — Sparkle</option>
+                <option value="naruto_sadness_sorrow">🍃 Naruto — Sadness &amp; Sorrow</option>
+                <option value="tanjiro_no_uta">🔥 Demon Slayer — Tanjiro no Uta</option>
+                <option value="silent_voice_lit">🌸 A Silent Voice — Lit</option>
+                <option value="mononoke_ashitaka">🐺 Princess Mononoke — Ashitaka</option>
+                <option value="spirited_away">🎹 Spirited Away — One Summer's Day</option>
+                <option value="totoro_theme">🐾 My Neighbor Totoro — Theme</option>
+              </optgroup>
+              <optgroup label="☀️ Dhaka Valley &amp; Heritage">
+                <option value="dhaka_flute">🌸 Dhaka Valley — Krishnachura Bansuri</option>
+                <option value="dhaka_adventure">☀️ Dhaka Valley — Daybreak Journey</option>
+                <option value="dhaka_lofi">🌧️ Dhaka Lofi — Rain Over Curzon Hall</option>
+                <option value="ohona_song">🎸 Ohona — Subconscious (Acoustic)</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="drawer-music-controls-row">
+            <button id="btn-music-prev" class="drawer-music-btn" title="Previous Track (Shift+P)" type="button" aria-label="Previous Track">⏮️</button>
+            <button id="btn-music-next" class="drawer-music-btn" title="Next Track (Shift+N)" type="button" aria-label="Next Track">⏭️</button>
+            <button id="btn-music-auto" class="drawer-music-auto-btn" title="Toggle Auto-Theme (Syncs to World / Biome)" type="button">🔄 Auto: ON</button>
+          </div>
+        </div>
       </div>
     </div>
 
