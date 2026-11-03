@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:e2e": "node tests/e2e/runner.js",
+    "test:all": "npm test && npm run test:e2e",
     "validate:npc": "vitest run tests/npc/validator.test.ts",
     "assets:validate": "vitest run tests/combat/assets_validation.test.ts",
     "assets:report": "vitest run tests/combat/assets_validation.test.ts",

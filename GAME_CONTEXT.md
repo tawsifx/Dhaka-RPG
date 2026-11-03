@@ -1397,6 +1397,12 @@ In November 2026, the game's interface and interaction mechanics received a comp
 - `npm run test`: Run the full Vitest test suite (`tests/` directory, 259/259 tests across 21 suites).
 - `npm run test:race:m1`: Run Playwright E2E verification test suite for Three.js 3D race spike (state preservation, driving telemetry, memory leak cycles, mobile touch).
 - `npm run test:race:m2`: Run Playwright E2E verification test suite for M2 kart feel (drift sparks, 3-tier mini-turbo, surfaces, ramp jump, tuning drawer, 10-cycle zero-leak audit).
+- `npm run test`: Run the consolidated Vitest unit & integration test suite (15 test files, 120 tests).
+- `npm run test:e2e`: Run the unified 4-suite Playwright E2E test runner (`tests/e2e/runner.js`) across NPC Roaming, Combat & Player, World & Farming, and Dialogue & Audio.
+- `npm run test:all`: Run both Vitest unit tests and Playwright E2E tests sequentially (`npm test && npm run test:e2e`).
+- `npm run test:race`: Run the 3D kart race unit test suite (`tests/race/`).
+- `npm run test:race:m1`: Run Playwright E2E verification test suite for M1 3D race spike (Phaser -> Three.js overlay -> canvas handover -> return to 2D overworld, 10-cycle zero-leak audit).
+- `npm run test:race:m2`: Run Playwright E2E verification test suite for M2 feel (drift, sparks, mini-turbo, surface physics, ramp jump, camera lead, 10-cycle zero-leak audit).
 - `npm run test:race:m3`: Run Playwright E2E verification test suite for M3 track pipeline (lazy loading, countdown, minimap, flyover bridge elevation, ramp jump, lantern rescue, 3 full laps, finish modal splits, 10-cycle zero-leak audit).
 - `npm run test:race:m35`: Run Playwright E2E verification test suite for M3.5 SuperTuxKart art pass (graphics quality presets, dressed Fuller Road circuit, zero 2D overworld leaks).
 - `npm run test:race:m4`: Run Playwright E2E verification test suite for M4 rivals (8-kart grid, AI drivers, multi-kart collisions, ranking standings, rubber-band, podium finish, 10-cycle zero-leak audit).
@@ -1411,7 +1417,6 @@ In November 2026, the game's interface and interaction mechanics received a comp
 - `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
 - `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
 - `npm run validate:npc`: Run the Living-World NPC Schedule Validator (validates all 38 schedules, graph connectivity, travel times, and slack).
-- `node scripts/test_combat_overhaul.js`: Run Playwright E2E combat overhaul verification test suite (combos, parry, dodge, roar, slam, poise).
 - `npm run deploy:cf`: Build production bundle and deploy directly to Cloudflare Pages (`wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true`).
 
 ### Live Production Deployments
@@ -1489,4 +1494,27 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
     - Update `src/config/assetSpecs.manifest.ts`.
     - **Immediately update this document (`GAME_CONTEXT.md`)** to reflect the new state in the same turn.
 
-*Last Updated: October 26, 2026 — MarioKart64JS Engine Integration (16 GP Circuits, 4 Arenas, 8 Drivers)*
+---
+
+## 16. Synchronized Test Architecture: Vitest & Playwright
+
+The testing infrastructure is organized symmetrically across unit/integration (Vitest) and end-to-end browser runtime (Playwright) suites:
+
+### 1. Vitest Unit & Integration Suites (`npm test` / `tests/`)
+15 consolidated test suites covering 120 automated assertions:
+- **Character & Movement**: `tests/npc/character_movement.test.ts` (unifies Nadia, Tania, Phulwali movement specs, facing directions, and spritesheet layouts).
+- **NPC Roaming & Offscreen Engine**: `tests/npc/roaming.test.ts` (combines dynamic scatter logic, obstacle repulsion, and analytic offscreen placement).
+- **NPC Navigation & Scheduling**: `tests/npc/navigator.test.ts`, `tests/npc/mover.test.ts`, `tests/npc/resolver.test.ts`, `tests/npc/validator.test.ts`.
+- **Combat Framework**: `tests/combat/attacks.test.ts`, `tests/combat/assets_validation.test.ts`.
+- **World & Farming**: `tests/farming.test.ts`, `tests/player_behaviors.test.ts`, `tests/stats.test.ts`, `tests/database_index.test.ts`.
+- **Audio & Dialogue**: `tests/sound_engine.test.ts`, `tests/opening_dialogue.test.ts`.
+- **3D Kart Racing Engine**: `tests/race/mariokart64.test.ts`.
+
+### 2. Playwright End-to-End Suites (`npm run test:e2e` / `tests/e2e/`)
+Consolidated into 4 domain-aligned test suites with an automated ephemeral Vite dev server runner (`tests/e2e/runner.js`):
+1. `tests/e2e/npc_roaming.e2e.js`: Validates living world NPC population, spatial decongestion (verifying Ahona & Apshora are non-congested at Krishnachura Avenue Gateway), and multi-hop roaming.
+2. `tests/e2e/combat_player.e2e.js`: Validates player keyboard movement, Totoro companion HUD bond pips, and responsive 3-hit combo execution (Jab -> Slash -> Spin).
+3. `tests/e2e/world_farming.e2e.js`: Validates seamless interior transitions (Curzon Hall & Green Meadows Farmhouse) and Stardew farming actions (soil tilling, planting, watering).
+4. `tests/e2e/dialogue_audio.e2e.js`: Validates NPC dialogue overlay, clean HUD typography without legacy Telegram status clutter, Font Awesome 6 vector icons, and anime music track momentum scrolling.
+
+*Last Updated: November 3, 2026 — Synchronized Vitest (15 suites) & Playwright (4 suites) Test Architecture*
