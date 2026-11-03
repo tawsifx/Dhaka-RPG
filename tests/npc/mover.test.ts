@@ -112,6 +112,10 @@ describe('NpcMover: Yielding & Patience', () => {
     // Wait until repathAfterSec (3.0s) passes -> needsRepath becomes true
     const res3 = mover.update(2.0, isBlocked);
     expect(res3.needsRepath).toBe(true);
+
+    // Immediate next frame: repath pulse has triggered and timer reset, so needsRepath is throttled
+    const res4 = mover.update(0.1, isBlocked);
+    expect(res4.needsRepath).toBe(false);
   });
 });
 

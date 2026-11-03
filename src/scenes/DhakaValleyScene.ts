@@ -93,6 +93,72 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.load.image('tileset-core-buildings', 'assets/tilesets/core_buildings.png');
     this.load.image('tileset-rubberduck-outdoor', 'assets/tilesets/rubberduck_outdoor.png');
     this.load.image('tileset-sand-water', 'assets/tilesets/Sand_n_water.png');
+
+    // External Stardew Farming Tools & Tilesets
+    this.load.image('tool-hoe', 'assets/sprites/farming/tools/Hoe.png');
+    this.load.image('tool-can', 'assets/sprites/farming/tools/Watering_Can.png');
+    this.load.image('tool-scythe', 'assets/sprites/farming/tools/Scythe.png');
+
+    this.load.spritesheet('tilled-dirt', 'assets/tilesets/farming/hoeDirt.png', { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet('tilled-dirt-dark', 'assets/tilesets/farming/hoeDirtDark.png', { frameWidth: 16, frameHeight: 16 });
+
+    // Sylhet Tea (tea-leaves)
+    this.load.image('crop-sylhet_tea-seed', 'assets/sprites/crops/sylhet_tea/seed.png');
+    this.load.image('crop-sylhet_tea-crop', 'assets/sprites/crops/sylhet_tea/crop.png');
+    this.load.image('crop-sylhet_tea-harvest', 'assets/sprites/crops/sylhet_tea/harvest.png');
+    this.load.image('crop-sylhet_tea-stage-1', 'assets/sprites/crops/sylhet_tea/stage-1.png');
+    this.load.image('crop-sylhet_tea-stage-2', 'assets/sprites/crops/sylhet_tea/stage-2.png');
+    this.load.image('crop-sylhet_tea-stage-3', 'assets/sprites/crops/sylhet_tea/stage-3.png');
+
+    // Naga Morich (hot-pepper)
+    this.load.image('crop-naga_morich-seed', 'assets/sprites/crops/naga_morich/seed.png');
+    this.load.image('crop-naga_morich-crop', 'assets/sprites/crops/naga_morich/crop.png');
+    this.load.image('crop-naga_morich-stage-1', 'assets/sprites/crops/naga_morich/stage-1.png');
+    this.load.image('crop-naga_morich-stage-2', 'assets/sprites/crops/naga_morich/stage-2.png');
+    this.load.image('crop-naga_morich-stage-3', 'assets/sprites/crops/naga_morich/stage-3.png');
+    this.load.image('crop-naga_morich-stage-4', 'assets/sprites/crops/naga_morich/stage-4.png');
+    this.load.image('crop-naga_morich-stage-5', 'assets/sprites/crops/naga_morich/stage-5.png');
+
+    // Dhaka Jute (fiber)
+    this.load.image('crop-dhaka_jute-seed', 'assets/sprites/crops/dhaka_jute/seed.png');
+    this.load.image('crop-dhaka_jute-crop', 'assets/sprites/crops/dhaka_jute/crop.png');
+    this.load.image('crop-dhaka_jute-stage-1', 'assets/sprites/crops/dhaka_jute/stage-1.png');
+    this.load.image('crop-dhaka_jute-stage-2', 'assets/sprites/crops/dhaka_jute/stage-2.png');
+    this.load.image('crop-dhaka_jute-stage-3', 'assets/sprites/crops/dhaka_jute/stage-3.png');
+    this.load.image('crop-dhaka_jute-stage-4', 'assets/sprites/crops/dhaka_jute/stage-4.png');
+
+    // Curzon Beli Flower (fairy-rose)
+    this.load.image('crop-beli_flower-seed', 'assets/sprites/crops/beli_flower/seed.png');
+    this.load.image('crop-beli_flower-crop', 'assets/sprites/crops/beli_flower/crop.png');
+    this.load.image('crop-beli_flower-stage-1', 'assets/sprites/crops/beli_flower/stage-1.png');
+    this.load.image('crop-beli_flower-stage-2', 'assets/sprites/crops/beli_flower/stage-2.png');
+    this.load.image('crop-beli_flower-stage-3', 'assets/sprites/crops/beli_flower/stage-3.png');
+    this.load.image('crop-beli_flower-stage-4', 'assets/sprites/crops/beli_flower/stage-4.png');
+
+    // Rajshahi Mango (strawberry / fruit)
+    this.load.image('crop-rajshahi_mango-seed', 'assets/sprites/crops/rajshahi_mango/seed.png');
+    this.load.image('crop-rajshahi_mango-crop', 'assets/sprites/crops/rajshahi_mango/crop.png');
+    this.load.image('crop-rajshahi_mango-stage-1', 'assets/sprites/crops/rajshahi_mango/stage-1.png');
+    this.load.image('crop-rajshahi_mango-stage-2', 'assets/sprites/crops/rajshahi_mango/stage-2.png');
+    this.load.image('crop-rajshahi_mango-stage-3', 'assets/sprites/crops/rajshahi_mango/stage-3.png');
+    this.load.image('crop-rajshahi_mango-stage-4', 'assets/sprites/crops/rajshahi_mango/stage-4.png');
+    this.load.image('crop-rajshahi_mango-stage-5', 'assets/sprites/crops/rajshahi_mango/stage-5.png');
+
+    // Spirit Dew Melon (melon)
+    this.load.image('crop-spirit_dew_melon-seed', 'assets/sprites/crops/spirit_dew_melon/seed.png');
+    this.load.image('crop-spirit_dew_melon-crop', 'assets/sprites/crops/spirit_dew_melon/crop.png');
+    this.load.image('crop-spirit_dew_melon-stage-1', 'assets/sprites/crops/spirit_dew_melon/stage-1.png');
+    this.load.image('crop-spirit_dew_melon-stage-2', 'assets/sprites/crops/spirit_dew_melon/stage-2.png');
+    this.load.image('crop-spirit_dew_melon-stage-3', 'assets/sprites/crops/spirit_dew_melon/stage-3.png');
+    this.load.image('crop-spirit_dew_melon-stage-4', 'assets/sprites/crops/spirit_dew_melon/stage-4.png');
+
+    // Astral Star Berry (starfruit)
+    this.load.image('crop-astral_star_berry-seed', 'assets/sprites/crops/astral_star_berry/seed.png');
+    this.load.image('crop-astral_star_berry-crop', 'assets/sprites/crops/astral_star_berry/crop.png');
+    this.load.image('crop-astral_star_berry-stage-1', 'assets/sprites/crops/astral_star_berry/stage-1.png');
+    this.load.image('crop-astral_star_berry-stage-2', 'assets/sprites/crops/astral_star_berry/stage-2.png');
+    this.load.image('crop-astral_star_berry-stage-3', 'assets/sprites/crops/astral_star_berry/stage-3.png');
+    this.load.image('crop-astral_star_berry-stage-4', 'assets/sprites/crops/astral_star_berry/stage-4.png');
   }
 
 
@@ -458,6 +524,10 @@ export class DhakaValleyScene extends Phaser.Scene {
             ? { x: 600, y: 780 }
             : { x: 340, y: 900 });
       try {
+        if (this.farmhouseFarmingController) {
+          this.farmhouseFarmingController.destroy();
+          this.farmhouseFarmingController = null;
+        }
         this.buildWorld(worldId, customSpawn || defaultSpawn);
       } catch (err) {
         console.error('buildWorld failed for', worldId, err);   // never leave the game locked on a black screen
@@ -2505,7 +2575,13 @@ export class DhakaValleyScene extends Phaser.Scene {
     }
 
     // Dynamic Farming Soil Actions (Hoeing, Watering, Harvesting)
-    if (this.farmingSystem && this.facingVec) {
+    if (DateState.currentWorld === 'farmhouse' && this.farmhouseFarmingController && this.facingVec) {
+      const targetCol = Math.floor((this.player.x + this.facingVec.x * 24) / 32);
+      const targetRow = Math.floor((this.player.y + this.facingVec.y * 24) / 32);
+      if (this.farmhouseFarmingController.executeToolAction(targetCol, targetRow)) {
+        return;
+      }
+    } else if (this.farmingSystem && this.facingVec) {
       const targetCol = Math.floor((this.player.x + this.facingVec.x * 24) / 32);
       const targetRow = Math.floor((this.player.y + this.facingVec.y * 24) / 32);
       const cell = this.farmingSystem.getCell(targetCol, targetRow);
@@ -4318,6 +4394,220 @@ export class DhakaValleyScene extends Phaser.Scene {
       }
     ]);
   }
+
+  /* ─────────────────────────────────────────────────────────────────────────
+   *  STARDEW VALLEY FARMHOUSE ENGINE INTERACTION HANDLERS
+   * ──────────────────────────────────────────────────────────────────────── */
+  interactSeedCabinet() {
+    SoundEngine.blip(520, 'sine');
+    const hasClaimedStarter = Boolean(DateState.hasClaimedStarterSeeds);
+
+    UI.startDialogue([
+      {
+        speaker: "Chacha's Seed Cabinet",
+        portrait: '🌾',
+        text: 'A sturdy timber cabinet containing fragrant heirloom seeds collected from across the delta. What would you like to do?',
+        choices: [
+          {
+            label: hasClaimedStarter
+              ? '🌱 Already received starter seeds! (Browse stock)'
+              : '🎁 Claim Free Heirloom Starter Pack (5x Tea, 5x Naga, 5x Jute, 5x Beli, 3x Mango)',
+            nextNodes: [
+              {
+                speaker: 'Chacha Rafiq',
+                portrait: '🌾',
+                text: hasClaimedStarter
+                  ? 'You already have your starter heirloom seeds in your pouch! Plant them in the garden beds using Tool [3].'
+                  : 'Welcome to the soil! May these heirloom seeds sprout strong roots and yield abundant harvests for you and Totoro!',
+                onComplete: () => {
+                  if (!hasClaimedStarter) {
+                    DateState.hasClaimedStarterSeeds = true;
+                    RPGStats.addItem('seed_tea', 5);
+                    RPGStats.addItem('seed_naga', 5);
+                    RPGStats.addItem('seed_jute', 5);
+                    RPGStats.addItem('seed_beli', 5);
+                    RPGStats.addItem('seed_mango', 3);
+                    SoundEngine.itemFanfare();
+                    if (this.farmhouseFarmingController) this.farmhouseFarmingController.setActiveSeed('sylhet_tea');
+                  }
+                }
+              }
+            ]
+          },
+          {
+            label: `💰 Buy 5x Sylhet Tea Bush Seeds (30 Taka) [Balance: ${RPGStats.getTaka()} ৳]`,
+            nextNodes: [
+              {
+                speaker: 'Chacha Rafiq',
+                portrait: '🌾',
+                text: 'Fresh Camellia sinensis seeds from the misty hilltops of Sreemangal!',
+                onComplete: () => {
+                  if (RPGStats.spendTaka(30)) {
+                    RPGStats.addItem('seed_tea', 5);
+                    SoundEngine.itemFanfare();
+                    UI.showNotification('Purchased 5x Sylhet Tea Seeds (-30 ৳)');
+                  } else {
+                    SoundEngine.blip(180, 'sawtooth');
+                    UI.showNotification('Not enough Taka!');
+                  }
+                }
+              }
+            ]
+          },
+          {
+            label: `💰 Buy 5x Naga Fire Chili Seeds (35 Taka) [Balance: ${RPGStats.getTaka()} ৳]`,
+            nextNodes: [
+              {
+                speaker: 'Chacha Rafiq',
+                portrait: '🌾',
+                text: 'Handle these seeds with respect! Sreemangal Naga Morich burns hotter than the midday sun!',
+                onComplete: () => {
+                  if (RPGStats.spendTaka(35)) {
+                    RPGStats.addItem('seed_naga', 5);
+                    SoundEngine.itemFanfare();
+                    UI.showNotification('Purchased 5x Naga Chili Seeds (-35 ৳)');
+                  } else {
+                    SoundEngine.blip(180, 'sawtooth');
+                    UI.showNotification('Not enough Taka!');
+                  }
+                }
+              }
+            ]
+          },
+          {
+            label: '📜 Learn farming tips from Chacha Rafiq',
+            nextNodes: [
+              {
+                speaker: 'Chacha Rafiq',
+                portrait: '🌾',
+                text: '1. Select Hoe [1] to till the garden beds into dark loam.\n2. Select Water [2] to hydrate dry soil daily.\n3. Select Seeds [3] to sow tea, chili, jute, or flowers.\n4. Sleep on the Cot [🛏️] to greet morning and watch your crops grow!\n5. When mature, harvest with Scythe [4] and sell at the Shipping Bin [📦] for Taka!'
+              }
+            ]
+          }
+        ]
+      }
+    ]);
+  }
+
+  interactShippingBin() {
+    SoundEngine.blip(440, 'triangle');
+    const cropItems = [
+      { id: 'leaves_tea', price: 45, name: 'Sylhet Tea Leaves' },
+      { id: 'chili_naga', price: 150, name: 'Sreemangal Naga Chili' },
+      { id: 'fiber_jute', price: 85, name: 'Golden Jute Fiber' },
+      { id: 'flower_beli', price: 60, name: 'Curzon Beli Blossoms' },
+      { id: 'fruit_mango', price: 120, name: 'Rajshahi Fazli Mango' },
+      { id: 'melon_dew', price: 200, name: 'Spirit Dew Melon' },
+      { id: 'berry_star', price: 250, name: 'Astral Star Berry' }
+    ];
+
+    let totalEarnable = 0;
+    const manifest: { name: string; count: number; total: number }[] = [];
+
+    for (const c of cropItems) {
+      const count = (DateState.itemCounts && DateState.itemCounts[c.id]) || 0;
+      if (count > 0) {
+        const subtotal = count * c.price;
+        totalEarnable += subtotal;
+        manifest.push({ name: c.name, count, total: subtotal });
+      }
+    }
+
+    if (totalEarnable === 0) {
+      UI.startDialogue([
+        {
+          speaker: 'Green Meadows Shipping Bin',
+          portrait: '📦',
+          text: 'The heavy wooden shipping bin is empty! Harvest fresh tea leaves, chili peppers, jute, or mangoes from the garden beds and deposit them here to sell for Taka.'
+        }
+      ]);
+      return;
+    }
+
+    const summaryText = manifest.map(m => `• ${m.name} x${m.count} (+${m.total} ৳)`).join('\n');
+
+    UI.startDialogue([
+      {
+        speaker: 'Green Meadows Shipping Bin',
+        portrait: '📦',
+        text: `Produce ready for Dhaka wholesale shipping:\n\n${summaryText}\n\nTotal Value: ${totalEarnable} Taka. Sell all produce?`,
+        choices: [
+          {
+            label: `💰 Ship all produce for +${totalEarnable} Taka!`,
+            nextNodes: [
+              {
+                speaker: 'Chacha Rafiq',
+                portrait: '🌾',
+                text: `Shabash! Green Meadows produce is heading to Karwan Bazar! You earned ${totalEarnable} Taka!`,
+                onComplete: () => {
+                  for (const c of cropItems) {
+                    const count = (DateState.itemCounts && DateState.itemCounts[c.id]) || 0;
+                    if (count > 0) {
+                      RPGStats.removeItem(c.id, count);
+                    }
+                  }
+                  RPGStats.addTaka(totalEarnable);
+                  SoundEngine.teaClink();
+                  UI.showNotification(`Shipped farm produce! +${totalEarnable} ৳`);
+                }
+              }
+            ]
+          },
+          {
+            label: 'Keep my harvested crops for now'
+          }
+        ]
+      }
+    ]);
+  }
+
+  interactFarmCot() {
+    SoundEngine.blip(320, 'sine');
+    UI.startDialogue([
+      {
+        speaker: 'Cozy Farmhouse Cot',
+        portrait: '🛏️',
+        text: 'A comfortable wooden bed dressed in hand-stitched Nakshi Kantha quilts. The gentle country breeze carries the scent of fresh hay and tea leaves.',
+        choices: [
+          {
+            label: '🌙 Rest & Sleep until Tomorrow Morning (Grow Crops)',
+            nextNodes: [
+              {
+                speaker: 'Moon Walker',
+                portrait: '🌙',
+                text: 'Goodnight Dhaka Valley... Let us rest and see how our crops grow by morning light.',
+                onComplete: () => {
+                  this.cameras.main.fadeOut(350, 10, 8, 16);
+                  this.time.delayedCall(400, () => {
+                    if (this.farmhouseFarmingController) {
+                      this.farmhouseFarmingController.advanceDay();
+                    }
+                    this.cameras.main.fadeIn(400, 10, 8, 16);
+                  });
+                }
+              }
+            ]
+          },
+          {
+            label: 'Keep working the farm plots 🌾'
+          }
+        ]
+      }
+    ]);
+  }
+
+  interactWaterWell() {
+    SoundEngine.waterSplash();
+    DateState.sp = Math.min(DateState.maxSp, DateState.sp + 25);
+    UI.updateRPGStats();
+    UI.startDialogue([
+      {
+        speaker: 'Pastoral Artisan Well',
+        portrait: '💧',
+        text: 'You pump crisp, ice-cold groundwater from the aquifer. Your watering can is filled to the brim and your face feels delightfully refreshed! (+25 SP)'
+      }
+    ]);
+  }
   renderMinimap() {
     MinimapRenderer.render(this);
   }
@@ -4330,6 +4620,9 @@ export class DhakaValleyScene extends Phaser.Scene {
     if (this.timeCalendar && !isWorldPaused) this.timeCalendar.update(delta);
     if (this.atmosphere && !isWorldPaused) this.atmosphere.update(time, delta);
     if (this.scheduleSystem) this.scheduleSystem.update(time, delta);
+    if (DateState.currentWorld === 'farmhouse' && this.farmhouseFarmingController) {
+      this.farmhouseFarmingController.update();
+    }
 
     // Render Monsoon Rain Drops & Slanted Streaks (Batched single draw call)
     if (this.isRaining && this.rainGraphics) {

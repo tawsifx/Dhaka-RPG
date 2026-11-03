@@ -39,6 +39,49 @@ export class FarmingSystem {
     return this.grid.get(this.getKey(x, y));
   }
 
+  getAllCells(): FarmGridCell[] {
+    return Array.from(this.grid.values());
+  }
+
+  setTileTillable(x: number, y: number, tillable: boolean): void {
+    const cell = this.getCell(x, y);
+    if (cell) cell.isTillable = tillable;
+  }
+
+  setTillableBounds(regions: { minCol: number; maxCol: number; minRow: number; maxRow: number }[]): void {
+    for (const cell of this.grid.values()) {
+      cell.isTillable = regions.some(
+        (r) => cell.x >= r.minCol && cell.x <= r.maxCol && cell.y >= r.minRow && cell.y <= r.maxRow
+      );
+    }
+  }
+
+  exportGrid(): FarmGridCell[] {
+    const active: FarmGridCell[] = [];
+    for (const cell of this.grid.values()) {
+      if (cell.isTilled || cell.crop !== null || cell.isWatered) {
+        active.push({
+          ...cell,
+          crop: cell.crop ? { ...cell.crop } : null
+        });
+      }
+    }
+    return active;
+  }
+
+  importGrid(cells: Partial<FarmGridCell>[]): void {
+    if (!Array.isArray(cells)) return;
+    for (const c of cells) {
+      if (typeof c.x !== 'number' || typeof c.y !== 'number') continue;
+      const target = this.getCell(c.x, c.y);
+      if (target) {
+        target.isTilled = Boolean(c.isTilled);
+        target.isWatered = Boolean(c.isWatered);
+        target.crop = c.crop ? { ...c.crop } : null;
+      }
+    }
+  }
+
   tillSoil(x: number, y: number): boolean {
     const cell = this.getCell(x, y);
     if (!cell || !cell.isTillable || cell.isTilled) return false;

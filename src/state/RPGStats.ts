@@ -82,6 +82,23 @@ export const RPGStats = {
     return Boolean(DateState.itemCounts && DateState.itemCounts[itemId] >= qty);
   },
 
+  getTaka(): number {
+    if (DateState.taka === undefined) DateState.taka = 250;
+    return DateState.taka;
+  },
+
+  addTaka(amount: number): void {
+    if (DateState.taka === undefined) DateState.taka = 250;
+    DateState.taka += amount;
+  },
+
+  spendTaka(amount: number): boolean {
+    if (DateState.taka === undefined) DateState.taka = 250;
+    if (DateState.taka < amount) return false;
+    DateState.taka -= amount;
+    return true;
+  },
+
   gainXP(amount: number): { leveled: boolean; newLevel: number } {
     DateState.xp += amount;
     let leveled = false;

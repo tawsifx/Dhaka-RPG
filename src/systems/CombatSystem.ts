@@ -747,8 +747,50 @@ export class CombatSystem {
       }
 
       // 3. Movement & Attack Decision
-      if (dist < detectRange && dist > 38) {
-        // Chase player
+      const atkRange = en.isBoss ? 85 : 55;
+      const attackReady = (time - (en.lastHitPlayer || 0)) >= 1800;
+
+      if (dist <= atkRange) {
+        if (attackReady) {
+          // In attack range and ready: trigger telegraphed attack
+          CombatSystem.triggerEnemyAttack(scene, en, time);
+        } else {
+          // Combat spacing & tactical flanking while on cooldown
+          const dx = px - en.x;
+          const dy = py - en.y;
+          const desSpacing = en.isBoss ? 70 : 45;
+          const step = (en.speed * delta) / 1000;
+
+          let moveX = 0;
+          let moveY = 0;
+          if (dist < desSpacing - 8) {
+            // Back off gently to maintain readable telegraph spacing
+            moveX = (-dx / dist) * (step * 0.5);
+            moveY = (-dy / dist) * (step * 0.5);
+          } else if (dist > desSpacing + 12) {
+            // Step in gently toward combat spacing
+            moveX = (dx / dist) * (step * 0.5);
+            moveY = (dy / dist) * (step * 0.5);
+          }
+
+          // Tactical strafe around player perimeter
+          const strafeDir = idx % 2 === 0 ? 1 : -1;
+          const perpX = (-dy / dist) * strafeDir;
+          const perpY = (dx / dist) * strafeDir;
+          moveX += perpX * (step * 0.4);
+          moveY += perpY * (step * 0.4);
+
+          en.x += moveX;
+          en.y += moveY;
+          en.sprite.setFlipX(dx < -1);
+
+          const walkAnim = scene.anims.exists(`${en.baseTex}-walk`) ? `${en.baseTex}-walk` : `anim-${en.baseTex}`;
+          if (scene.anims.exists(walkAnim) && (!en.sprite.anims.isPlaying || en.sprite.anims.currentAnim?.key !== walkAnim)) {
+            en.sprite.play(walkAnim, true);
+          }
+        }
+      } else if (dist < detectRange) {
+        // Chase player into combat range
         const dx = px - en.x;
         const dy = py - en.y;
         const step = (en.speed * delta) / 1000;
@@ -760,10 +802,22 @@ export class CombatSystem {
         if (scene.anims.exists(walkAnim) && (!en.sprite.anims.isPlaying || en.sprite.anims.currentAnim?.key !== walkAnim)) {
           en.sprite.play(walkAnim, true);
         }
-      } else if (dist <= 65) {
-        // In attack range: trigger telegraphed attack
-        CombatSystem.triggerEnemyAttack(scene, en, time);
-      } else if (!en.isBoss) {
+      } else if (en.isBoss) {
+        // Boss returns to home / arena center when out of detect range
+        const dx = en.homeX - en.x;
+        const dy = en.homeY - en.y;
+        const homeDist = Math.hypot(dx, dy);
+        if (homeDist > 10) {
+          const step = (en.speed * 0.5 * delta) / 1000;
+          en.x += (dx / homeDist) * step;
+          en.y += (dy / homeDist) * step;
+          en.sprite.setFlipX(dx < -1);
+          const walkAnim = scene.anims.exists(`${en.baseTex}-walk`) ? `${en.baseTex}-walk` : `anim-${en.baseTex}`;
+          if (scene.anims.exists(walkAnim) && (!en.sprite.anims.isPlaying || en.sprite.anims.currentAnim?.key !== walkAnim)) {
+            en.sprite.play(walkAnim, true);
+          }
+        }
+      } else {
         // Patrol orbit around home
         const patrolAng = time * 0.0012 + idx * 1.7;
         const tx = en.homeX + Math.cos(patrolAng) * 28;
@@ -803,6 +857,9 @@ export class CombatSystem {
         en.phase2Triggered = true;
         atk = ATTACKS_DB.stag_nature_barrier_charge;
         UI.showToast('⚠️', 'BOSS ENRAGED!', 'Sylvan Briar Stag is gathering thorny energy! Interrupt with Totoro Roar (Q)!');
+      } else if (hpPercent <= 0.5 && Math.random() < 0.35) {
+        // In Phase 2, the signature purple barrier charge remains in rotation!
+        atk = ATTACKS_DB.stag_nature_barrier_charge;
       } else if (Math.random() > 0.5) {
         atk = ATTACKS_DB.stag_antler_sweep; // GOLD parryable
       } else {

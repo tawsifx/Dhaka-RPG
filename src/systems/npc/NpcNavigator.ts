@@ -105,23 +105,28 @@ export class NpcNavigator {
     start: GridTile,
     goal: GridTile,
     maxCols = 80,
-    maxRows = 60
+    maxRows = 60,
+    dynamicBlocked?: Set<string>
   ): GridTile[] | null {
     if (start.col === goal.col && start.row === goal.row) {
       return [{ col: start.col, row: start.row }];
     }
 
+    const hasDynamic = Boolean(dynamicBlocked && dynamicBlocked.size > 0);
     const cacheKey = `${mapId}:${start.col},${start.row}->${goal.col},${goal.row}`;
-    const cached = this.pathCache.get(cacheKey);
-    if (cached) {
-      return [...cached];
+    if (!hasDynamic) {
+      const cached = this.pathCache.get(cacheKey);
+      if (cached) {
+        return [...cached];
+      }
     }
 
     // Check bounds
     if (
       goal.col < 0 || goal.col >= maxCols ||
       goal.row < 0 || goal.row >= maxRows ||
-      this.costProvider.isBlocked(goal.col, goal.row, mapId)
+      this.costProvider.isBlocked(goal.col, goal.row, mapId) ||
+      (hasDynamic && (dynamicBlocked!.has(`${goal.col},${goal.row}`) || dynamicBlocked!.has(String(goal.row * 1000 + goal.col))))
     ) {
       return null;
     }
@@ -179,11 +184,13 @@ export class NpcNavigator {
         }
 
         // Save to cache
-        if (this.pathCache.size >= this.maxCacheSize) {
-          const firstKey = this.pathCache.keys().next().value;
-          if (firstKey) this.pathCache.delete(firstKey);
+        if (!hasDynamic) {
+          if (this.pathCache.size >= this.maxCacheSize) {
+            const firstKey = this.pathCache.keys().next().value;
+            if (firstKey) this.pathCache.delete(firstKey);
+          }
+          this.pathCache.set(cacheKey, path);
         }
-        this.pathCache.set(cacheKey, path);
 
         return [...path];
       }
@@ -197,6 +204,8 @@ export class NpcNavigator {
 
         const nKey = toKey(nc, nr);
         if (closedSet.has(nKey)) continue;
+
+        if (hasDynamic && (dynamicBlocked!.has(`${nc},${nr}`) || dynamicBlocked!.has(String(nKey)))) continue;
 
         if (this.costProvider.isBlocked(nc, nr, mapId)) continue;
 
@@ -241,10 +250,11 @@ export class NpcNavigator {
     goalMap: MapId,
     goal: GridTile,
     maxCols = 80,
-    maxRows = 60
+    maxRows = 60,
+    dynamicBlocked?: Set<string>
   ): { path: GridTile[] | null; nextDoor: DoorLink | null } {
     if (currentMap === goalMap) {
-      const path = this.findPath(currentMap, start, goal, maxCols, maxRows);
+      const path = this.findPath(currentMap, start, goal, maxCols, maxRows, dynamicBlocked);
       return { path, nextDoor: null };
     }
 
@@ -254,7 +264,7 @@ export class NpcNavigator {
     );
 
     if (directDoor) {
-      const path = this.findPath(currentMap, start, directDoor.fromTile, maxCols, maxRows);
+      const path = this.findPath(currentMap, start, directDoor.fromTile, maxCols, maxRows, dynamicBlocked);
       return { path, nextDoor: directDoor };
     }
 
@@ -263,7 +273,7 @@ export class NpcNavigator {
       d => d.fromMap === currentMap && d.toMap === 'dhaka'
     );
     if (toDhakaDoor) {
-      const path = this.findPath(currentMap, start, toDhakaDoor.fromTile, maxCols, maxRows);
+      const path = this.findPath(currentMap, start, toDhakaDoor.fromTile, maxCols, maxRows, dynamicBlocked);
       return { path, nextDoor: toDhakaDoor };
     }
 

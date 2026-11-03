@@ -70,4 +70,21 @@ describe('Data-Driven Attack Framework (attacks.db.ts)', () => {
       }
     }
   });
+
+  it('validates boss Phase 2 signature interrupt charge and mob encounter specs', () => {
+    const barrierCharge = ATTACKS_DB.stag_nature_barrier_charge;
+    expect(barrierCharge).toBeDefined();
+    expect(barrierCharge.source).toBe('boss');
+    expect(barrierCharge.totoroInterrupt).toBe(true);
+    expect(barrierCharge.telegraph?.color).toBe('purple');
+    expect(barrierCharge.windupMs).toBeGreaterThanOrEqual(1000); // Generous windup window for Totoro Q interrupt
+
+    const antlerSweep = ATTACKS_DB.stag_antler_sweep;
+    expect(antlerSweep.parryable).toBe(true);
+    expect(antlerSweep.hitbox.radius).toBeGreaterThanOrEqual(85);
+
+    const boglingHop = ATTACKS_DB.bogling_spore_hop;
+    expect(boglingHop.source).toBe('enemy');
+    expect(boglingHop.parryable).toBe(true);
+  });
 });

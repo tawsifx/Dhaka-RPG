@@ -398,34 +398,45 @@ At the Rickshaw Stand (`x: 1648, y: 816`) on Fuller Roadway, interacting with th
 
 ## 7. Stardew Valley 32×32 Grid & Farming Engine
 
-The farming simulation is integrated into **Green Meadows Farmhouse** and explorable soil patches in Dhaka Valley, built strictly upon Stardew Valley mechanics.
+The farming simulation is integrated into **Green Meadows Farmhouse** and explorable agricultural plots, powered by the modular **`FarmhouseFarmingController`** (`src/scenes/world/FarmhouseFarmingController.ts`) and built strictly upon Stardew Valley mechanics with external pixel art assets.
 
 ### The 7-Layer Rendering Pipeline
 ```mermaid
 graph TD
     L0["Layer 0: Animated Water & HGSS Vertical Reflections (alpha: 0.22)"]
     L1["Layer 1: Deterministic 32x32 Base Grass & Soil Terrain"]
-    L2["Layer 2: 16-Tile 4-Bit Wang/Blob Autotiled Paths & Dynamic Farm Soil"]
+    L2["Layer 2: 16-Tile 4-Bit Wang/Blob Autotiled Paths & Dynamic Farm Soil (hoeDirt)"]
     L3["Layer 3: Interactive Rustling Ground Foliage & Flower Petals"]
-    L4["Layer 4: Dynamically Y-Sorted Entities (Player, Totoro, NPCs, Crops, Trees)"]
+    L4["Layer 4: Dynamically Y-Sorted Entities (Player, Totoro, Crops, Animals, Trees)"]
     L5["Layer 5: Overhead Architectural Canopies & Roofs (fades to alpha: 0.42)"]
-    L6["Layer 6: 32x32 Stardew Reticle Tile Cursor (Tool Targeting)"]
+    L6["Layer 6: 32x32 Stardew Reticle & HUD Tool Hotbar (Fixed to Camera)"]
 
     L0 --> L1 --> L2 --> L3 --> L4 --> L5 --> L6
 ```
 
-### Farming Grid Workflow
-1. **Soil Preparation (Hoeing)**: Using the Hoe tool on untilled grass turf converts the tile into a **32×32 Tilled Soil cell**. Neighboring tilled cells connect seamlessly via 4-bit Wang bitmasking.
-2. **Moisture System (Watering Can)**: Using the Watering Can transitions tilled soil into **Watered Soil** (dark, glistening loam). Soil retains moisture for 24 in-game hours before drying.
-3. **Seed Sowing**: Sowing seasonal seeds binds a dynamic `CropEntity` instance to the cell grid.
-4. **Growth Stages (0 to 5)**:
-   - **Stage 0**: Seed packet in furrow.
-   - **Stage 1**: Small green seedling sprout.
-   - **Stage 2**: Established stalk / young plant.
-   - **Stage 3**: Flowering / budding vegetation.
-   - **Stage 4**: Full mature harvestable crop (golden glow particle indicator).
-   - **Stage 5**: Regrowth state (for multi-harvest crops like Tea and Mango) or withered post-harvest soil.
-5. **Harvesting**: Interacting with mature crops yields items into the inventory, awards Farming XP, and triggers item acquisition fanfares.
+### Farmhouse Agricultural Layout & Facilities
+Inside Green Meadows Farmhouse (`1280 × 960`, 40×30 tiles), two dedicated agricultural garden beds are flanked by timber wood borders:
+- **West Farm Bed**: Cols 11–16, Rows 9–13 (30 tillable tiles)
+- **East Farm Bed**: Cols 21–26, Rows 9–13 (30 tillable tiles)
+- **Chacha's Heirloom Seed Cabinet** (`x: 550, y: 350`): Grants free heirloom starter seeds (5x Tea, 5x Naga, 5x Jute, 5x Beli, 3x Mango) and sells extra seed packets for Taka.
+- **Green Meadows Shipping Bin** (`x: 650, y: 350`): Allows players to deposit and ship harvested crops to Dhaka wholesale markets for instant Taka.
+- **Cozy Farmhouse Cot** (`x: 510, y: 240`): Rest spot allowing players to sleep until tomorrow morning, running `dailyGrowthTick` to grow watered crops and dry soil.
+- **Pastoral Water Well & Trough** (`x: 410, y: 280`): Groundwater pump restoring SP and refreshing watering can moisture.
+
+### Modern Farming Framework & Controls
+1. **Interactive Tool Hotbar (Bottom HUD)**:
+   - `[1] Hoe`: Tills designated tillable soil into rich loam.
+   - `[2] Water`: Waters dry tilled plots; soil darkens and stays moist until the next day.
+   - `[3] Seeds`: Sows the active heirloom seed; clicking or pressing `3` toggles the **Floating Seed Drawer** displaying all 7 crops and live inventory counts.
+   - `[4] Scythe`: Clears weeds and harvests mature crops.
+   - Switch tools via hotkeys `1`, `2`, `3`, `4` or clicking hotbar slots directly.
+2. **32×32 Dynamic Targeting Reticle**:
+   - Traces the tile in front of the player (or mouse hover).
+   - Valid actions highlight dynamically: Green (tillable with Hoe), Blue/Cyan (waterable with Can), Gold (plantable with Seeds), Glowing Amber (harvestable with Scythe).
+3. **External Asset Pipeline**:
+   - Tilled/watered soil: `hoeDirt.png` & `hoeDirtDark.png` (4-bit Wang connected 16×16 autotile sheet, scaled 2x to 32×32).
+   - Tools: `Hoe.png`, `Watering_Can.png`, `Scythe.png` from `stardew-valley-data`.
+   - Crops: Multi-stage external sprites (`stage-1.png` ... `stage-4.png` / `harvest.png`) with wind sway and harvest bounce animations.
 
 ### Seasonal Crop Manifest (`src/config/crops.db.ts`)
 | Crop ID | Crop Name | Seasons | Seed Item ID | Harvest Item ID | Growth Stages | Regrows? | Sell Price |
@@ -435,8 +446,8 @@ graph TD
 | `dhaka_jute` | **Golden Valley Jute** | Monsoon | `seed_jute` | `fiber_jute` | 5 stages (2 days/stage) | No | ৳85 |
 | `beli_flower` | **Curzon Beli Garland Bloom** | Spring, Summer | `seed_beli` | `flower_beli` | 4 stages (1 day/stage) | Yes (2 days) | ৳60 |
 | `naga_morich` | **Sreemangal Naga Fire Chili**| Summer, Autumn | `seed_naga` | `chili_naga` | 4 stages (2 days/stage) | Yes (3 days) | ৳150 |
-| `spirit_dew_melon`| **Whispering Spirit Melon** | Spring, Summer, Autumn | `seed_spirit_melon` | `spirit_dew` | 5 stages (3 days/stage) | No | ৳280 |
-| `frost_star_berry`| **Cryo Star Berry** | Winter | `seed_star_berry` | `frost_crystal` | 4 stages (2 days/stage) | Yes (2 days) | ৳220 |
+| `spirit_dew_melon`| **Spirit Dew Melon** | Spring, Summer, Autumn | `seed_spirit_melon` | `melon_dew` | 4 stages (3 days/stage) | No | ৳200 |
+| `astral_star_berry`| **Astral Star Berry** | Winter | `seed_star_berry` | `berry_star` | 4 stages (2 days/stage) | Yes (2 days) | ৳250 |
 
 ---
 
@@ -543,6 +554,21 @@ Forest biome entities feature authentic downloaded external pixel art assets reg
 - **Engine Slicing & Animation Resolution**:
   - `ExternalAssetAdapter.sliceAndRegisterEnemyBossAnimations` automatically slices all 16 frames into canvas textures `${id}-0` through `${id}-15` and registers `anim-${id}` (Row 1 walk cycle), `${id}-idle`, `${id}-walk`, `${id}-attack`, and `${id}-stagger`.
   - `CombatSystem.ts` dynamically drives sprite animation playback across walk chasing, telegraphed strikes, poise-break dazed staggers, and idle recovery.
+
+### 8.8 Autonomous Combat AI: Decision State Machine, Combat Spacing & Phase 2 Enrage
+The combat decision engine (`src/systems/CombatSystem.ts`) incorporates techniques from modern game AI literature (Dave Mark's Dual Utility Reasoner and Alex Champandard's reactive Behavior Tree architecture):
+1. **Decision State Machine & Dynamic Attack Triggering**:
+   - Differentiates attack ranges per archetype: `atkRange = en.isBoss ? 85 : 55` pixels, preventing large boss encounters from clipping into the player before initiating swings.
+   - Evaluates attack readiness: when `dist <= atkRange` and cooldown has elapsed (`time - en.lastHitPlayer >= 1800ms`), the combat entity immediately launches their telegraphed attack.
+2. **Combat Spacing & Tactical Flanking (On-Cooldown Behavior)**:
+   - Eliminates stationary dead-freezing and collision stacking when in attack range during cooldown.
+   - **Optimal Spacing Regulation**: Maintains a readable combat perimeter (`desSpacing = en.isBoss ? 70 : 45` px). If the player presses into the entity (`dist < desSpacing - 8`), the entity gently steps backward (`dx / dist * -step * 0.5`).
+   - **Perimeter Circling / Flanking**: Applies a tangential strafe velocity (`perpX = -dy / dist * strafeDir`, `perpY = dx / dist * strafeDir`) where `strafeDir = idx % 2 === 0 ? 1 : -1`, causing multiple combatants to naturally encircle the player at the perimeter of the arena.
+3. **Persistent Boss Phase 2 Threat Mechanics**:
+   - Upon falling below 50% HP (`hpPercent <= 0.5`), the Sylvan Briar Stag Boss enrages and triggers an immediate `stag_nature_barrier_charge` (PURPLE tell).
+   - Throughout Phase 2, `stag_nature_barrier_charge` remains actively weighted in the boss's attack pool with a 35% selection probability, ensuring players continuously coordinate Totoro's Q roar interrupt assist rather than encountering the mechanic only once.
+4. **Disengagement & Home Arena Return**:
+   - When the player flees beyond `detectRange` (550 px for boss, 260 px for mobs), the boss smoothly returns toward the arena center (`en.homeX, en.homeY`) at half speed, while mobs resume their ambient circular patrol orbit.
 
 ### Legendary Weapon Crafting (`src/config/recipes.db.ts`)
 - **Coral Tideglaive**: 6× `coral_shard` + 1× `item_parasol` → ATK: +24, Water splash trail.
@@ -1038,6 +1064,20 @@ To elevate cinematic storytelling, water surface realism, and living botanical a
    - **Widescreen Letterbox & Safe Camera Framing**: Smooth top/bottom cinema bars (`showLetterbox`/`hideLetterbox`), `focusCamera`, and `restoreCamera` (which always restores camera zoom to the canonical `1.22` and re-engages `startFollow`).
    - **Directional Walk-Cycle Tweening (`walkCharacterTo`)**: Moves characters during cutscenes while playing directional 4-row walk animations (`-walk-left`, `-walk-right`, `-walk-up`, `-walk-down`), spawning footstep dust motes, preventing `ScheduleSystem.update()` from pausing cutscene animations via `__cutsceneAnimActive`, and synchronizing `NpcMover` coordinates on arrival via `scheduleSystem.syncSpritePosition()`.
    - **Expressive Reactions & Stage/Runway FX**: Added `playEmoteReaction` (squash-and-stretch hops, double-hops, trembles), `spawnBlossomSwirl`, `spawnShockwaveRings`, converging spirit orbs for the Whispering Forest Grand Seance, glowing water reflections for Dhanmondi Lake sky lanterns, twinkling/shooting stars in the Stargazing Observatory, and a full Mughal carpet runway walk for Apshora's Curzon Hall Debut Exhibition.
+
+### 10.21 Autonomous Navigation AI: Dynamic Obstacle Avoidance, Repath Throttling & NPC-on-NPC Yielding
+To prevent traffic jams, endless 60 FPS repath loops, and sprite stacking when NPCs cross paths:
+1. **Dynamic Obstacle Avoidance in A* (`NpcNavigator.ts`)**:
+  - Extended `findPath` and `planRoute` with an optional `dynamicBlocked?: Set<string>` parameter.
+  - When dynamic blockers are passed, the navigator bypasses static cache lookups and storage, ensuring temporary obstacles (such as players standing in doorways or cross-traffic NPCs) are routed around in real time without poisoning the static world cache.
+2. **Blocked Repath Throttling (`NpcMover.ts`)**:
+  - In `NpcMover.update()`, upon exceeding `profile.patience.repathAfterSec`, `this.needsRepath` is emitted and `this.blockedTimer` is immediately reset to `0`. This converts `needsRepath` into a clean, throttled trigger event, completely eliminating the frame-by-frame 60 FPS recalculation spike when an NPC waits behind a blocked tile.
+  - `setPath()` automatically clears `this.blockedTimer = 0` so new paths begin with full patience.
+3. **NPC-on-NPC Collision Avoidance (`ScheduleSystem.ts`)**:
+  - `isNextTileBlocked` now validates candidate tiles against both the player's tile (`px, py`) and all other active entities in `this.activeNpcs`. When two NPCs walk toward the same tile, the follower yields rather than merging into the other's sprite.
+4. **Ambient Wanderer Sidestep & Detour Recovery (`ScheduleSystem.ts`)**:
+  - When an ambient roaming NPC is blocked for `patience.waitSec` (`res.needsSidestep`), the system releases the blocked waypoint path, transitions to `idle`, and reschedules the roam in `0.6s`, allowing the NPC to naturally re-roll an open wander direction.
+  - When scheduled travel encounters a blockage (`res.needsRepath`), the navigator plans an alternate detour path with dynamic blockers injected (`blockedSet`), smoothly stepping around obstructions.
 
 
 ---

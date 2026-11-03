@@ -8,6 +8,7 @@ import {
   FARMHOUSE_HEIGHT
 } from '../../config/constants';
 import { LeafWaterAnimator } from '../../systems/LeafWaterAnimator';
+import { FarmhouseFarmingController } from './FarmhouseFarmingController';
 
 export class InteriorBuilder {
   /**
@@ -458,6 +459,28 @@ export class InteriorBuilder {
 
     registerInteract(600, 840, null, 'Return to Dhaka Valley 🚶', 95, () => scene.exitFarmhouse());
 
+    // ── Stardew Valley Farmstead Facilities (Seed Cabinet, Shipping Bin, Cot, Water Well) ──
+    // Heirloom Seed Cabinet
+    const seedCabProp = scene.add.sprite(550, 350, 'prop-chest').setOrigin(0.5, 1).setDepth(350);
+    registerInteract(550, 350, 'prop-chest', "Chacha's Heirloom Seed Cabinet 🌾", 85, () => scene.interactSeedCabinet());
+
+    // Shipping Bin (Wooden produce delivery crate)
+    const shipBinProp = scene.add.sprite(650, 350, 'prop-crate').setOrigin(0.5, 1).setDepth(350);
+    registerInteract(650, 350, 'prop-crate', 'Green Meadows Shipping Bin 📦', 85, () => scene.interactShippingBin());
+
+    // Cozy Farmhouse Rest Cot (Advance Day & Grow Crops)
+    const cotGlow = scene.add.circle(510, 236, 16, 0xfef08a, 0.3).setDepth(235);
+    scene.add.rectangle(510, 240, 36, 24, 0x854d0e).setStrokeStyle(1.5, 0xca8a04).setDepth(238);
+    scene.add.rectangle(510, 240, 32, 20, 0x1e3a8a).setDepth(239); // Blue patterned Kantha quilt
+    scene.add.rectangle(498, 240, 8, 16, 0xfef3c7).setDepth(240);  // Soft pillow
+    registerInteract(510, 240, null, 'Cozy Farmhouse Cot 🛏️', 85, () => scene.interactFarmCot());
+
+    // Water Well & Irrigation Trough (Refills Watering Can)
+    scene.add.circle(410, 276, 14, 0x3b82f6, 0.4).setDepth(275);
+    scene.add.rectangle(410, 280, 34, 20, 0x475569).setStrokeStyle(1.5, 0x94a3b8).setDepth(278);
+    scene.add.rectangle(410, 280, 28, 14, 0x0284c7).setDepth(279);
+    registerInteract(410, 280, null, 'Pastoral Water Well & Trough 💧', 85, () => scene.interactWaterWell());
+
     if (!scene.scheduleSystem) {
       registerInteract(580, 340, 'npc-farmer-rafiq-0', 'Chacha Rafiq (Farm Owner)', 95, () => scene.interactFarmerRafiq());
       registerInteract(280, 260, 'npc-cow-0', 'Shuravi the Dairy Cow 🐄', 95, () => scene.interactCowShuravi());
@@ -526,6 +549,14 @@ export class InteriorBuilder {
     if (scene.scheduleSystem) {
       scene.scheduleSystem.initWorldNpcs('farmhouse');
     }
+
+    // Initialize Interactive Stardew-scale Farming Controller inside Farmhouse
+    if (scene.farmhouseFarmingController) {
+      scene.farmhouseFarmingController.destroy();
+    }
+    scene.farmhouseFarmingController = new FarmhouseFarmingController(scene);
+    scene.farmhouseFarmingController.init();
+
     UI.updateQuestText();
   }
 }

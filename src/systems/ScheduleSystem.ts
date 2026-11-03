@@ -624,7 +624,21 @@ export class ScheduleSystem {
         // Check if player occupies next tile
         const playerTileCol = Math.floor(px / 32);
         const playerTileRow = Math.floor(py / 32);
-        return targetTile.col === playerTileCol && targetTile.row === playerTileRow;
+        if (targetTile.col === playerTileCol && targetTile.row === playerTileRow) {
+          return true;
+        }
+
+        // Check if another active NPC occupies that tile
+        for (const [otherId, otherEnt] of this.activeNpcs.entries()) {
+          if (otherId === ent.id) continue;
+          if (
+            otherEnt.mover.currentTile.col === targetTile.col &&
+            otherEnt.mover.currentTile.row === targetTile.row
+          ) {
+            return true;
+          }
+        }
+        return false;
       });
 
       // Update Phaser sprite position and depth
@@ -745,9 +759,43 @@ export class ScheduleSystem {
       ent.badge.setText(`${badgePrefix}${ent.def.displayName}`);
       ent.badge.setPosition(mover.x, mover.y - ent.sprite.height - 6).setDepth(mover.y + 5);
 
-      // Handle blocked repath
+      // Handle blocked sidestep: NPC yielded patiently, release blocked roam path
+      if (res.needsSidestep) {
+        const roam = this.roamStates.get(ent.id);
+        if (roam && !roam.isSleeping && mover.state === 'waiting_blocked') {
+          mover.setPath([]);
+          mover.state = 'idle';
+          roam.nextRoamTime = currentTimeSec + 0.6;
+        }
+      }
+
+      // Handle blocked repath: calculate alternate route avoiding dynamic blockers
       if (res.needsRepath) {
-        this.evaluateSchedules(true);
+        const currentWorld: MapId = (this.scene.currentWorldId || DateState.currentWorld || 'dhaka') as MapId;
+        const playerTileCol = Math.floor(px / 32);
+        const playerTileRow = Math.floor(py / 32);
+        const blockedSet = new Set<string>([`${playerTileCol},${playerTileRow}`]);
+        for (const [otherId, otherEnt] of this.activeNpcs.entries()) {
+          if (otherId !== ent.id) {
+            blockedSet.add(`${otherEnt.mover.currentTile.col},${otherEnt.mover.currentTile.row}`);
+          }
+        }
+
+        const roam = this.roamStates.get(ent.id);
+        const curTile = mover.currentTile;
+        const destTile = roam ? roam.anchorTile : curTile;
+
+        // If not at destination, attempt dynamic detour path
+        if (destTile.col !== curTile.col || destTile.row !== curTile.row) {
+          const detourPath = this.navigator.findPath(currentWorld, curTile, destTile, 80, 60, blockedSet);
+          if (detourPath && detourPath.length > 1) {
+            mover.setPath(detourPath);
+          } else {
+            this.evaluateSchedules(true);
+          }
+        } else {
+          this.evaluateSchedules(true);
+        }
       }
     });
 

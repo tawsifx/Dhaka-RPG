@@ -53,3 +53,31 @@ Portions of the item probabilities, AI item evaluation heuristics, and projectil
   - `src/items/flyable.cpp`: Projectile flight constants, wall bounce mechanics, and homing kite tracking.
   - `src/karts/controller/skidding_ai.cpp`: AI item usage decision logic, forward targeting cone angle/distance thresholds, and defensive rear-firing checks (ported into `src/scenes/minigames/race/ai/ItemBrain.ts`).
   - `src/animations/explosion_animation.cpp`: Hit reaction pitch tumble and speed scrub constants (ported into `src/scenes/minigames/race/core/HitReaction.ts`).
+
+---
+
+## 4. Stardew Valley Farming Assets (Farmhouse Interior Agriculture Engine)
+
+External pixel art assets powering the farmhouse 32×32 agricultural garden beds, multi-stage crop growth cycles, and farming tool hotbar:
+
+- **Crop Growth Stages, Seeds & Tool Icons**:
+  - **Source Repository**: [https://github.com/chiefpansancolt/stardew-valley-data](https://github.com/chiefpansancolt/stardew-valley-data)
+  - **License**: MIT License
+  - **Directory**: `public/assets/sprites/crops/`, `public/assets/sprites/farming/tools/`
+  - **Assets Imported**:
+    - `sylhet_tea`: Camellia tea bush growth stages 1-3, harvest bloom, seed packet, fresh tea leaves (`tea-leaves`)
+    - `naga_morich`: Sreemangal fire chili growth stages 1-5, seed packet, red pepper (`hot-pepper`)
+    - `dhaka_jute`: Golden jute fiber growth stages 1-4, seed packet, fiber skein (`fiber`)
+    - `beli_flower`: Curzon beli flower growth stages 1-4, seed packet, garland bloom (`fairy-rose`)
+    - `rajshahi_mango`: Fazli mango sapling growth stages 1-5, seed packet, ripe fruit (`strawberry`)
+    - `spirit_dew_melon`: Sylvan dew melon growth stages 1-4, seed packet, glowing melon (`melon`)
+    - `astral_star_berry`: Celestial star fruit growth stages 1-4, seed packet, star berry (`starfruit`)
+    - Tools: `Hoe.png`, `Watering_Can.png`, `Scythe.png`
+
+- **Tilled & Watered Agricultural Soil Tilesets**:
+  - **Source Repository**: [https://github.com/sqbr/Stardew-Valley-Mod-Tools](https://github.com/sqbr/Stardew-Valley-Mod-Tools)
+  - **License**: MIT License
+  - **Directory**: `public/assets/tilesets/farming/`
+  - **Assets Imported**:
+    - `hoeDirt.png`: 16×16 48-tile connected dry tilled loam autotile sheet (192×64)
+    - `hoeDirtDark.png`: 16×16 48-tile connected watered fertile soil autotile sheet (192×64)

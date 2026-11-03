@@ -52,7 +52,23 @@ export const ITEMS_DB: Record<string, ItemDef> = {
   spectral_lantern:     { id: 'spectral_lantern',     cat: 'accessory', atk: 7, def: 5, emoji: '🏮', name: 'Phantom Silver Lantern', desc: 'Gifted by Ananya the Shakchunni. Emits cold emerald light that dispels dark forest illusions. (+7 ATK, +5 DEF)' },
   ghost_bell:           { id: 'ghost_bell',           cat: 'accessory', atk: 6, def: 8, emoji: '🛺', name: 'Phantom Rickshaw Brass Bell', desc: 'Given by Kofil Chacha. Its resonant toll pierces misty silence and repels the Nishi. (+6 ATK, +8 DEF)' },
   occult_talisman:      { id: 'occult_talisman',      cat: 'keepsake',  emoji: '📜', name: 'Prof. Shamsher’s Occult Field Tome', desc: 'A handwritten field journal detailing the paranormal apparitions and Nishi frequencies of the Whispering Woods.' },
-  forest_cleansing_charm:{ id: 'forest_cleansing_charm', cat: 'accessory', atk: 14, def: 14, emoji: '🧿', name: 'Aparthib Forest Cleansing Charm', desc: 'Forged from the harmony of the three pacified forest spirits. Radiates protective warmth across all realms. (+14 ATK, +14 DEF)' }
+  forest_cleansing_charm:{ id: 'forest_cleansing_charm', cat: 'accessory', atk: 14, def: 14, emoji: '🧿', name: 'Aparthib Forest Cleansing Charm', desc: 'Forged from the harmony of the three pacified forest spirits. Radiates protective warmth across all realms. (+14 ATK, +14 DEF)' },
+  // Stardew-scale Bengali Farmstead Crops & Seeds
+  seed_tea:             { id: 'seed_tea',             cat: 'material', emoji: '🌱', name: 'Sylhet Camellia Tea Seeds', desc: 'Seeds for planting fragrant Camellia tea bushes. Regrows after harvest.' },
+  seed_naga:            { id: 'seed_naga',            cat: 'material', emoji: '🌶️', name: 'Sreemangal Naga Chili Seeds', desc: 'Fiery heirloom chili seeds that pack a legendary heat.' },
+  seed_jute:            { id: 'seed_jute',            cat: 'material', emoji: '🌾', name: 'Golden Valley Jute Seeds', desc: 'Seeds that produce tall, golden eco-fibers during the monsoon season.' },
+  seed_beli:            { id: 'seed_beli',            cat: 'material', emoji: '🌼', name: 'Curzon Beli Garland Seeds', desc: 'Seeds for aromatic white Beli flower garlands.' },
+  seed_mango:           { id: 'seed_mango',           cat: 'material', emoji: '🥭', name: 'Rajshahi Fazli Mango Seeds', desc: 'Heirloom sapling seeds yielding sweet Rajshahi mangoes.' },
+  seed_spirit_melon:    { id: 'seed_spirit_melon',    cat: 'material', emoji: '🍈', name: 'Spirit Dew Melon Seeds', desc: 'Enchanted seeds yielding succulent melons bathed in sylvan dew.' },
+  seed_star_berry:      { id: 'seed_star_berry',      cat: 'material', emoji: '⭐', name: 'Astral Star Berry Seeds', desc: 'Celestial seeds that shimmer like miniature constellations.' },
+
+  leaves_tea:           { id: 'leaves_tea',           cat: 'consumable', healHp: 35, healSp: 35, emoji: '🍃', name: 'Fresh Sylhet Tea Leaves', desc: 'Tender tea flushes hand-harvested at the farmhouse. Restores 35 HP & 35 SP.' },
+  chili_naga:           { id: 'chili_naga',           cat: 'material', emoji: '🌶️', name: 'Fresh Sreemangal Naga Chili', desc: 'A blazing fiery red pepper harvested from the garden beds.' },
+  fiber_jute:           { id: 'fiber_jute',           cat: 'material', emoji: '🧶', name: 'Golden Jute Fiber Skein', desc: 'Glistening golden fiber ready for weaving traditional handicrafts.' },
+  flower_beli:          { id: 'flower_beli',          cat: 'material', emoji: '🌸', name: 'Fresh Curzon Beli Blossom', desc: 'Delicately scented white garland flower.' },
+  fruit_mango:          { id: 'fruit_mango',          cat: 'consumable', healHp: 80, healSp: 50, emoji: '🥭', name: 'Ripe Rajshahi Fazli Mango', desc: 'Luscious, golden-orange mango bursting with nectar. Restores 80 HP & 50 SP.' },
+  melon_dew:            { id: 'melon_dew',            cat: 'consumable', healHp: 120, healSp: 60, emoji: '🍈', name: 'Luminous Spirit Dew Melon', desc: 'A magical glowing melon that radiates calming energy. Restores 120 HP & 60 SP.' },
+  berry_star:           { id: 'berry_star',           cat: 'consumable', healHp: 150, healSp: 80, emoji: '⭐', name: 'Radiant Astral Star Berry', desc: 'A rare celestial berry that sparkles in the dark. Restores 150 HP & 80 SP.' },
 };
 
 /* Elemental visual effects, slash colors, and particle spark presets for equipped weapons */

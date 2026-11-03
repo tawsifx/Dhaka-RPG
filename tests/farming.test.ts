@@ -3,6 +3,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { FarmingSystem } from '../src/systems/FarmingSystem';
 import { DateState } from '../src/state/DateState';
 import { CROPS_DB } from '../src/config/crops.db';
+import { ITEMS_DB } from '../src/config/items.db';
+import { RPGStats } from '../src/state/RPGStats';
 
 describe('FarmingSystem (2D Grid Simulation)', () => {
   let farm: FarmingSystem;
@@ -110,5 +112,64 @@ describe('FarmingSystem (2D Grid Simulation)', () => {
     // Since sylhet_tea regrows, the plant remains in the ground!
     expect(cell.crop).not.toBeNull();
     expect(cell.crop?.isReadyForHarvest).toBe(false);
+  });
+
+  it('restricts tillability to designated farmhouse garden bed bounds', () => {
+    const farm40 = new FarmingSystem(40, 30);
+    farm40.setTillableBounds([
+      { minCol: 11, maxCol: 16, minRow: 9, maxRow: 13 },
+      { minCol: 21, maxCol: 26, minRow: 9, maxRow: 13 }
+    ]);
+
+    expect(farm40.getCell(12, 10)?.isTillable).toBe(true);
+    expect(farm40.getCell(25, 12)?.isTillable).toBe(true);
+    expect(farm40.getCell(2, 2)?.isTillable).toBe(false);
+    expect(farm40.getCell(18, 10)?.isTillable).toBe(false);
+
+    // Cannot till outside bounds
+    expect(farm40.tillSoil(2, 2)).toBe(false);
+    // Can till inside bounds
+    expect(farm40.tillSoil(12, 10)).toBe(true);
+  });
+
+  it('exports and imports grid state for cross-world persistence', () => {
+    farm.tillSoil(12, 10);
+    farm.waterSoil(12, 10);
+    farm.plantCrop(12, 10, 'naga_morich');
+
+    const exported = farm.exportGrid();
+    expect(exported.length).toBeGreaterThan(0);
+    const item = exported.find(c => c.x === 12 && c.y === 10);
+    expect(item).toBeDefined();
+    expect(item?.isTilled).toBe(true);
+    expect(item?.crop?.cropId).toBe('naga_morich');
+
+    // Fresh farm importing saved state
+    const newFarm = new FarmingSystem(20, 20);
+    newFarm.importGrid(exported);
+
+    const restoredCell = newFarm.getCell(12, 10);
+    expect(restoredCell?.isTilled).toBe(true);
+    expect(restoredCell?.isWatered).toBe(true);
+    expect(restoredCell?.crop?.cropId).toBe('naga_morich');
+  });
+
+  it('manages Taka economy and verifies heirloom seed/harvest items in ITEMS_DB', () => {
+    expect(ITEMS_DB.seed_tea).toBeDefined();
+    expect(ITEMS_DB.seed_naga).toBeDefined();
+    expect(ITEMS_DB.seed_jute).toBeDefined();
+    expect(ITEMS_DB.seed_beli).toBeDefined();
+    expect(ITEMS_DB.seed_mango).toBeDefined();
+    expect(ITEMS_DB.leaves_tea).toBeDefined();
+    expect(ITEMS_DB.chili_naga).toBeDefined();
+    expect(ITEMS_DB.fruit_mango).toBeDefined();
+
+    DateState.taka = 100;
+    expect(RPGStats.getTaka()).toBe(100);
+    expect(RPGStats.spendTaka(40)).toBe(true);
+    expect(RPGStats.getTaka()).toBe(60);
+    expect(RPGStats.spendTaka(100)).toBe(false);
+    RPGStats.addTaka(150);
+    expect(RPGStats.getTaka()).toBe(210);
   });
 });

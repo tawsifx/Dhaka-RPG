@@ -23,6 +23,8 @@ export const DateState: any = {
   confessionDone: false,
   rickshawBest: 0,
   hearts: 0,
+  taka: 250,
+  farmGrid: null,
   farmhouseExplored: false,
   cowMilked: false,
   eggCollected: false,

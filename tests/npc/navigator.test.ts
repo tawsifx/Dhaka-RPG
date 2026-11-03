@@ -107,4 +107,19 @@ describe('NpcNavigator: A* Pathfinding', () => {
     expect(route.path).not.toBeNull();
     expect(route.path?.[route.path.length - 1]).toEqual({ col: 6, row: 41 });
   });
+
+  it('dynamically routes around temporary dynamic obstacles without cache poisoning', () => {
+    // Direct path from (2, 2) to (4, 2) would pass through (3, 2)
+    const dynamicBlockers = new Set(['3,2']);
+    const detourPath = navigator.findPath('dhaka', { col: 2, row: 2 }, { col: 4, row: 2 }, 80, 60, dynamicBlockers);
+    expect(detourPath).not.toBeNull();
+    detourPath?.forEach(tile => {
+      expect(tile).not.toEqual({ col: 3, row: 2 });
+    });
+
+    // Verify standard unblocked path is not poisoned
+    const normalPath = navigator.findPath('dhaka', { col: 2, row: 2 }, { col: 4, row: 2 });
+    expect(normalPath).not.toBeNull();
+    expect(normalPath?.some(t => t.col === 3 && t.row === 2)).toBe(true);
+  });
 });

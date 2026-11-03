@@ -79,6 +79,7 @@ export class NpcMover {
     }
 
     this.state = 'walking';
+    this.blockedTimer = 0;
     this.advanceToNextPathNode();
 
     // Immediately orient facing towards target node
@@ -146,6 +147,7 @@ export class NpcMover {
 
       if (this.blockedTimer >= this.profile.patience.repathAfterSec) {
         this.needsRepath = true;
+        this.blockedTimer = 0;
       } else if (this.blockedTimer >= this.profile.patience.waitSec) {
         this.needsSidestep = true;
       }
