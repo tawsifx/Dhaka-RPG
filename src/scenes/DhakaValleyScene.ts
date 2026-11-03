@@ -359,12 +359,17 @@ export class DhakaValleyScene extends Phaser.Scene {
         if (UI.isOpen() || this.currentInteractable) {
           this.handleActionPress();
         } else {
+          if (CombatSystem.isCombatRestricted(this)) {
+            this.handleActionPress();
+            return;
+          }
           CombatSystem.performTotoroGroundSlam(this);
         }
       }
     });
     this.input.keyboard.on('keydown-J', e => {
       if (!e.repeat && !UI.isOpen()) {
+        if (CombatSystem.isCombatRestricted(this)) return;
         CombatSystem.performPlayerAttack(this);
         this.jHoldTimer = this.time.delayedCall(160, () => {
           CombatSystem.startGuard(this);
@@ -377,15 +382,22 @@ export class DhakaValleyScene extends Phaser.Scene {
     });
     this.input.keyboard.on('keydown-K', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performPlayerDash(this); });
     this.input.keyboard.on('keydown-SHIFT', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performPlayerDash(this); });
-    this.input.keyboard.on('keydown-Q', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performTotoroRoar(this); });
-    this.input.keyboard.on('keydown-R', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performTotoroGroundSlam(this); });
-    this.input.keyboard.on('keydown-F', e => { if (!e.repeat && !UI.isOpen()) CombatSystem.performTotoroLeafGust(this); });
+    this.input.keyboard.on('keydown-Q', e => { if (!e.repeat && !UI.isOpen() && !CombatSystem.isCombatRestricted(this)) CombatSystem.performTotoroRoar(this); });
+    this.input.keyboard.on('keydown-R', e => { if (!e.repeat && !UI.isOpen() && !CombatSystem.isCombatRestricted(this)) CombatSystem.performTotoroGroundSlam(this); });
+    this.input.keyboard.on('keydown-F', e => { if (!e.repeat && !UI.isOpen() && !CombatSystem.isCombatRestricted(this)) CombatSystem.performTotoroLeafGust(this); });
     this.input.keyboard.on('keydown-I', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('inventory'); });
     this.input.keyboard.on('keydown-M', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('map'); });
     this.input.keyboard.on('keydown-L', e => { if (!e.repeat && !UI.isOpen()) UI.openRPGMenu('quests'); });
 
     this.input.on('pointerdown', pointer => {
       if (!UI.isOpen()) {
+        let clickCoord: { col: number; row: number } | undefined;
+        if (this.cameras && this.cameras.main) {
+          const wp = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+          clickCoord = { col: Math.floor(wp.x / 32), row: Math.floor(wp.y / 32) };
+        }
+        if (CombatSystem.isCombatRestricted(this, clickCoord)) return;
+
         if (pointer.leftButtonDown()) {
           CombatSystem.performPlayerAttack(this);
         } else if (pointer.rightButtonDown()) {
@@ -495,10 +507,16 @@ export class DhakaValleyScene extends Phaser.Scene {
     };
 
     bindTouchAction('btn-mobile-act', () => this.handleActionPress());
-    bindTouchAction('btn-mobile-atk', () => this.performPlayerAttack());
+    bindTouchAction('btn-mobile-atk', () => {
+      if (!CombatSystem.isCombatRestricted(this)) this.performPlayerAttack();
+    });
     bindTouchAction('btn-mobile-dash', () => this.performPlayerDash());
-    bindTouchAction('btn-mobile-skill', () => this.performTotoroRoar());
-    bindTouchAction('btn-mobile-slam', () => this.performTotoroGroundSlam());
+    bindTouchAction('btn-mobile-skill', () => {
+      if (!CombatSystem.isCombatRestricted(this)) this.performTotoroRoar();
+    });
+    bindTouchAction('btn-mobile-slam', () => {
+      if (!CombatSystem.isCombatRestricted(this)) this.performTotoroGroundSlam();
+    });
 
     UI.updateRPGStats();
     UI.updateQuestText();
@@ -1945,6 +1963,7 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   /* Real-Time Combat: Overhauled Data-Driven Combos & Companion System */
   performPlayerAttack() {
+    if (CombatSystem.isCombatRestricted(this)) return;
     CombatSystem.performPlayerAttack(this);
   }
 
@@ -1953,18 +1972,22 @@ export class DhakaValleyScene extends Phaser.Scene {
   }
 
   performTotoroRoar() {
+    if (CombatSystem.isCombatRestricted(this)) return;
     CombatSystem.performTotoroRoar(this);
   }
 
   performTotoroGroundSlam() {
+    if (CombatSystem.isCombatRestricted(this)) return;
     CombatSystem.performTotoroGroundSlam(this);
   }
 
   performTotoroLeafGust() {
+    if (CombatSystem.isCombatRestricted(this)) return;
     CombatSystem.performTotoroLeafGust(this);
   }
 
   performTotoroSkill() {
+    if (CombatSystem.isCombatRestricted(this)) return;
     CombatSystem.performTotoroRoar(this);
   }
 

@@ -433,7 +433,11 @@ Inside Green Meadows Farmhouse (`1280 × 960`, 40×30 tiles), two dedicated agri
 2. **32×32 Dynamic Targeting Reticle**:
    - Traces the tile in front of the player (or mouse hover).
    - Valid actions highlight dynamically: Green (tillable with Hoe), Blue/Cyan (waterable with Can), Gold (plantable with Seeds), Glowing Amber (harvestable with Scythe).
-3. **External Asset Pipeline**:
+3. **Peaceful Sanctuary & Farmland Combat Restriction Engine**:
+   - Prohibits player combat attacks (weapon combo strikes, parasol guard, Totoro roar, belly slam, leaf gust) from initiating while in the Farmhouse, while standing on or facing agricultural soil, or while actively executing farming tool interactions.
+   - Mouse left-clicks, spacebar interactions, and touch inputs on farmland strictly execute agricultural tasks (hoeing, watering, seeding, scything) without triggering combat slashes or lunges.
+   - Guarded centrally via `CombatSystem.isCombatRestricted(scene, targetCoord)` across keyboard (`J`, `E`, `Q`, `R`, `F`), mouse canvas pointer clicks, mobile touch action buttons, and input buffer queues.
+4. **External Asset Pipeline**:
    - Tilled/watered soil: `hoeDirt.png` & `hoeDirtDark.png` (4-bit Wang connected 16×16 autotile sheet, scaled 2x to 32×32).
    - Tools: `Hoe.png`, `Watering_Can.png`, `Scythe.png` from `stardew-valley-data`.
    - Crops: Multi-stage external sprites (`stage-1.png` ... `stage-4.png` / `harvest.png`) with wind sway and harvest bounce animations.
@@ -503,7 +507,14 @@ Totoro's abilities are powered by a 4-pip Affection Bond Gauge (`DateState.bond`
   - Depleting Poise to 0 inflicts **Stagger for 1.5s**, during which the target takes **1.5× critical damage** with orbiting stun stars.
   - Bosses display a dedicated Poise Bar under their Boss HP bar (`#boss-poise-fill`) and enter a **Dazed Blue Telegraph** state when broken. Poise regenerates after stagger recovery.
 
-### 8.6 Realm Enemies & Guardian Bosses (`src/config/worlds.db.ts`)
+### 8.6 Sanctuary & Farmland Combat Prohibitions (`CombatSystem.isCombatRestricted`)
+To provide an authentic, tranquil farming and life-sim experience in peaceful domestic environments, combat attacks and offensive companion abilities are prohibited in the following contexts:
+1. **Farmhouse & Peaceful Interiors**: In `farmhouse` and `curzon_interior`, no attack animations, combo chains, or companion shouts can be initiated.
+2. **Farmland Soil & Crop Plots**: When standing on, facing, or clicking/targeting tilled soil, watered plots, planted crops, or designated agricultural garden beds (`PLOT_REGIONS`), combat inputs are strictly suppressed.
+3. **Active Farming Actions**: While swinging a hoe, watering soil, sowing seeds, or scything/harvesting crops, `isFarmingAction` locks out combat buffer queuing and attack executions.
+4. **Action Key Contextual Fallback**: Pressing the `E` action key on or near farmland automatically triggers agricultural interactions (`handleActionPress()`) rather than executing Totoro Ground Slam.
+
+### 8.7 Realm Enemies & Guardian Bosses (`src/config/worlds.db.ts`)
 ```mermaid
 sequenceDiagram
     autonumber
@@ -539,7 +550,7 @@ sequenceDiagram
 | **Frost** | Glacier Wraith | HP: 180, Poise: 75, ATK: 28 | **Cryon, Warden of Eternal Frost**| HP: 850, Poise: 175, ATK: 38 | `seal_frost` (Frost Realm Seal) | Placeholder Fallback |
 | **Astral** | Void Echo | HP: 230, Poise: 90, ATK: 34 | **Chrono-Fracture Archon** | HP: 1200, Poise: 220, ATK: 45| `seal_astral` (Master Reality Seal) | Placeholder Fallback |
 
-### 8.7 External Enemy & Boss Spritesheet Pipeline
+### 8.8 External Enemy & Boss Spritesheet Pipeline
 Forest biome entities feature authentic downloaded external pixel art assets registered through `ExternalAssetAdapter.ts`:
 - **Briar Bogling (`enemy-slime`)**: CC0 1.0 animated slime spritesheet (`public/assets/sprites/enemies/briar_bogling.png`, 256×256 px, 4×4 grid of 64×64 frames). Authored timing via `public/assets/sprites/enemies/briar_bogling.anim.json`:
   - Row 0: Idle (frames 0-3, 4 fps)
@@ -555,7 +566,7 @@ Forest biome entities feature authentic downloaded external pixel art assets reg
   - `ExternalAssetAdapter.sliceAndRegisterEnemyBossAnimations` automatically slices all 16 frames into canvas textures `${id}-0` through `${id}-15` and registers `anim-${id}` (Row 1 walk cycle), `${id}-idle`, `${id}-walk`, `${id}-attack`, and `${id}-stagger`.
   - `CombatSystem.ts` dynamically drives sprite animation playback across walk chasing, telegraphed strikes, poise-break dazed staggers, and idle recovery.
 
-### 8.8 Autonomous Combat AI: Decision State Machine, Combat Spacing & Phase 2 Enrage
+### 8.9 Autonomous Combat AI: Decision State Machine, Combat Spacing & Phase 2 Enrage
 The combat decision engine (`src/systems/CombatSystem.ts`) incorporates techniques from modern game AI literature (Dave Mark's Dual Utility Reasoner and Alex Champandard's reactive Behavior Tree architecture):
 1. **Decision State Machine & Dynamic Attack Triggering**:
    - Differentiates attack ranges per archetype: `atkRange = en.isBoss ? 85 : 55` pixels, preventing large boss encounters from clipping into the player before initiating swings.

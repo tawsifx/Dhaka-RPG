@@ -1,6 +1,21 @@
 // tests/combat/attacks.test.ts - Attack Framework and Validator Unit Tests
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { ATTACKS_DB, validateAttacks } from '../../src/config/attacks.db';
+
+vi.mock('phaser', () => ({
+  default: {
+    Math: {
+      Distance: {
+        Between: (x1: number, y1: number, x2: number, y2: number) => Math.hypot(x2 - x1, y2 - y1)
+      },
+      Clamp: (v: number, min: number, max: number) => Math.min(Math.max(v, min), max),
+      DegToRad: (deg: number) => (deg * Math.PI) / 180,
+      Angle: {
+        Between: (x1: number, y1: number, x2: number, y2: number) => Math.atan2(y2 - y1, x2 - x1)
+      }
+    }
+  }
+}));
 
 describe('Data-Driven Attack Framework (attacks.db.ts)', () => {
   it('passes all telegraph and windup validation rules', () => {
@@ -86,5 +101,80 @@ describe('Data-Driven Attack Framework (attacks.db.ts)', () => {
     const boglingHop = ATTACKS_DB.bogling_spore_hop;
     expect(boglingHop.source).toBe('enemy');
     expect(boglingHop.parryable).toBe(true);
+  });
+
+  it('prohibits combat attacks and guard in farmhouse, on farmland, and during farming actions', async () => {
+    const { CombatSystem } = await import('../../src/systems/CombatSystem');
+    const { FarmingSystem } = await import('../../src/systems/FarmingSystem');
+    const { DateState } = await import('../../src/state/DateState');
+
+    const farming = new FarmingSystem(20, 20);
+
+    // 1. In farmhouse
+    DateState.currentWorld = 'farmhouse';
+    const farmhouseScene: any = {
+      currentWorld: 'farmhouse',
+      player: { x: 300, y: 300 },
+      farmingSystem: farming,
+      time: { now: 1000 }
+    };
+    expect(CombatSystem.isCombatRestricted(farmhouseScene)).toBe(true);
+
+    // Attempt attack in farmhouse - should be blocked
+    let attackTriggered = false;
+    farmhouseScene.tweens = {
+      add: () => { attackTriggered = true; }
+    };
+    CombatSystem.performPlayerAttack(farmhouseScene);
+    expect(farmhouseScene.isAttacking).toBeFalsy();
+    expect(attackTriggered).toBe(false);
+
+    // 2. In normal world, not on farmland
+    DateState.currentWorld = 'dhaka';
+    const normalScene: any = {
+      currentWorld: 'dhaka',
+      player: { x: 320, y: 320 }, // Tile (10, 10)
+      farmingSystem: farming,
+      time: { now: 1000 },
+      facingVec: { x: 0, y: 1 }
+    };
+    expect(CombatSystem.isCombatRestricted(normalScene)).toBe(false);
+
+    // 3. During active farming action (e.g. hoeing)
+    normalScene.isFarmingAction = true;
+    expect(CombatSystem.isCombatRestricted(normalScene)).toBe(true);
+    normalScene.isFarmingAction = false;
+
+    // 4. Standing on tilled farmland
+    farming.tillSoil(10, 10);
+    const standingOnFarmlandScene: any = {
+      currentWorld: 'dhaka',
+      player: { x: 10 * 32 + 16, y: 10 * 32 + 16 },
+      farmingSystem: farming,
+      time: { now: 1000 },
+      facingVec: { x: 0, y: 1 }
+    };
+    expect(CombatSystem.isCombatRestricted(standingOnFarmlandScene)).toBe(true);
+
+    // 5. Standing on normal ground but facing tilled farmland
+    const facingFarmlandScene: any = {
+      currentWorld: 'dhaka',
+      player: { x: 10 * 32 + 16, y: 9 * 32 + 16 }, // Tile (10, 9)
+      facingVec: { x: 0, y: 1 },  // Facing south towards (10, 10)
+      farmingSystem: farming,
+      time: { now: 1000 }
+    };
+    expect(CombatSystem.isCombatRestricted(facingFarmlandScene)).toBe(true);
+
+    // 6. Target coordinate clicked on farmland
+    const distantPlayerScene: any = {
+      currentWorld: 'dhaka',
+      player: { x: 50, y: 50 },
+      facingVec: { x: 1, y: 0 },
+      farmingSystem: farming,
+      time: { now: 1000 }
+    };
+    expect(CombatSystem.isCombatRestricted(distantPlayerScene)).toBe(false);
+    expect(CombatSystem.isCombatRestricted(distantPlayerScene, { col: 10, row: 10 })).toBe(true);
   });
 });

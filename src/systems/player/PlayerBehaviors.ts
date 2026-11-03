@@ -317,6 +317,21 @@ export class PlayerBehaviors {
     const targetX = tileCol * 32 + 16;
     const targetY = tileRow * 32 + 16;
 
+    // Lock combat attacks during active farming tool action
+    this.scene.isFarmingAction = true;
+    if (this.scene.farmingActionTimer && typeof this.scene.farmingActionTimer.remove === 'function') {
+      this.scene.farmingActionTimer.remove();
+    }
+    if (this.scene.time && typeof this.scene.time.delayedCall === 'function') {
+      this.scene.farmingActionTimer = this.scene.time.delayedCall(350, () => {
+        this.scene.isFarmingAction = false;
+      });
+    } else {
+      this.scene.farmingActionTimer = setTimeout(() => {
+        this.scene.isFarmingAction = false;
+      }, 350);
+    }
+
     // Hoe impact sound & soil dust
     SoundEngine.step('path');
     this.scene.tweens.add({
@@ -353,6 +368,21 @@ export class PlayerBehaviors {
   triggerWaterAction(tileCol: number, tileRow: number): void {
     const targetX = tileCol * 32 + 16;
     const targetY = tileRow * 32 + 16;
+
+    // Lock combat attacks during active farming tool action
+    this.scene.isFarmingAction = true;
+    if (this.scene.farmingActionTimer && typeof this.scene.farmingActionTimer.remove === 'function') {
+      this.scene.farmingActionTimer.remove();
+    }
+    if (this.scene.time && typeof this.scene.time.delayedCall === 'function') {
+      this.scene.farmingActionTimer = this.scene.time.delayedCall(400, () => {
+        this.scene.isFarmingAction = false;
+      });
+    } else {
+      this.scene.farmingActionTimer = setTimeout(() => {
+        this.scene.isFarmingAction = false;
+      }, 400);
+    }
 
     SoundEngine.waterSplash();
 
@@ -391,6 +421,21 @@ export class PlayerBehaviors {
   triggerHarvestAction(cropName: string, tileCol: number, tileRow: number): void {
     const targetX = tileCol * 32 + 16;
     const targetY = tileRow * 32 + 16;
+
+    // Lock combat attacks during active farming tool action
+    this.scene.isFarmingAction = true;
+    if (this.scene.farmingActionTimer && typeof this.scene.farmingActionTimer.remove === 'function') {
+      this.scene.farmingActionTimer.remove();
+    }
+    if (this.scene.time && typeof this.scene.time.delayedCall === 'function') {
+      this.scene.farmingActionTimer = this.scene.time.delayedCall(450, () => {
+        this.scene.isFarmingAction = false;
+      });
+    } else {
+      this.scene.farmingActionTimer = setTimeout(() => {
+        this.scene.isFarmingAction = false;
+      }, 450);
+    }
 
     SoundEngine.harvestCrop();
     this.showEmote('🧺', 1800);

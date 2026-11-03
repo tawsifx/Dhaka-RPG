@@ -47,6 +47,67 @@ export class CombatSystem {
   private static inputBuffer: { action: 'attack' | 'dash' | 'parry'; time: number } | null = null;
   private static readonly INPUT_BUFFER_WINDOW_MS = 150;
 
+  /**
+   * Checks whether combat attacks, guarding, and companion abilities are restricted.
+   * Attacks are strictly prohibited inside the Farmhouse, while standing on or facing farmland,
+   * while targeting farmland, and during active farming operations (hoeing, watering, planting, harvesting).
+   */
+  static isCombatRestricted(scene: any, targetCoord?: { col: number; row: number }): boolean {
+    if (!scene) return false;
+
+    // 1. Explicit farming action in progress (hoe swing, water spray, crop harvest)
+    if (scene.isFarmingAction) return true;
+
+    // 2. Indoor peaceful sanctuary: Farmhouse or Curzon interior
+    const worldKey = scene.currentWorld || (typeof DateState !== 'undefined' ? DateState.currentWorld : '');
+    if (worldKey === 'farmhouse' || worldKey === 'curzon_interior') {
+      return true;
+    }
+
+    // 3. Active Farmhouse Farming Controller
+    if (scene.farmhouseFarmingController) {
+      return true;
+    }
+
+    // 4. Farmland detection: check if target, player position, or facing tile is agricultural soil/crop
+    if (scene.farmingSystem) {
+      const isCellFarmland = (col: number, row: number): boolean => {
+        const cell = scene.farmingSystem.getCell(col, row);
+        if (cell && (cell.isTilled || cell.crop !== null || cell.isWatered)) {
+          return true;
+        }
+        const plots = scene.farmhouseFarmingController?.PLOT_REGIONS;
+        if (Array.isArray(plots)) {
+          for (const p of plots) {
+            if (col >= p.minCol && col <= p.maxCol && row >= p.minRow && row <= p.maxRow) {
+              return true;
+            }
+          }
+        }
+        return false;
+      };
+
+      if (targetCoord && isCellFarmland(targetCoord.col, targetCoord.row)) {
+        return true;
+      }
+
+      if (scene.player) {
+        const px = scene.player.x;
+        const py = scene.player.y;
+        const pCol = Math.floor(px / 32);
+        const pRow = Math.floor(py / 32);
+        if (isCellFarmland(pCol, pRow)) return true;
+
+        const facing = scene.facingVec || { x: 0, y: 1 };
+        const fCol = Math.floor((px + facing.x * 24) / 32);
+        const fRow = Math.floor((py + facing.y * 24) / 32);
+        if (isCellFarmland(fCol, fRow)) return true;
+      }
+    }
+
+    return false;
+  }
+
   // =========================================================================
   // 1. PLAYER COMBAT: COMBOS, INPUT BUFFER & AIM ASSIST
   // =========================================================================
@@ -55,6 +116,10 @@ export class CombatSystem {
    * Perform player attack with 3-hit combo branching, input buffering, and soft aim assist
    */
   static performPlayerAttack(scene: any): void {
+    if (this.isCombatRestricted(scene)) {
+      this.inputBuffer = null;
+      return;
+    }
     if (UI.isOpen() || scene.cutsceneLocked || !scene.player) return;
     const now = scene.time.now;
 
@@ -130,6 +195,11 @@ export class CombatSystem {
    * Execute player attack with windup, active hitbox, recovery, lunges, and audio/vfx
    */
   private static executePlayerAttackDef(scene: any, atk: AttackDef): void {
+    if (this.isCombatRestricted(scene)) {
+      scene.isAttacking = false;
+      scene.attackPhase = 'idle';
+      return;
+    }
     scene.isAttacking = true;
     scene.attackPhase = 'windup';
 
@@ -217,6 +287,7 @@ export class CombatSystem {
    * Start Parasol Guard / Parry
    */
   static startGuard(scene: any): void {
+    if (this.isCombatRestricted(scene)) return;
     if (UI.isOpen() || scene.cutsceneLocked || !scene.player) return;
     DateState.isGuarding = true;
     DateState.parryActiveUntil = scene.time.now + 150; // 150ms perfect parry window
@@ -357,6 +428,7 @@ export class CombatSystem {
    * Totoro Spirit Roar (Q, 1 Pip): AoE stun 2.2s in 140px, breaks shields, interrupts PURPLE attacks
    */
   static performTotoroRoar(scene: any): void {
+    if (this.isCombatRestricted(scene)) return;
     if (UI.isOpen() || scene.cutsceneLocked) return;
     if (!DateState.totoroJoined || !scene.totoro) {
       UI.showToast('🐾', 'Partner Needed', 'Meet Totoro at Curzon Hall to unlock companion abilities!');
@@ -402,6 +474,7 @@ export class CombatSystem {
    * Totoro Seismic Belly Slam (E, 2 Pips): Ground-pound shockwave, heavy poise damage, creates safe stagger window
    */
   static performTotoroGroundSlam(scene: any): void {
+    if (this.isCombatRestricted(scene)) return;
     if (UI.isOpen() || scene.cutsceneLocked) return;
     if (!DateState.totoroJoined || !scene.totoro) {
       UI.showToast('🐾', 'Partner Needed', 'Meet Totoro at Curzon Hall to unlock companion abilities!');
@@ -483,6 +556,7 @@ export class CombatSystem {
    * Totoro Leaf Gust / Swiftness (F, 1 Pip): +40% speed for 6s, clears ground hazards
    */
   static performTotoroLeafGust(scene: any): void {
+    if (this.isCombatRestricted(scene)) return;
     if (UI.isOpen() || scene.cutsceneLocked) return;
     if (!DateState.totoroJoined || !scene.totoro) return;
 

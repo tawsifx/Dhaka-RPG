@@ -34,6 +34,7 @@ export class FarmhouseFarmingController {
   private hotbarSlots: { bg: Phaser.GameObjects.Rectangle; icon: Phaser.GameObjects.Sprite | Phaser.GameObjects.Image; text: Phaser.GameObjects.Text; badge?: Phaser.GameObjects.Text }[] = [];
   private seedDrawerContainer: Phaser.GameObjects.Container | null = null;
   private keyListeners: { [key: string]: Phaser.Input.Keyboard.Key } = {};
+  private pointerDownListener?: (pointer: Phaser.Input.Pointer) => void;
 
   // Designated Farm Plot Regions inside Farmhouse
   public readonly PLOT_REGIONS: PlotRegion[] = [
@@ -540,7 +541,7 @@ export class FarmhouseFarmingController {
     }
 
     // Direct click/tap on farm tiles
-    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    this.pointerDownListener = (pointer: Phaser.Input.Pointer) => {
       // Ignore click if clicking hotbar area
       if (pointer.y > this.scene.scale.height - 70) return;
       const worldPoint = this.scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
@@ -552,7 +553,8 @@ export class FarmhouseFarmingController {
       if (dist < 88) {
         this.executeToolAction(targetCol, targetRow);
       }
-    });
+    };
+    this.scene.input.on('pointerdown', this.pointerDownListener);
   }
 
   /**
@@ -674,6 +676,21 @@ export class FarmhouseFarmingController {
   public executeToolAction(col: number, row: number): boolean {
     const cell = this.farmingSystem.getCell(col, row);
     if (!cell) return false;
+
+    // Lock combat attacks during active farming tool action
+    this.scene.isFarmingAction = true;
+    if (this.scene.farmingActionTimer && typeof this.scene.farmingActionTimer.remove === 'function') {
+      this.scene.farmingActionTimer.remove();
+    }
+    if (this.scene.time && typeof this.scene.time.delayedCall === 'function') {
+      this.scene.farmingActionTimer = this.scene.time.delayedCall(350, () => {
+        this.scene.isFarmingAction = false;
+      });
+    } else {
+      this.scene.farmingActionTimer = setTimeout(() => {
+        this.scene.isFarmingAction = false;
+      }, 350);
+    }
 
     if (this.activeTool === 'hoe') {
       if (!cell.isTilled && cell.isTillable) {
@@ -802,5 +819,10 @@ export class FarmhouseFarmingController {
       if (k) k.removeAllListeners();
     }
     this.keyListeners = {};
+
+    if (this.pointerDownListener && this.scene.input) {
+      this.scene.input.off('pointerdown', this.pointerDownListener);
+      this.pointerDownListener = undefined;
+    }
   }
 }
