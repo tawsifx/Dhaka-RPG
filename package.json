@@ -13,8 +13,6 @@
     "test:e2e": "node tests/e2e/runner.js",
     "test:all": "npm test && npm run test:e2e",
     "validate:npc": "vitest run tests/npc/validator.test.ts",
-    "assets:validate": "vitest run tests/combat/assets_validation.test.ts",
-    "assets:report": "vitest run tests/combat/assets_validation.test.ts",
     "assets:compress": "python3 scripts/compress_images.py",
     "deploy:cf": "npm run build && wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true",
     "start": "node telegram-bot.js",

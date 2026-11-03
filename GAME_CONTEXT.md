@@ -44,7 +44,7 @@ The narrative bridges real-world Dhaka romance and campus nostalgia (sipping cla
 | **3D Mini-Game Engine** | [Three.js 0.186.1](https://threejs.org/) | Dedicated WebGL overlay and standalone harness for MarioKart64JS Grand Prix (all 16 N64 tracks, 4 battle arenas, 8 classic drivers, Wii 3D karts, synthesized Web Audio) |
 | **Build & Tooling** | [Vite 8](https://vitejs.dev/) | Ultra-fast HMR dev server, Rolldown code-splitting into 9 modular chunks (`phaser`, `scene-dhaka`, `graphics-world`, `graphics-creatures`, `graphics-characters`, `game-db`, `game-systems`, and lazy `three` + `race-engine`) |
 | **Language** | [TypeScript 7.x](https://www.typescriptlang.org/) | Strict typing, full interfaces for state, items, crops, database indices, and asset specs |
-| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | Consolidated Vitest test suites (14 suites, 113 unit & regression tests across combat, farming, NPC roaming & schedule engine, opening dialogues, database index, behaviors, and stats) + unified Playwright E2E test runner (`npm run test:e2e` across 4 domain suites) |
+| **Testing** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | 5 focused algorithmic Vitest test suites (45 assertions across living-world schedules, A* navigation, schedule resolver, ambient roaming, and combat frame data) + 4 Playwright browser E2E suites (`npm run test:e2e`) |
 | **Database & Indexing** | IndexedDB + Memory Index Engine | High-performance IndexedDB storage with secondary $O(1)$ in-memory index engine (`src/config/databaseIndex.ts`) and paginated UI lists |
 | **Audio Engine** | Web Audio API + HTML5 Audio | Dual-player 400ms cross-fading BGM player, 6-channel pooled SFX, vocal song track player (`ohona_song.mp3`), Web Audio real-time engine & drift screech synthesizers |
 | **Graphic Pipeline** | Hybrid External / Procedural | External PNG overrides with auto-integer 2× nearest-neighbor upscaling, runtime 2-pass border defringing + procedural canvas fallback |
@@ -1396,12 +1396,10 @@ In November 2026, the game's interface and interaction mechanics received a comp
 - `npm run dev:race`: Launch standalone MarioKart64JS race harness (`/race.html`).
 - `npm run build`: Execute production Vite build to `dist/`.
 - `npm run typecheck`: Run standalone TypeScript syntax and type integrity check (0 errors).
-- `npm test`: Run the consolidated Vitest unit & integration test suite (14 test files, 113 tests).
+- `npm test`: Run the focused Vitest algorithmic test suite (5 test files, 45 tests).
 - `npm run test:e2e`: Run the unified 4-suite Playwright E2E test runner (`tests/e2e/runner.js`) across NPC Roaming, Combat & Player, World & Farming, and Dialogue & Audio.
 - `npm run test:all`: Run both Vitest unit tests and Playwright E2E tests sequentially (`npm test && npm run test:e2e`).
 - `npm run validate:npc`: Run the Living-World NPC Schedule Validator (validates all 38 schedules, graph connectivity, travel times, and slack).
-- `npm run assets:validate`: Validate asset manifest entries, preferred frame dimensions, grid alignment, transparency, and `.anim.json` integrity.
-- `npm run assets:report`: Generate asset coverage table and sync `ASSET_SHOPPING_LIST.md`.
 - `npm run assets:compress`: Run Python PIL batch image compression on `public/assets/`.
 - `npm run deploy:cf`: Build production bundle and deploy directly to Cloudflare Pages (`wrangler pages deploy dist --project-name=moon-walkers-day --branch=main --commit-dirty=true`).
 
@@ -1410,7 +1408,7 @@ In November 2026, the game's interface and interaction mechanics received a comp
 
 ### Verification Checklist Before Commits
 1. Run `npm run typecheck` — zero TypeScript errors.
-2. Run `npm test` — all Vitest suites pass (113/113 tests across 14 suites).
+2. Run `npm test` — all Vitest suites pass (45/45 tests across 5 suites).
 3. Run `npm run validate:npc` — all 38 NPC schedules validated with zero errors.
 4. Run `npm run test:e2e` — Playwright end-to-end suites pass across all 4 domains.
 5. Run `npm run build` — bundle compiles cleanly with no missing assets.
@@ -1478,16 +1476,15 @@ Whenever an AI model, pair programmer, or automated tool touches this repository
 
 The testing infrastructure is organized symmetrically across unit/integration (Vitest) and end-to-end browser runtime (Playwright) suites:
 
-### 1. Vitest Unit & Integration Suites (`npm test` / `tests/`)
-14 consolidated test suites covering 113 automated assertions:
-- **Character & Movement**: `tests/npc/character_movement.test.ts` (unifies Nadia, Tania, Phulwali movement specs, facing directions, and spritesheet layouts).
-- **NPC Roaming & Offscreen Engine**: `tests/npc/roaming.test.ts` (combines dynamic scatter logic, obstacle repulsion, and analytic offscreen placement).
-- **NPC Navigation & Scheduling**: `tests/npc/navigator.test.ts`, `tests/npc/mover.test.ts`, `tests/npc/resolver.test.ts`, `tests/npc/validator.test.ts`.
-- **Combat Framework**: `tests/combat/attacks.test.ts`, `tests/combat/assets_validation.test.ts`.
-- **World & Farming**: `tests/farming.test.ts`, `tests/player_behaviors.test.ts`, `tests/stats.test.ts`, `tests/database_index.test.ts`.
-- **Audio & Dialogue**: `tests/sound_engine.test.ts`, `tests/opening_dialogue.test.ts`.
+### 1. Vitest Algorithmic & Schedule Suites (`npm test` / `tests/`)
+5 focused test suites covering 45 critical assertions:
+- **Living-World Schedule Validator**: `tests/npc/validator.test.ts` (validates all 38 schedules, graph reachability, and travel times against world constraints).
+- **Schedule Condition Resolver**: `tests/npc/resolver.test.ts` (validates priority evaluation, weather/time-of-day contextual resolution).
+- **A* Pathfinding & Heuristics**: `tests/npc/navigator.test.ts` (validates grid pathing, obstacle avoidance, and terrain traversal costs).
+- **Dynamic Roaming & Offscreen Engine**: `tests/npc/roaming.test.ts` (validates ambient scatter radius, obstacle repulsion, and offscreen analytical placement).
+- **Combat Attack Frame Data**: `tests/combat/attacks.test.ts` (validates attack database windups, active frames, telegraphs, and combo cancels).
 
-*(Note: MarioKart64JS is cloned directly as an external 3D mini-game and verified via TypeScript check and Vite build rather than redundant unit tests).*
+*(Note: Redundant mock-heavy unit tests for static JSON structures, audio track name checks, and finished systems like farming and leveling have been purged in favor of end-to-end browser runtime validation).*
 
 ### 2. Playwright End-to-End Suites (`npm run test:e2e` / `tests/e2e/`)
 Consolidated into 4 domain-aligned test suites with an automated ephemeral Vite dev server runner (`tests/e2e/runner.js`):
