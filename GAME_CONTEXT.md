@@ -1112,12 +1112,13 @@ All music tracks are compressed using high-efficiency 64kbps joint-stereo MP3 en
 11. **`menu_theme.mp3`** (1.7 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
 12. **`ohona_song.mp3`** (0.9 MB): Acoustic serenade ballad by Subconscious / Rakin.
 
-### HUD Dropdown Music Track Change System
+### HUD Dropdown Anime Music Track Scroll & Vector Icon System
 Located in the 3-bar hamburger dropdown menu (`#hud-dropdown-menu`):
-- **Dynamic Track Select (`#hud-music-select`)**: Instant dropdown selector featuring grouped categories (*✨ Anime Masterpieces* and *☀️ Dhaka Valley & Heritage*).
-- **Navigation Controls (`⏮️` / `⏭️`)**: Quickly skip backward/forward through the soundtrack with smooth 420ms Web Audio cross-fading.
-- **Auto-Theme Mode (`🔄 Auto: ON / 🎵 Manual`)**: Allows toggling automatic biome/realm music sync or locking in any preferred anime BGM.
-- **Active Badge Display (`#hud-music-badge`)**: Shows current track vibe badge (`🏰 Ghibli Waltz`, `💫 Shinkai Romance`, `🍃 Shinobi Melancholy`, `🔥 Hinokami Kagura`, etc.).
+- **Anime Track Scroll Reel (`#anime-track-scroll`)**: Smooth horizontal momentum track reel with custom styled golden scrollbars, touch drag, and mousewheel scroll. Features rich track cards with external vector icons, franchise badges, and live 3-bar audio equalizer animations (`.card-playing-indicator`). When any track is selected or changed via keyboard/prev/next/auto, it automatically scrolls into center view (`scrollIntoView({ behavior: 'smooth', inline: 'center' })`).
+- **Category Filter Pills (`.music-category-pills`)**: Quick-filter pills (*All [12]*, *Anime Masterpieces [8]*, *Dhaka & Folk [4]*) allowing focused browsing between anime OSTs and local Dhaka arrangements.
+- **Now Playing Marquee Ticker (`.drawer-music-now-playing`)**: Displays animated equalizer bars alongside a smooth CSS marquee ticker showing current anime franchise, song name, and artist without truncation.
+- **Vector External Icon Suite (Font Awesome 6)**: Completely replaces legacy default OS emojis with crisp, high-resolution vector icons across the Top HUD (`fa-cloud-sun`, `fa-paw` bond pips), Navigation Drawer (`fa-paw`, `fa-scroll`, `fa-bag-shopping`, `fa-map-location-dot`, `fa-floppy-disk`, `fa-volume-high`), Track Scroll (`fa-chess-rook`, `fa-wand-magic-sparkles`, `fa-wind`, `fa-fire`, `fa-spa`, `fa-shield-cat`, `fa-music`, `fa-tree`, `fa-feather`, `fa-compass`, `fa-cloud-showers-heavy`, `fa-guitar`), and RPG Menus (`fa-backward-step`, `fa-forward-step`, `fa-pause`, `fa-play`, `fa-arrows-rotate`, `fa-heart`).
+- **Accessibility & Legacy Fallback**: Preserves `#hud-music-select` in DOM synchronized with the active track for full screen-reader and legacy test compatibility.
 
 ### Dual-Player Cross-Fading Architecture
 ```

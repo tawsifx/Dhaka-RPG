@@ -18,6 +18,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&family=Press+Start+2P&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <!-- External Vector Icon Library (Font Awesome 6) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="/src/style.css" />
 </head>
 <body>
@@ -34,7 +36,7 @@
 
     <div class="hud-card hud-zone-card" id="hud-zone-card" role="button" tabindex="0" title="Click to open Realm Map (M)" aria-label="Zone and Time Information — Open Realm Map">
       <div class="hud-row">
-        <span id="hud-weather" aria-hidden="true">🌤️</span>
+        <span id="hud-weather" aria-hidden="true"><i class="fa-solid fa-cloud-sun"></i></span>
         <strong id="hud-zone">Curzon Hall Lawn</strong>
       </div>
       <div class="hud-subrow">
@@ -46,7 +48,7 @@
       <div class="stat-top">
         <span id="hud-level">LV. 1 Moon Walker</span>
         <span class="heart-container" title="Relationship Bond with Totoro" aria-label="Relationship: 5 hearts">
-          <span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span><span class="h-slot">♡</span>
+          <span class="h-slot"><i class="fa-regular fa-heart"></i></span><span class="h-slot"><i class="fa-regular fa-heart"></i></span><span class="h-slot"><i class="fa-regular fa-heart"></i></span><span class="h-slot"><i class="fa-regular fa-heart"></i></span><span class="h-slot"><i class="fa-regular fa-heart"></i></span>
         </span>
       </div>
       <div class="bar-group">
@@ -56,10 +58,10 @@
       </div>
       <div class="totoro-bond-meter" role="progressbar" aria-label="Totoro Bond Level" aria-valuenow="1" aria-valuemin="0" aria-valuemax="4" title="Totoro Bond Pips (Roar [Q]: 1 | Slam [E/R]: 2 | Swiftness [F]: 1)">
         <div class="bond-pips-group" aria-hidden="true">
-          <span class="bond-pip" id="bond-pip-1">🐾</span>
-          <span class="bond-pip" id="bond-pip-2">🐾</span>
-          <span class="bond-pip" id="bond-pip-3">🐾</span>
-          <span class="bond-pip" id="bond-pip-4">🐾</span>
+          <span class="bond-pip" id="bond-pip-1"><i class="fa-solid fa-paw"></i></span>
+          <span class="bond-pip" id="bond-pip-2"><i class="fa-solid fa-paw"></i></span>
+          <span class="bond-pip" id="bond-pip-3"><i class="fa-solid fa-paw"></i></span>
+          <span class="bond-pip" id="bond-pip-4"><i class="fa-solid fa-paw"></i></span>
         </div>
         <span id="hud-bond-text">BOND 1.0/4</span>
       </div>
@@ -78,43 +80,239 @@
         <span class="hamburger-bar"></span>
       </button>
       <div id="hud-dropdown-menu" class="hud-dropdown-drawer" role="menu" aria-label="Game Quick Actions" hidden>
-        <button id="btn-talk-partner" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">🐾 Partner</button>
-        <button id="btn-open-quests" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">📜 Quests (L)</button>
-        <button id="btn-open-bag" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">🎒 Bag &amp; Craft (I)</button>
-        <button id="btn-open-map" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">🗺️ Realm Map (M)</button>
-        <button id="btn-save-game" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button">💾 Quick Save</button>
-        <button id="btn-bgm" class="drawer-item-btn" role="menuitem" type="button">🎵 BGM: ON</button>
+        <button id="btn-talk-partner" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button"><i class="fa-solid fa-paw"></i> Partner</button>
+        <button id="btn-open-quests" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button"><i class="fa-solid fa-scroll"></i> Quests (L)</button>
+        <button id="btn-open-bag" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button"><i class="fa-solid fa-bag-shopping"></i> Bag &amp; Craft (I)</button>
+        <button id="btn-open-map" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button"><i class="fa-solid fa-map-location-dot"></i> Realm Map (M)</button>
+        <button id="btn-save-game" class="drawer-item-btn drawer-nav-item" role="menuitem" type="button"><i class="fa-solid fa-floppy-disk"></i> Quick Save</button>
+        <button id="btn-bgm" class="drawer-item-btn" role="menuitem" type="button"><i class="fa-solid fa-volume-high"></i> BGM: ON</button>
 
-        <!-- Music Track Change Subsystem -->
+        <!-- Music Track Change Subsystem (Anime Track Scroll) -->
         <div class="drawer-music-section" role="group" aria-label="Soundtrack Track Selector">
           <div class="drawer-music-header">
-            <span class="drawer-music-title">🎶 SOUNDTRACK</span>
-            <span id="hud-music-badge" class="drawer-music-badge">🍃 Ghibli Classic</span>
+            <span class="drawer-music-title"><i class="fa-solid fa-compact-disc fa-spin-pulse" style="--fa-animation-duration: 4s;"></i> SOUNDTRACK</span>
+            <span id="hud-music-badge" class="drawer-music-badge"><i class="fa-solid fa-chess-rook"></i> Ghibli Waltz</span>
           </div>
-          <div class="drawer-music-select-wrap">
-            <select id="hud-music-select" class="drawer-music-select" aria-label="Select Background Music Track">
-              <optgroup label="✨ Anime Masterpieces">
-                <option value="howl_moving_castle">🏰 Howl's Moving Castle — Merry-Go-Round</option>
-                <option value="your_name_sparkle">💫 Your Name — Sparkle</option>
-                <option value="naruto_sadness_sorrow">🍃 Naruto — Sadness &amp; Sorrow</option>
-                <option value="tanjiro_no_uta">🔥 Demon Slayer — Tanjiro no Uta</option>
-                <option value="silent_voice_lit">🌸 A Silent Voice — Lit</option>
-                <option value="mononoke_ashitaka">🐺 Princess Mononoke — Ashitaka</option>
-                <option value="spirited_away">🎹 Spirited Away — One Summer's Day</option>
-                <option value="totoro_theme">🐾 My Neighbor Totoro — Theme</option>
-              </optgroup>
-              <optgroup label="☀️ Dhaka Valley &amp; Heritage">
-                <option value="dhaka_flute">🌸 Dhaka Valley — Krishnachura Bansuri</option>
-                <option value="dhaka_adventure">☀️ Dhaka Valley — Daybreak Journey</option>
-                <option value="dhaka_lofi">🌧️ Dhaka Lofi — Rain Over Curzon Hall</option>
-                <option value="ohona_song">🎸 Ohona — Subconscious (Acoustic)</option>
-              </optgroup>
-            </select>
+
+          <!-- Live Now Playing Marquee -->
+          <div class="drawer-music-now-playing" aria-live="polite">
+            <div class="music-wave-equalizer playing" aria-hidden="true" title="Audio Status">
+              <span class="eq-bar eq-1"></span>
+              <span class="eq-bar eq-2"></span>
+              <span class="eq-bar eq-3"></span>
+            </div>
+            <div class="marquee-viewport">
+              <div id="hud-music-marquee" class="marquee-track">
+                <span id="hud-now-playing-title">Howl's Moving Castle — Merry-Go-Round of Life</span>
+                <span class="marquee-divider">•</span>
+                <span id="hud-now-playing-artist">Joe Hisaishi</span>
+              </div>
+            </div>
           </div>
+
+          <!-- Category filter pills for Anime vs Folk -->
+          <div class="music-category-pills" role="tablist" aria-label="Track Filter">
+            <button class="music-cat-pill active" data-cat="all" type="button"><i class="fa-solid fa-music"></i> All (12)</button>
+            <button class="music-cat-pill" data-cat="anime" type="button"><i class="fa-solid fa-wand-magic-sparkles"></i> Anime (8)</button>
+            <button class="music-cat-pill" data-cat="dhaka" type="button"><i class="fa-solid fa-compass"></i> Dhaka (4)</button>
+          </div>
+
+          <!-- Horizontal Smooth-Scrolling Anime & Realm Track Reel -->
+          <div class="anime-track-scroll-wrapper">
+            <button id="btn-track-scroll-left" class="track-scroll-arrow left" type="button" aria-label="Scroll Tracks Left" title="Scroll Left">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <div id="anime-track-scroll" class="anime-track-scroll-container" role="listbox" aria-label="Anime Music Tracks">
+              <!-- Anime Masterpieces -->
+              <div class="anime-track-card active" data-tid="howl_moving_castle" data-cat="anime" role="option" aria-selected="true" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-chess-rook"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Howl's Moving Castle</div>
+                  <div class="track-card-sub">Merry-Go-Round of Life</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-wind"></i> Ghibli Waltz</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="your_name_sparkle" data-cat="anime" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Your Name</div>
+                  <div class="track-card-sub">Sparkle (RADWIMPS)</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Shinkai Romance</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="naruto_sadness_sorrow" data-cat="anime" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-wind"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Naruto</div>
+                  <div class="track-card-sub">Sadness and Sorrow</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-leaf"></i> Shinobi Melancholy</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="tanjiro_no_uta" data-cat="anime" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-fire"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Demon Slayer</div>
+                  <div class="track-card-sub">Kamado Tanjiro no Uta</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-fire"></i> Hinokami Kagura</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="silent_voice_lit" data-cat="anime" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-spa"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">A Silent Voice</div>
+                  <div class="track-card-sub">Lit (Kensuke Ushio)</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-spa"></i> Kyoto Animation</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="mononoke_ashitaka" data-cat="anime" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-shield-cat"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Princess Mononoke</div>
+                  <div class="track-card-sub">Legend of Ashitaka</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-shield-cat"></i> Epic Symphony</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="spirited_away" data-cat="anime" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-music"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Spirited Away</div>
+                  <div class="track-card-sub">One Summer's Day</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-music"></i> Piano Masterpiece</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="totoro_theme" data-cat="anime" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-tree"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">My Neighbor Totoro</div>
+                  <div class="track-card-sub">Main Theme</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-leaf"></i> Ghibli Classic</span>
+                </div>
+              </div>
+
+              <!-- Dhaka Valley & Folk Heritage -->
+              <div class="anime-track-card" data-tid="dhaka_flute" data-cat="dhaka" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-feather"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Dhaka Valley</div>
+                  <div class="track-card-sub">Krishnachura Bansuri</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-feather"></i> Bengali Bansuri</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="dhaka_adventure" data-cat="dhaka" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-compass"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Dhaka Valley</div>
+                  <div class="track-card-sub">Daybreak Journey</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-compass"></i> Adventure</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="dhaka_lofi" data-cat="dhaka" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-cloud-showers-heavy"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Dhaka Lofi</div>
+                  <div class="track-card-sub">Rain Over Curzon</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-cloud-showers-heavy"></i> Lofi Beats</span>
+                </div>
+              </div>
+              <div class="anime-track-card" data-tid="ohona_song" data-cat="dhaka" role="option" aria-selected="false" tabindex="0">
+                <div class="track-card-icon-wrap">
+                  <i class="fa-solid fa-guitar"></i>
+                  <div class="card-playing-indicator">
+                    <span class="eq-dot dot-1"></span><span class="eq-dot dot-2"></span><span class="eq-dot dot-3"></span>
+                  </div>
+                </div>
+                <div class="track-card-meta">
+                  <div class="track-card-title">Ohona Acoustic</div>
+                  <div class="track-card-sub">Subconscious (Live)</div>
+                  <span class="track-card-badge"><i class="fa-solid fa-guitar"></i> Campus Romance</span>
+                </div>
+              </div>
+            </div>
+            <button id="btn-track-scroll-right" class="track-scroll-arrow right" type="button" aria-label="Scroll Tracks Right" title="Scroll Right">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- Hidden / Synchronized select for legacy callers and full accessibility -->
+          <select id="hud-music-select" class="drawer-music-select sr-only" aria-label="Select Background Music Track">
+            <optgroup label="Anime Masterpieces">
+              <option value="howl_moving_castle">Howl's Moving Castle — Merry-Go-Round</option>
+              <option value="your_name_sparkle">Your Name — Sparkle</option>
+              <option value="naruto_sadness_sorrow">Naruto — Sadness &amp; Sorrow</option>
+              <option value="tanjiro_no_uta">Demon Slayer — Tanjiro no Uta</option>
+              <option value="silent_voice_lit">A Silent Voice — Lit</option>
+              <option value="mononoke_ashitaka">Princess Mononoke — Ashitaka</option>
+              <option value="spirited_away">Spirited Away — One Summer's Day</option>
+              <option value="totoro_theme">My Neighbor Totoro — Theme</option>
+            </optgroup>
+            <optgroup label="Dhaka Valley &amp; Heritage">
+              <option value="dhaka_flute">Dhaka Valley — Krishnachura Bansuri</option>
+              <option value="dhaka_adventure">Dhaka Valley — Daybreak Journey</option>
+              <option value="dhaka_lofi">Dhaka Lofi — Rain Over Curzon Hall</option>
+              <option value="ohona_song">Ohona — Subconscious (Acoustic)</option>
+            </optgroup>
+          </select>
+
           <div class="drawer-music-controls-row">
-            <button id="btn-music-prev" class="drawer-music-btn" title="Previous Track (Shift+P)" type="button" aria-label="Previous Track">⏮️</button>
-            <button id="btn-music-next" class="drawer-music-btn" title="Next Track (Shift+N)" type="button" aria-label="Next Track">⏭️</button>
-            <button id="btn-music-auto" class="drawer-music-auto-btn" title="Toggle Auto-Theme (Syncs to World / Biome)" type="button">🔄 Auto: ON</button>
+            <button id="btn-music-prev" class="drawer-music-btn" title="Previous Track (Shift+P)" type="button" aria-label="Previous Track"><i class="fa-solid fa-backward-step"></i></button>
+            <button id="btn-music-playpause" class="drawer-music-btn playpause-btn" title="Play / Pause BGM" type="button" aria-label="Play or Pause BGM"><i class="fa-solid fa-pause"></i></button>
+            <button id="btn-music-next" class="drawer-music-btn" title="Next Track (Shift+N)" type="button" aria-label="Next Track"><i class="fa-solid fa-forward-step"></i></button>
+            <button id="btn-music-auto" class="drawer-music-auto-btn" title="Toggle Auto-Theme (Syncs to World / Biome)" type="button"><i class="fa-solid fa-arrows-rotate"></i> Auto: ON</button>
           </div>
         </div>
       </div>
@@ -207,7 +405,7 @@
 
   <!-- Item / Quest Toast Notification -->
   <div id="item-toast" role="status" aria-live="polite" hidden>
-    <span id="toast-icon" aria-hidden="true">🌺</span>
+    <span id="toast-icon" aria-hidden="true"><i class="fa-solid fa-award"></i></span>
     <div>
       <strong id="toast-title">Obtained Item!</strong>
       <div id="toast-sub">Added to your inventory</div>
@@ -218,7 +416,7 @@
   <div id="dialogue-overlay" role="dialog" aria-modal="false" aria-label="Character Dialogue" aria-live="polite" hidden>
     <div class="dialogue-box">
       <div class="dlg-portrait-frame">
-        <div id="dlg-portrait" aria-hidden="true">🐾</div>
+        <div id="dlg-portrait" aria-hidden="true"><i class="fa-solid fa-paw"></i></div>
       </div>
       <div class="dlg-content">
         <div id="dlg-speaker">Totoro</div>
@@ -232,11 +430,11 @@
   <!-- Scrapbook / Memories Modal -->
   <div id="scrapbook-modal" class="rpg-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="scrapbook-title" hidden>
     <div class="rpg-modal-card">
-      <h2 id="scrapbook-title">📖 Dhaka & Astral Chronicle Scrapbook</h2>
+      <h2 id="scrapbook-title"><i class="fa-solid fa-book-bookmark"></i> Dhaka & Astral Chronicle Scrapbook</h2>
       <p class="modal-subtitle">Every keepsake and memory forged across the realms by Moon Walker & Totoro.</p>
       <div id="scrapbook-moments" class="scrapbook-grid"></div>
       <div class="modal-actions">
-        <button id="btn-keep-exploring" class="primary-rpg-btn" type="button">Continue Adventure ✨</button>
+        <button id="btn-keep-exploring" class="primary-rpg-btn" type="button">Continue Adventure <i class="fa-solid fa-wand-magic-sparkles"></i></button>
       </div>
     </div>
   </div>
@@ -245,11 +443,11 @@
   <div id="rpg-menu-modal" class="rpg-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="tab-quests" hidden>
     <div class="rpg-modal-card wide-card">
       <div class="rpg-tabs" role="tablist" aria-label="Adventure Ledger Tabs">
-        <button class="rpg-tab-btn active" data-tab="quests" id="tab-quests" role="tab" aria-selected="true" aria-controls="rpg-tab-body" type="button">📜 Quest Journal</button>
-        <button class="rpg-tab-btn" data-tab="inventory" id="tab-inventory" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">🎒 Bag &amp; Gear</button>
-        <button class="rpg-tab-btn" data-tab="crafting" id="tab-crafting" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">⚒️ Crafting</button>
-        <button class="rpg-tab-btn" data-tab="map" id="tab-map" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">🗺️ Realm Travel</button>
-        <button class="rpg-tab-btn" data-tab="system" id="tab-system" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button">⚙️ Save &amp; Audio</button>
+        <button class="rpg-tab-btn active" data-tab="quests" id="tab-quests" role="tab" aria-selected="true" aria-controls="rpg-tab-body" type="button"><i class="fa-solid fa-scroll"></i> Quest Journal</button>
+        <button class="rpg-tab-btn" data-tab="inventory" id="tab-inventory" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button"><i class="fa-solid fa-bag-shopping"></i> Bag &amp; Gear</button>
+        <button class="rpg-tab-btn" data-tab="crafting" id="tab-crafting" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button"><i class="fa-solid fa-hammer"></i> Crafting</button>
+        <button class="rpg-tab-btn" data-tab="map" id="tab-map" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button"><i class="fa-solid fa-map-location-dot"></i> Realm Travel</button>
+        <button class="rpg-tab-btn" data-tab="system" id="tab-system" role="tab" aria-selected="false" aria-controls="rpg-tab-body" type="button"><i class="fa-solid fa-sliders"></i> Save &amp; Audio</button>
         <button id="btn-close-rpg-menu" class="rpg-close-btn" type="button" aria-label="Close Adventure Ledger">✕ Close</button>
       </div>
       <div id="rpg-tab-body" class="rpg-tab-body" role="tabpanel" aria-labelledby="tab-quests"></div>
@@ -263,7 +461,7 @@
   <div id="title-screen-overlay">
     <div class="rpg-title-backdrop"></div>
     <div class="rpg-scanlines"></div>
-    <button id="btn-title-peek" class="title-peek-btn" type="button" aria-pressed="false" title="Hide the menu to see the full scene">👁 VIEW SCENE</button>
+    <button id="btn-title-peek" class="title-peek-btn" type="button" aria-pressed="false" title="Hide the menu to see the full scene"><i class="fa-solid fa-eye"></i> VIEW SCENE</button>
 
     <div class="rpg-main-frame">
       <!-- Ornate Retro Header -->
@@ -288,22 +486,22 @@
       <div class="rpg-command-window">
         <div class="rpg-command-list">
           <button id="btn-title-new" class="rpg-cmd-btn" type="button">
-            <span class="cmd-cursor">▶</span>
+            <span class="cmd-cursor"><i class="fa-solid fa-play"></i></span>
             <span class="cmd-label">START ADVENTURE</span>
           </button>
           <button id="btn-title-continue" class="rpg-cmd-btn" type="button" hidden>
-            <span class="cmd-cursor">▶</span>
+            <span class="cmd-cursor"><i class="fa-solid fa-play"></i></span>
             <span class="cmd-label">CONTINUE JOURNEY</span>
           </button>
           <button id="btn-title-scrapbook" class="rpg-cmd-btn" type="button">
-            <span class="cmd-cursor">▶</span>
+            <span class="cmd-cursor"><i class="fa-solid fa-play"></i></span>
             <span class="cmd-label">HOW TO PLAY</span>
           </button>
         </div>
 
         <div class="rpg-audio-indicator" id="menu-audio-status">
-          <span class="music-note">♪</span>
-          <span id="menu-audio-text">TAP SCREEN FOR SPIRITED AWAY PIANO ♫</span>
+          <span class="music-note"><i class="fa-solid fa-music"></i></span>
+          <span id="menu-audio-text">TAP SCREEN FOR SPIRITED AWAY PIANO <i class="fa-solid fa-music"></i></span>
         </div>
       </div>
 

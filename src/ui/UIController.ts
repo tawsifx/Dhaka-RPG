@@ -45,9 +45,9 @@ export const UIController: any = (() => {
     if (totalPages <= 1) return '';
     return `
       <div class="rpg-pagination-bar">
-        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="-1" ${page <= 1 ? 'disabled' : ''} type="button">◀ Prev</button>
+        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="-1" ${page <= 1 ? 'disabled' : ''} type="button"><i class="fa-solid fa-chevron-left"></i> Prev</button>
         <span class="pg-status-text">Page ${page} of ${totalPages} <small>(${startIdx + 1}–${endIdx} of ${totalItems})</small></span>
-        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="1" ${page >= totalPages ? 'disabled' : ''} type="button">Next ▶</button>
+        <button class="hud-btn pg-nav-btn" data-pg-key="${key}" data-pg-dir="1" ${page >= totalPages ? 'disabled' : ''} type="button">Next <i class="fa-solid fa-chevron-right"></i></button>
       </div>
     `;
   }
@@ -68,7 +68,7 @@ export const UIController: any = (() => {
 
   if (typeof document !== 'undefined') {
     const bgmBtn = $('btn-bgm');
-    if (bgmBtn) bgmBtn.textContent = '🎵 BGM: ON';
+    if (bgmBtn) bgmBtn.innerHTML = '<i class="fa-solid fa-volume-high"></i> BGM: ON';
   }
 
   function showHotbarTooltip(slotBtn: HTMLElement, item: any, count: number, isEquipped: boolean) {
@@ -262,7 +262,7 @@ export const UIController: any = (() => {
     if (typeof document === 'undefined') return;
     const slots = [...document.querySelectorAll('.h-slot')];
     slots.forEach((s, idx) => {
-      s.textContent = idx < DateState.hearts ? '♥' : '♡';
+      s.innerHTML = idx < DateState.hearts ? '<i class="fa-solid fa-heart"></i>' : '<i class="fa-regular fa-heart"></i>';
     });
   }
 
@@ -277,24 +277,24 @@ export const UIController: any = (() => {
 
   function updateClock() {
     const doneCount = getCompletedCount();
-   const stages = [
-      { time: '3:15 PM', phase: 'Curzon Afternoon', weather: '🌤️' },
-      { time: '4:00 PM', phase: 'TSC Tea Breeze', weather: '⛅' },
-      { time: '4:35 PM', phase: 'Charukola Sunlight', weather: '🎨' },
-      { time: '5:10 PM', phase: 'Nilkhet Storm Clouds', weather: '☁️' },
-      { time: '5:35 PM', phase: 'Kalbaishakhi Monsoon', weather: '⛈️' }, // Triggers rain
-      { time: '6:10 PM', phase: 'Post-Rain Golden Hour', weather: '🌅' },
-      { time: '6:40 PM', phase: 'Ramna Park Twilight', weather: '🌸' },
-      { time: '7:10 PM', phase: 'Beli Flower Dusk', weather: '🌼' },
-      { time: '7:45 PM', phase: 'Evening Fuchka Lights', weather: '🏮' },
-      { time: '8:15 PM', phase: 'Rickshaw Tour Night', weather: '🛺' },
-      { time: '8:45 PM', phase: 'Starlight Telescope', weather: '🔭' },
-      { time: '9:20 PM', phase: 'Astral Convergence', weather: '✨' }
+    const stages = [
+      { time: '3:15 PM', phase: 'Curzon Afternoon', weather: '<i class="fa-solid fa-cloud-sun"></i>' },
+      { time: '4:00 PM', phase: 'TSC Tea Breeze', weather: '<i class="fa-solid fa-cloud-sun"></i>' },
+      { time: '4:35 PM', phase: 'Charukola Sunlight', weather: '<i class="fa-solid fa-palette"></i>' },
+      { time: '5:10 PM', phase: 'Nilkhet Storm Clouds', weather: '<i class="fa-solid fa-cloud"></i>' },
+      { time: '5:35 PM', phase: 'Kalbaishakhi Monsoon', weather: '<i class="fa-solid fa-cloud-bolt"></i>' }, // Triggers rain
+      { time: '6:10 PM', phase: 'Post-Rain Golden Hour', weather: '<i class="fa-solid fa-sun"></i>' },
+      { time: '6:40 PM', phase: 'Ramna Park Twilight', weather: '<i class="fa-solid fa-spa"></i>' },
+      { time: '7:10 PM', phase: 'Beli Flower Dusk', weather: '<i class="fa-solid fa-fan"></i>' },
+      { time: '7:45 PM', phase: 'Evening Fuchka Lights', weather: '<i class="fa-solid fa-lightbulb"></i>' },
+      { time: '8:15 PM', phase: 'Rickshaw Tour Night', weather: '<i class="fa-solid fa-bicycle"></i>' },
+      { time: '8:45 PM', phase: 'Starlight Telescope', weather: '<i class="fa-solid fa-eye"></i>' },
+      { time: '9:20 PM', phase: 'Astral Convergence', weather: '<i class="fa-solid fa-wand-magic-sparkles"></i>' }
     ];
     const s = stages[Math.min(doneCount, stages.length - 1)];
     if ($('hud-time')) $('hud-time').textContent = s.time;
     if ($('hud-phase')) $('hud-phase').textContent = s.phase;
-    if ($('hud-weather')) $('hud-weather').textContent = s.weather;
+    if ($('hud-weather')) $('hud-weather').innerHTML = s.weather;
   }
 
   function updateQuestText() {
@@ -372,7 +372,13 @@ export const UIController: any = (() => {
       clearTimeout(toastTimer);
       toastTimer = null;
     }
-    $('toast-icon').textContent = icon;
+    if ($('toast-icon')) {
+      if (typeof icon === 'string' && icon.includes('<')) {
+        $('toast-icon').innerHTML = icon;
+      } else {
+        $('toast-icon').textContent = icon;
+      }
+    }
     $('toast-title').textContent = title;
     if ($('toast-sub')) $('toast-sub').textContent = sub;
     toastEl.hidden = false;
@@ -613,11 +619,11 @@ export const UIController: any = (() => {
 
       body.innerHTML = `
         <div class="rpg-section-header">
-          <h3>🌟 Main Campaign (${mainList.filter(q => q.done).length}/${mainList.length})</h3>
+          <h3><i class="fa-solid fa-star"></i> Main Campaign (${mainList.filter(q => q.done).length}/${mainList.length})</h3>
           <div class="rpg-filter-bar" role="group" aria-label="Filter Quests">
             ${(['all', 'active', 'done'] as const).map(f => `
               <button class="hud-btn q-filter-btn rpg-filter-pill ${questFilter === f ? 'active' : ''}" data-qf="${f}" aria-pressed="${questFilter === f}" type="button">
-                ${f === 'all' ? 'All Quests' : f === 'active' ? '⏳ In Progress' : '✅ Completed'}
+                ${f === 'all' ? '<i class="fa-solid fa-list-check"></i> All Quests' : f === 'active' ? '<i class="fa-solid fa-hourglass-half"></i> In Progress' : '<i class="fa-solid fa-circle-check"></i> Completed'}
               </button>
             `).join('')}
           </div>
@@ -625,18 +631,18 @@ export const UIController: any = (() => {
         <div class="scrapbook-grid">
           ${pgMain.items.length ? pgMain.items.map(q => `
             <div class="scrapbook-entry ${q.done ? 'entry-done' : ''}">
-              <span>${q.done ? '✅' : '⏳'}</span>
+              <span>${q.done ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-regular fa-clock"></i>'}</span>
               <div><b>${q.title}</b><small>${q.desc}</small></div>
             </div>
           `).join('') : `<div class="scrapbook-entry"><small>No main quests match this filter.</small></div>`}
         </div>
         ${renderPaginationBar('questsMain', pgMain.page, pgMain.totalPages, pgMain.totalItems, pgMain.startIndex, pgMain.endIndex)}
 
-        <h3 class="rpg-subsection-title">🧭 Side Quests &amp; Discoveries (${sideList.filter(q => q.done).length}/${sideList.length})</h3>
+        <h3 class="rpg-subsection-title"><i class="fa-solid fa-compass"></i> Side Quests &amp; Discoveries (${sideList.filter(q => q.done).length}/${sideList.length})</h3>
         <div class="scrapbook-grid">
           ${pgSide.items.length ? pgSide.items.map(q => `
             <div class="scrapbook-entry ${q.done ? 'entry-done' : ''}">
-              <span>${q.done ? '🌟' : '📌'}</span>
+              <span>${q.done ? '<i class="fa-solid fa-star"></i>' : '<i class="fa-solid fa-location-dot"></i>'}</span>
               <div><b>${q.title}</b><small>${q.desc}</small></div>
             </div>
           `).join('') : `<div class="scrapbook-entry"><small>No side quests match this filter.</small></div>`}
@@ -683,10 +689,10 @@ export const UIController: any = (() => {
         <div class="rpg-filter-bar" role="group" aria-label="Filter Inventory Category">
           ${[
             ['all', `All (${allOwnedIds.length})`],
-            ['keepsake', '🌺 Keepsakes'],
-            ['consumable', '🍵 Consumables'],
-            ['gear', '⚔️ Gear'],
-            ['materials', '💎 Materials & Relics']
+            ['keepsake', '<i class="fa-solid fa-gem"></i> Keepsakes'],
+            ['consumable', '<i class="fa-solid fa-mug-hot"></i> Consumables'],
+            ['gear', '<i class="fa-solid fa-shield-halved"></i> Gear'],
+            ['materials', '<i class="fa-solid fa-cubes"></i> Materials &amp; Relics']
           ].map(([catKey, label]) => `
             <button class="hud-btn bag-cat-btn rpg-filter-pill ${bagCatFilter === catKey ? 'active' : ''}" data-bcat="${catKey}" aria-pressed="${bagCatFilter === catKey}" type="button">${label}</button>
           `).join('')}
@@ -748,7 +754,7 @@ export const UIController: any = (() => {
                     <small>Requires: ${r.costDesc}</small>
                   </div>
                 </div>
-                <button class="hud-btn craft-btn" data-rid="${r.id}" ${canCraft ? '' : 'disabled'} type="button">⚒️ Craft</button>
+                <button class="hud-btn craft-btn" data-rid="${r.id}" ${canCraft ? '' : 'disabled'} type="button"><i class="fa-solid fa-hammer"></i> Craft</button>
               </div>
             `;
           }).join('')}
@@ -781,10 +787,10 @@ export const UIController: any = (() => {
             return `
               <div class="scrapbook-entry scrapbook-action-row ${active ? 'entry-equipped' : ''}">
                 <div>
-                  <b>${w.name} ${active ? '📍 (Current)' : ''}</b>
+                  <b>${w.name} ${active ? '<i class="fa-solid fa-location-dot"></i> (Current)' : ''}</b>
                   <small>${w.subtitle}</small>
                 </div>
-                <button class="hud-btn warp-world-btn" data-wid="${w.id}" type="button">${unlocked ? '🌀 Travel' : '🔓 Unlock & Travel'}</button>
+                <button class="hud-btn warp-world-btn" data-wid="${w.id}" type="button">${unlocked ? '<i class="fa-solid fa-burst"></i> Travel' : '<i class="fa-solid fa-lock-open"></i> Unlock &amp; Travel'}</button>
               </div>
             `;
           }).join('')}
@@ -813,7 +819,7 @@ export const UIController: any = (() => {
       body.innerHTML = `
         <div class="system-settings-stack">
           <div class="scrapbook-entry scrapbook-action-row">
-            <div><b>💾 Save / Load Progress</b><small>Persist your level, keepsakes, quests, and current world in browser storage.</small></div>
+            <div><b><i class="fa-solid fa-floppy-disk"></i> Save / Load Progress</b><small>Persist your level, keepsakes, quests, and current world in browser storage.</small></div>
             <div class="system-btn-pair">
               <button id="sys-btn-save" class="primary-rpg-btn" type="button">Save Now</button>
               <button id="sys-btn-load" class="secondary-rpg-btn" type="button">Load Save</button>
@@ -823,25 +829,25 @@ export const UIController: any = (() => {
           <!-- Ghibli & Realm Jukebox (Paginated) -->
           <div class="scrapbook-entry jukebox-card">
             <div class="jukebox-header">
-              <div><b>📻 Ghibli &amp; Realm Jukebox</b><small>Select BGM tracks or let the game adapt to your location.</small></div>
+              <div><b><i class="fa-solid fa-radio"></i> Anime &amp; Realm Jukebox</b><small>Select BGM tracks or let the game adapt to your location.</small></div>
               <label class="jukebox-auto-toggle">
                 <input id="sys-auto-bgm" type="checkbox" ${autoTheme ? 'checked' : ''} />
-                <span>Auto Realm Music</span>
+                <span><i class="fa-solid fa-arrows-rotate"></i> Auto Realm Music</span>
               </label>
             </div>
 
             <div class="jukebox-now-playing">
-              <span class="jukebox-note" aria-hidden="true">🎵</span>
+              <span class="jukebox-note" aria-hidden="true"><i class="fa-solid fa-music"></i></span>
               <div class="jukebox-meta">
                 <div id="jukebox-current-title" class="jukebox-title">${currTrack.title}</div>
-                <div class="jukebox-sub"><span id="jukebox-current-badge">${currTrack.badge}</span> • ${currTrack.artist}</div>
+                <div class="jukebox-sub"><span id="jukebox-current-badge"><i class="${currTrack.iconClass || 'fa-solid fa-music'}"></i> ${currTrack.badge}</span> • ${currTrack.artist}</div>
               </div>
             </div>
 
             <div class="jukebox-track-grid">
               ${pgJukebox.items.map(t => `
                 <button class="hud-btn sys-track-btn ${t.id === currTrack.id ? 'active' : ''}" data-tid="${t.id}" type="button">
-                  <span class="track-btn-title">${t.title.split('—')[0].trim()}</span>
+                  <span class="track-btn-title"><i class="${t.iconClass || 'fa-solid fa-music'}"></i> ${t.title.split('—')[0].trim()}</span>
                   <span class="track-btn-badge">${t.badge}</span>
                 </button>
               `).join('')}
@@ -852,15 +858,15 @@ export const UIController: any = (() => {
           </div>
 
           <div class="scrapbook-entry scrapbook-action-row">
-            <label for="sys-music-vol"><b>🎵 Music Volume</b></label>
+            <label for="sys-music-vol"><b><i class="fa-solid fa-music"></i> Music Volume</b></label>
             <input id="sys-music-vol" class="rpg-range-slider" type="range" min="0" max="1" step="0.05" value="${vols.musicVol}" />
           </div>
           <div class="scrapbook-entry scrapbook-action-row">
-            <label for="sys-sfx-vol"><b>🔊 Sound Effects Volume</b></label>
+            <label for="sys-sfx-vol"><b><i class="fa-solid fa-volume-high"></i> Sound Effects Volume</b></label>
             <input id="sys-sfx-vol" class="rpg-range-slider" type="range" min="0" max="1" step="0.05" value="${vols.sfxVol}" />
           </div>
           <div class="scrapbook-entry scrapbook-action-row">
-            <div><b>📖 Chronicle Scrapbook</b><small>View all recorded keepsake memories.</small></div>
+            <div><b><i class="fa-solid fa-book-bookmark"></i> Chronicle Scrapbook</b><small>View all recorded keepsake memories.</small></div>
             <button id="sys-btn-scrapbook" class="hud-btn" type="button">Open Scrapbook</button>
           </div>
         </div>
@@ -980,6 +986,15 @@ export const UIController: any = (() => {
           dropdown.hidden = !isHidden;
           menuBtn.classList.toggle('open', !isHidden);
           menuBtn.setAttribute('aria-expanded', (!isHidden).toString());
+
+          if (!isHidden) {
+            setTimeout(() => {
+              const activeCard = dropdown.querySelector('.anime-track-card.active') as HTMLElement | null;
+              if (activeCard && typeof activeCard.scrollIntoView === 'function') {
+                activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }
+            }, 50);
+          }
         });
 
         // Auto-close dropdown when navigation drawer items are tapped
@@ -997,6 +1012,69 @@ export const UIController: any = (() => {
           musicSec.addEventListener('click', (e) => e.stopPropagation());
         }
 
+        // Anime Track Scroll Container & Buttons
+        const scrollContainer = $('anime-track-scroll');
+        const scrollLeftBtn = $('btn-track-scroll-left');
+        const scrollRightBtn = $('btn-track-scroll-right');
+        if (scrollContainer) {
+          scrollLeftBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            SoundEngine.select();
+            scrollContainer.scrollBy({ left: -180, behavior: 'smooth' });
+          });
+          scrollRightBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            SoundEngine.select();
+            scrollContainer.scrollBy({ left: 180, behavior: 'smooth' });
+          });
+          scrollContainer.addEventListener('wheel', (e) => {
+            if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+              e.preventDefault();
+              scrollContainer.scrollLeft += e.deltaY;
+            }
+          }, { passive: false });
+        }
+
+        // Category filter pills
+        dropdown.querySelectorAll('.music-cat-pill').forEach(pill => {
+          pill.addEventListener('click', (e) => {
+            e.stopPropagation();
+            SoundEngine.select();
+            dropdown.querySelectorAll('.music-cat-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            const cat = (pill as HTMLElement).dataset.cat;
+            (dropdown.querySelectorAll('.anime-track-card') as NodeListOf<HTMLElement>).forEach(card => {
+              const cardCat = card.dataset.cat;
+              if (cat === 'all' || cardCat === cat) {
+                card.style.display = 'flex';
+              } else {
+                card.style.display = 'none';
+              }
+            });
+          });
+        });
+
+        // Interactive Anime Track Cards
+        (dropdown.querySelectorAll('.anime-track-card') as NodeListOf<HTMLElement>).forEach(card => {
+          const onCardSelect = (e: Event) => {
+            e.stopPropagation();
+            SoundEngine.select();
+            const tid = card.dataset.tid;
+            if (tid) {
+              SoundEngine.playTrack(tid, true);
+              const autoCheckbox = $('sys-auto-bgm') as HTMLInputElement | null;
+              if (autoCheckbox) autoCheckbox.checked = false;
+            }
+          };
+          card.addEventListener('click', onCardSelect);
+          card.addEventListener('keydown', (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onCardSelect(e);
+            }
+          });
+        });
+
         const musicSelect = $('hud-music-select') as HTMLSelectElement | null;
         if (musicSelect) {
           musicSelect.addEventListener('change', (e) => {
@@ -1011,6 +1089,14 @@ export const UIController: any = (() => {
           prevBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             SoundEngine.prevTrack();
+          });
+        }
+
+        const playPauseBtn = $('btn-music-playpause');
+        if (playPauseBtn) {
+          playPauseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            SoundEngine.toggleBGM();
           });
         }
 

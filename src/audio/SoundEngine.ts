@@ -7,6 +7,10 @@ export interface BGMTrack {
   artist: string;
   src: string;
   badge: string;
+  category?: 'anime' | 'dhaka';
+  iconClass?: string;
+  franchise?: string;
+  shortTitle?: string;
 }
 
 interface BGMDeck {
@@ -59,89 +63,137 @@ export const SoundEngine = (() => {
   const CROSSFADE_SEC = 0.42;
 
   const BGM_TRACKS: Record<string, BGMTrack> = {
-    spirited_away: {
-      id: 'spirited_away',
-      title: "Spirited Away — One Summer's Day (Piano)",
-      artist: 'Joe Hisaishi',
-      src: 'assets/audio/spirited_away_piano.mp3',
-      badge: '🎹 Piano Masterpiece'
-    },
-    totoro_theme: {
-      id: 'totoro_theme',
-      title: 'My Neighbor Totoro — Main Theme',
-      artist: 'Joe Hisaishi / Ghibli Chill',
-      src: 'assets/audio/totoro_theme.mp3',
-      badge: '🍃 Ghibli Classic'
-    },
     howl_moving_castle: {
       id: 'howl_moving_castle',
       title: "Howl's Moving Castle — Merry-Go-Round of Life",
       artist: 'Joe Hisaishi',
       src: 'assets/audio/anime/howl_moving_castle.mp3',
-      badge: '🏰 Ghibli Waltz'
+      badge: 'Ghibli Waltz',
+      category: 'anime',
+      iconClass: 'fa-solid fa-chess-rook',
+      franchise: "Howl's Moving Castle",
+      shortTitle: 'Merry-Go-Round of Life'
     },
     your_name_sparkle: {
       id: 'your_name_sparkle',
       title: 'Your Name — Sparkle',
       artist: 'RADWIMPS / Piano',
       src: 'assets/audio/anime/your_name_sparkle.mp3',
-      badge: '💫 Shinkai Romance'
+      badge: 'Shinkai Romance',
+      category: 'anime',
+      iconClass: 'fa-solid fa-wand-magic-sparkles',
+      franchise: 'Your Name',
+      shortTitle: 'Sparkle'
     },
     naruto_sadness_sorrow: {
       id: 'naruto_sadness_sorrow',
       title: 'Naruto — Sadness and Sorrow',
       artist: 'Toshiro Masuda / Flute & Piano',
       src: 'assets/audio/anime/naruto_sadness_sorrow.mp3',
-      badge: '🍃 Shinobi Melancholy'
+      badge: 'Shinobi Melancholy',
+      category: 'anime',
+      iconClass: 'fa-solid fa-wind',
+      franchise: 'Naruto',
+      shortTitle: 'Sadness & Sorrow'
     },
     tanjiro_no_uta: {
       id: 'tanjiro_no_uta',
       title: 'Demon Slayer — Kamado Tanjiro no Uta',
       artist: 'Go Shiina / Piano',
       src: 'assets/audio/anime/tanjiro_no_uta.mp3',
-      badge: '🔥 Hinokami Kagura'
+      badge: 'Hinokami Kagura',
+      category: 'anime',
+      iconClass: 'fa-solid fa-fire',
+      franchise: 'Demon Slayer',
+      shortTitle: 'Tanjiro no Uta'
     },
     silent_voice_lit: {
       id: 'silent_voice_lit',
       title: 'A Silent Voice — Lit',
       artist: 'Kensuke Ushio',
       src: 'assets/audio/anime/silent_voice_lit.mp3',
-      badge: '🌸 Kyoto Animation'
+      badge: 'Kyoto Animation',
+      category: 'anime',
+      iconClass: 'fa-solid fa-spa',
+      franchise: 'A Silent Voice',
+      shortTitle: 'Lit'
     },
     mononoke_ashitaka: {
       id: 'mononoke_ashitaka',
       title: 'Princess Mononoke — The Legend of Ashitaka',
       artist: 'Joe Hisaishi / WDR Orchestra',
       src: 'assets/audio/anime/mononoke_ashitaka.mp3',
-      badge: '🐺 Epic Symphony'
+      badge: 'Epic Symphony',
+      category: 'anime',
+      iconClass: 'fa-solid fa-shield-cat',
+      franchise: 'Princess Mononoke',
+      shortTitle: 'Ashitaka Legend'
+    },
+    spirited_away: {
+      id: 'spirited_away',
+      title: "Spirited Away — One Summer's Day (Piano)",
+      artist: 'Joe Hisaishi',
+      src: 'assets/audio/spirited_away_piano.mp3',
+      badge: 'Piano Masterpiece',
+      category: 'anime',
+      iconClass: 'fa-solid fa-music',
+      franchise: 'Spirited Away',
+      shortTitle: "One Summer's Day"
+    },
+    totoro_theme: {
+      id: 'totoro_theme',
+      title: 'My Neighbor Totoro — Main Theme',
+      artist: 'Joe Hisaishi / Ghibli Chill',
+      src: 'assets/audio/totoro_theme.mp3',
+      badge: 'Ghibli Classic',
+      category: 'anime',
+      iconClass: 'fa-solid fa-tree',
+      franchise: 'My Neighbor Totoro',
+      shortTitle: 'Main Theme'
     },
     dhaka_flute: {
       id: 'dhaka_flute',
       title: 'Dhaka Valley — Krishnachura Bansuri',
       artist: 'Robi Ray / Bengali Folk',
       src: 'assets/audio/dhaka_flute.mp3',
-      badge: '🌸 Bengali Bansuri'
+      badge: 'Bengali Bansuri',
+      category: 'dhaka',
+      iconClass: 'fa-solid fa-feather',
+      franchise: 'Dhaka Valley',
+      shortTitle: 'Krishnachura Bansuri'
     },
     dhaka_adventure: {
       id: 'dhaka_adventure',
       title: 'Dhaka Valley — Daybreak Journey',
       artist: 'Original OST',
       src: 'assets/audio/game_bgm.mp3',
-      badge: '☀️ Adventure'
+      badge: 'Adventure',
+      category: 'dhaka',
+      iconClass: 'fa-solid fa-compass',
+      franchise: 'Dhaka Valley',
+      shortTitle: 'Daybreak Journey'
     },
     dhaka_lofi: {
       id: 'dhaka_lofi',
       title: 'Dhaka Lofi — Rain Over Curzon Hall',
       artist: 'Original OST',
       src: 'assets/audio/menu_theme.mp3',
-      badge: '🌧️ Lofi Beats'
+      badge: 'Lofi Beats',
+      category: 'dhaka',
+      iconClass: 'fa-solid fa-cloud-showers-heavy',
+      franchise: 'Dhaka Lofi',
+      shortTitle: 'Rain Over Curzon'
     },
     ohona_song: {
       id: 'ohona_song',
       title: 'Ohona — Subconscious (Rakin Acoustic Live)',
       artist: 'Subconscious / Rakin',
       src: 'assets/audio/ohona_song.mp3',
-      badge: '🎸 Acoustic Serenade'
+      badge: 'Acoustic Serenade',
+      category: 'dhaka',
+      iconClass: 'fa-solid fa-guitar',
+      franchise: 'Campus Romance',
+      shortTitle: 'Subconscious (Live)'
     }
   };
 
@@ -530,7 +582,9 @@ export const SoundEngine = (() => {
     const titleEl = document.getElementById('jukebox-current-title');
     if (titleEl) titleEl.textContent = track.title;
     const badgeEl = document.getElementById('jukebox-current-badge');
-    if (badgeEl) badgeEl.textContent = track.badge;
+    if (badgeEl) {
+      badgeEl.innerHTML = `<i class="${track.iconClass || 'fa-solid fa-music'}"></i> ${track.badge}`;
+    }
     document.querySelectorAll('.sys-track-btn').forEach(btn => {
       if ((btn as HTMLElement).dataset.tid === currentTrackId) btn.classList.add('active');
       else btn.classList.remove('active');
@@ -543,17 +597,60 @@ export const SoundEngine = (() => {
     }
     const hudBadge = document.getElementById('hud-music-badge');
     if (hudBadge) {
-      hudBadge.textContent = track.badge;
+      hudBadge.innerHTML = `<i class="${track.iconClass || 'fa-solid fa-music'}"></i> ${track.badge}`;
     }
+
+    // Now Playing Marquee Ticker
+    const nowPlayingTitle = document.getElementById('hud-now-playing-title');
+    if (nowPlayingTitle) {
+      nowPlayingTitle.textContent = `${track.franchise || track.title} — ${track.shortTitle || ''}`;
+    }
+    const nowPlayingArtist = document.getElementById('hud-now-playing-artist');
+    if (nowPlayingArtist) {
+      nowPlayingArtist.textContent = track.artist;
+    }
+
+    // Equalizer animations
+    document.querySelectorAll('.music-wave-equalizer, .card-playing-indicator').forEach(eq => {
+      if (bgmPlaying) eq.classList.add('playing');
+      else eq.classList.remove('playing');
+    });
+
+    // Play/Pause button
+    const playPauseBtn = document.getElementById('btn-music-playpause');
+    if (playPauseBtn) {
+      playPauseBtn.innerHTML = bgmPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+      playPauseBtn.setAttribute('title', bgmPlaying ? 'Pause BGM' : 'Play BGM');
+    }
+
+    // Quick Action Drawer BGM button
+    const bgmBtn = document.getElementById('btn-bgm');
+    if (bgmBtn) {
+      bgmBtn.innerHTML = bgmPlaying ? '<i class="fa-solid fa-volume-high"></i> BGM: ON' : '<i class="fa-solid fa-volume-xmark"></i> BGM: OFF';
+    }
+
+    // Auto-Theme Button
     const autoBtn = document.getElementById('btn-music-auto');
     if (autoBtn) {
-      autoBtn.textContent = isAutoTheme ? '🔄 Auto: ON' : '🎵 Manual';
+      autoBtn.innerHTML = isAutoTheme ? '<i class="fa-solid fa-arrows-rotate"></i> Auto: ON' : '<i class="fa-solid fa-hand"></i> Manual';
       if (isAutoTheme) {
         autoBtn.classList.remove('manual');
       } else {
         autoBtn.classList.add('manual');
       }
     }
+
+    // Anime Track Scroll Container & Cards Sync
+    document.querySelectorAll<HTMLElement>('.anime-track-card').forEach(card => {
+      const isCardActive = card.dataset.tid === currentTrackId;
+      card.classList.toggle('active', isCardActive);
+      card.setAttribute('aria-selected', isCardActive.toString());
+      if (isCardActive && typeof card.scrollIntoView === 'function') {
+        try {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } catch {}
+      }
+    });
   }
 
   function tone(
@@ -767,6 +864,7 @@ export const SoundEngine = (() => {
       }
       try { if (deckA.audio) deckA.audio.pause(); } catch {}
       try { if (deckB.audio) deckB.audio.pause(); } catch {}
+      updateJukeboxDisplay();
     },
 
     toggleBGM: () => {

@@ -1610,8 +1610,11 @@ a:focus-visible {
   position: absolute;
   top: 48px;
   right: 0;
-  width: 250px;
+  width: 290px;
+  max-width: calc(100vw - 24px);
   background: rgba(29, 21, 17, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 3px solid var(--border-wood);
   outline: 2px solid var(--accent-gold);
   border-radius: 12px;
@@ -1619,7 +1622,7 @@ a:focus-visible {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
   animation: popUp 0.15s ease-out;
   z-index: 90;
 }
@@ -1633,14 +1636,24 @@ a:focus-visible {
   color: #fff8eb;
   border: 1.5px solid #6e4e37;
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 9px 12px;
   font-family: 'Rajdhani', sans-serif;
   font-weight: 700;
-  font-size: 0.98rem;
+  font-size: 0.95rem;
   letter-spacing: 0.6px;
   text-align: left;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.drawer-item-btn i {
+  color: var(--accent-gold);
+  width: 16px;
+  text-align: center;
+  font-size: 0.95rem;
 }
 
 .drawer-item-btn:active, .drawer-item-btn:hover {
@@ -1648,11 +1661,11 @@ a:focus-visible {
   border-color: var(--accent-gold);
 }
 
-/* ================= HUD DROPDOWN MUSIC TRACK SELECTOR ================= */
+/* ================= HUD DROPDOWN ANIME MUSIC TRACK SCROLLER ================= */
 .drawer-music-section {
   margin-top: 4px;
   padding: 8px 10px;
-  background: rgba(18, 12, 9, 0.88);
+  background: rgba(18, 12, 9, 0.94);
   border: 1.5px solid #855938;
   border-radius: 8px;
   display: flex;
@@ -1672,61 +1685,331 @@ a:focus-visible {
   font-weight: 700;
   letter-spacing: 0.8px;
   color: var(--accent-gold);
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .drawer-music-badge {
   font-size: 0.72rem;
-  padding: 1px 6px;
+  padding: 2px 7px;
   background: rgba(253, 230, 138, 0.15);
   border: 1px solid rgba(253, 230, 138, 0.4);
   border-radius: 4px;
   color: #fef08a;
   white-space: nowrap;
-  max-width: 120px;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Now Playing Ticker Marquee */
+.drawer-music-now-playing {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 6, 4, 0.82);
+  border: 1px solid #5a3f2c;
+  border-radius: 6px;
+  padding: 5px 8px;
+  overflow: hidden;
+}
+
+.music-wave-equalizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.music-wave-equalizer .eq-bar {
+  width: 3px;
+  height: 4px;
+  background: var(--accent-gold);
+  border-radius: 1px;
+  transition: height 0.15s ease;
+}
+
+.music-wave-equalizer.playing .eq-1 {
+  animation: waveBar 0.8s infinite ease-in-out alternate;
+}
+.music-wave-equalizer.playing .eq-2 {
+  animation: waveBar 0.6s infinite ease-in-out alternate 0.2s;
+}
+.music-wave-equalizer.playing .eq-3 {
+  animation: waveBar 0.9s infinite ease-in-out alternate 0.4s;
+}
+
+@keyframes waveBar {
+  0% { height: 3px; }
+  100% { height: 14px; }
+}
+
+.marquee-viewport {
+  overflow: hidden;
+  white-space: nowrap;
+  flex: 1;
+  position: relative;
+  mask-image: linear-gradient(to right, transparent 0%, black 8px, black calc(100% - 8px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8px, black calc(100% - 8px), transparent 100%);
+}
+
+.marquee-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #fff8eb;
+  letter-spacing: 0.2px;
+}
+
+.marquee-divider {
+  color: var(--accent-gold);
+  opacity: 0.6;
+}
+
+/* Category Filter Pills */
+.music-category-pills {
+  display: flex;
+  gap: 4px;
+  margin-top: 1px;
+}
+
+.music-cat-pill {
+  flex: 1;
+  background: rgba(35, 23, 16, 0.85);
+  border: 1px solid #5d3f2b;
+  border-radius: 12px;
+  padding: 3px 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #d6b896;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.15s;
+}
+
+.music-cat-pill:hover {
+  background: #3b2416;
+  border-color: var(--accent-gold);
+  color: #fff;
+}
+
+.music-cat-pill.active {
+  background: #52321c;
+  border-color: var(--accent-gold);
+  color: #fef08a;
+  box-shadow: 0 0 8px rgba(246, 211, 101, 0.25);
+}
+
+/* Anime Track Scroll Container */
+.anime-track-scroll-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.anime-track-scroll-container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 6px 4px 8px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-gold) rgba(22, 14, 10, 0.9);
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.anime-track-scroll-container::-webkit-scrollbar {
+  height: 5px;
+}
+
+.anime-track-scroll-container::-webkit-scrollbar-track {
+  background: rgba(18, 11, 8, 0.8);
+  border-radius: 3px;
+}
+
+.anime-track-scroll-container::-webkit-scrollbar-thumb {
+  background: #855938;
+  border-radius: 3px;
+}
+
+.anime-track-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-gold);
+}
+
+/* Track Card Item in Scroll Reel */
+.anime-track-card {
+  flex: 0 0 168px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: rgba(33, 21, 14, 0.85);
+  border: 1.5px solid #6b4c37;
+  border-radius: 8px;
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.anime-track-card:hover {
+  background: #3d2618;
+  border-color: var(--accent-gold);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.anime-track-card:active {
+  transform: scale(0.98);
+}
+
+.anime-track-card.active {
+  background: linear-gradient(135deg, rgba(82, 48, 25, 0.95), rgba(48, 30, 20, 0.95));
+  border-color: #f6d365;
+  box-shadow: 0 0 12px rgba(246, 211, 101, 0.35);
+}
+
+.track-card-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(15, 10, 7, 0.85);
+  border: 1px solid rgba(246, 211, 101, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-gold);
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.card-playing-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  display: flex;
+  gap: 1.5px;
+}
+
+.card-playing-indicator .eq-dot {
+  width: 2.5px;
+  height: 2.5px;
+  border-radius: 50%;
+  background: #10b981;
+  opacity: 0;
+}
+
+.anime-track-card.active .card-playing-indicator.playing .eq-dot {
+  opacity: 1;
+}
+
+.anime-track-card.active .card-playing-indicator.playing .dot-1 {
+  animation: eqPulse 0.9s infinite alternate;
+}
+.anime-track-card.active .card-playing-indicator.playing .dot-2 {
+  animation: eqPulse 0.6s infinite alternate 0.15s;
+}
+.anime-track-card.active .card-playing-indicator.playing .dot-3 {
+  animation: eqPulse 0.8s infinite alternate 0.3s;
+}
+
+@keyframes eqPulse {
+  0% { transform: scale(0.8); opacity: 0.4; }
+  100% { transform: scale(1.4); opacity: 1; }
+}
+
+.track-card-meta {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  text-align: left;
+}
+
+.track-card-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #fff8eb;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.drawer-music-select-wrap {
-  width: 100%;
+.track-card-sub {
+  font-size: 0.68rem;
+  color: #d6b896;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.drawer-music-select {
-  width: 100%;
-  background: #2b1d14;
-  color: #fff8eb;
-  border: 1.5px solid #6e4e37;
-  border-radius: 6px;
-  padding: 6px 8px;
-  font-family: 'Outfit', 'Rajdhani', sans-serif;
-  font-weight: 600;
-  font-size: 0.82rem;
-  cursor: pointer;
-  outline: none;
-  transition: border-color 0.15s;
+.track-card-badge {
+  font-size: 0.63rem;
+  color: #fde68a;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
 }
 
-.drawer-music-select:focus,
-.drawer-music-select:hover {
-  border-color: var(--accent-gold);
-}
-
-.drawer-music-select optgroup {
-  background: #1d1511;
+/* Scroll Chevrons */
+.track-scroll-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 6;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(22, 14, 10, 0.92);
+  border: 1px solid var(--accent-gold);
   color: var(--accent-gold);
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+  transition: all 0.15s;
 }
 
-.drawer-music-select option {
-  background: #2b1d14;
-  color: #fff8eb;
-  padding: 4px 6px;
+.track-scroll-arrow.left {
+  left: -4px;
+}
+
+.track-scroll-arrow.right {
+  right: -4px;
+}
+
+.track-scroll-arrow:hover {
+  background: #4a2e1b;
+  color: #fff;
+  transform: translateY(-50%) scale(1.15);
 }
 
 .drawer-music-controls-row {
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-top: 2px;
 }
 
 .drawer-music-btn {
@@ -1734,17 +2017,21 @@ a:focus-visible {
   color: #fff8eb;
   border: 1.5px solid #6e4e37;
   border-radius: 6px;
-  padding: 5px 9px;
+  padding: 6px 10px;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
   flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .drawer-music-btn:hover,
 .drawer-music-btn:active {
   background: #4a2e1b;
   border-color: var(--accent-gold);
+  color: #fef08a;
 }
 
 .drawer-music-auto-btn {
@@ -1752,7 +2039,7 @@ a:focus-visible {
   color: #a7f3d0;
   border: 1.5px solid #059669;
   border-radius: 6px;
-  padding: 5px 8px;
+  padding: 6px 8px;
   font-family: 'Rajdhani', sans-serif;
   font-weight: 700;
   font-size: 0.82rem;
@@ -1760,6 +2047,10 @@ a:focus-visible {
   cursor: pointer;
   flex: 1 1 auto;
   text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   transition: all 0.15s;
 }
 
@@ -1771,6 +2062,19 @@ a:focus-visible {
 
 .drawer-music-auto-btn:hover {
   filter: brightness(1.15);
+}
+
+/* Accessibility helper */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ================= ENHANCED MOBILE LANDSCAPE CONTROLS ================= */

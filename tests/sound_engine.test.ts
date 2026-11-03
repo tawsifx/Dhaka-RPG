@@ -57,6 +57,10 @@ describe('SoundEngine — Ohona Song Cutscene Audio Management', () => {
     expect(all).toHaveProperty('tanjiro_no_uta');
     expect(all).toHaveProperty('silent_voice_lit');
     expect(all).toHaveProperty('mononoke_ashitaka');
+    expect(all.howl_moving_castle.category).toBe('anime');
+    expect(all.howl_moving_castle.iconClass).toContain('fa-');
+    expect(all.your_name_sparkle.category).toBe('anime');
+    expect(all.your_name_sparkle.iconClass).toContain('fa-');
 
     // Can manually play an anime track
     SoundEngine.playTrack('howl_moving_castle');
