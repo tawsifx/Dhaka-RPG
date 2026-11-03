@@ -23,6 +23,7 @@ export const SoundEngine = (() => {
   let compressor: DynamicsCompressorNode | null = null;
   let musicBusGain: GainNode | null = null;
   let sfxBusGain: GainNode | null = null;
+  let ambienceBusGain: GainNode | null = null;
   let sharedNoiseBuffer: AudioBuffer | null = null;
 
   let bgmPlaying = false;
@@ -44,6 +45,13 @@ export const SoundEngine = (() => {
   let menuGainNode: GainNode | null = null;
   let menuFadeTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Environment Ambience Loop Engine (Morning Birds & Evening Lake Water/Crickets)
+  let ambienceAudioEl: HTMLAudioElement | null = null;
+  let ambienceSourceNode: MediaElementAudioSourceNode | null = null;
+  let ambienceGainNode: GainNode | null = null;
+  let currentAmbienceType: 'birds' | 'lake' | null = null;
+  let ambienceFadeTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Track state before cutscene or special serenade tracks
   let preSpecialTrackId: string | null = null;
   let preSpecialBgmState: boolean | null = null;
@@ -64,6 +72,13 @@ export const SoundEngine = (() => {
       artist: 'Joe Hisaishi / Ghibli Chill',
       src: 'assets/audio/totoro_theme.mp3',
       badge: '🍃 Ghibli Classic'
+    },
+    dhaka_flute: {
+      id: 'dhaka_flute',
+      title: 'Dhaka Valley — Krishnachura Bansuri',
+      artist: 'Robi Ray / Bengali Folk',
+      src: 'assets/audio/dhaka_flute.mp3',
+      badge: '🌸 Bengali Bansuri'
     },
     dhaka_adventure: {
       id: 'dhaka_adventure',
@@ -115,7 +130,7 @@ export const SoundEngine = (() => {
     totoro_slam: 'assets/audio/sfx/totoro_slam.wav',
     tea_clink: 'assets/audio/sfx/tea_clink.wav',
     crunch_fuchka: 'assets/audio/sfx/crunch_fuchka.wav',
-    rickshaw_bell: 'assets/audio/sfx/rickshaw_bell.wav',
+    rickshaw_bell: 'assets/audio/sfx/rickshaw_bell_authentic.mp3',
     water_splash: 'assets/audio/sfx/water_splash.wav',
     portal_warp: 'assets/audio/sfx/portal_warp.wav',
     select: 'assets/audio/sfx/select.wav',
@@ -158,6 +173,9 @@ export const SoundEngine = (() => {
       sfxBusGain = ctx.createGain();
       sfxBusGain.gain.value = sfxVol;
 
+      ambienceBusGain = ctx.createGain();
+      ambienceBusGain.gain.value = musicVol * 0.65;
+
       if (ctx.createDynamicsCompressor) {
         compressor = ctx.createDynamicsCompressor();
         compressor.threshold.value = -12;
@@ -173,6 +191,7 @@ export const SoundEngine = (() => {
 
       musicBusGain.connect(masterGain);
       sfxBusGain.connect(masterGain);
+      ambienceBusGain.connect(masterGain);
 
       // Attach any already-created BGM decks to the Web Audio graph
       if (deckA.audio) attachDeckToWebAudio(deckA, activeDeck === 'A' ? 1.0 : 0.0001);
@@ -766,15 +785,98 @@ export const SoundEngine = (() => {
         const now = c.currentTime;
         musicBusGain.gain.setTargetAtTime(musicVol, now, 0.015);
         sfxBusGain.gain.setTargetAtTime(sfxVol, now, 0.015);
+        if (ambienceBusGain) {
+          ambienceBusGain.gain.setTargetAtTime(musicVol * 0.65, now, 0.015);
+        }
       } else {
         const curr = activeDeck === 'A' ? deckA : deckB;
         if (curr.audio && !curr.gainNode) {
           try { curr.audio.volume = musicVol; } catch {}
         }
+        if (ambienceAudioEl && !ambienceGainNode) {
+          try { ambienceAudioEl.volume = musicVol * 0.45; } catch {}
+        }
       }
     },
 
     getVolumes: () => ({ musicVol, sfxVol }),
+
+    /**
+     * Controls environmental ambient audio loops (morning birds, calm night lake crickets).
+     * Softly crossfades and loops behind music and SFX.
+     */
+    setAmbience: (type: 'birds' | 'lake' | null) => {
+      if (type === currentAmbienceType) return;
+      currentAmbienceType = type;
+
+      const c = getCtx();
+      if (typeof document !== 'undefined' && !ambienceAudioEl) {
+        ambienceAudioEl = new Audio();
+        ambienceAudioEl.loop = true;
+      }
+      if (!ambienceAudioEl) return;
+
+      if (c && ambienceBusGain && !ambienceSourceNode) {
+        try {
+          ambienceSourceNode = c.createMediaElementSource(ambienceAudioEl);
+          ambienceGainNode = c.createGain();
+          ambienceGainNode.gain.setValueAtTime(0.0001, c.currentTime);
+          ambienceSourceNode.connect(ambienceGainNode);
+          ambienceGainNode.connect(ambienceBusGain);
+        } catch {
+          ambienceSourceNode = null;
+          ambienceGainNode = null;
+        }
+      }
+
+      if (ambienceFadeTimer) {
+        clearTimeout(ambienceFadeTimer);
+        ambienceFadeTimer = null;
+      }
+
+      if (!type) {
+        if (c && ambienceGainNode) {
+          const now = c.currentTime;
+          ambienceGainNode.gain.cancelScheduledValues(now);
+          ambienceGainNode.gain.setValueAtTime(ambienceGainNode.gain.value, now);
+          ambienceGainNode.gain.linearRampToValueAtTime(0.0001, now + 1.2);
+          ambienceFadeTimer = setTimeout(() => {
+            if (ambienceAudioEl && !currentAmbienceType) ambienceAudioEl.pause();
+          }, 1250);
+        } else {
+          try { ambienceAudioEl.pause(); } catch {}
+        }
+        return;
+      }
+
+      const ambientSrc = type === 'birds'
+        ? 'assets/audio/ambience/dhaka_morning_birds.mp3'
+        : 'assets/audio/ambience/dhaka_evening_lake.mp3';
+
+      ambienceAudioEl.src = ambientSrc;
+      ambienceAudioEl.loop = true;
+
+      if (c && ambienceGainNode) {
+        const now = c.currentTime;
+        ambienceGainNode.gain.cancelScheduledValues(now);
+        ambienceGainNode.gain.setValueAtTime(0.0001, now);
+        ambienceAudioEl.play().then(() => {
+          if (c && ambienceGainNode) {
+            const playNow = c.currentTime;
+            ambienceGainNode.gain.cancelScheduledValues(playNow);
+            ambienceGainNode.gain.setValueAtTime(0.0001, playNow);
+            ambienceGainNode.gain.linearRampToValueAtTime(0.55, playNow + 1.5);
+          }
+        }).catch(() => {});
+      } else {
+        try {
+          ambienceAudioEl.volume = 0.45 * musicVol;
+          ambienceAudioEl.play().catch(() => {});
+        } catch {}
+      }
+    },
+
+    getAmbience: () => currentAmbienceType,
 
     duckBGM: (ratio = 0.2, fadeMs = 300): void => {
       const c = getCtx();

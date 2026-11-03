@@ -88,6 +88,11 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.load.image('tileset-superpowers', 'assets/tilesets/Superpowers_Tilesheet.png');
     this.load.image('tileset-vegetation', 'assets/tilesets/Vegetation_by_George.png');
     this.load.image('tileset-pipo-flower', 'assets/tilesets/pipo_Flower.png');
+    this.load.image('tileset-outdoor-nature', 'assets/tilesets/core_outdoor_nature.png');
+    this.load.image('tileset-outdoor-water', 'assets/tilesets/core_outdoor_water.png');
+    this.load.image('tileset-core-buildings', 'assets/tilesets/core_buildings.png');
+    this.load.image('tileset-rubberduck-outdoor', 'assets/tilesets/rubberduck_outdoor.png');
+    this.load.image('tileset-sand-water', 'assets/tilesets/Sand_n_water.png');
   }
 
 
@@ -226,6 +231,10 @@ export class DhakaValleyScene extends Phaser.Scene {
     this.timeCalendar.onMinuteCallback = (date) => {
       if (this.atmosphere) {
         this.atmosphere.updateLighting(date.timePhase, this.isRaining ? 'monsoon' : (date.weather || 'sunny'));
+      }
+      if (this.currentWorld === 'dhaka') {
+        const isNightOrEve = date.timePhase === 'evening' || date.timePhase === 'night' || date.timePhase === 'dusk';
+        SoundEngine.setAmbience(isNightOrEve ? 'lake' : 'birds');
       }
     };
 
@@ -687,10 +696,12 @@ export class DhakaValleyScene extends Phaser.Scene {
 
   buildWorld(worldId, spawnPos) {
     if (worldId === 'curzon_interior') {
+      SoundEngine.setAmbience(null);
       this.buildCurzonInterior(spawnPos);
       return;
     }
     if (worldId === 'farmhouse') {
+      SoundEngine.setAmbience(null);
       this.buildFarmhouse(spawnPos);
       return;
     }
@@ -712,6 +723,12 @@ export class DhakaValleyScene extends Phaser.Scene {
 
     const wCfg = WORLDS_DB[worldId] || WORLDS_DB.dhaka;
     SoundEngine.setTheme(wCfg.theme);
+    if (worldId === 'dhaka') {
+      const isNightOrEve = this.timeCalendar ? (this.timeCalendar.timePhase === 'evening' || this.timeCalendar.timePhase === 'night' || this.timeCalendar.timePhase === 'dusk') : false;
+      SoundEngine.setAmbience(isNightOrEve ? 'lake' : 'birds');
+    } else {
+      SoundEngine.setAmbience(null);
+    }
     const minLabel = document.getElementById('minimap-world-label');
     if (minLabel) minLabel.textContent = wCfg.name;
 

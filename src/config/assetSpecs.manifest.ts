@@ -181,6 +181,74 @@ export const ASSET_SPECS_MANIFEST: Record<string, AssetSpec> = {
       styleSearchTags: ['outdoor pixel art', 'cliff ledges', 'river banks', 'wooden fences']
     }
   },
+  'tileset-outdoor-nature': {
+    id: 'tileset-outdoor-nature',
+    name: 'Dhaka Valley Outdoor Nature & Campus Flora',
+    category: 'tileset',
+    description: 'High-definition 16x16 outdoor nature atlas featuring flowering bushes, stone benches, trees, and garden fences.',
+    externalPath: 'assets/tilesets/core_outdoor_nature.png',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'dhaka-tileset-32',
+    logicalGridFootprint: { cols: 16, rows: 24 },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 16, height: 16 },
+      acceptedNativeSizes: ['16x16 (auto-2x)', '32x32 (1:1)'],
+      sheetLayout: '16x16 nature feature atlas',
+      origin: { x: 0, y: 0 },
+      styleSearchTags: ['Tuxemon nature tileset', 'outdoor foliage', 'garden benches', 'campus shrubs']
+    }
+  },
+  'tileset-outdoor-water': {
+    id: 'tileset-outdoor-water',
+    name: 'Dhanmondi Lake & Botanical Pond Water Network',
+    category: 'tileset',
+    description: 'Animated shoreline, water ripples, lily pads, and lotus flowers for Dhaka Valley water bodies.',
+    externalPath: 'assets/tilesets/core_outdoor_water.png',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'dhaka-tileset-32',
+    logicalGridFootprint: { cols: 16, rows: 16 },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 16, height: 16 },
+      acceptedNativeSizes: ['16x16 (auto-2x)', '32x32 (1:1)'],
+      sheetLayout: 'Water surface and shoreline tileset',
+      origin: { x: 0, y: 0 },
+      styleSearchTags: ['water tileset', 'lake surface', 'lily pads', 'shoreline foam']
+    }
+  },
+  'tileset-core-buildings': {
+    id: 'tileset-core-buildings',
+    name: 'Dhaka Heritage Brick Buildings & Architecture',
+    category: 'tileset',
+    description: 'Red-brick heritage facade tiles, arched windows, and colonnade trims for campus monuments.',
+    externalPath: 'assets/tilesets/core_buildings.png',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'dhaka-tileset-32',
+    logicalGridFootprint: { cols: 16, rows: 16 },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 16, height: 16 },
+      acceptedNativeSizes: ['16x16 (auto-2x)', '32x32 (1:1)'],
+      sheetLayout: '16x16 architectural tileset',
+      origin: { x: 0, y: 0 },
+      styleSearchTags: ['heritage brick', 'campus architecture', 'arched windows', 'terracotta masonry']
+    }
+  },
+  'tileset-rubberduck-outdoor': {
+    id: 'tileset-rubberduck-outdoor',
+    name: 'Rubberduck Outdoor Pathways & Ground Accents',
+    category: 'tileset',
+    description: 'Decorative stepping stones, flower borders, and walkway edges for Dhaka Valley parks.',
+    externalPath: 'assets/tilesets/rubberduck_outdoor.png',
+    hasExternalFile: true,
+    fallbackProceduralKey: 'dhaka-tileset-32',
+    logicalGridFootprint: { cols: 16, rows: 16 },
+    recommendedDownloadSpecs: {
+      preferredFrameSize: { width: 16, height: 16 },
+      acceptedNativeSizes: ['16x16 (auto-2x)', '32x32 (1:1)'],
+      sheetLayout: '16x16 outdoor ground embellishment atlas',
+      origin: { x: 0, y: 0 },
+      styleSearchTags: ['ground textures', 'path borders', 'flower beds', 'stepping stones']
+    }
+  },
   'tileset-vegetation': {
     id: 'tileset-vegetation',
     name: 'George Vegetation Tileset',

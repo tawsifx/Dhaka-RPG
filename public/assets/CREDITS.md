@@ -97,6 +97,45 @@
 
 ---
 
+## 🌿 Dhaka Valley Environment Assets (Acquired via `pdl`)
+
+### 1. Environmental Audio & Ambient Soundscapes
+- **Krishnachura Bansuri (BGM)**:
+  - **File**: `public/assets/audio/dhaka_flute.mp3`
+  - **Title**: *Dhaka Valley — Krishnachura Bansuri*
+  - **Artist/Performer**: Robi Ray
+  - **Acquisition Tool**: `pdl` CoreAudio Lossless Extraction
+  - **Description**: Soul-stirring Bengali bamboo flute melody that echoes across Curzon Hall, Fuller Road, and Dhanmondi Lake.
+- **Morning Bird Chorus Ambience**:
+  - **File**: `public/assets/audio/ambience/dhaka_morning_birds.mp3`
+  - **Author/Recording**: Paul Dinning
+  - **Acquisition Tool**: `pdl` Multi-Channel Stream Extraction
+  - **Description**: Natural bird songs recorded in lush gardens, playing during daytime in Dhaka Valley across Curzon lawns and Ramna park.
+- **Dhanmondi Lake Evening Crickets & Gentle Water**:
+  - **File**: `public/assets/audio/ambience/dhaka_evening_lake.mp3`
+  - **Author/Recording**: Jason Stephenson
+  - **Acquisition Tool**: `pdl` Multi-Channel Stream Extraction
+  - **Description**: Calming lake water ripples and evening dusk crickets that play during evening and nighttime in Dhaka Valley.
+- **Authentic Dhaka Rickshaw Double-Ding Bell**:
+  - **File**: `public/assets/audio/sfx/rickshaw_bell_authentic.mp3`
+  - **Source/Recording**: Happy Cartoon Room
+  - **Acquisition Tool**: `pdl` Stream Extraction
+  - **Description**: Crisp, realistic twin-chime bell for the painted cycle rickshaws stationed along Fuller Road.
+
+### 2. External Environment Tilesets (Tuxemon CC-BY-SA 3.0)
+- **Files**:
+  - `public/assets/tilesets/core_outdoor_nature.png`: Campus garden flora, flowering shrubs, decorative benches, and stone fences.
+  - `public/assets/tilesets/core_outdoor_water.png`: Animated shoreline water ripples, lily pads, and lotus blossoms for Dhanmondi Lake.
+  - `public/assets/tilesets/core_buildings.png`: Terracotta red-brick campus architecture, colonnades, and arched portals.
+  - `public/assets/tilesets/rubberduck_outdoor.png`: Flagstone stepping paths and flower bed borders (by Rubberduck).
+  - `public/assets/tilesets/Sand_n_water.png`: Shoreline embankments and sand transitions.
+- **Author/Project**: Tuxemon Project / ShadowApex / Rubberduck
+- **Source**: https://github.com/Tuxemon/Tuxemon
+- **License**: CC-BY-SA 3.0 / GPL 3.0
+- **Acquisition Tool**: `pdl` GitHub Parallel Acceleration Engine
+
+---
+
 ## 🕹️ Mobile Touch Action Icons
 - **Files**: `public/assets/icons/atk.svg`, `act.svg`, `dash.svg`, `roar.svg`, `slam.svg`
 - **Authors**: Lorc and Skoll

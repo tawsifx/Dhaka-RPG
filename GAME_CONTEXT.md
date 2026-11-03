@@ -1050,8 +1050,9 @@ The audio engine (`src/audio/SoundEngine.ts`) delivers studio-quality retro imme
 All music tracks are compressed using high-efficiency LAME Variable Bitrate (VBR `-V 5` / `-V 6`, `-q 0`) with 44.1kHz stereo fidelity, preserving high-frequency warmth while reducing initial payload size:
 1. **`spirited_away_piano.mp3`** (3.4 MB): Joe Hisaishi's *"One Summer's Day"* piano arrangement. Plays in Curzon Hall Interior, Kingdom of Eternal Frost, and Title Menu.
 2. **`totoro_theme.mp3`** (3.5 MB): Joe Hisaishi's *"My Neighbor Totoro Main Theme"* Ghibli chill arrangement. Plays in Dhaka Valley Overworld, Green Meadows Farmhouse, and Whispering Emerald Forest.
-3. **`game_bgm.mp3`** (2.5 MB): Original Dhaka Adventure OST. Plays in Sunken Kingdom, Emberfall Highlands, and Boss Arenas.
-4. **`menu_theme.mp3`** (2.9 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
+3. **`dhaka_flute.mp3`** (2.3 MB): Soul-stirring Bengali bamboo bansuri arrangement by Robi Ray (*Dhaka Valley — Krishnachura Bansuri*). Plays in Dhaka Valley and is selectable in the Jukebox.
+4. **`game_bgm.mp3`** (2.5 MB): Original Dhaka Adventure OST. Plays in Sunken Kingdom, Emberfall Highlands, and Boss Arenas.
+5. **`menu_theme.mp3`** (2.9 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
 
 ### Dual-Player Cross-Fading Architecture
 ```
@@ -1067,6 +1068,12 @@ Player A (Active Track)       Player B (Incoming Track)
      (Fades out in 400ms)          (Fades in in 400ms)
 ```
 
+### Living-World Environmental Ambience Subsystem (`SoundEngine.setAmbience`)
+In addition to background music, `SoundEngine` manages an independent Web Audio ambient bus (`ambienceBusGain`) for subtle continuous environmental atmospheres acquired via `pdl`:
+- **`dhaka_morning_birds.mp3`** (528 KB): Peaceful morning bird chorus recorded by Paul Dinning. Automatically fades in during morning and daytime overworld exploration across Curzon Hall garden lawns and Ramna Promenade.
+- **`dhaka_evening_lake.mp3`** (528 KB): Calming nighttime water ripples and dusk crickets recorded by Jason Stephenson. Seamlessly cross-fades into the soundscape during evening, dusk, and night in Dhaka Valley.
+- Automatically mutes when entering indoor locations (`curzon_interior`, `farmhouse`) or fantasy realm dungeons.
+
 ### Vocal Romance & Acoustic Concert Track (`ohona_song.mp3`)
 In addition to background instrumental themes, the game integrates an authentic high-fidelity acoustic vocal arrangement:
 - **`ohona_song.mp3`**: Heartfelt romantic ballad celebrating love and companionship across Dhaka.
@@ -1075,9 +1082,9 @@ In addition to background instrumental themes, the game integrates an authentic 
   - `stopOhonaSong(fadeMs = 800)`: Fades out the vocal track smoothly and restores the ambient overworld BGM.
   - `getOhonaSongDuration()`: Returns track duration for cutscene synchronization.
 
-### 16-Channel SFX Pool (`sfxAudioPool`)
+### 16-Channel SFX Pool (`sfxAudioPool`) & Authentic SFX
 SFX instances are pre-buffered into audio pools of up to 6 simultaneous voices to eliminate browser audio latency:
-`slash.wav`, `thrust.wav`, `spin.wav`, `dash.wav`, `enemy_hit.wav`, `player_hurt.wav`, `level_up.wav`, `totoro_roar.wav`, `totoro_slam.wav`, `tea_clink.wav`, `crunch_fuchka.wav`, `rickshaw_bell.wav`, `water_splash.wav`, `portal_warp.wav`, `select.wav`, `item_get.wav`.
+`slash.wav`, `thrust.wav`, `spin.wav`, `dash.wav`, `enemy_hit.wav`, `player_hurt.wav`, `level_up.wav`, `totoro_roar.wav`, `totoro_slam.wav`, `tea_clink.wav`, `crunch_fuchka.wav`, `rickshaw_bell_authentic.mp3` (authentic Dhaka cycle rickshaw double-ding bell), `water_splash.wav`, `portal_warp.wav`, `select.wav`, `item_get.wav`.
 
 ---
 
