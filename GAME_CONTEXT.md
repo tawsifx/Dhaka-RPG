@@ -1047,18 +1047,19 @@ To elevate cinematic storytelling, water surface realism, and living botanical a
 The audio engine (`src/audio/SoundEngine.ts`) delivers studio-quality retro immersion with seamless cross-fading and zero stuttering.
 
 ### Compressed BGM Tracks (LAME VBR Encoded)
-All music tracks are compressed using high-efficiency LAME Variable Bitrate (VBR `-V 5` / `-V 6`, `-q 0`) with 44.1kHz stereo fidelity, preserving high-frequency warmth while reducing initial payload size:
-1. **`spirited_away_piano.mp3`** (3.4 MB): Joe Hisaishi's *"One Summer's Day"* piano arrangement. Plays in Curzon Hall Interior, Kingdom of Eternal Frost, and Title Menu.
-2. **`totoro_theme.mp3`** (3.5 MB): Joe Hisaishi's *"My Neighbor Totoro Main Theme"* Ghibli chill arrangement. Plays in Dhaka Valley Overworld, Green Meadows Farmhouse, and Whispering Emerald Forest.
-3. **`howl_moving_castle.mp3`** (5.0 MB): Joe Hisaishi's *"Merry-Go-Round of Life"* (*Howl's Moving Castle*).
-4. **`your_name_sparkle.mp3`** (6.0 MB): RADWIMPS' *"Sparkle"* (*Your Name / Kimi no Na wa*).
-5. **`naruto_sadness_sorrow.mp3`** (3.2 MB): Toshiro Masuda's *"Sadness and Sorrow"* (*Naruto* flute & piano).
-6. **`tanjiro_no_uta.mp3`** (5.3 MB): Go Shiina's *"Kamado Tanjiro no Uta"* (*Demon Slayer* piano).
-7. **`silent_voice_lit.mp3`** (2.8 MB): Kensuke Ushio's *"Lit"* (*A Silent Voice / Koe no Katachi*).
-8. **`mononoke_ashitaka.mp3`** (4.6 MB): Joe Hisaishi's *"The Legend of Ashitaka"* (*Princess Mononoke* orchestral).
-9. **`dhaka_flute.mp3`** (2.3 MB): Soul-stirring Bengali bamboo bansuri arrangement by Robi Ray (*Dhaka Valley — Krishnachura Bansuri*). Plays in Dhaka Valley and is selectable in the Jukebox.
-10. **`game_bgm.mp3`** (2.5 MB): Original Dhaka Adventure OST. Plays in Sunken Kingdom, Emberfall Highlands, and Boss Arenas.
-11. **`menu_theme.mp3`** (2.9 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
+All music tracks are compressed using high-efficiency 64kbps joint-stereo MP3 encoding with 44.1kHz fidelity, preserving high-frequency warmth while reducing initial payload size by ~48%:
+1. **`spirited_away_piano.mp3`** (2.2 MB): Joe Hisaishi's *"One Summer's Day"* piano arrangement. Plays in Curzon Hall Interior, Kingdom of Eternal Frost, and Title Menu.
+2. **`totoro_theme.mp3`** (1.1 MB): Joe Hisaishi's *"My Neighbor Totoro Main Theme"* Ghibli chill arrangement. Plays in Dhaka Valley Overworld, Green Meadows Farmhouse, and Whispering Emerald Forest.
+3. **`howl_moving_castle.mp3`** (2.5 MB): Joe Hisaishi's *"Merry-Go-Round of Life"* (*Howl's Moving Castle*).
+4. **`your_name_sparkle.mp3`** (3.0 MB): RADWIMPS' *"Sparkle"* (*Your Name / Kimi no Na wa*).
+5. **`naruto_sadness_sorrow.mp3`** (1.6 MB): Toshiro Masuda's *"Sadness and Sorrow"* (*Naruto* flute & piano).
+6. **`tanjiro_no_uta.mp3`** (2.7 MB): Go Shiina's *"Kamado Tanjiro no Uta"* (*Demon Slayer* piano).
+7. **`silent_voice_lit.mp3`** (1.4 MB): Kensuke Ushio's *"Lit"* (*A Silent Voice / Koe no Katachi*).
+8. **`mononoke_ashitaka.mp3`** (2.3 MB): Joe Hisaishi's *"The Legend of Ashitaka"* (*Princess Mononoke* orchestral).
+9. **`dhaka_flute.mp3`** (1.1 MB): Soul-stirring Bengali bamboo bansuri arrangement by Robi Ray (*Dhaka Valley — Krishnachura Bansuri*). Plays in Dhaka Valley and is selectable in the Jukebox.
+10. **`game_bgm.mp3`** (3.6 MB): Original Dhaka Adventure OST. Plays in Sunken Kingdom, Emberfall Highlands, and Boss Arenas.
+11. **`menu_theme.mp3`** (1.7 MB): Original Dhaka Lofi Beat (*Rain Over Curzon Hall*). Plays during Monsoon rain storms and evening strolls.
+12. **`ohona_song.mp3`** (0.9 MB): Acoustic serenade ballad by Subconscious / Rakin.
 
 ### HUD Dropdown Music Track Change System
 Located in the 3-bar hamburger dropdown menu (`#hud-dropdown-menu`):
